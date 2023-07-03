@@ -2,7 +2,7 @@ import sys
 
 import argparse
 
-from openvino_xai.classification import InsertXAICls
+from openvino_xai.inserter import InsertXAICls, InsertXAIDet
 
 
 def get_argument_parser():
@@ -16,12 +16,21 @@ def main(argv):
     parser = get_argument_parser()
     args = parser.parse_args(argv)
 
-    ir_xai = InsertXAICls(args.model_path)  # , explain_algorithm="activationmap"
-    print("\nOriginal model:\n", ir_xai.model_ori)
-    ir_xai.generate_model_with_xai()
-    print("\nModel with XAI inserted:\n", ir_xai.model_with_xai)
+    # # # Classification example
+    # ir_with_xai_generator = InsertXAICls(args.model_path)  # , explain_algorithm="activationmap"
+    # print("\nOriginal model:\n", ir_with_xai_generator.model_ori)
+    # ir_with_xai_generator.generate_model_with_xai()
+    # print("\nModel with XAI inserted:\n", ir_with_xai_generator.model_with_xai)
+    # if args.save_path:
+    #     ir_with_xai_generator.serialize_model_with_xai(args.save_path)
+
+    # Detection example
+    ir_with_xai_generator = InsertXAIDet(args.model_path)
+    print("\nOriginal model:\n", ir_with_xai_generator.model_ori)
+    ir_with_xai_generator.generate_model_with_xai()
+    print("\nModel with XAI inserted:\n", ir_with_xai_generator.model_with_xai)
     if args.save_path:
-        ir_xai.serialize_model_with_xai(args.save_path)
+        ir_with_xai_generator.serialize_model_with_xai(args.save_path)
 
 
 if __name__ == "__main__":
