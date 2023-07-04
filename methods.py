@@ -6,81 +6,60 @@ import numpy as np
 import openvino.runtime as ov
 from openvino.runtime import opset10 as opset
 
+from openvino_xai.parse import IRParserCls
+
 
 class XAIMethodBase(ABC):
-    """Explainer class. Parse OV IR model and add XAI branch."""
+    """Defines XAI branch of the model."""
 
-    def __init__(self, model_ori: ov.Model):
-        self._model_ori = model_ori
+    def __init__(self, model_path: str):
+        self._model_ori_path = model_path
+        self._model_ori = ov.Core().read_model(model_path)
+        self._model_ori.get_parameters()[0].set_friendly_name('data_ori')  # for debug
+
+    @property
+    def model_ori(self):
+        return self._model_ori
+
+    @property
+    def model_ori_params(self):
+        return self._model_ori.get_parameters()
 
     @abstractmethod
     def generate_xai_branch(self):
         """Implements specific XAI algorithm"""
 
-    @staticmethod
-    def get_logit_node(model, output_id=0):
-        logit_node = (
-            model.get_output_op(output_id)
-            .input(0)
-            .get_source_output()
-            .get_node()
-        )
-        return logit_node
 
-
-class XAIMethodCls(XAIMethodBase):
-    def _get_output_backbone_node(self, model):
-        # output_backbone_node_name = "/backbone/conv/conv.2/Div"  # mnet_v3
-        # output_backbone_node_name = "/backbone/features/final_block/activate/Mul"  # effnet
-        # for op in model.get_ordered_ops():
-        #     if op.get_friendly_name() == output_backbone_node_name:
-        #         return op
-
-        first_head_node = self._get_first_head_node(model)
-        output_backbone_node = first_head_node.input(0).get_source_output().get_node()
-        return output_backbone_node
-
-    @staticmethod
-    def _get_first_head_node(model):
-        # first_head_node_name = "/neck/gap/GlobalAveragePool"  # effnet and mnet_v3
-        # for op in model.get_ordered_ops():
-        #     if op.get_friendly_name() == first_head_node_name:
-        #         return op
-
-        for op in model.get_ordered_ops()[::-1]:
-            if "GlobalAveragePool" in op.get_friendly_name():
-                return op
-
-
-class ActivationMapXAIMethod(XAIMethodCls):
+class ActivationMapXAIMethod(XAIMethodBase):
     """Implements ActivationMap"""
 
-    def __init__(self, model_ori):
-        super().__init__(model_ori)
+    def __init__(self, model_path, target_layer=None):
+        super().__init__(model_path)
         self.per_class = False
 
     def generate_xai_branch(self):
-        output_backbone_node_ori = self._get_output_backbone_node(self._model_ori)
+        output_backbone_node_ori = IRParserCls.get_output_backbone_node(self._model_ori)
         saliency_maps = opset.reduce_mean(output_backbone_node_ori.output(0), 1)
         return saliency_maps
 
 
-class ReciproCAMXAIMethod(XAIMethodCls):
+class ReciproCAMXAIMethod(XAIMethodBase):
     """Implements Recipro-CAM"""
 
-    def __init__(self, model_ori):
-        super().__init__(model_ori)
+    def __init__(self, model_path, target_layer=None):
+        super().__init__(model_path)
         self.per_class = True
+        self._target_layer = target_layer
 
     def generate_xai_branch(self):
         model_clone = self._model_ori.clone()
         model_clone.get_parameters()[0].set_friendly_name('data_clone')  # for debug
 
-        output_backbone_node_ori = self._get_output_backbone_node(self._model_ori)
-        first_head_node_clone = self._get_first_head_node(model_clone)
+        output_backbone_node_ori = IRParserCls.get_output_backbone_node(self._model_ori)
+        first_head_node_clone = IRParserCls.get_first_head_node(model_clone)
 
-        logit_node = self.get_logit_node(self._model_ori)
-        logit_node_clone_model = self.get_logit_node(model_clone)
+        logit_node = IRParserCls.get_logit_node(self._model_ori)
+        logit_node_clone_model = IRParserCls.get_logit_node(model_clone)
 
         logit_node.set_friendly_name("logits_ori")  # for debug
         logit_node_clone_model.set_friendly_name("logits_clone")  # for debug
@@ -112,32 +91,17 @@ class ReciproCAMXAIMethod(XAIMethodCls):
 class DetClassProbabilityMapXAIMethod(XAIMethodBase):
     """Implements DetClassProbabilityMap, used for single-stage detectors, e.g. YOLOX or ATSS."""
 
-    def __init__(self, model_ori, saliency_map_size=(13, 13)):
-        super().__init__(model_ori)
+    def __init__(self, model_path, cls_head_output_node_names, num_anchors, saliency_map_size=(13, 13)):
+        super().__init__(model_path)
         self.per_class = True
-        self._num_anchors = [1] * 10  # Either num_anchors or num_classes has to be provided to process cls head output
+        self._cls_head_output_node_names = cls_head_output_node_names
+        self._num_anchors = num_anchors  # Either num_anchors or num_classes has to be provided to process cls head output
         self._saliency_map_size = saliency_map_size  # Not always can be obtained from model -> defined externally
 
     def generate_xai_branch(self):
-        # # YOLOX
-        # classification_head_output_node_names = [
-        #     "/bbox_head/multi_level_conv_cls.0/Conv/WithoutBiases",
-        #     "/bbox_head/multi_level_conv_cls.1/Conv/WithoutBiases",
-        #     "/bbox_head/multi_level_conv_cls.2/Conv/WithoutBiases",
-        # ]
-
-        # ATSS
-        classification_head_output_node_names = [
-            "/bbox_head/atss_cls_0/Conv/WithoutBiases",
-            "/bbox_head/atss_cls_1/Conv/WithoutBiases",
-            "/bbox_head/atss_cls_2/Conv/WithoutBiases",
-            "/bbox_head/atss_cls_3/Conv/WithoutBiases",
-            "/bbox_head/atss_cls_4/Conv/WithoutBiases",
-        ]
-
         cls_head_output_nodes = []
         for op in self._model_ori.get_ordered_ops():
-            if op.get_friendly_name() in classification_head_output_node_names:
+            if op.get_friendly_name() in self._cls_head_output_node_names:
                 cls_head_output_nodes.append(op)
 
         cls_head_output_nodes = [opset.softmax(node.output(0), 1) for node in cls_head_output_nodes]

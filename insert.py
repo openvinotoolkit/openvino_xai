@@ -8,16 +8,13 @@ from openvino.runtime import opset10 as opset
 from openvino.runtime import Model, Type
 from openvino.preprocess import PrePostProcessor
 
-from openvino_xai.methods import ReciproCAMXAIMethod, ActivationMapXAIMethod, DetClassProbabilityMapXAIMethod
+from openvino_xai.parse import IRParser
 
 
 class InsertXAIBase(ABC):
-    def __init__(self, model_path: str):
-        self._model_ori_path = model_path
-        self._model_ori = ov.Core().read_model(model_path)
+    def __init__(self, explain_method):
         self._model_with_xai = None
-
-        self._model_ori.get_parameters()[0].set_friendly_name('data_ori')  # for debug
+        self._explain_method = explain_method
 
     @property
     def model_with_xai(self):
@@ -25,13 +22,27 @@ class InsertXAIBase(ABC):
             raise RuntimeError("First, generate model with xai.")
         return self._model_with_xai
 
-    @property
-    def model_ori(self):
-        return self._model_ori
-
-    @abstractmethod
-    def generate_model_with_xai(self):
+    def generate_model_with_xai(self, normalize=True):
         """Generates model with XAI inserted."""
+        saliency_map_node = self._explain_method.generate_xai_branch()
+        if normalize:
+            saliency_map_node = self._normalize_saliency_maps(saliency_map_node, self._explain_method.per_class)
+
+        output_nodes = self._get_main_output_nodes(self._explain_method.model_ori)
+
+        model_with_xai = Model([*output_nodes, saliency_map_node.output(0)], self._explain_method.model_ori_params)
+        self._model_with_xai = self._set_output_names_and_precisions(model_with_xai)
+        return self._model_with_xai
+
+    @staticmethod
+    @abstractmethod
+    def _get_main_output_nodes(model):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def _set_output_names_and_precisions(model):
+        pass
 
     def serialize_model_with_xai(self, model_with_xai_path):
         if not self._model_with_xai:
@@ -71,34 +82,13 @@ class InsertXAIBase(ABC):
 class InsertXAICls(InsertXAIBase):
     """Generates a classification model with XAI."""
 
-    def __init__(self, model_path: str, explain_algorithm: str = "reciprocam"):
-        super().__init__(model_path)
-        self._explain_algorithm = explain_algorithm
-        self._explain_params = None
-
-    def generate_model_with_xai(self, normalize=True):
-        explain_method = self._generate_explain_method()
-        saliency_map_node = explain_method.generate_xai_branch()
-        if normalize:
-            saliency_map_node = self._normalize_saliency_maps(saliency_map_node, explain_method.per_class)
-
-        logit_node = explain_method.get_logit_node(self._model_ori)
-
+    @staticmethod
+    def _get_main_output_nodes(model):
+        # All outputs except sal_map can be removed, keep it now for debug
+        logit_node = IRParser.get_logit_node(model)
         # Just to make OTX infer/explain not to fail
         dummy_feature_vector_node = opset.constant(0, dtype=np.float32)
-
-        model_with_xai = Model([logit_node.output(0), dummy_feature_vector_node.output(0), saliency_map_node.output(0)],
-                               self._model_ori.get_parameters())
-        model_with_xai = self._set_output_names_and_precisions(model_with_xai)
-        self._model_with_xai = model_with_xai
-        return model_with_xai
-
-    def _generate_explain_method(self):
-        if self._explain_algorithm.lower() == "reciprocam":
-            return ReciproCAMXAIMethod(self._model_ori)
-        if self._explain_algorithm.lower() == "activationmap":
-            return ActivationMapXAIMethod(self._model_ori)
-        raise ValueError("Requested explain algorithm is not implemented.")
+        return logit_node.output(0), dummy_feature_vector_node.output(0)
 
     @staticmethod
     def _set_output_names_and_precisions(model):
@@ -119,33 +109,14 @@ class InsertXAICls(InsertXAIBase):
 class InsertXAIDet(InsertXAIBase):
     """Generates a detection model with XAI."""
 
-    def __init__(self, model_path: str, explain_algorithm: str = "detclassprobabilitymap"):
-        super().__init__(model_path)
-        self._explain_algorithm = explain_algorithm
-        self._explain_params = None
-
-    def generate_model_with_xai(self, normalize=True):
-        explain_method = self._generate_explain_method()
-        saliency_map_node = explain_method.generate_xai_branch()
-        if normalize:
-            saliency_map_node = self._normalize_saliency_maps(saliency_map_node, explain_method.per_class)
-
-        # All outputs except sal_map can be removed, keep it for now for debug
-        boxes_node = explain_method.get_logit_node(self._model_ori, 0)
-        labels_node = explain_method.get_logit_node(self._model_ori, 1)
+    @staticmethod
+    def _get_main_output_nodes(model):
+        # All outputs except sal_map can be removed, keep it now for debug
+        boxes_node = IRParser.get_logit_node(model, 0)
+        labels_node = IRParser.get_logit_node(model, 1)
         # Just to make OTX infer/explain not to fail
         dummy_feature_vector_node = opset.constant(1, dtype=np.float32)
-
-        model_with_xai = Model([boxes_node.output(0), labels_node.output(0), dummy_feature_vector_node.output(0),
-                                saliency_map_node.output(0)], self._model_ori.get_parameters())
-        model_with_xai = self._set_output_names_and_precisions(model_with_xai)
-        self._model_with_xai = model_with_xai
-        return model_with_xai
-
-    def _generate_explain_method(self):
-        if self._explain_algorithm.lower() == "detclassprobabilitymap":
-            return DetClassProbabilityMapXAIMethod(self._model_ori)
-        raise ValueError("Requested explain algorithm is not implemented.")
+        return boxes_node.output(0), labels_node.output(0), dummy_feature_vector_node.output(0)
 
     @staticmethod
     def _set_output_names_and_precisions(model):
