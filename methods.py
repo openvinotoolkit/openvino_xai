@@ -8,13 +8,13 @@ from openvino.runtime import opset10 as opset
 
 
 class XAIMethodBase(ABC):
-    """Explainer class. Parse IR model and add XAI output node(s)."""
+    """Explainer class. Parse OV IR model and add XAI branch."""
 
     def __init__(self, model_ori: ov.Model):
         self._model_ori = model_ori
 
     @abstractmethod
-    def generate_saliency_map_node(self):
+    def generate_xai_branch(self):
         """Implements specific XAI algorithm"""
 
     @staticmethod
@@ -27,6 +27,8 @@ class XAIMethodBase(ABC):
         )
         return logit_node
 
+
+class XAIMethodCls(XAIMethodBase):
     def _get_output_backbone_node(self, model):
         # output_backbone_node_name = "/backbone/conv/conv.2/Div"  # mnet_v3
         # output_backbone_node_name = "/backbone/features/final_block/activate/Mul"  # effnet
@@ -50,27 +52,27 @@ class XAIMethodBase(ABC):
                 return op
 
 
-class ActivationMapXAIMethod(XAIMethodBase):
+class ActivationMapXAIMethod(XAIMethodCls):
     """Implements ActivationMap"""
 
     def __init__(self, model_ori):
         super().__init__(model_ori)
         self.per_class = False
 
-    def generate_saliency_map_node(self):
+    def generate_xai_branch(self):
         output_backbone_node_ori = self._get_output_backbone_node(self._model_ori)
         saliency_maps = opset.reduce_mean(output_backbone_node_ori.output(0), 1)
         return saliency_maps
 
 
-class ReciproCAMXAIMethod(XAIMethodBase):
+class ReciproCAMXAIMethod(XAIMethodCls):
     """Implements Recipro-CAM"""
 
     def __init__(self, model_ori):
         super().__init__(model_ori)
         self.per_class = True
 
-    def generate_saliency_map_node(self):
+    def generate_xai_branch(self):
         model_clone = self._model_ori.clone()
         model_clone.get_parameters()[0].set_friendly_name('data_clone')  # for debug
 
@@ -108,15 +110,15 @@ class ReciproCAMXAIMethod(XAIMethodBase):
 
 
 class DetClassProbabilityMapXAIMethod(XAIMethodBase):
-    """Implements DetClassProbabilityMap"""
+    """Implements DetClassProbabilityMap, used for single-stage detectors, e.g. YOLOX or ATSS."""
 
     def __init__(self, model_ori, saliency_map_size=(13, 13)):
         super().__init__(model_ori)
         self.per_class = True
-        self._num_anchors = [1] * 10
-        self._saliency_map_size = saliency_map_size
+        self._num_anchors = [1] * 10  # Either num_anchors or num_classes has to be provided to process cls head output
+        self._saliency_map_size = saliency_map_size  # Not always can be obtained from model -> defined externally
 
-    def generate_saliency_map_node(self):
+    def generate_xai_branch(self):
         # # YOLOX
         # classification_head_output_node_names = [
         #     "/bbox_head/multi_level_conv_cls.0/Conv/WithoutBiases",

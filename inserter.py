@@ -13,7 +13,7 @@ from openvino_xai.methods import ReciproCAMXAIMethod, ActivationMapXAIMethod, De
 
 class InsertXAIBase(ABC):
     def __init__(self, model_path: str):
-        self._model_path = model_path
+        self._model_ori_path = model_path
         self._model_ori = ov.Core().read_model(model_path)
         self._model_with_xai = None
 
@@ -37,10 +37,11 @@ class InsertXAIBase(ABC):
         if not self._model_with_xai:
             raise RuntimeError("First, generate model with xai.")
         ov.serialize(self._model_with_xai, xml_path=model_with_xai_path)
-        # TODO: Copy/rename bin. file
+        # TODO: Copy/rename bin. file?
 
     @staticmethod
     def _normalize_saliency_maps(saliency_maps, per_class):
+        # TODO: should be implemented in the model wrapper?
         if per_class:
             # Normalization for per-class saliency maps
             _, num_classes, h, w = saliency_maps.get_output_partial_shape(0)
@@ -76,12 +77,12 @@ class InsertXAICls(InsertXAIBase):
         self._explain_params = None
 
     def generate_model_with_xai(self, normalize=True):
-        explainer = self._generate_explain_method()
-        saliency_map_node = explainer.generate_saliency_map_node()
+        explain_method = self._generate_explain_method()
+        saliency_map_node = explain_method.generate_xai_branch()
         if normalize:
-            saliency_map_node = self._normalize_saliency_maps(saliency_map_node, explainer.per_class)
+            saliency_map_node = self._normalize_saliency_maps(saliency_map_node, explain_method.per_class)
 
-        logit_node = explainer.get_logit_node(self._model_ori)
+        logit_node = explain_method.get_logit_node(self._model_ori)
 
         # Just to make OTX infer/explain not to fail
         dummy_feature_vector_node = opset.constant(0, dtype=np.float32)
@@ -124,14 +125,14 @@ class InsertXAIDet(InsertXAIBase):
         self._explain_params = None
 
     def generate_model_with_xai(self, normalize=True):
-        explainer = self._generate_explain_method()
-        saliency_map_node = explainer.generate_saliency_map_node()
+        explain_method = self._generate_explain_method()
+        saliency_map_node = explain_method.generate_xai_branch()
         if normalize:
-            saliency_map_node = self._normalize_saliency_maps(saliency_map_node, explainer.per_class)
+            saliency_map_node = self._normalize_saliency_maps(saliency_map_node, explain_method.per_class)
 
-        boxes_node = explainer.get_logit_node(self._model_ori, 0)
-        labels_node = explainer.get_logit_node(self._model_ori, 1)
-
+        # All outputs except sal_map can be removed, keep it for now for debug
+        boxes_node = explain_method.get_logit_node(self._model_ori, 0)
+        labels_node = explain_method.get_logit_node(self._model_ori, 1)
         # Just to make OTX infer/explain not to fail
         dummy_feature_vector_node = opset.constant(1, dtype=np.float32)
 
