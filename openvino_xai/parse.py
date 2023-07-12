@@ -1,4 +1,6 @@
 class IRParser:
+    """Parser parse OV IR model."""
+
     @staticmethod
     def get_logit_node(model, output_id=0):
         logit_node = (
@@ -11,25 +13,53 @@ class IRParser:
 
 
 class IRParserCls(IRParser):
-    @staticmethod
-    def get_output_backbone_node(model):
-        # output_backbone_node_name = "/backbone/conv/conv.2/Div"  # mnet_v3
-        # output_backbone_node_name = "/backbone/features/final_block/activate/Mul"  # effnet
-        # for op in model.get_ordered_ops():
-        #     if op.get_friendly_name() == output_backbone_node_name:
-        #         return op
+    """ParserCls parse classification OV IR model."""
 
-        first_head_node = IRParserCls.get_first_head_node(model)
+    @staticmethod
+    def get_logit_node(model, output_id=0):
+        nodes = model.get_ops()
+        softmax_node = None
+        for op in nodes:
+            if "Softmax" == op.get_type_name():
+                softmax_node = op
+        if softmax_node:
+            logit_node = softmax_node.input(0).get_source_output().get_node()
+            return logit_node
+
+        logit_node = (
+            model.get_output_op(output_id)
+            .input(0)
+            .get_source_output()
+            .get_node()
+        )
+        return logit_node
+
+    @staticmethod
+    def get_output_backbone_node(model, output_backbone_node_name=None):
+        if output_backbone_node_name:
+            for op in model.get_ordered_ops():
+                if op.get_friendly_name() == output_backbone_node_name:
+                    return op
+            raise ValueError(f"Cannot find {output_backbone_node_name} node.")
+
+        # Make an attempt to use heuristics
+        first_head_node = IRParserCls.get_input_head_node(model)
         output_backbone_node = first_head_node.input(0).get_source_output().get_node()
         return output_backbone_node
 
     @staticmethod
-    def get_first_head_node(model):
-        # first_head_node_name = "/neck/gap/GlobalAveragePool"  # effnet and mnet_v3
-        # for op in model.get_ordered_ops():
-        #     if op.get_friendly_name() == first_head_node_name:
-        #         return op
+    def get_input_head_node(model, output_backbone_node_name=None, output_backbone_id=0):
+        if output_backbone_node_name:
+            output_backbone_node = IRParserCls.get_output_backbone_node(model, output_backbone_node_name)
+            target_inputs = output_backbone_node.output(output_backbone_id).get_target_inputs()
+            target_input_nodes = [target_input.get_node() for target_input in target_inputs]
+            assert len(target_input_nodes) == 1, "Support only single target input."
+            return target_input_nodes[0]
 
+        # Apply heuristic - pick the last pooling layer
+        # TODO: add more heuristics, e.g. check node type, not name
         for op in model.get_ordered_ops()[::-1]:
             if "GlobalAveragePool" in op.get_friendly_name():
                 return op
+
+        raise RuntimeError("Cannot find required node in auto mode, please provide target_layer name.")

@@ -3,19 +3,16 @@ from abc import abstractmethod
 
 import numpy as np
 
-import openvino.runtime as ov
 from openvino.runtime import opset10 as opset
 
 from openvino_xai.parse import IRParserCls
 
 
 class XAIMethodBase(ABC):
-    """Defines XAI branch of the model."""
+    """Base class for methods that generates XAI branch of the model."""
 
-    def __init__(self, model_path: str):
-        self._model_ori_path = model_path
-        self._model_ori = ov.Core().read_model(model_path)
-        self._model_ori.get_parameters()[0].set_friendly_name('data_ori')  # for debug
+    def __init__(self, model: str):
+        self._model_ori = model
 
     @property
     def model_ori(self):
@@ -46,23 +43,30 @@ class ActivationMapXAIMethod(XAIMethodBase):
 class ReciproCAMXAIMethod(XAIMethodBase):
     """Implements Recipro-CAM"""
 
-    def __init__(self, model_path, target_layer=None):
-        super().__init__(model_path)
+    def __init__(self, model, target_layer=None):
+        super().__init__(model)
         self.per_class = True
         self._target_layer = target_layer
 
     def generate_xai_branch(self):
-        model_clone = self._model_ori.clone()
-        model_clone.get_parameters()[0].set_friendly_name('data_clone')  # for debug
+        _model_clone = self._model_ori.clone()
+        _model_clone.get_parameters()[0].set_friendly_name('data_clone')  # for debug
 
-        output_backbone_node_ori = IRParserCls.get_output_backbone_node(self._model_ori)
-        first_head_node_clone = IRParserCls.get_first_head_node(model_clone)
+        # TODO: support models with multiple inputs.
+        assert len(_model_clone.inputs) == 1, "Support only for models with single input."
+        if not _model_clone.input(0).partial_shape[0].is_dynamic:
+            partial_shape = _model_clone.input(0).partial_shape
+            partial_shape[0] = -1  # make batch dimensions to be dynamic
+            _model_clone.reshape(partial_shape)
 
-        logit_node = IRParserCls.get_logit_node(self._model_ori)
-        logit_node_clone_model = IRParserCls.get_logit_node(model_clone)
+        output_backbone_node_ori = IRParserCls.get_output_backbone_node(self._model_ori, self._target_layer)
+        first_head_node_clone = IRParserCls.get_input_head_node(_model_clone, self._target_layer)
 
-        logit_node.set_friendly_name("logits_ori")  # for debug
-        logit_node_clone_model.set_friendly_name("logits_clone")  # for debug
+        # logit_node = IRParserCls.get_logit_node(self._model_ori)
+        logit_node_clone_model = IRParserCls.get_logit_node(_model_clone)
+
+        # logit_node.set_friendly_name("logits_ori")  # for debug
+        # logit_node_clone_model.set_friendly_name("logits_clone")  # for debug
 
         _, c, h, w = output_backbone_node_ori.get_output_partial_shape(0)
         c, h, w = c.get_length(), h.get_length(), w.get_length()
@@ -83,29 +87,33 @@ class ReciproCAMXAIMethod(XAIMethodBase):
         mosaic_prediction = logit_node_clone_model
 
         tmp = opset.transpose(mosaic_prediction.output(0), (1, 0))
-        _, num_classes = logit_node.get_output_partial_shape(0)
-        saliency_maps = opset.reshape(tmp, (1, num_classes.get_length(), h, w), False)
+        # _, num_classes = logit_node.get_output_partial_shape(0)
+        # saliency_maps = opset.reshape(tmp, (1, num_classes.get_length(), h, w), False)
+        saliency_maps = opset.reshape(tmp, (1, 5, h, w), False)
         return saliency_maps
 
 
 class DetClassProbabilityMapXAIMethod(XAIMethodBase):
-    """Implements DetClassProbabilityMap, used for single-stage detectors, e.g. YOLOX or ATSS."""
+    """Implements DetClassProbabilityMap, used for single-stage detectors, e.g. SSD, YOLOX or ATSS."""
 
-    def __init__(self, model_path, cls_head_output_node_names, num_anchors, saliency_map_size=(13, 13)):
-        super().__init__(model_path)
+    def __init__(self, model, target_layer, num_anchors, saliency_map_size=(13, 13)):
+        super().__init__(model)
         self.per_class = True
-        self._cls_head_output_node_names = cls_head_output_node_names
+        self._target_layer = target_layer
         self._num_anchors = num_anchors  # Either num_anchors or num_classes has to be provided to process cls head output
         self._saliency_map_size = saliency_map_size  # Not always can be obtained from model -> defined externally
 
     def generate_xai_branch(self):
         cls_head_output_nodes = []
         for op in self._model_ori.get_ordered_ops():
-            if op.get_friendly_name() in self._cls_head_output_node_names:
+            if op.get_friendly_name() in self._target_layer:
                 cls_head_output_nodes.append(op)
+        if len(cls_head_output_nodes) != len(self._target_layer):
+            raise ValueError("Not all target layers were found.")
 
         cls_head_output_nodes = [opset.softmax(node.output(0), 1) for node in cls_head_output_nodes]
 
+        # TODO: better handle num_classes num_anchors availability
         _, num_channels, _, _ = cls_head_output_nodes[-1].get_output_partial_shape(0)
         num_cls_out_channels = num_channels.get_length() // self._num_anchors[-1]
 
@@ -132,6 +140,4 @@ class DetClassProbabilityMapXAIMethod(XAIMethodBase):
             )
         saliency_maps = opset.reduce_mean(opset.concat(cls_head_output_nodes, 0), 0, keep_dims=True)
 
-        # saliency_maps = opset.softmax(cls_head_output_nodes[-1].output(0), 1)
-        # saliency_maps = opset.multiply(saliency_maps, opset.constant(255, dtype=np.float32))
         return saliency_maps
