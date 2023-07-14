@@ -59,7 +59,7 @@ class IRParserCls(IRParser):
         # Apply heuristic - pick the last pooling layer
         # TODO: add more heuristics, e.g. check node type, not name
         for op in model.get_ordered_ops()[::-1]:
-            if "GlobalAveragePool" in op.get_friendly_name():
+            if "Pool" in op.get_friendly_name():
                 return op
 
         raise RuntimeError("Cannot find required node in auto mode, please provide target_layer name.")

@@ -62,7 +62,7 @@ class ReciproCAMXAIMethod(XAIMethodBase):
         output_backbone_node_ori = IRParserCls.get_output_backbone_node(self._model_ori, self._target_layer)
         first_head_node_clone = IRParserCls.get_input_head_node(_model_clone, self._target_layer)
 
-        # logit_node = IRParserCls.get_logit_node(self._model_ori)
+        logit_node = IRParserCls.get_logit_node(self._model_ori)
         logit_node_clone_model = IRParserCls.get_logit_node(_model_clone)
 
         # logit_node.set_friendly_name("logits_ori")  # for debug
@@ -87,9 +87,8 @@ class ReciproCAMXAIMethod(XAIMethodBase):
         mosaic_prediction = logit_node_clone_model
 
         tmp = opset.transpose(mosaic_prediction.output(0), (1, 0))
-        # _, num_classes = logit_node.get_output_partial_shape(0)
-        # saliency_maps = opset.reshape(tmp, (1, num_classes.get_length(), h, w), False)
-        saliency_maps = opset.reshape(tmp, (1, 5, h, w), False)
+        _, num_classes = logit_node.get_output_partial_shape(0)
+        saliency_maps = opset.reshape(tmp, (1, num_classes.get_length(), h, w), False)
         return saliency_maps
 
 

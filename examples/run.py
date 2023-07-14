@@ -13,7 +13,6 @@ def get_argument_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('model_path')
     parser.add_argument('image_path')
-    parser.add_argument('--save_path')
     return parser
 
 
@@ -34,18 +33,19 @@ def main(argv):
     explanations = explainer.explain(image)
     logger.info(f"Generated classification saliency maps with shape {explanations.shape}.")
 
+    # Classification example w/o target layer
+    model = XAIClassificationModel.create_model(args.model_path, "Classification")
+    image = cv2.imread(args.image_path)
+    explainer = WhiteBoxExplainer(model)
+    explanations = explainer.explain(image)
+    logger.info(f"Generated classification saliency maps with shape {explanations.shape}.")
+
     # Classification auto example
-    explain_parameters = {
-        "explain_method_name": "reciprocam",  # Optional
-        "target_layer": "/backbone/features/final_block/activate/Mul",  # effnet
-        # "target_layer": "/backbone/conv/conv.2/Div",  # mnet_v3
-    }
     model = ClassificationModel.create_model(args.model_path, "Classification")
-    auto_explainer = ClassificationAutoExplainer(model, explain_parameters)
+    auto_explainer = ClassificationAutoExplainer(model)
     image = cv2.imread(args.image_path)
     explanations = auto_explainer.explain(image)
     logger.info(f"Generated classification saliency maps with shape {explanations.shape}.")
-    a = 1
 
     # Detection example
     # # YOLOX
@@ -69,7 +69,7 @@ def main(argv):
     }
     model = XAIDetectionModel.create_model(args.model_path, model_type="ssd",
                                                 explain_parameters=explain_parameters)
-    image = cv2.imread(args.image_path)
+    image = cv2.imread("/home/negvet/training_extensions/otx-workspace-DETECTION-wgisd-atss/splitted_dataset/val/images/val/CDY_2015.jpg")
     explainer = WhiteBoxExplainer(model)
     explanations = explainer.explain(image)
     logger.info(f"Generated detection saliency maps with shape {explanations.shape}.")
