@@ -6,13 +6,14 @@ from openvino.model_api.models import ClassificationModel
 
 from openvino_xai.explain import WhiteBoxExplainer, ClassificationAutoExplainer
 from openvino_xai.model import XAIClassificationModel, XAIDetectionModel
-from openvino_xai.utils import logger
+from openvino_xai.utils import logger, save_explanations
 
 
 def get_argument_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('model_path')
     parser.add_argument('image_path')
+    parser.add_argument('--output', default=None, type=str)
     return parser
 
 
@@ -32,6 +33,8 @@ def main(argv):
     explainer = WhiteBoxExplainer(model)
     explanations = explainer.explain(image)
     logger.info(f"Generated classification saliency maps with shape {explanations.shape}.")
+    if args.output is not None:
+        save_explanations(args.output, explanations)
 
     # Classification example w/o target layer
     model = XAIClassificationModel.create_model(args.model_path, "Classification")
@@ -39,6 +42,8 @@ def main(argv):
     explainer = WhiteBoxExplainer(model)
     explanations = explainer.explain(image)
     logger.info(f"Generated classification saliency maps with shape {explanations.shape}.")
+    if args.output is not None:
+        save_explanations(args.output, explanations)
 
     # Classification auto example
     model = ClassificationModel.create_model(args.model_path, "Classification")
@@ -46,6 +51,8 @@ def main(argv):
     image = cv2.imread(args.image_path)
     explanations = auto_explainer.explain(image)
     logger.info(f"Generated classification saliency maps with shape {explanations.shape}.")
+    if args.output is not None:
+        save_explanations(args.output, explanations)
 
     # Detection example
     # # YOLOX
@@ -73,6 +80,8 @@ def main(argv):
     explainer = WhiteBoxExplainer(model)
     explanations = explainer.explain(image)
     logger.info(f"Generated detection saliency maps with shape {explanations.shape}.")
+    if args.output is not None:
+        save_explanations(args.output, explanations)
 
 
 if __name__ == "__main__":
