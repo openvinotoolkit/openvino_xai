@@ -1,0 +1,20 @@
+*.pyc
+__pycache__
+.idea/
+.vscode/
+
+build/
+dist/
+*egg-info
+
+*.pth
+*.onnx
+*.xml
+*.bin
+*.mapping
+
+*.tar.gz
+*.zip
+
+# Pytest
+.pytest_cache
