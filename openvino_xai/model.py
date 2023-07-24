@@ -3,6 +3,8 @@ from abc import abstractmethod
 
 from openvino.model_api.models import ClassificationModel
 from openvino.model_api.models import DetectionModel
+from openvino.model_api.models.types import BooleanValue, NumericalValue
+from openvino.model_api.models.classification import sigmoid_numpy
 
 from openvino_xai.insert import InsertXAI
 from openvino_xai.methods import ReciproCAMXAIMethod, ActivationMapXAIMethod, DetClassProbabilityMapXAIMethod
@@ -107,3 +109,74 @@ class XAIDetectionModel(XAIModel):
         if explain_method_name.lower() == "detclassprobabilitymap":
             return DetClassProbabilityMapXAIMethod(model, **explain_parameters)
         raise ValueError(f"Requested explain method {explain_method_name} is not implemented.")
+
+class BlackBoxModel(ClassificationModel):
+    @classmethod
+    def parameters(cls):
+        parameters = super().parameters()
+        parameters.update(
+            {
+                "topk": NumericalValue(
+                    value_type=int,
+                    default_value=1,
+                    min=1,
+                    description="Number of most likely labels",
+                ),
+                "output_raw_scores": BooleanValue(
+                    default_value=True,
+                    description="Output all scores for multiclass classificaiton",
+                ),
+            }
+        )
+        return parameters
+    
+    def postprocess(self, outputs, meta):
+        if self.multilabel:
+            logits = outputs[self.out_layer_names[0]].squeeze()
+            result = sigmoid_numpy(logits)
+            # result = self.get_multilabel_predictions(
+            #     outputs[self.out_layer_names[0]].squeeze()
+            # )
+        elif self.hierarchical:
+            result = self.get_hierarchical_predictions(
+                outputs[self.out_layer_names[0]].squeeze()
+            )
+        else:
+            result = outputs['raw_scores'] #self.get_multiclass_predictions(outputs)
+
+        return result #ClassificationResult(
+        #     result,
+        #     outputs.get(_saliency_map_name, np.ndarray(0)),
+        #     outputs.get(_feature_vector_name, np.ndarray(0)),
+        # )
+
+    def get_hierarchical_predictions(self, logits: np.ndarray):
+        predicted_labels = []
+        predicted_scores = []
+        cls_heads_info = self.hierarchical_info["cls_heads_info"]
+        for i in range(cls_heads_info["num_multiclass_heads"]):
+            logits_begin, logits_end = cls_heads_info["head_idx_to_logits_range"][
+                str(i)
+            ]
+            head_logits = logits[logits_begin:logits_end]
+            head_logits = softmax_numpy(head_logits)
+            j = np.argmax(head_logits)
+            label_str = cls_heads_info["all_groups"][i][j]
+            predicted_labels.append(label_str)
+            predicted_scores.append(head_logits[j])
+
+        if cls_heads_info["num_multilabel_classes"]:
+            logits_begin = cls_heads_info["num_single_label_classes"]
+            head_logits = logits[logits_begin:]
+            head_logits = sigmoid_numpy(head_logits)
+
+            for i in range(head_logits.shape[0]):
+                if head_logits[i] > self.confidence_threshold:
+                    label_str = cls_heads_info["all_groups"][
+                        cls_heads_info["num_multiclass_heads"] + i
+                    ][0]
+                    predicted_labels.append(label_str)
+                    predicted_scores.append(head_logits[i])
+
+        predictions = zip(predicted_labels, predicted_scores)
+        return self.labels_resolver.resolve_labels(predictions)

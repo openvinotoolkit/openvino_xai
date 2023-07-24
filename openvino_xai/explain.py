@@ -2,9 +2,10 @@ from abc import ABC
 from abc import abstractmethod
 
 import numpy as np
+from tqdm import tqdm
 
 from openvino_xai.model import XAIModel, XAIClassificationModel
-from openvino_xai.utils import logger
+from openvino_xai.utils import logger, save_explanations
 
 
 class PostProcessor:
@@ -99,9 +100,86 @@ class BlackBoxExplainer(Explainer):
 
 
 class RISEExplainer(BlackBoxExplainer):
+    def __init__(self, model):
+        super().__init__(model)
+        # self._model = model
+        self.input_size = model.inputs['data'].shape[-2:]
+        self.num_masks = 10
+        self.num_cells = 8
+        self.prob = 0.5
+
     def explain(self, data):
+
         """Explain the input."""
-        raise NotImplementedError
+        
+        data_size = data.shape
+        self.input_size = data_size[:2]
+        self._generate_masks(self.num_masks, self.num_cells, self.prob)
+
+        preds = []
+
+        # data = np.transpose(data, (2, 0, 1)) # c, h, w
+
+        # masked = data * self.masks
+        for i in tqdm(range(0, self.num_masks), desc='Explaining'):
+            masked = np.expand_dims(self.masks[i], axis=2) * data
+            pred = self._model(masked)
+            if 'raw_scores' in pred:
+                scores = pred['raw_scores']
+            else:
+                # softmax is needed
+                scores = pred['logits']
+            preds.append(scores)
+        preds = np.concatenate(preds)
+        sal = preds.T.dot(self.masks.reshape(self.num_masks, -1)).reshape(-1, *self.input_size)
+        sal = sal / self.num_masks / self.prob
+        sal = np.expand_dims(sal, axis=0)
+        # sal = self._processor.postprocess(sal)
+        sal = self._postprocess(sal)
+
+        return sal
+    
+    @staticmethod
+    def _postprocess(saliency_map):
+        min_soft_score = np.min(saliency_map)
+        max_soft_score = np.max(saliency_map)
+        saliency_map = 255.0 / (max_soft_score + 1e-12) * (saliency_map - min_soft_score)
+        return saliency_map
+
+
+    def _generate_masks(self, N, s, p1, savepath='masks.npy'):
+        
+        from skimage.transform import resize
+        # import torch
+        """ Generate masks for RISE
+            Args:
+                N: number of masks
+                s: number of cells for one spatial dimension
+                    in low-res RISE random mask
+                p (float, optional): with prob p, a low-res cell is set to 0;
+                    otherwise, it's 1. Default: ``0.5``.
+            Returns:
+
+            """
+        cell_size = np.ceil(np.array(self.input_size) / s)
+        up_size = (s + 1) * cell_size
+
+        grid = np.random.rand(N, s, s) < p1
+        grid = grid.astype('float32')
+
+        self.masks = np.empty((N, *self.input_size))
+
+        for i in tqdm(range(N), desc='Generating filters'):
+            # Random shifts
+            x = np.random.randint(0, cell_size[0])
+            y = np.random.randint(0, cell_size[1])
+            # Linear upsampling and cropping
+            self.masks[i, :, :] = resize(grid[i], up_size, order=1, mode='reflect', anti_aliasing=False)[x:x + self.input_size[0], y:y + self.input_size[1]]     
+        # self.masks = self.masks.reshape(-1, 1, *self.input_size)
+        # save_explanations('masks',self.masks*255)
+        self.N = N
+        self.p1 = p1
+
 
 
 class DRISEExplainer(BlackBoxExplainer):
