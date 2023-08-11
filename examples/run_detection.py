@@ -1,11 +1,12 @@
 import sys
 import argparse
+from pathlib import Path
 
 import cv2
 
 from openvino_xai.explain import WhiteBoxExplainer
 from openvino_xai.model import XAIDetectionModel
-from openvino_xai.utils import logger, save_explanations
+from openvino_xai.utils import logger
 
 
 def get_argument_parser():
@@ -21,6 +22,7 @@ def main(argv):
     args = parser.parse_args(argv)
 
     image = cv2.imread(args.image_path)
+    image_name = Path(args.image_path).stem
 
     # # OTX YOLOX
     # cls_head_output_node_names = [
@@ -44,10 +46,11 @@ def main(argv):
     model = XAIDetectionModel.create_model(args.model_path, model_type="ssd",
                                                 explain_parameters=explain_parameters)
     explainer = WhiteBoxExplainer(model)
-    explanations = explainer.explain(image)
-    logger.info(f"Generated detection saliency maps with shape {explanations.shape}.")
+    explanation = explainer.explain(image)
+    logger.info(f"Generated detection saliency maps of layout {explanation.layout} "
+                f"with shape {explanation.map.shape}.")
     if args.output is not None:
-        save_explanations(args.output, explanations)
+        explanation.save(args.output, image_name)
 
 
 if __name__ == "__main__":
