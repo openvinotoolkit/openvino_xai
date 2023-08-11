@@ -1,98 +1,62 @@
 from abc import ABC
 from abc import abstractmethod
+from typing import Dict, Any, Optional, List
 
 import numpy as np
-from tqdm import tqdm
+import openvino
 
 from openvino_xai.model import XAIModel, XAIClassificationModel
-from openvino_xai.utils import logger, save_explanations
-
-
-class PostProcessor:
-    """Processor implements post-processing for the saliency map."""
-
-    @staticmethod
-    def postprocess(saliency_map, data=None, normalize=True, resize=False, colormap=False, overlay=False):
-        """Interface for postprocess method."""
-        if normalize:
-            saliency_map = PostProcessor._normalize(saliency_map)
-        if resize:
-            if data is None:
-                # TODO: add explicit target_size as an option
-                raise ValueError("Input data has to be provided for resize (for target size estimation).")
-            saliency_map = PostProcessor._resize(saliency_map, data)
-        if colormap:
-            saliency_map = PostProcessor._colormap(saliency_map)
-        if overlay:
-            if data is None:
-                raise ValueError("Input data has to be provided for overlay.")
-            if not PostProcessor._resized(data, saliency_map):
-                saliency_map = PostProcessor._resize(saliency_map, data)
-            if not PostProcessor._colormapped(saliency_map):
-                saliency_map = PostProcessor._colormap(saliency_map)
-            saliency_map = PostProcessor._overlay(saliency_map, data)
-        return saliency_map
-
-    @staticmethod
-    def _normalize(saliency_map):
-        # TODO: move norm here from IR
-        return saliency_map
-
-    @staticmethod
-    def _resize(saliency_map, data):
-        return saliency_map
-
-    @staticmethod
-    def _colormap(saliency_map):
-        return saliency_map
-
-    @staticmethod
-    def _overlay(saliency_map, data):
-        return saliency_map
-
-    @staticmethod
-    def _resized(saliency_map, data):
-        return True
-
-    @staticmethod
-    def _colormapped(saliency_map):
-        return True
+from openvino_xai.saliency_map import ExplainResult, PostProcessor, TargetExplainGroup
+from openvino_xai.utils import logger
 
 
 class Explainer(ABC):
     """A base interface for explainer."""
 
-    def __init__(self, model):
+    def __init__(self, model: openvino.model_api.models.Model):
         self._model = model
-        self._processor = PostProcessor()
+        self._explain_method = self._model.explain_method if hasattr(self._model, "explain_method") else None
+        self._labels = self._model.labels
 
     @abstractmethod
-    def explain(self, data):
+    def explain(self, data: np.ndarray) -> ExplainResult:
         """Explain the input."""
         raise NotImplementedError
 
-    @staticmethod
-    def _check_data_type(saliency_map):
-        if saliency_map.dtype != np.uint8:
-            saliency_map = saliency_map.astype(np.uint8)
-        return saliency_map
+    def _get_target_explain_group(self, target_explain_group):
+        if target_explain_group:
+            if self._explain_method:
+                assert target_explain_group in self._explain_method.supported_target_explain_groups, \
+                    f"Provided target_explain_group {target_explain_group} is not supported by the explain method."
+            return target_explain_group
+        else:
+            if self._explain_method:
+                return self._explain_method.default_target_explain_group
+            else:
+                raise ValueError("Model with XAI branch was created outside of Openvino-XAI library. "
+                                 "Please explicitly provide target_explain_group to the explain call.")
 
 
 class WhiteBoxExplainer(Explainer):
     """Explainer explains models with XAI branch injected."""
 
-    def explain(self, data, explain_only_predictions=False):
+    def explain(
+            self,
+            data: np.ndarray,
+            target_explain_group: Optional[TargetExplainGroup] = None,
+            explain_targets: Optional[List[int]] = None,
+            post_processing_parameters: Optional[Dict[str, Any]] = None,
+    ) -> ExplainResult:
         """Explain the input in white box mode."""
         raw_result = self._model(data)
 
-        saliency_map = raw_result.saliency_map
-        if saliency_map.size == 0:
-            raise RuntimeError("Model does not contain saliency_map output.")
+        target_explain_group = self._get_target_explain_group(target_explain_group)
+        explain_result = ExplainResult(raw_result, target_explain_group, explain_targets, self._labels)
 
-        saliency_map = self._check_data_type(saliency_map)
-        # TODO: if explain_only_predictions: keep saliency maps only for predicted classes
-        saliency_map = self._processor.postprocess(saliency_map, data=data)
-        return saliency_map
+        post_processing_parameters = post_processing_parameters or {}
+        post_processor = PostProcessor(explain_result, data, **post_processing_parameters)
+        explain_result = post_processor.postprocess()
+        return explain_result
 
 
 class BlackBoxExplainer(Explainer):
@@ -183,7 +147,7 @@ class RISEExplainer(BlackBoxExplainer):
 
 
 class DRISEExplainer(BlackBoxExplainer):
-    def explain(self, data):
+    def explain(self, data: np.ndarray) -> ExplainResult:
         """Explain the input."""
         raise NotImplementedError
 
@@ -191,7 +155,7 @@ class DRISEExplainer(BlackBoxExplainer):
 class AutoExplainer(Explainer):
     """Explain in auto mode, using white box or black box approach."""
 
-    def __init__(self, model, explain_parameters=None):
+    def __init__(self, model: openvino.model_api.models.Model, explain_parameters: bool = None):
         super().__init__(model)
         self._explain_parameters = explain_parameters if explain_parameters else {}
 
@@ -199,7 +163,7 @@ class AutoExplainer(Explainer):
 class ClassificationAutoExplainer(AutoExplainer):
     """Explain classification models in auto mode, using white box or black box approach."""
 
-    def explain(self, data):
+    def explain(self, data: np.ndarray, target_explain_group: Optional[TargetExplainGroup] = None) -> ExplainResult:
         """
         Implements three explain scenarios, for different IR models:
             1. IR model contain xai branch -> infer Model API wrapper.
@@ -208,10 +172,11 @@ class ClassificationAutoExplainer(AutoExplainer):
 
         Args:
             data(numpy.ndarray): data to explain.
+            target_explain_group(TargetExplainGroup): Target explain group.
         """
         if XAIModel.has_xai(self._model):
             logger.info("Model already has XAI - using White Box explainer.")
-            explanations = WhiteBoxExplainer(self._model).explain(data)
+            explanations = WhiteBoxExplainer(self._model).explain(data, target_explain_group)
             return explanations
         else:
             try:
@@ -229,6 +194,6 @@ class ClassificationAutoExplainer(AutoExplainer):
 class DetectionAutoExplainer(AutoExplainer):
     """Explain detection models in auto mode, using white box or black box approach."""
 
-    def explain(self, data):
+    def explain(self, data: np.ndarray) -> np.ndarray:
         """Explain the input."""
         raise NotImplementedError

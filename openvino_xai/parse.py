@@ -1,8 +1,13 @@
+from typing import Optional
+
+import openvino
+
+
 class IRParser:
     """Parser parse OV IR model."""
 
     @staticmethod
-    def get_logit_node(model, output_id=0):
+    def get_logit_node(model: openvino.runtime.Model, output_id: int = 0) -> openvino.runtime.Node:
         logit_node = (
             model.get_output_op(output_id)
             .input(0)
@@ -16,7 +21,7 @@ class IRParserCls(IRParser):
     """ParserCls parse classification OV IR model."""
 
     @staticmethod
-    def get_logit_node(model, output_id=0):
+    def get_logit_node(model: openvino.runtime.Model, output_id=0) -> openvino.runtime.Node:
         nodes = model.get_ops()
         softmax_node = None
         for op in nodes:
@@ -35,7 +40,9 @@ class IRParserCls(IRParser):
         return logit_node
 
     @staticmethod
-    def get_output_backbone_node(model, output_backbone_node_name=None):
+    def get_output_backbone_node(
+            model: openvino.runtime.Model, output_backbone_node_name: Optional[str] = None
+    ) -> openvino.runtime.Node:
         if output_backbone_node_name:
             for op in model.get_ordered_ops():
                 if op.get_friendly_name() == output_backbone_node_name:
@@ -48,7 +55,9 @@ class IRParserCls(IRParser):
         return output_backbone_node
 
     @staticmethod
-    def get_input_head_node(model, output_backbone_node_name=None, output_backbone_id=0):
+    def get_input_head_node(
+            model, output_backbone_node_name: Optional[str] = None, output_backbone_id: int = 0
+    ) -> openvino.runtime.Node:
         if output_backbone_node_name:
             output_backbone_node = IRParserCls.get_output_backbone_node(model, output_backbone_node_name)
             target_inputs = output_backbone_node.output(output_backbone_id).get_target_inputs()
