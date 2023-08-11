@@ -22,3 +22,12 @@ dist/
 .ruff_cache
 
 venv*
+
+flowers
+hie
+images
+otx_models
+sal_map
+sal_map_multilabel
+white_sal_map*
+masks

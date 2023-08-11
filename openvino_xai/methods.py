@@ -103,7 +103,7 @@ class ReciproCAMXAIMethod(XAIMethodBase):
 
     def generate_xai_branch(self) -> openvino.runtime.Node:
         _model_clone = self._model_ori.clone()
-        _model_clone.get_parameters()[0].set_friendly_name('data_clone')  # for debug
+        _model_clone.get_parameters()[0].set_friendly_name("data_clone")  # for debug
 
         # TODO: support models with multiple inputs.
         assert len(_model_clone.inputs) == 1, "Support only for models with single input."
@@ -168,7 +168,9 @@ class DetClassProbabilityMapXAIMethod(XAIMethodBase):
         ]
         self.default_target_explain_group = TargetExplainGroup.ALL_CLASSES
         self._target_layer = target_layer
-        self._num_anchors = num_anchors  # Either num_anchors or num_classes has to be provided to process cls head output
+        self._num_anchors = (
+            num_anchors  # Either num_anchors or num_classes has to be provided to process cls head output
+        )
         self._saliency_map_size = saliency_map_size  # Not always can be obtained from model -> defined externally
 
     def generate_xai_branch(self) -> openvino.runtime.Node:
@@ -204,7 +206,7 @@ class DetClassProbabilityMapXAIMethod(XAIMethodBase):
                 output_shape=np.array([1, num_cls_out_channels, *self._saliency_map_size]),
                 scales=np.array([1, 1, 1, 1], dtype=np.float32),
                 mode="linear",
-                shape_calculation_mode="sizes"
+                shape_calculation_mode="sizes",
             )
         saliency_maps = opset.reduce_mean(opset.concat(cls_head_output_nodes, 0), 0, keep_dims=True)
 

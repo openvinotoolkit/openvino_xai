@@ -2,8 +2,12 @@ from abc import ABC
 from abc import abstractmethod
 from typing import Dict, Any, Optional, List
 
+import cv2
 import numpy as np
 import openvino
+from PIL import Image
+from tqdm import tqdm
+from skimage.transform import resize
 
 from openvino_xai.model import XAIModel, XAIClassificationModel
 from openvino_xai.saliency_map import ExplainResult, PostProcessor, TargetExplainGroup
@@ -64,86 +68,74 @@ class BlackBoxExplainer(Explainer):
 
 
 class RISEExplainer(BlackBoxExplainer):
-    def __init__(self, model):
+    def __init__(self, model, num_masks, num_cells, prob):
+        """RISE BlackBox Explainer
+
+        Args:
+            num_masks (int, optional): number of generated masks to aggregate
+            num_cells (int, optional): number of cells for low-dimentaional RISE
+                random mask that later will be upscaled to the model input size
+            prob (float, optional): with prob p, a low-res cell is set to 1;
+                otherwise, it's 0. Default: ``0.5``.
+
+        """
         super().__init__(model)
-        # self._model = model
-        self.input_size = model.inputs['data'].shape[-2:]
-        self.num_masks = 10
-        self.num_cells = 8
-        self.prob = 0.5
+        self.input_size = model.inputs["data"].shape[-2:]
+        self.num_masks = 100  # num_masks
+        self.num_cells = 8  # num_cells
+        self.prob = 0.2  # prob
 
     def explain(self, data):
-
         """Explain the input."""
-        
-        data_size = data.shape
-        self.input_size = data_size[:2]
         self._generate_masks(self.num_masks, self.num_cells, self.prob)
+        resized_data = self.resize_input(data)
 
         preds = []
-
-        # data = np.transpose(data, (2, 0, 1)) # c, h, w
-
-        # masked = data * self.masks
-        for i in tqdm(range(0, self.num_masks), desc='Explaining'):
-            masked = np.expand_dims(self.masks[i], axis=2) * data
-            pred = self._model(masked)
-            if 'raw_scores' in pred:
-                scores = pred['raw_scores']
-            else:
-                # softmax is needed
-                scores = pred['logits']
+        for i in tqdm(range(0, self.num_masks), desc="Explaining"):
+            # Add channel dimentions for masks
+            masked = np.expand_dims(self.masks[i], axis=2) * resized_data
+            scores = self._model(masked)
             preds.append(scores)
         preds = np.concatenate(preds)
+
         sal = preds.T.dot(self.masks.reshape(self.num_masks, -1)).reshape(-1, *self.input_size)
         sal = sal / self.num_masks / self.prob
         sal = np.expand_dims(sal, axis=0)
-        # sal = self._processor.postprocess(sal)
-        sal = self._postprocess(sal)
-
+        sal = self._processor.postprocess(sal, normalize=True, overlay=True, data=data)
         return sal
-    
-    @staticmethod
-    def _postprocess(saliency_map):
-        min_soft_score = np.min(saliency_map)
-        max_soft_score = np.max(saliency_map)
-        saliency_map = 255.0 / (max_soft_score + 1e-12) * (saliency_map - min_soft_score)
-        return saliency_map
 
+    def resize_input(self, image):
+        image = cv2.resize(image, self.input_size, Image.BILINEAR)
+        return image
 
-    def _generate_masks(self, N, s, p1, savepath='masks.npy'):
-        
-        from skimage.transform import resize
-        # import torch
-        """ Generate masks for RISE
-            Args:
-                N: number of masks
-                s: number of cells for one spatial dimension
-                    in low-res RISE random mask
-                p (float, optional): with prob p, a low-res cell is set to 0;
-                    otherwise, it's 1. Default: ``0.5``.
-            Returns:
+    def _generate_masks(self, N=1000, s=8, p=0.5):
+        """Generate masks for RISE
+        Args:
+            N (int, optional): number of masks
+            s (int, optional): number of cells for one spatial dimension
+                in low-res RISE random mask
+            p (float, optional): with prob p, a low-res cell is set to 1;
+                otherwise, it's 0. Default: ``0.5``.
+        Returns:
+            masks (np.array): N float masks from 0 to 1 with size of input model
 
-            """
+        """
         cell_size = np.ceil(np.array(self.input_size) / s)
-        up_size = (s + 1) * cell_size
+        up_size = np.array((s + 1) * cell_size, dtype=np.uint32)
 
-        grid = np.random.rand(N, s, s) < p1
-        grid = grid.astype('float32')
+        grid = np.random.rand(N, s, s) < p
+        grid = grid.astype("float32")
 
         self.masks = np.empty((N, *self.input_size))
 
-        for i in tqdm(range(N), desc='Generating filters'):
+        for i in tqdm(range(N), desc="Generating filters"):
             # Random shifts
             x = np.random.randint(0, cell_size[0])
             y = np.random.randint(0, cell_size[1])
             # Linear upsampling and cropping
-            self.masks[i, :, :] = resize(grid[i], up_size, order=1, mode='reflect', anti_aliasing=False)[x:x + self.input_size[0], y:y + self.input_size[1]]     
-        # self.masks = self.masks.reshape(-1, 1, *self.input_size)
-        # save_explanations('masks',self.masks*255)
-        self.N = N
-        self.p1 = p1
-
+            self.masks[i, :, :] = resize(grid[i], up_size, order=1, mode="reflect", anti_aliasing=False)[
+                x : x + self.input_size[0], y : y + self.input_size[1]
+            ]
 
 
 class DRISEExplainer(BlackBoxExplainer):
