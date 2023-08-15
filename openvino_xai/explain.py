@@ -9,6 +9,8 @@ from PIL import Image
 from tqdm import tqdm
 from skimage.transform import resize
 
+from openvino.model_api.models import ClassificationResult
+
 from openvino_xai.model import XAIModel, XAIClassificationModel
 from openvino_xai.saliency_map import ExplainResult, PostProcessor, TargetExplainGroup
 from openvino_xai.utils import logger
@@ -30,26 +32,29 @@ class Explainer(ABC):
     def _get_target_explain_group(self, target_explain_group):
         if target_explain_group:
             if self._explain_method:
-                assert target_explain_group in self._explain_method.supported_target_explain_groups, \
-                    f"Provided target_explain_group {target_explain_group} is not supported by the explain method."
+                assert (
+                    target_explain_group in self._explain_method.supported_target_explain_groups
+                ), f"Provided target_explain_group {target_explain_group} is not supported by the explain method."
             return target_explain_group
         else:
             if self._explain_method:
                 return self._explain_method.default_target_explain_group
             else:
-                raise ValueError("Model with XAI branch was created outside of Openvino-XAI library. "
-                                 "Please explicitly provide target_explain_group to the explain call.")
+                raise ValueError(
+                    "Model with XAI branch was created outside of Openvino-XAI library. "
+                    "Please explicitly provide target_explain_group to the explain call."
+                )
 
 
 class WhiteBoxExplainer(Explainer):
     """Explainer explains models with XAI branch injected."""
 
     def explain(
-            self,
-            data: np.ndarray,
-            target_explain_group: Optional[TargetExplainGroup] = None,
-            explain_targets: Optional[List[int]] = None,
-            post_processing_parameters: Optional[Dict[str, Any]] = None,
+        self,
+        data: np.ndarray,
+        target_explain_group: Optional[TargetExplainGroup] = None,
+        explain_targets: Optional[List[int]] = None,
+        post_processing_parameters: Optional[Dict[str, Any]] = None,
     ) -> ExplainResult:
         """Explain the input in white box mode."""
         raw_result = self._model(data)
@@ -68,7 +73,7 @@ class BlackBoxExplainer(Explainer):
 
 
 class RISEExplainer(BlackBoxExplainer):
-    def __init__(self, model, num_masks, num_cells, prob):
+    def __init__(self, model, num_masks=100, num_cells=8, prob=0.2):
         """RISE BlackBox Explainer
 
         Args:
@@ -81,54 +86,62 @@ class RISEExplainer(BlackBoxExplainer):
         """
         super().__init__(model)
         self.input_size = model.inputs["data"].shape[-2:]
-        self.num_masks = 100  # num_masks
-        self.num_cells = 8  # num_cells
-        self.prob = 0.2  # prob
+        self.num_masks = num_masks
+        self.num_cells = num_cells
+        self.prob = prob
 
-    def explain(self, data):
+    def explain(
+        self,
+        data,
+        target_explain_group: Optional[TargetExplainGroup] = None,
+        explain_targets: Optional[List[int]] = None,
+        post_processing_parameters: Optional[Dict[str, Any]] = None,
+    ):
         """Explain the input."""
-        self._generate_masks(self.num_masks, self.num_cells, self.prob)
+        self._generate_masks()
         resized_data = self.resize_input(data)
+        _, top_labels = self._model(resized_data)
 
         preds = []
         for i in tqdm(range(0, self.num_masks), desc="Explaining"):
             # Add channel dimentions for masks
             masked = np.expand_dims(self.masks[i], axis=2) * resized_data
-            scores = self._model(masked)
+            scores, _ = self._model(masked)
             preds.append(scores)
         preds = np.concatenate(preds)
 
         sal = preds.T.dot(self.masks.reshape(self.num_masks, -1)).reshape(-1, *self.input_size)
         sal = sal / self.num_masks / self.prob
         sal = np.expand_dims(sal, axis=0)
-        sal = self._processor.postprocess(sal, normalize=True, overlay=True, data=data)
-        return sal
+
+        cls_res = ClassificationResult(top_labels, sal, np.ndarray(0))
+        target_explain_group = self._get_target_explain_group(target_explain_group)
+        explain_result = ExplainResult(cls_res, target_explain_group, explain_targets, self._labels)
+
+        post_processing_parameters = post_processing_parameters or {}
+        post_processor = PostProcessor(explain_result, data, **post_processing_parameters)
+        explain_result = post_processor.postprocess()
+        return explain_result
 
     def resize_input(self, image):
         image = cv2.resize(image, self.input_size, Image.BILINEAR)
         return image
 
-    def _generate_masks(self, N=1000, s=8, p=0.5):
+    def _generate_masks(self):
         """Generate masks for RISE
-        Args:
-            N (int, optional): number of masks
-            s (int, optional): number of cells for one spatial dimension
-                in low-res RISE random mask
-            p (float, optional): with prob p, a low-res cell is set to 1;
-                otherwise, it's 0. Default: ``0.5``.
         Returns:
-            masks (np.array): N float masks from 0 to 1 with size of input model
+            masks (np.array): self.num_masks float masks from 0 to 1 with size of input model
 
         """
-        cell_size = np.ceil(np.array(self.input_size) / s)
-        up_size = np.array((s + 1) * cell_size, dtype=np.uint32)
+        cell_size = np.ceil(np.array(self.input_size) / self.num_cells)
+        up_size = np.array((self.num_cells + 1) * cell_size, dtype=np.uint32)
 
-        grid = np.random.rand(N, s, s) < p
+        grid = np.random.rand(self.num_masks, self.num_cells, self.num_cells) < self.prob
         grid = grid.astype("float32")
 
-        self.masks = np.empty((N, *self.input_size))
+        self.masks = np.empty((self.num_masks, *self.input_size))
 
-        for i in tqdm(range(N), desc="Generating filters"):
+        for i in tqdm(range(self.num_masks), desc="Generating filters"):
             # Random shifts
             x = np.random.randint(0, cell_size[0])
             y = np.random.randint(0, cell_size[1])

@@ -6,9 +6,9 @@ from pathlib import Path
 import cv2
 from openvino.model_api.models import ClassificationModel
 
-from openvino_xai.explain import WhiteBoxExplainer, ClassificationAutoExplainer
+from openvino_xai.explain import WhiteBoxExplainer, ClassificationAutoExplainer, RISEExplainer
 from openvino_xai.saliency_map import TargetExplainGroup
-from openvino_xai.model import XAIClassificationModel
+from openvino_xai.model import XAIClassificationModel, BlackBoxModel
 from openvino_xai.utils import logger
 
 
@@ -66,7 +66,28 @@ def run_example_w_postprocessing_parameters(args):
         TargetExplainGroup.PREDICTED_CLASSES,
         post_processing_parameters=post_processing_parameters,
     )
-    logger.info(f"Example w/ post_processing_parameterss: generated classification saliency maps "
+    logger.info(f"Example w/ post_processing_parameters: generated classification saliency maps "
+                f"of layout {explanation.layout} with shape {explanation.map.shape}.")
+    if args.output is not None:
+        explanation.save(args.output, image_name)
+
+
+def run_blackbox_w_postprocessing_parameters(args):
+    image = cv2.imread(args.image_path)
+    image_name = Path(args.image_path).stem
+
+    model = BlackBoxModel.create_model(args.model_path, "Classification")
+    explainer = RISEExplainer(model)
+    post_processing_parameters = {
+        "normalize": True,
+        "overlay": True,
+    }
+    explanation = explainer.explain(
+        image,
+        TargetExplainGroup.PREDICTED_CLASSES,
+        post_processing_parameters=post_processing_parameters,
+    )
+    logger.info(f"Example from BlackBox explainer w/ post_processing_parameters: generated classification saliency maps "
                 f"of layout {explanation.layout} with shape {explanation.map.shape}.")
     if args.output is not None:
         explanation.save(args.output, image_name)
@@ -134,6 +155,7 @@ def main(argv):
     run_example_wo_explain_parameters(args)
     run_example_w_explain_parameters(args)
     run_example_w_postprocessing_parameters(args)
+    run_blackbox_w_postprocessing_parameters(args)
     run_auto_example(args)
     run_multiple_image_example(args)
 
