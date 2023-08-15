@@ -11,8 +11,12 @@ from openvino.model_api.models.types import BooleanValue
 from openvino.model_api.models.classification import sigmoid_numpy, softmax_numpy
 
 from openvino_xai.insert import InsertXAI
-from openvino_xai.methods import ReciproCAMXAIMethod, ActivationMapXAIMethod, DetClassProbabilityMapXAIMethod, \
-    XAIMethodBase
+from openvino_xai.methods import (
+    ReciproCAMXAIMethod,
+    ActivationMapXAIMethod,
+    DetClassProbabilityMapXAIMethod,
+    XAIMethodBase,
+)
 from openvino_xai.utils import logger
 
 
@@ -37,9 +41,7 @@ class XAIModel(ABC):
 
     @classmethod
     def insert_xai(
-            cls,
-            model_api_wrapper: openvino.model_api.models.Model,
-            explain_parameters: Dict[str, Any]
+        cls, model_api_wrapper: openvino.model_api.models.Model, explain_parameters: Dict[str, Any]
     ) -> openvino.model_api.models.Model:
         # Insert XAI branch into the model
         model_ir = model_api_wrapper.get_model()
@@ -89,7 +91,7 @@ class XAIClassificationModel(XAIModel):
 
     @classmethod
     def _generate_explain_method(
-            cls, model: openvino.runtime.Model, explain_parameters: Dict[str, Any]
+        cls, model: openvino.runtime.Model, explain_parameters: Dict[str, Any]
     ) -> XAIMethodBase:
         if explain_parameters is None:
             return ReciproCAMXAIMethod(model)
@@ -111,7 +113,7 @@ class XAIDetectionModel(XAIModel):
 
     @classmethod
     def _generate_explain_method(
-            cls, model: openvino.runtime.Model, explain_parameters: Dict[str, Any]
+        cls, model: openvino.runtime.Model, explain_parameters: Dict[str, Any]
     ) -> XAIMethodBase:
         if explain_parameters is None:
             raise ValueError("explain_parameters is required for the detection models.")
@@ -125,6 +127,8 @@ class XAIDetectionModel(XAIModel):
 
 
 class BlackBoxModel(ClassificationModel):
+    """Creates Classification Model API model wrapper to return raw scores."""
+
     @classmethod
     def parameters(cls):
         parameters = super().parameters()
@@ -142,27 +146,35 @@ class BlackBoxModel(ClassificationModel):
         if self.multilabel:
             logits = outputs[self.out_layer_names[0]].squeeze()
             result = [sigmoid_numpy(logits)]
+            label_indexes = [[i] for i in range(logits.shape[0]) if logits[i] > self.confidence_threshold]
         elif self.hierarchical:
             logits = outputs[self.out_layer_names[0]].squeeze()
-            result = [self.get_hierarchical_predictions(logits)]
+            result, label_indexes = self.get_hierarchical_predictions(logits)
         else:
             result = np.copy(outputs["raw_scores"])
-
-        return result
+            label_indexes = outputs["indices"]
+        return result, label_indexes
 
     def get_hierarchical_predictions(self, logits: np.ndarray):
         scores = []
+        label_indexes = []
         cls_heads_info = self.hierarchical_info["cls_heads_info"]
         for i in range(cls_heads_info["num_multiclass_heads"]):
             logits_begin, logits_end = cls_heads_info["head_idx_to_logits_range"][str(i)]
             head_logits = logits[logits_begin:logits_end]
             head_logits = softmax_numpy(head_logits)
             scores.extend(head_logits)
+            j = np.argmax(head_logits)
+            label_str = cls_heads_info["all_groups"][i][j]
+            label_indexes.append([cls_heads_info["label_to_idx"][label_str]])
 
         if cls_heads_info["num_multilabel_classes"]:
             logits_begin = cls_heads_info["num_single_label_classes"]
             head_logits = logits[logits_begin:]
             head_logits = sigmoid_numpy(head_logits)
             scores.extend(head_logits)
+            if head_logits[i] > self.confidence_threshold:
+                label_str = cls_heads_info["all_groups"][cls_heads_info["num_multiclass_heads"] + i][0]
+                label_indexes.append([cls_heads_info["label_to_idx"][label_str]])
 
-        return scores
+        return [scores], label_indexes

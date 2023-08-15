@@ -7,7 +7,6 @@ class IRParser:
     """Parser parse OV IR model."""
 
     @staticmethod
-<<<<<<< Updated upstream
     def get_logit_node(model: openvino.runtime.Model, output_id: int = 0) -> openvino.runtime.Node:
         logit_node = (
             model.get_output_op(output_id)
@@ -15,10 +14,6 @@ class IRParser:
             .get_source_output()
             .get_node()
         )
-=======
-    def get_logit_node(model, output_id=0):
-        logit_node = model.get_output_op(output_id).input(0).get_source_output().get_node()
->>>>>>> Stashed changes
         return logit_node
 
 
@@ -36,7 +31,12 @@ class IRParserCls(IRParser):
             logit_node = softmax_node.input(0).get_source_output().get_node()
             return logit_node
 
-        logit_node = model.get_output_op(output_id).input(0).get_source_output().get_node()
+        logit_node = (
+            model.get_output_op(output_id)
+            .input(0)
+            .get_source_output()
+            .get_node()
+        )
         return logit_node
 
     @staticmethod
