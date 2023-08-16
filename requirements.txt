@@ -1,4 +1,4 @@
-openvino-model-api==0.1.3
+openvino-model-api==0.1.5
 opencv-python
 numpy
 scikit-image

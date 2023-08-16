@@ -140,7 +140,7 @@ class ExplainResult:
                 assert raw_predictions is not None, (
                     f"Raw model predictions has to be provided " f"for {target_explain_group}."
                 )
-                assert len(raw_predictions.top_labels) > 0, (
+                assert raw_predictions.top_labels, (
                     "TargetExplainGroup.PREDICTED_CLASSES requires predictions "
                     "to be available, but currently model has no predictions. "
                     "Try to use different input data, confidence threshold"

@@ -73,7 +73,7 @@ class BlackBoxExplainer(Explainer):
 
 
 class RISEExplainer(BlackBoxExplainer):
-    def __init__(self, model, num_masks=100, num_cells=8, prob=0.2):
+    def __init__(self, model, num_masks=1000, num_cells=8, prob=0.2):
         """RISE BlackBox Explainer
 
         Args:
@@ -98,32 +98,17 @@ class RISEExplainer(BlackBoxExplainer):
         post_processing_parameters: Optional[Dict[str, Any]] = None,
     ):
         """Explain the input."""
-        self._generate_masks()
-        resized_data = self.resize_input(data)
-        _, top_labels = self._model(resized_data)
-
-        preds = []
-        for i in tqdm(range(0, self.num_masks), desc="Explaining"):
-            # Add channel dimentions for masks
-            masked = np.expand_dims(self.masks[i], axis=2) * resized_data
-            scores, _ = self._model(masked)
-            preds.append(scores)
-        preds = np.concatenate(preds)
-
-        sal = preds.T.dot(self.masks.reshape(self.num_masks, -1)).reshape(-1, *self.input_size)
-        sal = sal / self.num_masks / self.prob
-        sal = np.expand_dims(sal, axis=0)
-
-        cls_res = ClassificationResult(top_labels, sal, np.ndarray(0))
+        cls_result = self._generate_saliency_map(data)
+        
         target_explain_group = self._get_target_explain_group(target_explain_group)
-        explain_result = ExplainResult(cls_res, target_explain_group, explain_targets, self._labels)
+        explain_result = ExplainResult(cls_result, target_explain_group, explain_targets, self._labels)
 
         post_processing_parameters = post_processing_parameters or {}
         post_processor = PostProcessor(explain_result, data, **post_processing_parameters)
         explain_result = post_processor.postprocess()
         return explain_result
 
-    def resize_input(self, image):
+    def _resize_input(self, image):
         image = cv2.resize(image, self.input_size, Image.BILINEAR)
         return image
 
@@ -149,6 +134,30 @@ class RISEExplainer(BlackBoxExplainer):
             self.masks[i, :, :] = resize(grid[i], up_size, order=1, mode="reflect", anti_aliasing=False)[
                 x : x + self.input_size[0], y : y + self.input_size[1]
             ]
+
+    def _generate_saliency_map(self, data):
+        """Generate RISE saliency map
+        Returns:
+            cls_result (ClassificationResult): classification result with labels and saliency map
+
+        """
+        self._generate_masks()
+        resized_data = self._resize_input(data)
+        cls_result = self._model(resized_data)
+
+        preds = []
+        for i in tqdm(range(0, self.num_masks), desc="Explaining"):
+            # Add channel dimentions for masks
+            masked = np.expand_dims(self.masks[i], axis=2) * resized_data
+            scores = [self._model(masked).raw_scores]
+            preds.append(scores)
+        preds = np.concatenate(preds)
+
+        sal = preds.T.dot(self.masks.reshape(self.num_masks, -1)).reshape(-1, *self.input_size)
+        sal = sal / self.num_masks / self.prob
+        sal = np.expand_dims(sal, axis=0)
+        cls_result = ClassificationResult(cls_result[0], sal, np.ndarray(0), np.ndarray(0))
+        return cls_result
 
 
 class DRISEExplainer(BlackBoxExplainer):
