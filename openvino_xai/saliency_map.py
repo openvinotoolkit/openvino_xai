@@ -87,9 +87,8 @@ class ExplainResult:
             labels: List[str] = None,
     ):
         raw_saliency_map = self._get_saliency_map_from_predictions(raw_result)
-        saliency_map = self._check_data_type(raw_saliency_map)
         self._saliency_map = self._select_target_saliency_maps(
-            saliency_map, target_explain_group, raw_result, explain_targets
+            raw_saliency_map, target_explain_group, raw_result, explain_targets
         )
         self._layout = self.get_layout(self._saliency_map)
         self._labels = labels
@@ -100,7 +99,6 @@ class ExplainResult:
 
     @map.setter
     def map(self, saliency_map):
-        saliency_map = self._check_data_type(saliency_map)
         self._saliency_map = saliency_map
 
     @property

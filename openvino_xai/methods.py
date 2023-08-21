@@ -32,6 +32,7 @@ class XAIMethodBase(ABC):
 
     @staticmethod
     def _normalize_saliency_maps(saliency_maps: openvino.runtime.Node, per_class: bool) -> openvino.runtime.Node:
+        """Normalize saliency maps to [0, 255] range, per-map."""
         # TODO: unify for per-class and for per-image
         if per_class:
             # Normalization for per-class saliency maps

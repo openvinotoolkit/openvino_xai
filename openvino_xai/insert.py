@@ -27,17 +27,19 @@ class InsertXAI:
         model_with_xai = Model([*model_ori_outputs, saliency_map_node.output(0)], model_ori_params)
 
         saliency_map_output_id = len(model_ori_outputs)
-        self._model_with_xai = self._set_output_names_and_precisions(model_with_xai, saliency_map_output_id)
+        set_uint8 = self._explain_method._embed_normalization
+        self._model_with_xai = self._set_output_names_and_precisions(model_with_xai, saliency_map_output_id, set_uint8)
         return self._model_with_xai
 
     @staticmethod
     def _set_output_names_and_precisions(
-            model: openvino.runtime.Model, saliency_map_output_id: int
+            model: openvino.runtime.Model, saliency_map_output_id: int, set_uint8: bool
     ) -> openvino.runtime.Model:
         model.outputs[saliency_map_output_id].tensor.set_names({"saliency_map"})
-        ppp = PrePostProcessor(model)
-        ppp.output("saliency_map").tensor().set_element_type(Type.u8)
-        model = ppp.build()
+        if set_uint8:
+            ppp = PrePostProcessor(model)
+            ppp.output("saliency_map").tensor().set_element_type(Type.u8)
+            model = ppp.build()
         return model
 
     def serialize_model_with_xai(self, model_with_xai_path: openvino.runtime.Model):
