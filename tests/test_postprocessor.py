@@ -4,8 +4,8 @@ import pytest
 from openvino_xai.saliency_map import TargetExplainGroup, ExplainResult, PostProcessor
 
 RAW_PREDICTIONS = [
-    type('raw_predictions', (), dict(saliency_map=np.ones((1, 5, 5)))),
-    type('raw_predictions', (), dict(saliency_map=np.ones((1, 2, 5, 5)), top_labels = [[0]])),
+    type('raw_predictions', (), dict(saliency_map=np.ones((1, 5, 5), dtype=np.uint8))),
+    type('raw_predictions', (), dict(saliency_map=np.ones((1, 2, 5, 5), dtype=np.uint8), top_labels = [[0]])),
 ]
 
 

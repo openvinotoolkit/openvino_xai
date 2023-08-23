@@ -310,6 +310,8 @@ class PostProcessor:
     def apply_colormap(self) -> None:
         """Applies cv2.applyColorMap to the saliency map
         TODO: support different (custom?) colormaps."""
+        assert self._saliency_map.map.dtype == np.uint8, "Colormap requires saliency map to has uint8 dtype. " \
+                                                         "Enable 'normalize' flag for PostProcessor."
         if self._saliency_map.layout == SaliencyMapLayout.ONE_MAP_PER_IMAGE_GRAY:
             x = self._saliency_map.map[0]
             x = cv2.applyColorMap(x, cv2.COLORMAP_JET)
