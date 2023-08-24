@@ -127,16 +127,27 @@ def run_multiple_image_example(args):
             explanation.save(args.output, image_name)
 
 
+def run_ir_model_update_wo_inference(args):
+    """Embedding XAI into the model graph and save updated IR, no actual inference performed.
+    User suppose to use his/her own inference pipeline to get explanations along with the regular model outputs."""
+    model_with_xai = XAIClassificationModel.insert_xai_into_native_ir(args.model_path, args.output)
+    logger.info(f"Model with XAI head saved to {args.output}")
+
+
 def main(argv):
     parser = get_argument_parser()
     args = parser.parse_args(argv)
 
+    # e2e model explanation examples: patching IR model with XAI branch and using ModelAPI as inference framework
     run_example_wo_explain_parameters(args)
     run_example_w_explain_parameters(args)
     run_example_w_postprocessing_parameters(args)
     run_auto_example(args)
     run_multiple_image_example(args)
 
+    # Embedding XAI into the model graph and save updated IR, no actual inference performed
+    # User suppose to use his/her own custom inference pipeline to get explanations along with the regular model outputs
+    run_ir_model_update_wo_inference(args)
 
 if __name__ == "__main__":
     main(sys.argv[1:])

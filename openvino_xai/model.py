@@ -1,6 +1,8 @@
 from abc import ABC
 from abc import abstractmethod
-from typing import Dict, Any
+from typing import Dict, Any, Optional
+from pathlib import Path
+import os
 
 import openvino
 from openvino.model_api.models import ClassificationModel
@@ -24,7 +26,7 @@ class XAIModel(ABC):
         model_api_wrapper = model_api_model_class.create_model(*args, **kwargs)
         logger.info("Created Model API wrapper.")
 
-        if cls.has_xai(model_api_wrapper):
+        if cls.has_xai(model_api_wrapper.inference_adapter.model):
             logger.info("Provided IR model already contains XAI branch, return it as-is.")
             return model_api_wrapper
 
@@ -37,9 +39,10 @@ class XAIModel(ABC):
             model_api_wrapper: openvino.model_api.models.Model,
             explain_parameters: Dict[str, Any]
     ) -> openvino.model_api.models.Model:
+        """Insert XAI into IR model stored in Model API wrapper."""
         # Insert XAI branch into the model
         model_ir = model_api_wrapper.get_model()
-        explain_method = cls._generate_explain_method(model_ir, explain_parameters)
+        explain_method = cls.generate_explain_method(model_ir, explain_parameters)
         xai_generator = InsertXAI(explain_method)
         model_ir_with_xai = xai_generator.generate_model_with_xai()
         # logger.info(f"Original model:\n{explain_method.model_ori}")
@@ -53,9 +56,27 @@ class XAIModel(ABC):
         if model_api_wrapper.model_loaded:
             model_api_wrapper.load(force=True)
 
-        assert cls.has_xai(model_api_wrapper), "Insertion of the XAI branch into the model was not successful."
+        assert cls.has_xai(model_api_wrapper.inference_adapter.model), "Insertion of the XAI branch into the model " \
+                                                                       "was not successful."
         logger.info("Insertion of the XAI branch into the model was successful.")
         return model_api_wrapper
+
+    @classmethod
+    def insert_xai_into_native_ir(
+            cls,
+            model_path: str,
+            output: Optional[str] = None,
+            explain_parameters: Optional[Dict[str, Any]] = None,
+    ) -> openvino.runtime.Model:
+        """Insert XAI into IR model."""
+        model_name = Path(model_path).stem
+        model_ir = openvino.runtime.Core().read_model(model_path)
+        explain_method = cls.generate_explain_method(model_ir, explain_parameters)
+        xai_generator = InsertXAI(explain_method)
+        model_with_xai = xai_generator.generate_model_with_xai()
+        if output:
+            xai_generator.serialize_model_with_xai(os.path.join(output, model_name + "_xai.xml"))
+        return model_with_xai
 
     @classmethod
     @abstractmethod
@@ -64,13 +85,14 @@ class XAIModel(ABC):
 
     @classmethod
     @abstractmethod
-    def _generate_explain_method(cls, model_ir: openvino.runtime.Model, explain_parameters: Dict[str, Any]):
+    def generate_explain_method(cls, model_ir: openvino.runtime.Model, explain_parameters: Dict[str, Any]):
+        """Generates instance of the explain method class."""
         raise NotImplementedError
 
     @staticmethod
-    def has_xai(model: openvino.model_api.models.Model) -> bool:
+    def has_xai(model: openvino.runtime.Model) -> bool:
         """Check if the model contain XAI."""
-        for output in model.inference_adapter.model.outputs:
+        for output in model.outputs:
             if "saliency_map" in output.get_names():
                 return True
         return False
@@ -84,8 +106,8 @@ class XAIClassificationModel(XAIModel):
         return ClassificationModel
 
     @classmethod
-    def _generate_explain_method(
-            cls, model: openvino.runtime.Model, explain_parameters: Dict[str, Any]
+    def generate_explain_method(
+            cls, model: openvino.runtime.Model, explain_parameters: Optional[Dict[str, Any]] = None
     ) -> XAIMethodBase:
         if explain_parameters is None:
             return ReciproCAMXAIMethod(model)
@@ -106,7 +128,7 @@ class XAIDetectionModel(XAIModel):
         return DetectionModel
 
     @classmethod
-    def _generate_explain_method(
+    def generate_explain_method(
             cls, model: openvino.runtime.Model, explain_parameters: Dict[str, Any]
     ) -> XAIMethodBase:
         if explain_parameters is None:

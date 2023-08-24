@@ -97,7 +97,7 @@ class ClassificationAutoExplainer(AutoExplainer):
             data(numpy.ndarray): data to explain.
             target_explain_group(TargetExplainGroup): Target explain group.
         """
-        if XAIModel.has_xai(self._model):
+        if XAIModel.has_xai(self._model.inference_adapter.model):
             logger.info("Model already has XAI - using White Box explainer.")
             explanations = WhiteBoxExplainer(self._model).explain(data, target_explain_group)
             return explanations

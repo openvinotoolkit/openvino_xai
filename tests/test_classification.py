@@ -1,14 +1,16 @@
 import os
+from pathlib import Path
 
 import numpy as np
 import pytest
 from urllib.request import urlretrieve
 
 from openvino.model_api.models import ClassificationModel
+import openvino.runtime as ov
 
 from openvino_xai.explain import WhiteBoxExplainer, ClassificationAutoExplainer
 from openvino_xai.saliency_map import TargetExplainGroup
-from openvino_xai.model import XAIClassificationModel
+from openvino_xai.model import XAIClassificationModel, XAIModel
 
 MODELS = [
     "mlc_mobilenetv3_large_voc",  # verified
@@ -20,6 +22,8 @@ MODELS = [
     "mobilenet_v3_large_hc_cf",
     "classification_model_with_xai_head",  # verified
 ]
+
+DEFAULT_MODEL = "mlc_efficient_b0_voc"
 
 MODELS_NUM_CLASSES = {
     "mlc_mobilenetv3_large_voc": 20,  # verified
@@ -150,3 +154,19 @@ def test_classification_auto(model_name):
         target_explain_group = TargetExplainGroup.ALL_CLASSES
     explanations = ClassificationAutoExplainer(model).explain(np.zeros((224, 224, 3)), target_explain_group)
     assert explanations is not None
+
+
+def test_ir_model_update_wo_inference():
+    data_dir = "."
+    retrieve_otx_model(data_dir, DEFAULT_MODEL)
+    model_path = os.path.join(data_dir, "otx_models", DEFAULT_MODEL + ".xml")
+
+    model_ir = ov.Core().read_model(model_path)
+    assert not XAIModel.has_xai(model_ir), "Input IR model should not have XAI head."
+
+    output = os.path.join(data_dir, "otx_models")
+    model_with_xai = XAIClassificationModel.insert_xai_into_native_ir(model_path, output)
+
+    assert XAIModel.has_xai(model_with_xai), "Updated IR model should has XAI head."
+    model_name = Path(model_path).stem
+    assert os.path.exists(os.path.join(output, model_name + "_xai.xml")), "Updated IR model should be saved."
