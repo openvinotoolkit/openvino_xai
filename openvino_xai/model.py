@@ -71,9 +71,15 @@ class XAIModel(ABC):
         """Insert XAI into IR model."""
         model_name = Path(model_path).stem
         model_ir = openvino.runtime.Core().read_model(model_path)
+        if cls.has_xai(model_ir):
+            logger.info("Provided IR model already contains XAI branch, return it as-is.")
+            return model_ir
+
         explain_method = cls.generate_explain_method(model_ir, explain_parameters)
         xai_generator = InsertXAI(explain_method)
         model_with_xai = xai_generator.generate_model_with_xai()
+        assert cls.has_xai(model_with_xai), "Insertion of the XAI branch into the model was not successful."
+        logger.info("Insertion of the XAI branch into the model was successful.")
         if output:
             xai_generator.serialize_model_with_xai(os.path.join(output, model_name + "_xai.xml"))
         return model_with_xai
