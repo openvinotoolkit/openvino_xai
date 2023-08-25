@@ -1,6 +1,6 @@
 from abc import ABC
 from abc import abstractmethod
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union, List
 
 import numpy as np
 
@@ -155,9 +155,9 @@ class DetClassProbabilityMapXAIMethod(XAIMethodBase):
     def __init__(
             self,
             model: openvino.runtime.Model,
-            target_layer: str,
-            num_anchors: int,
-            saliency_map_size: Tuple[int] = (13, 13),
+            target_layer: List[str],
+            num_anchors: List[int],
+            saliency_map_size: Union[Tuple[int, int], List[int]] = (13, 13),
             embed_normalization: bool = True,
     ):
         super().__init__(model, embed_normalization)

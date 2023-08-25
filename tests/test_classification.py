@@ -9,8 +9,10 @@ from openvino.model_api.models import ClassificationModel
 import openvino.runtime as ov
 
 from openvino_xai.explain import WhiteBoxExplainer, ClassificationAutoExplainer
+from openvino_xai.parameters import ClassificationExplainParametersWB, PostProcessParameters
 from openvino_xai.saliency_map import TargetExplainGroup
 from openvino_xai.model import XAIClassificationModel, XAIModel
+
 
 MODELS = [
     "mlc_mobilenetv3_large_voc",  # verified
@@ -71,7 +73,10 @@ class TestClsWB:
         data_dir = "."
         retrieve_otx_model(data_dir, model_name)
         model_path = os.path.join(data_dir, "otx_models", model_name + ".xml")
-        explain_parameters = {"explain_method_name": "reciprocam", "embed_normalization": embed_normalization}
+        explain_parameters = ClassificationExplainParametersWB(
+            embed_normalization=embed_normalization,
+            explain_method_name="reciprocam",
+        )
         model = XAIClassificationModel.create_model(model_path, "Classification", explain_parameters=explain_parameters)
 
         if target_explain_group == TargetExplainGroup.ALL_CLASSES:
@@ -101,7 +106,10 @@ class TestClsWB:
         data_dir = "."
         retrieve_otx_model(data_dir, model_name)
         model_path = os.path.join(data_dir, "otx_models", model_name + ".xml")
-        explain_parameters = {"explain_method_name": "activationmap", "embed_normalization": embed_normalization}
+        explain_parameters = ClassificationExplainParametersWB(
+            embed_normalization=embed_normalization,
+            explain_method_name="activationmap",
+        )
         model = XAIClassificationModel.create_model(model_path, "Classification", explain_parameters=explain_parameters)
 
         explanations = WhiteBoxExplainer(model).explain(np.zeros((224, 224, 3)))
@@ -115,14 +123,16 @@ class TestClsWB:
         data_dir = "."
         retrieve_otx_model(data_dir, model_name)
         model_path = os.path.join(data_dir, "otx_models", model_name + ".xml")
-        explain_parameters = {"explain_method_name": explain_method_name}
+        explain_parameters = ClassificationExplainParametersWB(
+            explain_method_name=explain_method_name,
+        )
         model = XAIClassificationModel.create_model(model_path, "Classification", explain_parameters=explain_parameters)
 
         target_explain_group = None
         if model_name == "classification_model_with_xai_head":
             target_explain_group = TargetExplainGroup.ALL_CLASSES
 
-        post_processing_parameters = {"overlay": overlay}
+        post_processing_parameters = PostProcessParameters(overlay=overlay)
         explanations = WhiteBoxExplainer(model).explain(
             np.zeros((224, 224, 3)),
             target_explain_group=target_explain_group,
@@ -156,17 +166,29 @@ def test_classification_auto(model_name):
     assert explanations is not None
 
 
-def test_ir_model_update_wo_inference():
+@pytest.mark.parametrize("model_name", MODELS)
+def test_ir_model_update_wo_inference(model_name):
     data_dir = "."
-    retrieve_otx_model(data_dir, DEFAULT_MODEL)
-    model_path = os.path.join(data_dir, "otx_models", DEFAULT_MODEL + ".xml")
+    retrieve_otx_model(data_dir, model_name)
+    model_path = os.path.join(data_dir, "otx_models", model_name + ".xml")
 
     model_ir = ov.Core().read_model(model_path)
-    assert not XAIModel.has_xai(model_ir), "Input IR model should not have XAI head."
+    if model_name != "classification_model_with_xai_head":
+        assert not XAIModel.has_xai(model_ir), "Input IR model should not have XAI head."
+    if model_name == "classification_model_with_xai_head":
+        assert XAIModel.has_xai(model_ir), "Input IR model should have XAI head."
 
     output = os.path.join(data_dir, "otx_models")
     model_with_xai = XAIClassificationModel.insert_xai_into_native_ir(model_path, output)
 
     assert XAIModel.has_xai(model_with_xai), "Updated IR model should has XAI head."
     model_name = Path(model_path).stem
-    assert os.path.exists(os.path.join(output, model_name + "_xai.xml")), "Updated IR model should be saved."
+    if model_name != "classification_model_with_xai_head":
+        assert os.path.exists(os.path.join(output, model_name + "_xai.xml")), "Updated IR model should be saved."
+
+
+def test_classification_explain_parameters():
+    cls_explain_params = ClassificationExplainParametersWB()
+    assert cls_explain_params.target_layer is None
+    assert cls_explain_params.embed_normalization
+    assert cls_explain_params.explain_method_name == "reciprocam"

@@ -222,6 +222,7 @@ class PostProcessor:
     ):
         self._saliency_map = saliency_map
         self._data = data
+
         self._normalize = normalize
         self._resize = resize
         self._colormap = colormap

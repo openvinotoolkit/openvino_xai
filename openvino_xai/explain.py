@@ -1,11 +1,12 @@
 from abc import ABC
 from abc import abstractmethod
-from typing import Dict, Any, Optional, List
+from typing import Optional, List
 
 import numpy as np
 import openvino
 
 from openvino_xai.model import XAIModel, XAIClassificationModel
+from openvino_xai.parameters import ExplainParameters, PostProcessParameters
 from openvino_xai.saliency_map import ExplainResult, PostProcessor, TargetExplainGroup
 from openvino_xai.utils import logger
 
@@ -36,6 +37,22 @@ class Explainer(ABC):
                 raise ValueError("Model with XAI branch was created outside of Openvino-XAI library. "
                                  "Please explicitly provide target_explain_group to the explain call.")
 
+    @staticmethod
+    def _get_processed_explain_result(raw_explain_result, data, post_processing_parameters):
+        if post_processing_parameters:
+            post_processor = PostProcessor(
+                raw_explain_result,
+                data,
+                post_processing_parameters.normalize,
+                post_processing_parameters.resize,
+                post_processing_parameters.colormap,
+                post_processing_parameters.overlay,
+                post_processing_parameters.overlay_weight,
+            )
+        else:
+            post_processor = PostProcessor(raw_explain_result, data)
+        processed_explain_result = post_processor.postprocess()
+        return processed_explain_result
 
 class WhiteBoxExplainer(Explainer):
     """Explainer explains models with XAI branch injected."""
@@ -45,18 +62,18 @@ class WhiteBoxExplainer(Explainer):
             data: np.ndarray,
             target_explain_group: Optional[TargetExplainGroup] = None,
             explain_targets: Optional[List[int]] = None,
-            post_processing_parameters: Optional[Dict[str, Any]] = None,
+            post_processing_parameters: Optional[PostProcessParameters] = None,
     ) -> ExplainResult:
         """Explain the input in white box mode."""
         raw_result = self._model(data)
 
         target_explain_group = self._get_target_explain_group(target_explain_group)
-        explain_result = ExplainResult(raw_result, target_explain_group, explain_targets, self._labels)
+        raw_explain_result = ExplainResult(raw_result, target_explain_group, explain_targets, self._labels)
 
-        post_processing_parameters = post_processing_parameters or {}
-        post_processor = PostProcessor(explain_result, data, **post_processing_parameters)
-        explain_result = post_processor.postprocess()
-        return explain_result
+        processed_explain_result = self._get_processed_explain_result(
+            raw_explain_result, data, post_processing_parameters
+        )
+        return processed_explain_result
 
 
 class BlackBoxExplainer(Explainer):
@@ -78,9 +95,9 @@ class DRISEExplainer(BlackBoxExplainer):
 class AutoExplainer(Explainer):
     """Explain in auto mode, using white box or black box approach."""
 
-    def __init__(self, model: openvino.model_api.models.Model, explain_parameters: bool = None):
+    def __init__(self, model: openvino.model_api.models.Model, explain_parameters: Optional[ExplainParameters] = None):
         super().__init__(model)
-        self._explain_parameters = explain_parameters if explain_parameters else {}
+        self._explain_parameters = explain_parameters
 
 
 class ClassificationAutoExplainer(AutoExplainer):

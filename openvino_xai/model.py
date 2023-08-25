@@ -1,6 +1,6 @@
 from abc import ABC
 from abc import abstractmethod
-from typing import Dict, Any, Optional
+from typing import Optional
 from pathlib import Path
 import os
 
@@ -11,6 +11,7 @@ from openvino.model_api.models import DetectionModel
 from openvino_xai.insert import InsertXAI
 from openvino_xai.methods import ReciproCAMXAIMethod, ActivationMapXAIMethod, DetClassProbabilityMapXAIMethod, \
     XAIMethodBase
+from openvino_xai.parameters import ExplainParameters, ClassificationExplainParametersWB, DetectionExplainParametersWB
 from openvino_xai.utils import logger
 
 
@@ -37,7 +38,7 @@ class XAIModel(ABC):
     def insert_xai(
             cls,
             model_api_wrapper: openvino.model_api.models.Model,
-            explain_parameters: Dict[str, Any]
+            explain_parameters: ExplainParameters,
     ) -> openvino.model_api.models.Model:
         """Insert XAI into IR model stored in Model API wrapper."""
         # Insert XAI branch into the model
@@ -45,8 +46,6 @@ class XAIModel(ABC):
         explain_method = cls.generate_explain_method(model_ir, explain_parameters)
         xai_generator = InsertXAI(explain_method)
         model_ir_with_xai = xai_generator.generate_model_with_xai()
-        # logger.info(f"Original model:\n{explain_method.model_ori}")
-        # logger.info(f"Model with XAI inserted:\n{model_ir_with_xai}")
 
         # Update Model API wrapper
         model_api_wrapper.explain_method = explain_method
@@ -66,7 +65,7 @@ class XAIModel(ABC):
             cls,
             model_path: str,
             output: Optional[str] = None,
-            explain_parameters: Optional[Dict[str, Any]] = None,
+            explain_parameters: Optional[ExplainParameters] = None,
     ) -> openvino.runtime.Model:
         """Insert XAI into IR model."""
         model_name = Path(model_path).stem
@@ -91,7 +90,7 @@ class XAIModel(ABC):
 
     @classmethod
     @abstractmethod
-    def generate_explain_method(cls, model_ir: openvino.runtime.Model, explain_parameters: Dict[str, Any]):
+    def generate_explain_method(cls, model_ir: openvino.runtime.Model, explain_parameters: ExplainParameters):
         """Generates instance of the explain method class."""
         raise NotImplementedError
 
@@ -113,16 +112,18 @@ class XAIClassificationModel(XAIModel):
 
     @classmethod
     def generate_explain_method(
-            cls, model: openvino.runtime.Model, explain_parameters: Optional[Dict[str, Any]] = None
+            cls, model: openvino.runtime.Model, explain_parameters: Optional[ClassificationExplainParametersWB] = None
     ) -> XAIMethodBase:
         if explain_parameters is None:
             return ReciproCAMXAIMethod(model)
 
-        explain_method_name = explain_parameters.pop("explain_method_name", None)
-        if explain_method_name is None or explain_method_name.lower() == "reciprocam":
-            return ReciproCAMXAIMethod(model, **explain_parameters)
+        explain_method_name = explain_parameters.explain_method_name
+        if explain_method_name.lower() == "reciprocam":
+            return ReciproCAMXAIMethod(model, explain_parameters.target_layer, explain_parameters.embed_normalization)
         if explain_method_name.lower() == "activationmap":
-            return ActivationMapXAIMethod(model, **explain_parameters)
+            return ActivationMapXAIMethod(
+                model, explain_parameters.target_layer, explain_parameters.embed_normalization
+            )
         raise ValueError(f"Requested explain method {explain_method_name} is not implemented.")
 
 
@@ -135,14 +136,18 @@ class XAIDetectionModel(XAIModel):
 
     @classmethod
     def generate_explain_method(
-            cls, model: openvino.runtime.Model, explain_parameters: Dict[str, Any]
+            cls, model: openvino.runtime.Model, explain_parameters: DetectionExplainParametersWB
     ) -> XAIMethodBase:
         if explain_parameters is None:
             raise ValueError("explain_parameters is required for the detection models.")
 
-        explain_method_name = explain_parameters.pop("explain_method_name")
-        if explain_method_name is None:
-            raise ValueError("explain_method_name is required for the detection models.")
+        explain_method_name = explain_parameters.explain_method_name
         if explain_method_name.lower() == "detclassprobabilitymap":
-            return DetClassProbabilityMapXAIMethod(model, **explain_parameters)
+            return DetClassProbabilityMapXAIMethod(
+                model,
+                explain_parameters.target_layer,
+                explain_parameters.num_anchors,
+                explain_parameters.saliency_map_size,
+                explain_parameters.embed_normalization,
+            )
         raise ValueError(f"Requested explain method {explain_method_name} is not implemented.")
