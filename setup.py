@@ -24,7 +24,7 @@ setup(
     python_requires=">=3.7",
     install_requires=(SETUP_DIR / "requirements" / "base.txt").read_text(),
     extras_require={
-        "tests": (SETUP_DIR / "requirements" / "dev.txt").read_text(),
+        "dev": (SETUP_DIR / "requirements" / "dev.txt").read_text(),
     },
     long_description=(SETUP_DIR / "README.md").read_text(),
     long_description_content_type="text/markdown",
