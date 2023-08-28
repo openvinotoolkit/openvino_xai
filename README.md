@@ -2,9 +2,22 @@
 Portable library for OpenVINO™ IR model explanation.
 
 # Installation
+Initialize an isolated python environment:
+```bash
+python3 -m venv .ovxai
 ```
-pip install -r requirements.txt
-python setup.py develop
+
+- Editable mode (for development):
+```bash
+pip install -e .[dev]
+```
+Run tests for verification:
+```bash
+pytest -v -s ./tests/
+```
+- Package mode (for normal use):
+```bash
+pip install .
 ```
 
 # Usage

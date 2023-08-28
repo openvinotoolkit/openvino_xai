@@ -1,3 +1,6 @@
+# Copyright (C) 2023 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 import openvino
 import openvino.runtime as ov
 from openvino.runtime import Model, Type
