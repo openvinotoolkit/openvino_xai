@@ -41,7 +41,7 @@ MODELS_NUM_CLASSES = {
 
 
 def retrieve_otx_model(data_dir, model_name):
-    destination_folder = os.path.join(data_dir, "otx_models")
+    destination_folder = Path(data_dir) / "otx_models"
     os.makedirs(destination_folder, exist_ok=True)
 
     if not os.path.isfile(os.path.join(destination_folder, model_name + ".xml")):
@@ -71,7 +71,7 @@ class TestClsWB:
         TargetExplainGroup.CUSTOM_CLASSES,
     ])
     def test_reciprocam(self, model_name, embed_normalization, target_explain_group):
-        data_dir = "."
+        data_dir = ".data"
         retrieve_otx_model(data_dir, model_name)
         model_path = os.path.join(data_dir, "otx_models", model_name + ".xml")
         explain_parameters = ClassificationExplainParametersWB(
@@ -104,7 +104,7 @@ class TestClsWB:
     def test_activationmap(self, model_name, embed_normalization):
         if model_name == "classification_model_with_xai_head":
             pytest.skip("model already has reciprocam xai head - this test cannot change it.")
-        data_dir = "."
+        data_dir = ".data"
         retrieve_otx_model(data_dir, model_name)
         model_path = os.path.join(data_dir, "otx_models", model_name + ".xml")
         explain_parameters = ClassificationExplainParametersWB(
@@ -121,7 +121,7 @@ class TestClsWB:
     @pytest.mark.parametrize("explain_method_type", [XAIMethodType.RECIPROCAM, XAIMethodType.ACTIVATIONMAP])
     @pytest.mark.parametrize("overlay", [True, False])
     def test_classification_white_box_postprocessing(self, model_name, explain_method_type, overlay):
-        data_dir = "."
+        data_dir = ".data"
         retrieve_otx_model(data_dir, model_name)
         model_path = os.path.join(data_dir, "otx_models", model_name + ".xml")
         explain_parameters = ClassificationExplainParametersWB(
@@ -156,7 +156,7 @@ class TestClsWB:
 
 @pytest.mark.parametrize("model_name", MODELS)
 def test_classification_auto(model_name):
-    data_dir = "."
+    data_dir = ".data"
     retrieve_otx_model(data_dir, model_name)
     model_path = os.path.join(data_dir, "otx_models", model_name + ".xml")
     model = ClassificationModel.create_model(model_path, "Classification")
@@ -169,7 +169,7 @@ def test_classification_auto(model_name):
 
 @pytest.mark.parametrize("model_name", MODELS)
 def test_ir_model_update_wo_inference(model_name):
-    data_dir = "."
+    data_dir = ".data"
     retrieve_otx_model(data_dir, model_name)
     model_path = os.path.join(data_dir, "otx_models", model_name + ".xml")
 
