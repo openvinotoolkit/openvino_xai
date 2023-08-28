@@ -6,6 +6,10 @@ Portable library for OpenVINO™ IR model explanation.
 ```bash
 pip install -e .[tests]
 ```
+Run tests for verification:
+```bash
+pytest -v -s ./tests/
+```
 - Package mode (for normal use):
 ```bash
 pip install .
