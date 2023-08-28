@@ -5,6 +5,7 @@ from pathlib import Path
 import cv2
 
 from openvino_xai.explain import WhiteBoxExplainer
+from openvino_xai.methods import XAIMethodType
 from openvino_xai.model import XAIDetectionModel
 from openvino_xai.parameters import DetectionExplainParametersWB
 from openvino_xai.utils import logger
@@ -42,7 +43,7 @@ def main(argv):
         target_layer=cls_head_output_node_names,
         num_anchors=[1, 1, 1, 1, 1],
         saliency_map_size=(23, 23),  # Optional
-        explain_method_name="detclassprobabilitymap",  # Optional
+        explain_method_type=XAIMethodType.DETCLASSPROBABILITYMAP,  # Optional
     )
     model = XAIDetectionModel.create_model(args.model_path, model_type="ssd",
                                                 explain_parameters=explain_parameters)

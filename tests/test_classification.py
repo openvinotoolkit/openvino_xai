@@ -9,6 +9,7 @@ from openvino.model_api.models import ClassificationModel
 import openvino.runtime as ov
 
 from openvino_xai.explain import WhiteBoxExplainer, ClassificationAutoExplainer
+from openvino_xai.methods import XAIMethodType
 from openvino_xai.parameters import ClassificationExplainParametersWB, PostProcessParameters
 from openvino_xai.saliency_map import TargetExplainGroup
 from openvino_xai.model import XAIClassificationModel, XAIModel
@@ -75,7 +76,7 @@ class TestClsWB:
         model_path = os.path.join(data_dir, "otx_models", model_name + ".xml")
         explain_parameters = ClassificationExplainParametersWB(
             embed_normalization=embed_normalization,
-            explain_method_name="reciprocam",
+            explain_method_type=XAIMethodType.RECIPROCAM,
         )
         model = XAIClassificationModel.create_model(model_path, "Classification", explain_parameters=explain_parameters)
 
@@ -108,7 +109,7 @@ class TestClsWB:
         model_path = os.path.join(data_dir, "otx_models", model_name + ".xml")
         explain_parameters = ClassificationExplainParametersWB(
             embed_normalization=embed_normalization,
-            explain_method_name="activationmap",
+            explain_method_type=XAIMethodType.ACTIVATIONMAP,
         )
         model = XAIClassificationModel.create_model(model_path, "Classification", explain_parameters=explain_parameters)
 
@@ -117,14 +118,14 @@ class TestClsWB:
         assert explanations.map.ndim == 3
 
     @pytest.mark.parametrize("model_name", MODELS)
-    @pytest.mark.parametrize("explain_method_name", ["reciprocam", "activationmap"])
+    @pytest.mark.parametrize("explain_method_type", [XAIMethodType.RECIPROCAM, XAIMethodType.ACTIVATIONMAP])
     @pytest.mark.parametrize("overlay", [True, False])
-    def test_classification_white_box_postprocessing(self, model_name, explain_method_name, overlay):
+    def test_classification_white_box_postprocessing(self, model_name, explain_method_type, overlay):
         data_dir = "."
         retrieve_otx_model(data_dir, model_name)
         model_path = os.path.join(data_dir, "otx_models", model_name + ".xml")
         explain_parameters = ClassificationExplainParametersWB(
-            explain_method_name=explain_method_name,
+            explain_method_type=explain_method_type,
         )
         model = XAIClassificationModel.create_model(model_path, "Classification", explain_parameters=explain_parameters)
 
@@ -139,12 +140,12 @@ class TestClsWB:
             post_processing_parameters=post_processing_parameters,
         )
         assert explanations is not None
-        if explain_method_name == "reciprocam":
+        if explain_method_type == XAIMethodType.RECIPROCAM:
             if overlay:
                 assert explanations.map.shape == (1, MODELS_NUM_CLASSES[model_name], 224, 224, 3)
             else:
                 assert explanations.map.shape == (1, MODELS_NUM_CLASSES[model_name], 7, 7)
-        if explain_method_name == "activationmap":
+        if explain_method_type == XAIMethodType.ACTIVATIONMAP:
             if model_name == "classification_model_with_xai_head":
                 pytest.skip("model already has xai head - this test cannot change it.")
             if overlay:
@@ -191,4 +192,4 @@ def test_classification_explain_parameters():
     cls_explain_params = ClassificationExplainParametersWB()
     assert cls_explain_params.target_layer is None
     assert cls_explain_params.embed_normalization
-    assert cls_explain_params.explain_method_name == "reciprocam"
+    assert cls_explain_params.explain_method_type == XAIMethodType.RECIPROCAM

@@ -1,5 +1,6 @@
 from abc import ABC
 from abc import abstractmethod
+from enum import Enum
 from typing import Optional, Tuple, Union, List
 
 import numpy as np
@@ -9,6 +10,12 @@ from openvino.runtime import opset10 as opset
 
 from openvino_xai.saliency_map import TargetExplainGroup
 from openvino_xai.parse import IRParserCls
+
+
+class XAIMethodType(Enum):
+    ACTIVATIONMAP = "activationmap"
+    RECIPROCAM = "reciprocam"
+    DETCLASSPROBABILITYMAP = "detclassprobabilitymap"
 
 
 class XAIMethodBase(ABC):

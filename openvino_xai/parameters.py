@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Optional, Tuple, List, Union
 
+from openvino_xai.methods import XAIMethodType
+
 
 @dataclass
 class ExplainParameters:
@@ -15,13 +17,13 @@ class ClassificationExplainParametersWB(ExplainParameters):
     Attributes:
         target_layer: Target layer (node) name after which the XAI branch will be inserted.
         embed_normalization: If set to True, saliency map normalization is embedded in the model.
-        explain_method_name: Explain method to use for model explanation.
+        explain_method_type: Explain method to use for model explanation.
     """
 
     target_layer: Optional[str] = None
     embed_normalization: Optional[bool] = True
 
-    explain_method_name: str = "reciprocam"
+    explain_method_type: XAIMethodType = XAIMethodType.RECIPROCAM
 
 
 @dataclass
@@ -33,7 +35,7 @@ class DetectionExplainParametersWB(ExplainParameters):
         num_anchors: Number of anchors per scale.
         saliency_map_size: Size of the output saliency map.
         embed_normalization: If set to True, saliency map normalization is embedded in the model.
-        explain_method_name: Explain method to use for model explanation.
+        explain_method_type: Explain method to use for model explanation.
     """
 
     target_layer: List[str]
@@ -41,7 +43,7 @@ class DetectionExplainParametersWB(ExplainParameters):
     saliency_map_size: Union[Tuple[int, int], List[int]] = (13, 13)
     embed_normalization: bool = True
 
-    explain_method_name: str = "detclassprobabilitymap"
+    explain_method_type: XAIMethodType = XAIMethodType.DETCLASSPROBABILITYMAP
 
 
 @dataclass

@@ -7,6 +7,7 @@ import cv2
 from openvino.model_api.models import ClassificationModel
 
 from openvino_xai.explain import WhiteBoxExplainer, ClassificationAutoExplainer
+from openvino_xai.methods import XAIMethodType
 from openvino_xai.parameters import ClassificationExplainParametersWB, PostProcessParameters
 from openvino_xai.saliency_map import TargetExplainGroup
 from openvino_xai.model import XAIClassificationModel
@@ -41,7 +42,7 @@ def run_example_w_explain_parameters(args):
     explain_parameters = ClassificationExplainParametersWB(
         target_layer="/backbone/features/final_block/activate/Mul",  # OTX effnet
         # target_layer="/backbone/conv/conv.2/Div",  # OTX mnet_v3
-        explain_method_name="reciprocam",
+        explain_method_type=XAIMethodType.RECIPROCAM,
     )
     model = XAIClassificationModel.create_model(args.model_path, "Classification",
                                                 explain_parameters=explain_parameters)

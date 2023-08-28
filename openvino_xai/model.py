@@ -10,7 +10,7 @@ from openvino.model_api.models import DetectionModel
 
 from openvino_xai.insert import InsertXAI
 from openvino_xai.methods import ReciproCAMXAIMethod, ActivationMapXAIMethod, DetClassProbabilityMapXAIMethod, \
-    XAIMethodBase
+    XAIMethodBase, XAIMethodType
 from openvino_xai.parameters import ExplainParameters, ClassificationExplainParametersWB, DetectionExplainParametersWB
 from openvino_xai.utils import logger
 
@@ -117,14 +117,14 @@ class XAIClassificationModel(XAIModel):
         if explain_parameters is None:
             return ReciproCAMXAIMethod(model)
 
-        explain_method_name = explain_parameters.explain_method_name
-        if explain_method_name.lower() == "reciprocam":
+        explain_method_type = explain_parameters.explain_method_type
+        if explain_method_type == XAIMethodType.RECIPROCAM:
             return ReciproCAMXAIMethod(model, explain_parameters.target_layer, explain_parameters.embed_normalization)
-        if explain_method_name.lower() == "activationmap":
+        if explain_method_type == XAIMethodType.ACTIVATIONMAP:
             return ActivationMapXAIMethod(
                 model, explain_parameters.target_layer, explain_parameters.embed_normalization
             )
-        raise ValueError(f"Requested explain method {explain_method_name} is not implemented.")
+        raise ValueError(f"Requested explain method {explain_method_type} is not implemented.")
 
 
 class XAIDetectionModel(XAIModel):
@@ -141,8 +141,8 @@ class XAIDetectionModel(XAIModel):
         if explain_parameters is None:
             raise ValueError("explain_parameters is required for the detection models.")
 
-        explain_method_name = explain_parameters.explain_method_name
-        if explain_method_name.lower() == "detclassprobabilitymap":
+        explain_method_type = explain_parameters.explain_method_type
+        if explain_method_type == XAIMethodType.DETCLASSPROBABILITYMAP:
             return DetClassProbabilityMapXAIMethod(
                 model,
                 explain_parameters.target_layer,
@@ -150,4 +150,4 @@ class XAIDetectionModel(XAIModel):
                 explain_parameters.saliency_map_size,
                 explain_parameters.embed_normalization,
             )
-        raise ValueError(f"Requested explain method {explain_method_name} is not implemented.")
+        raise ValueError(f"Requested explain method {explain_method_type} is not implemented.")
