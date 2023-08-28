@@ -7,6 +7,8 @@ import cv2
 from openvino.model_api.models import ClassificationModel
 
 from openvino_xai.explain import WhiteBoxExplainer, ClassificationAutoExplainer
+from openvino_xai.methods import XAIMethodType
+from openvino_xai.parameters import ClassificationExplainParametersWB, PostProcessParameters
 from openvino_xai.saliency_map import TargetExplainGroup
 from openvino_xai.model import XAIClassificationModel
 from openvino_xai.utils import logger
@@ -37,11 +39,11 @@ def run_example_w_explain_parameters(args):
     image = cv2.imread(args.image_path)
     image_name = Path(args.image_path).stem
 
-    explain_parameters = {
-        "explain_method_name": "reciprocam",  # Optional
-        "target_layer": "/backbone/features/final_block/activate/Mul",  # OTX effnet
-        # "target_layer": "/backbone/conv/conv.2/Div",  # OTX mnet_v3
-    }
+    explain_parameters = ClassificationExplainParametersWB(
+        target_layer="/backbone/features/final_block/activate/Mul",  # OTX effnet
+        # target_layer="/backbone/conv/conv.2/Div",  # OTX mnet_v3
+        explain_method_type=XAIMethodType.RECIPROCAM,
+    )
     model = XAIClassificationModel.create_model(args.model_path, "Classification",
                                                 explain_parameters=explain_parameters)
     explainer = WhiteBoxExplainer(model)
@@ -58,9 +60,7 @@ def run_example_w_postprocessing_parameters(args):
 
     model = XAIClassificationModel.create_model(args.model_path, "Classification")
     explainer = WhiteBoxExplainer(model)
-    post_processing_parameters = {
-        "overlay": True,
-    }
+    post_processing_parameters = PostProcessParameters(overlay=True)
     explanation = explainer.explain(
         image,
         TargetExplainGroup.PREDICTED_CLASSES,
@@ -109,13 +109,10 @@ def run_multiple_image_example(args):
                 img_files.extend([os.path.join(root, file.name) for file in Path(root).glob(f"*{format_}")])
     model = XAIClassificationModel.create_model(args.model_path, "Classification")
     explainer = WhiteBoxExplainer(model)
-    post_processing_parameters = {
-        "normalize": True,
-        "overlay": True,
-    }
+    post_processing_parameters = PostProcessParameters(normalize=True, overlay=True)
     for image_path in img_files:
         image = cv2.imread(image_path)
-        image_name = image_path.split("/")[-1].split(".")[0]
+        image_name = Path(image_path).stem
         explanation = explainer.explain(
             image,
             TargetExplainGroup.PREDICTED_CLASSES,

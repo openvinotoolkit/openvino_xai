@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from openvino_xai.parameters import PostProcessParameters
 from openvino_xai.saliency_map import TargetExplainGroup, ExplainResult, PostProcessor
 
 RAW_PREDICTIONS = [
@@ -36,13 +37,13 @@ class TestPostProcessor:
             overlay,
             overlay_weight,
     ):
-        post_processing_parameters = {
-            "normalize": normalize,
-            "resize": resize,
-            "colormap": colormap,
-            "overlay": overlay,
-            "overlay_weight": overlay_weight,
-        }
+        post_processing_parameters = PostProcessParameters(
+            normalize=normalize,
+            resize=resize,
+            colormap=colormap,
+            overlay=overlay,
+            overlay_weight=overlay_weight,
+        )
 
         if target_explain_group == TargetExplainGroup.CUSTOM_CLASSES:
             explain_targets = [0]
@@ -58,7 +59,15 @@ class TestPostProcessor:
 
         raw_dims = saliency_map_obj.map.ndim
         data = np.ones((10, 10, 3))
-        post_processor = PostProcessor(saliency_map_obj, data, **post_processing_parameters)
+        post_processor = PostProcessor(
+            saliency_map_obj,
+            data,
+            post_processing_parameters.normalize,
+            post_processing_parameters.resize,
+            post_processing_parameters.colormap,
+            post_processing_parameters.overlay,
+            post_processing_parameters.overlay_weight,
+        )
         saliency_map_processed = post_processor.postprocess()
 
         assert saliency_map_processed is not None
