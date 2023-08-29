@@ -5,11 +5,6 @@ import cv2
 import numpy as np
 import pytest
 
-import timm
-import torch
-from torch import nn
-
-
 import os
 import subprocess
 import sys
@@ -23,7 +18,9 @@ from openvino_xai.model import XAIClassificationModel
 from openvino_xai.parameters import ClassificationExplainParametersWB, PostProcessParameters
 from openvino_xai.saliency_map import TargetExplainGroup, PostProcessor
 
-# timm = pytest.importorskip("timm")
+timm = pytest.importorskip("timm")
+torch = pytest.importorskip("torch")
+pytest.importorskip("onnx")
 
 
 class Command:
@@ -109,7 +106,7 @@ class Command:
         return self.exec_time
 
 
-def export_to_onnx(model: nn.Module, save_path: str, data_sample: torch.Tensor) -> None:
+def export_to_onnx(model: torch.nn.Module, save_path: str, data_sample: torch.Tensor) -> None:
     """
     Export Torch model to ONNX format.
     """
@@ -128,12 +125,8 @@ def export_to_ir(model_path: str, save_path: str, model_name: str) -> None:
     runner.run()
 
 
-TEST_MODELS = timm.list_models('efficientnet*', pretrained=True)
-# TEST_MODELS = timm.list_models(pretrained=True)
-TEST_MODELS = TEST_MODELS[:2]
+TEST_MODELS = timm.list_models(pretrained=True)
 
-# TEST_MODELS = timm.list_models('efficientnet_b5.sw_in12k_ft_in1k', pretrained=True)
-# TEST_MODELS = timm.list_models('efficientnet_b5*', pretrained=True)
 
 CNN_MODELS = [
     "bat_resnext",
