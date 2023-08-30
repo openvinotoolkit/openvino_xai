@@ -172,6 +172,12 @@ CNN_MODELS = [
 ]
 
 
+NON_CONVERTABLE_CNN_MODELS = [
+    "convnext_xxlarge",  # too big
+    "convnextv2_huge",  # too big
+]
+
+
 class TestImageClassificationTimm:
     data_dir = ".data"
     fields = ["Model", "Exported to ONNX", "Exported to OV IR", "Explained", "Map size", "Map saved"]
@@ -185,6 +191,8 @@ class TestImageClassificationTimm:
         self.clean_cash(clean_ir_cash, clean_huggingface_cash)
         if not any(cnn_model_key in model_id for cnn_model_key in CNN_MODELS):
             pytest.skip(f"Model {model_id} is not CNN-based.")
+        if any(cnn_model_key in model_id for cnn_model_key in NON_CONVERTABLE_CNN_MODELS):
+            pytest.skip(f"Model {model_id} is non-convertable ether to ONNX or to OV representation.")
 
         output_dir = os.path.join(self.data_dir, "timm_models", "converted_models", model_id)
         output_model_dir = Path(output_dir)
