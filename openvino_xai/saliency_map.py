@@ -199,19 +199,7 @@ class ExplainResult:
 
 
 class PostProcessor:
-    """PostProcessor implements post-processing for the saliency map.
-
-    Args:
-        saliency_map: Input raw saliency map(s).
-        data: Input data.
-        normalize: If True, normalize saliency map into [0, 255] range (filling the whole range).
-            By default, normalization to [0, 255] range is embedded into the IR model.
-            Therefore, normalize=False here by default.
-        resize: If True, resize saliency map to the input image size.
-        colormap: If True, apply colormap to the grayscale saliency map.
-        overlay: If True, generate overlay of the saliency map over the input image.
-        overlay_weight: Weight of the saliency map when overlaying the input data with the saliency map.
-    """
+    """PostProcessor implements post-processing for the saliency map."""
 
     def __init__(
             self,
@@ -223,6 +211,17 @@ class PostProcessor:
             overlay: bool = False,
             overlay_weight: float = 0.5,
     ):
+        """
+        :param saliency_map: Input raw saliency map(s).
+        :param data: Input data.
+        :param normalize: If True, normalize saliency map into [0, 255] range (filling the whole range).
+            By default, normalization to [0, 255] range is embedded into the IR model.
+            Therefore, normalize=False here by default.
+        :param resize: If True, resize saliency map to the input image size.
+        :param colormap: If True, apply colormap to the grayscale saliency map.
+        :param overlay: If True, generate overlay of the saliency map over the input image.
+        :param overlay_weight: Weight of the saliency map when overlaying the input data with the saliency map.
+        """
         self._saliency_map = saliency_map
         self._data = data
 

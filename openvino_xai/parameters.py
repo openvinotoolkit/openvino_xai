@@ -15,12 +15,12 @@ class ExplainParameters:
 
 @dataclass
 class ClassificationExplainParametersWB(ExplainParameters):
-    """Explain parameters for classification.
+    """
+    Explain parameters for classification.
 
-    Attributes:
-        target_layer: Target layer (node) name after which the XAI branch will be inserted.
-        embed_normalization: If set to True, saliency map normalization is embedded in the model.
-        explain_method_type: Explain method to use for model explanation.
+    :parameter target_layer: Target layer (node) name after which the XAI branch will be inserted.
+    :parameter embed_normalization: If set to True, saliency map normalization is embedded in the model.
+    :parameter explain_method_type: Explain method to use for model explanation.
     """
 
     target_layer: Optional[str] = None
@@ -31,14 +31,14 @@ class ClassificationExplainParametersWB(ExplainParameters):
 
 @dataclass
 class DetectionExplainParametersWB(ExplainParameters):
-    """Explain parameters for detection.
+    """
+    Explain parameters for detection.
 
-    Attributes:
-        target_layer: Target layer (node) name after which the XAI branch will be inserted.
-        num_anchors: Number of anchors per scale.
-        saliency_map_size: Size of the output saliency map.
-        embed_normalization: If set to True, saliency map normalization is embedded in the model.
-        explain_method_type: Explain method to use for model explanation.
+    :parameter target_layer: Target layer (node) name after which the XAI branch will be inserted.
+    :parameter num_anchors: Number of anchors per scale.
+    :parameter saliency_map_size: Size of the output saliency map.
+    :parameter embed_normalization: If set to True, saliency map normalization is embedded in the model.
+    :parameter explain_method_type: Explain method to use for model explanation.
     """
 
     target_layer: List[str]
@@ -51,16 +51,16 @@ class DetectionExplainParametersWB(ExplainParameters):
 
 @dataclass
 class PostProcessParameters:
-    """PostProcessParameters parametrize postprocessing of saliency maps.
+    """
+    PostProcessParameters parametrize postprocessing of saliency maps.
 
-    Attributes:
-        normalize: If True, normalize saliency map into [0, 255] range (filling the whole range).
-            By default, normalization to [0, 255] range is embedded into the IR model.
-            Therefore, normalize=False here by default.
-        resize: If True, resize saliency map to the input image size.
-        colormap: If True, apply colormap to the grayscale saliency map.
-        overlay: If True, generate overlay of the saliency map over the input image.
-        overlay_weight: Weight of the saliency map when overlaying the input data with the saliency map.
+    :parameter normalize: If True, normalize saliency map into [0, 255] range (filling the whole range).
+        By default, normalization to [0, 255] range is embedded into the IR model.
+        Therefore, normalize=False here by default.
+    :parameter resize: If True, resize saliency map to the input image size.
+    :parameter colormap: If True, apply colormap to the grayscale saliency map.
+    :parameter overlay: If True, generate overlay of the saliency map over the input image.
+    :parameter overlay_weight: Weight of the saliency map when overlaying the input data with the saliency map.
     """
 
     normalize: bool = False
