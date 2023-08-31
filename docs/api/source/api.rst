@@ -1,7 +1,7 @@
 OpenVINO-XAI Python API
 =======================
 
-Models
+Model
 ------
 
 To create XAIModel, which is OpenVINO™ ModelAPI model wrapper with XAI head inserted into the model graph, use openvino_xai.model
