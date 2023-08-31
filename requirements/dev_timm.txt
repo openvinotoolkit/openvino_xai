@@ -1,2 +1,2 @@
-timm
-onnx
+timm==0.9.5
+onnx==1.14.1

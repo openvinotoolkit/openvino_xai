@@ -134,12 +134,9 @@ CNN_MODELS = [
     "cs3darknet",
     "cs3",
     "darknet",
-    "cspresnet",
     "densenet",
     "dla",
     "dpn",
-    "eca_resnet",
-    "ecaresnet",
     "efficientnet",
     "ese_vovnet",
     "fbnet",
@@ -157,24 +154,50 @@ CNN_MODELS = [
     "regnet",
     "repvgg",
     "res2net",
+    "res2next",
     "resnest",
     "resnext",
     "rexnet",
     "selecsls",
     "semnasnet",
     "senet",
-    "seresnet",
     "seresnext",
     "spnasnet",
     "tinynet",
     "vgg",
     "xception",
+    "resnet",
 ]
 
 
+# TODO: include it into the report with corresponding error
 NON_CONVERTABLE_CNN_MODELS = [
     "convnext_xxlarge",  # too big
     "convnextv2_huge",  # too big
+    "gc_efficientnetv2_rw",  # failed to convert to OV
+    "gcresnext",  # failed to convert to OV
+    "haloregnetz",
+    "nasnetalarge",
+    "pnasnet5large",
+    "regnety_1280",
+    "regnety_2560",
+    "resnest14d",
+    "resnest26d",
+    "resnest50d",
+    "resnest101e",
+    "resnest200e",
+    "resnest269e",
+    "skresnext50_32x4d",
+    "tf_efficientnet_cc_b",
+    "gcresnet",
+    "lambda_resnet",
+    "nf_regnet",
+    "nf_resnet",
+    "resnetv2_50x",
+    "resnetv2_101x",
+    "resnetv2_152x",
+    "skresnet",
+    "tresnet_",
 ]
 
 
@@ -235,6 +258,7 @@ class TestImageClassificationTimm:
             [target_class],
         )
         assert explanation is not None
+        assert explanation.map.shape[-1] > 1
         print(f"{model_id}: Generated classification saliency maps with shape {explanation.map.shape}.")
         self.update_report(model_id, "True", "True", "True")
         raw_shape = explanation.map.shape
@@ -286,7 +310,9 @@ class TestImageClassificationTimm:
             for i in range(len(last_row)):
                 if last_row[i] != fields[i]:
                     last_row[i] = fields[i]
-            bool_flags = np.array([[bool(model[1]), bool(model[2]), bool(model[3])] for model in self.report[2:]])
+            bool_flags = np.array(
+                [[self.count(model[1]), self.count(model[2]), self.count(model[3])] for model in self.report[2:]]
+            )
             self.report[1][1] = str(bool_flags[:, 0].sum())
             self.report[1][2] = str(bool_flags[:, 1].sum())
             self.report[1][3] = str(bool_flags[:, 2].sum())
@@ -303,3 +329,11 @@ class TestImageClassificationTimm:
             huggingface_hub_dir = os.path.join(os.path.expanduser('~'), ".cache/huggingface/hub/")
             if os.path.isdir(huggingface_hub_dir):
                 shutil.rmtree(huggingface_hub_dir)
+
+    @staticmethod
+    def count(bool_string):
+        if bool_string == "True":
+            return 1
+        if bool_string == "False":
+            return 0
+        raise ValueError
