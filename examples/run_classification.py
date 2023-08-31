@@ -7,8 +7,7 @@ import cv2
 from openvino.model_api.models import ClassificationModel
 
 from openvino_xai.explain import WhiteBoxExplainer, ClassificationAutoExplainer
-from openvino_xai.methods import XAIMethodType
-from openvino_xai.parameters import ClassificationExplainParametersWB, PostProcessParameters
+from openvino_xai.parameters import ClassificationExplainParametersWB, PostProcessParameters, XAIMethodType
 from openvino_xai.saliency_map import TargetExplainGroup
 from openvino_xai.model import XAIClassificationModel
 from openvino_xai.utils import logger

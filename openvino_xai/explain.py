@@ -25,6 +25,7 @@ class Explainer(ABC):
     @abstractmethod
     def explain(self, data: np.ndarray) -> ExplainResult:
         """Explain the input."""
+        # TODO: handle path_to_data as input as well?
         raise NotImplementedError
 
     def _get_target_explain_group(self, target_explain_group):
@@ -42,18 +43,11 @@ class Explainer(ABC):
 
     @staticmethod
     def _get_processed_explain_result(raw_explain_result, data, post_processing_parameters):
-        if post_processing_parameters:
-            post_processor = PostProcessor(
-                raw_explain_result,
-                data,
-                post_processing_parameters.normalize,
-                post_processing_parameters.resize,
-                post_processing_parameters.colormap,
-                post_processing_parameters.overlay,
-                post_processing_parameters.overlay_weight,
-            )
-        else:
-            post_processor = PostProcessor(raw_explain_result, data)
+        post_processor = PostProcessor(
+            raw_explain_result,
+            data,
+            post_processing_parameters,
+        )
         processed_explain_result = post_processor.postprocess()
         return processed_explain_result
 
@@ -65,9 +59,19 @@ class WhiteBoxExplainer(Explainer):
             data: np.ndarray,
             target_explain_group: Optional[TargetExplainGroup] = None,
             explain_targets: Optional[List[int]] = None,
-            post_processing_parameters: Optional[PostProcessParameters] = None,
+            post_processing_parameters: PostProcessParameters = PostProcessParameters(),
     ) -> ExplainResult:
-        """Explain the input in white box mode."""
+        """Explain the input in white box mode.
+
+        :param data: Data to explain.
+        :type data: np.ndarray
+        :param target_explain_group: Defines targets to explain: all classes, only predicted classes, etc.
+        :type target_explain_group: TargetExplainGroup
+        :param explain_targets: Provides list of custom targets, optional.
+        :type explain_targets: Optional[List[int]]
+        :param post_processing_parameters: Parameters that define post-processing.
+        :type post_processing_parameters: PostProcessParameters
+        """
         raw_result = self._model(data)
 
         target_explain_group = self._get_target_explain_group(target_explain_group)
@@ -113,9 +117,10 @@ class ClassificationAutoExplainer(AutoExplainer):
             2. If not (1), IR model can be augmented with XAI branch -> augment and infer.
             3. If not (1) and (2), IR model can NOT be augmented with XAI branch -> use XAI BB method.
 
-        Args:
-            data(numpy.ndarray): data to explain.
-            target_explain_group(TargetExplainGroup): Target explain group.
+        :param data: Data to explain.
+        :type data: np.ndarray
+        :param target_explain_group: Target explain group.
+        :type target_explain_group: TargetExplainGroup
         """
         if XAIModel.has_xai(self._model.inference_adapter.model):
             logger.info("Model already has XAI - using White Box explainer.")

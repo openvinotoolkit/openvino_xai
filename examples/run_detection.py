@@ -5,9 +5,8 @@ from pathlib import Path
 import cv2
 
 from openvino_xai.explain import WhiteBoxExplainer
-from openvino_xai.methods import XAIMethodType
 from openvino_xai.model import XAIDetectionModel
-from openvino_xai.parameters import DetectionExplainParametersWB
+from openvino_xai.parameters import DetectionExplainParametersWB, XAIMethodType
 from openvino_xai.utils import logger
 
 
