@@ -1,5 +1,9 @@
 # OpenVINO-XAI
-Portable library for OpenVINO™ IR model explanation.
+OpenVINO-XAI provides a suite of Explainable AI (XAI) algorithms for explanation of 
+[OpenVINO™](https://github.com/openvinotoolkit/openvino) Intermediate Representation (IR).
+
+# Documentation
+OpenVINO-XAI API documentation can be found [here](https://curly-couscous-ovjvm29.pages.github.io/).
 
 # Usage
 ### E2E model explanation
