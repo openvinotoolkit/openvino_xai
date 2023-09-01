@@ -10,7 +10,7 @@ SETUP_DIR = Path(__file__).resolve().parent
 INSTALL_REQUIRES = (SETUP_DIR / "requirements" / "base.txt").read_text()
 
 TEST_BASE_EXTRAS = (SETUP_DIR / "requirements" / "dev.txt").read_text()
-TIMM_EXTRAS = TEST_BASE_EXTRAS + (SETUP_DIR / "requirements" / "dev_timm.txt").read_text()
+TIMM_EXTRAS = TEST_BASE_EXTRAS + "\n" + (SETUP_DIR / "requirements" / "dev_timm.txt").read_text()
 EXTRAS_REQUIRE = {
     "dev": TEST_BASE_EXTRAS,
     "dev_timm": TIMM_EXTRAS,
