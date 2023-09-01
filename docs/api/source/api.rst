@@ -12,7 +12,7 @@ openvino_xai.model
     :members:
 
 Explain
----------
+-------
 
 To generate explanations, use openvino_xai.explain
 
