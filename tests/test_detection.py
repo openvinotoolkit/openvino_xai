@@ -1,5 +1,4 @@
-from openvino_xai.methods import XAIMethodType
-from openvino_xai.parameters import DetectionExplainParametersWB
+from openvino_xai.parameters import DetectionExplainParametersWB, XAIMethodType
 
 
 def test_detection_explain_parameters():

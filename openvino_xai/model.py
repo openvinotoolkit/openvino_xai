@@ -13,8 +13,9 @@ from openvino.model_api.models import DetectionModel
 
 from openvino_xai.insert import InsertXAI
 from openvino_xai.methods import ReciproCAMXAIMethod, ActivationMapXAIMethod, DetClassProbabilityMapXAIMethod, \
-    XAIMethodBase, XAIMethodType
-from openvino_xai.parameters import ExplainParameters, ClassificationExplainParametersWB, DetectionExplainParametersWB
+    XAIMethodBase
+from openvino_xai.parameters import ExplainParameters, ClassificationExplainParametersWB, DetectionExplainParametersWB, \
+    XAIMethodType
 from openvino_xai.utils import logger
 
 
@@ -43,7 +44,16 @@ class XAIModel(ABC):
             model_api_wrapper: openvino.model_api.models.Model,
             explain_parameters: ExplainParameters,
     ) -> openvino.model_api.models.Model:
-        """Insert XAI into IR model stored in Model API wrapper."""
+        """
+        Insert XAI into IR model stored in Model API wrapper.
+
+        :param model_api_wrapper: Original ModelAPI wrapper.
+        :type model_api_wrapper: openvino.model_api.models.Model
+        :param explain_parameters: Explain parameters that parametrize explain method,
+            that will be inserted into the model graph.
+        :type explain_parameters: ExplainParameters
+        :return: Modified ModelAPI wrapper with XAI head.
+        """
         # Insert XAI branch into the model
         model_ir = model_api_wrapper.get_model()
         explain_method = cls.generate_explain_method(model_ir, explain_parameters)
@@ -70,7 +80,20 @@ class XAIModel(ABC):
             output: Optional[str] = None,
             explain_parameters: Optional[ExplainParameters] = None,
     ) -> openvino.runtime.Model:
-        """Insert XAI into IR model."""
+        """Insert XAI directly into IR model.
+
+        :param model_path: Path to OV IR model.
+        :type model_path: str
+
+        :param output: Output path where to save updated OV IR model.
+        :type output: Optional[str]
+
+        :param explain_parameters: Explain parameters that parametrize explain method,
+            that will be inserted into the model graph.
+        :type explain_parameters: Optional[ExplainParameters]
+
+        :return: Modified OV IR model with XAI head.
+        """
         model_name = Path(model_path).stem
         model_ir = openvino.runtime.Core().read_model(model_path)
         if cls.has_xai(model_ir):
@@ -93,13 +116,27 @@ class XAIModel(ABC):
 
     @classmethod
     @abstractmethod
-    def generate_explain_method(cls, model_ir: openvino.runtime.Model, explain_parameters: ExplainParameters):
-        """Generates instance of the explain method class."""
+    def generate_explain_method(
+            cls, model_ir: openvino.runtime.Model, explain_parameters: ExplainParameters
+    ) -> XAIMethodBase:
+        """Generates instance of the explain method class.
+
+        :param model: OV IR model.
+        :type model: openvino.runtime.Model
+        :param explain_parameters: Explain parameters that parametrize explain method,
+            that will be inserted into the model graph.
+        :type explain_parameters: ExplainParameters
+        """
         raise NotImplementedError
 
     @staticmethod
     def has_xai(model: openvino.runtime.Model) -> bool:
-        """Check if the model contain XAI."""
+        """Check if the model contain XAI.
+
+        :param model: OV IR model.
+        :type model: openvino.runtime.Model
+        :return: True is the model has XAI head, False otherwise.
+        """
         for output in model.outputs:
             if "saliency_map" in output.get_names():
                 return True
@@ -117,6 +154,14 @@ class XAIClassificationModel(XAIModel):
     def generate_explain_method(
             cls, model: openvino.runtime.Model, explain_parameters: Optional[ClassificationExplainParametersWB] = None
     ) -> XAIMethodBase:
+        """Generates instance of the classification explain method class.
+
+        :param model: OV IR model.
+        :type model: openvino.runtime.Model
+        :param explain_parameters: Explain parameters that parametrize explain method,
+            that will be inserted into the model graph.
+        :type explain_parameters: ExplainParameters
+        """
         if explain_parameters is None:
             return ReciproCAMXAIMethod(model)
 
@@ -141,6 +186,14 @@ class XAIDetectionModel(XAIModel):
     def generate_explain_method(
             cls, model: openvino.runtime.Model, explain_parameters: DetectionExplainParametersWB
     ) -> XAIMethodBase:
+        """Generates instance of the detection explain method class.
+
+        :param model: OV IR model.
+        :type model: openvino.runtime.Model
+        :param explain_parameters: Explain parameters that parametrize explain method,
+            that will be inserted into the model graph.
+        :type explain_parameters: ExplainParameters
+        """
         if explain_parameters is None:
             raise ValueError("explain_parameters is required for the detection models.")
 

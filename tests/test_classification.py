@@ -9,8 +9,7 @@ from openvino.model_api.models import ClassificationModel
 import openvino.runtime as ov
 
 from openvino_xai.explain import WhiteBoxExplainer, ClassificationAutoExplainer
-from openvino_xai.methods import XAIMethodType
-from openvino_xai.parameters import ClassificationExplainParametersWB, PostProcessParameters
+from openvino_xai.parameters import ClassificationExplainParametersWB, PostProcessParameters, XAIMethodType
 from openvino_xai.saliency_map import TargetExplainGroup
 from openvino_xai.model import XAIClassificationModel, XAIModel
 

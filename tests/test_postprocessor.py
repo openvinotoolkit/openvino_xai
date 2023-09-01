@@ -62,11 +62,7 @@ class TestPostProcessor:
         post_processor = PostProcessor(
             saliency_map_obj,
             data,
-            post_processing_parameters.normalize,
-            post_processing_parameters.resize,
-            post_processing_parameters.colormap,
-            post_processing_parameters.overlay,
-            post_processing_parameters.overlay_weight,
+            post_processing_parameters,
         )
         saliency_map_processed = post_processor.postprocess()
 

@@ -9,10 +9,12 @@ import cv2
 import numpy as np
 from openvino.model_api.models import ClassificationResult
 
+from openvino_xai.parameters import PostProcessParameters
+
 
 class TargetExplainGroup(Enum):
     """
-    Describes target explain groups.
+    Enum describes different target explain groups.
 
     Contains the following values:
         IMAGE - Global (single) saliency map per image.
@@ -43,7 +45,7 @@ SELECTED_BBOXES = {
 
 class SaliencyMapLayout(Enum):
     """
-    Describes saliency map layout.
+    Enum describes different saliency map layouts.
 
     Saliency map can have the following layout:
         ONE_MAP_PER_IMAGE_GRAY - BHW - one map per image
@@ -79,8 +81,17 @@ ONE_MAP_LAYOUTS = {
 class ExplainResult:
     """
     ExplainResult selects target saliency maps, holds it and its layout.
-    TODO: Separate for task type, e.g. create ExplainResult <- ExplainResultClassification, etc.
+
+    :param raw_result: Raw prediction of ModelAPI wrapper.
+    :type raw_result: ClassificationResult
+    :param target_explain_group: Defines targets to explain: all classes, only predicted classes, custom classes, etc.
+    :type target_explain_group: TargetExplainGroup
+    :param explain_targets: Provides list of custom targets, optional.
+    :type explain_targets: Optional[List[int]]
+    :param labels: List of all labels.
+    :type labels: List[str]
     """
+    # TODO: Separate for task type, e.g. create ExplainResult <- ExplainResultClassification, etc.
 
     def __init__(
             self,
@@ -168,7 +179,7 @@ class ExplainResult:
         # TODO: implement for detection, probably in a separate class
 
     @staticmethod
-    def get_layout(saliency_map):
+    def get_layout(saliency_map: np.ndarray) -> SaliencyMapLayout:
         """Estimate and return SaliencyMapLayout. Requires raw saliency map."""
         if saliency_map.ndim == 3:
             return SaliencyMapLayout.ONE_MAP_PER_IMAGE_GRAY
@@ -178,7 +189,7 @@ class ExplainResult:
             raise ValueError(f"Raw saliency map has to be three or four dimensional tensor, "
                              f"but got {saliency_map.ndim}.")
 
-    def save(self, dir_path, name: Optional[str] = None) -> None:
+    def save(self, dir_path: str, name: Optional[str] = None) -> None:
         """Dumps saliency map."""
         # TODO: use labels instead of map_id for classification
         # TODO: add unit test
@@ -199,48 +210,36 @@ class ExplainResult:
 
 
 class PostProcessor:
-    """PostProcessor implements post-processing for the saliency map.
+    """
+    PostProcessor implements post-processing for the saliency map.
 
-    Args:
-        saliency_map: Input raw saliency map(s).
-        data: Input data.
-        normalize: If True, normalize saliency map into [0, 255] range (filling the whole range).
-            By default, normalization to [0, 255] range is embedded into the IR model.
-            Therefore, normalize=False here by default.
-        resize: If True, resize saliency map to the input image size.
-        colormap: If True, apply colormap to the grayscale saliency map.
-        overlay: If True, generate overlay of the saliency map over the input image.
-        overlay_weight: Weight of the saliency map when overlaying the input data with the saliency map.
+    :param saliency_map: Input raw saliency map(s).
+    :type saliency_map: ExplainResult
+    :param data: Input data.
+    :type data: ExplainResult
+    :param post_processing_parameters: Parameters that define post-processing.
+    :type post_processing_parameters: PostProcessParameters
     """
 
     def __init__(
             self,
             saliency_map: ExplainResult,
             data: np.ndarray = None,
-            normalize: bool = False,
-            resize: bool = False,
-            colormap: bool = False,
-            overlay: bool = False,
-            overlay_weight: float = 0.5,
+            post_processing_parameters: PostProcessParameters = PostProcessParameters(),
     ):
         self._saliency_map = saliency_map
         self._data = data
 
-        self._normalize = normalize
-        self._resize = resize
-        self._colormap = colormap
-        self._overlay = overlay
-        self._overlay_weight = overlay_weight
+        self._normalize = post_processing_parameters.normalize
+        self._resize = post_processing_parameters.resize
+        self._colormap = post_processing_parameters.colormap
+        self._overlay = post_processing_parameters.overlay
+        self._overlay_weight = post_processing_parameters.overlay_weight
 
     def postprocess(self) -> ExplainResult:
-        """Saliency map postprocess method.
-
-        Return:
-            saliency_map: ExplainResult object with processed saliency map, that can have the following layout:
-                - B, H, W - single map per image
-                - B, H, W, C - single map per image, colormapped
-                - B, N, H, W - multiple maps per image, e.g. per-class maps can potentially lead to this
-                - B, N, H, W, C - multiple maps per image, colormapped
+        """
+        Saliency map postprocess method.
+        Returns ExplainResult object with processed saliency map, that can have one of SaliencyMapLayout layouts.
         """
         if self._normalize:
             self.apply_normalization()
@@ -292,11 +291,9 @@ class PostProcessor:
         return min_values, max_values
 
     def apply_resize(self) -> None:
-        """
-        Resizes saliency map to the original size of input data.
-        TODO: support resize of colormapped images.
-        TODO: support resize to custom size.
-        """
+        """Resizes saliency map to the original size of input data."""
+        # TODO: support resize of colormapped images.
+        # TODO: support resize to custom size.
         if self._saliency_map.layout == SaliencyMapLayout.ONE_MAP_PER_IMAGE_GRAY:
             x = self._saliency_map.map[0]
             x = cv2.resize(x, self._data.shape[:2][::-1])
@@ -312,8 +309,8 @@ class PostProcessor:
                                f"but got {self._saliency_map.layout}.")
 
     def apply_colormap(self) -> None:
-        """Applies cv2.applyColorMap to the saliency map
-        TODO: support different (custom?) colormaps."""
+        """Applies cv2.applyColorMap to the saliency map."""
+        #  TODO: support different (custom?) colormaps.
         assert self._saliency_map.map.dtype == np.uint8, "Colormap requires saliency map to has uint8 dtype. " \
                                                          "Enable 'normalize' flag for PostProcessor."
         if self._saliency_map.layout == SaliencyMapLayout.ONE_MAP_PER_IMAGE_GRAY:
