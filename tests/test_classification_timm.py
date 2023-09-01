@@ -211,7 +211,6 @@ class TestImageClassificationTimm:
     def test_cnn_classification_white_box(
             self, model_id, clean_ir_cash=True, clean_huggingface_cash=True, dump_maps=True
     ):
-        self.clean_cash(clean_ir_cash, clean_huggingface_cash)
         if not any(cnn_model_key in model_id for cnn_model_key in CNN_MODELS):
             pytest.skip(f"Model {model_id} is not CNN-based.")
         if any(cnn_model_key in model_id for cnn_model_key in NON_CONVERTABLE_CNN_MODELS):
@@ -258,7 +257,7 @@ class TestImageClassificationTimm:
             [target_class],
         )
         assert explanation is not None
-        assert explanation.map.shape[-1] > 1
+        assert explanation.map.shape[-1] > 1 and explanation.map.shape[-2] > 1
         print(f"{model_id}: Generated classification saliency maps with shape {explanation.map.shape}.")
         self.update_report(model_id, "True", "True", "True")
         raw_shape = explanation.map.shape
