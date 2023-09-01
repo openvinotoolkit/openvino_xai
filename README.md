@@ -48,3 +48,18 @@ pip install -e .[dev]
 # Run tests for verification
 pytest -v -s ./tests/
 ```
+
+# Scope of explained models
+
+## White-box explanation (fast, model-dependent)
+### Classification
+We support 542 models from [Pytorch Image Models (timm)](https://github.com/huggingface/pytorch-image-models).
+Currently, we support only CNN-based architectures in white-box mode (using ReciproCAM explain method), 
+transformers will be supported in the upcoming weeks.
+
+For more details (numbers, model list, samples of generated saliency maps) see 
+[#11](https://github.com/intel-sandbox/openvino_xai/pull/11).
+
+## Black-box (slow, model-agnostic)
+### Classification
+TODO: gz
