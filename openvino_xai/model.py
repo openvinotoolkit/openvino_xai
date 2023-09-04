@@ -1,22 +1,21 @@
+# Copyright (C) 2023 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from abc import ABC
 from abc import abstractmethod
-from typing import Dict, Any
+from typing import Optional
+from pathlib import Path
+import os
 
 import openvino
-import numpy as np
-
 from openvino.model_api.models import ClassificationModel
 from openvino.model_api.models import DetectionModel
-from openvino.model_api.models.types import BooleanValue
-from openvino.model_api.models.classification import sigmoid_numpy, softmax_numpy
 
 from openvino_xai.insert import InsertXAI
-from openvino_xai.methods import (
-    ReciproCAMXAIMethod,
-    ActivationMapXAIMethod,
-    DetClassProbabilityMapXAIMethod,
-    XAIMethodBase,
-)
+from openvino_xai.methods import ReciproCAMXAIMethod, ActivationMapXAIMethod, DetClassProbabilityMapXAIMethod, \
+    XAIMethodBase
+from openvino_xai.parameters import ExplainParameters, ClassificationExplainParametersWB, DetectionExplainParametersWB, \
+    XAIMethodType
 from openvino_xai.utils import logger
 
 
@@ -32,7 +31,7 @@ class XAIModel(ABC):
         model_api_wrapper = model_api_model_class.create_model(*args, **kwargs)
         logger.info("Created Model API wrapper.")
 
-        if cls.has_xai(model_api_wrapper):
+        if cls.has_xai(model_api_wrapper.inference_adapter.model):
             logger.info("Provided IR model already contains XAI branch, return it as-is.")
             return model_api_wrapper
 
@@ -41,15 +40,25 @@ class XAIModel(ABC):
 
     @classmethod
     def insert_xai(
-        cls, model_api_wrapper: openvino.model_api.models.Model, explain_parameters: Dict[str, Any]
+            cls,
+            model_api_wrapper: openvino.model_api.models.Model,
+            explain_parameters: ExplainParameters,
     ) -> openvino.model_api.models.Model:
+        """
+        Insert XAI into IR model stored in Model API wrapper.
+
+        :param model_api_wrapper: Original ModelAPI wrapper.
+        :type model_api_wrapper: openvino.model_api.models.Model
+        :param explain_parameters: Explain parameters that parametrize explain method,
+            that will be inserted into the model graph.
+        :type explain_parameters: ExplainParameters
+        :return: Modified ModelAPI wrapper with XAI head.
+        """
         # Insert XAI branch into the model
         model_ir = model_api_wrapper.get_model()
-        explain_method = cls._generate_explain_method(model_ir, explain_parameters)
+        explain_method = cls.generate_explain_method(model_ir, explain_parameters)
         xai_generator = InsertXAI(explain_method)
         model_ir_with_xai = xai_generator.generate_model_with_xai()
-        # logger.info(f"Original model:\n{explain_method.model_ori}")
-        # logger.info(f"Model with XAI inserted:\n{model_ir_with_xai}")
 
         # Update Model API wrapper
         model_api_wrapper.explain_method = explain_method
@@ -59,9 +68,46 @@ class XAIModel(ABC):
         if model_api_wrapper.model_loaded:
             model_api_wrapper.load(force=True)
 
-        assert cls.has_xai(model_api_wrapper), "Insertion of the XAI branch into the model was not successful."
+        assert cls.has_xai(model_api_wrapper.inference_adapter.model), "Insertion of the XAI branch into the model " \
+                                                                       "was not successful."
         logger.info("Insertion of the XAI branch into the model was successful.")
         return model_api_wrapper
+
+    @classmethod
+    def insert_xai_into_native_ir(
+            cls,
+            model_path: str,
+            output: Optional[str] = None,
+            explain_parameters: Optional[ExplainParameters] = None,
+    ) -> openvino.runtime.Model:
+        """Insert XAI directly into IR model.
+
+        :param model_path: Path to OV IR model.
+        :type model_path: str
+
+        :param output: Output path where to save updated OV IR model.
+        :type output: Optional[str]
+
+        :param explain_parameters: Explain parameters that parametrize explain method,
+            that will be inserted into the model graph.
+        :type explain_parameters: Optional[ExplainParameters]
+
+        :return: Modified OV IR model with XAI head.
+        """
+        model_name = Path(model_path).stem
+        model_ir = openvino.runtime.Core().read_model(model_path)
+        if cls.has_xai(model_ir):
+            logger.info("Provided IR model already contains XAI branch, return it as-is.")
+            return model_ir
+
+        explain_method = cls.generate_explain_method(model_ir, explain_parameters)
+        xai_generator = InsertXAI(explain_method)
+        model_with_xai = xai_generator.generate_model_with_xai()
+        assert cls.has_xai(model_with_xai), "Insertion of the XAI branch into the model was not successful."
+        logger.info("Insertion of the XAI branch into the model was successful.")
+        if output:
+            xai_generator.serialize_model_with_xai(os.path.join(output, model_name + "_xai.xml"))
+        return model_with_xai
 
     @classmethod
     @abstractmethod
@@ -70,13 +116,28 @@ class XAIModel(ABC):
 
     @classmethod
     @abstractmethod
-    def _generate_explain_method(cls, model_ir: openvino.runtime.Model, explain_parameters: Dict[str, Any]):
+    def generate_explain_method(
+            cls, model_ir: openvino.runtime.Model, explain_parameters: ExplainParameters
+    ) -> XAIMethodBase:
+        """Generates instance of the explain method class.
+
+        :param model: OV IR model.
+        :type model: openvino.runtime.Model
+        :param explain_parameters: Explain parameters that parametrize explain method,
+            that will be inserted into the model graph.
+        :type explain_parameters: ExplainParameters
+        """
         raise NotImplementedError
 
     @staticmethod
-    def has_xai(model: openvino.model_api.models.Model) -> bool:
-        """Check if the model contain XAI."""
-        for output in model.inference_adapter.model.outputs:
+    def has_xai(model: openvino.runtime.Model) -> bool:
+        """Check if the model contain XAI.
+
+        :param model: OV IR model.
+        :type model: openvino.runtime.Model
+        :return: True is the model has XAI head, False otherwise.
+        """
+        for output in model.outputs:
             if "saliency_map" in output.get_names():
                 return True
         return False
@@ -90,18 +151,28 @@ class XAIClassificationModel(XAIModel):
         return ClassificationModel
 
     @classmethod
-    def _generate_explain_method(
-        cls, model: openvino.runtime.Model, explain_parameters: Dict[str, Any]
+    def generate_explain_method(
+            cls, model: openvino.runtime.Model, explain_parameters: Optional[ClassificationExplainParametersWB] = None
     ) -> XAIMethodBase:
+        """Generates instance of the classification explain method class.
+
+        :param model: OV IR model.
+        :type model: openvino.runtime.Model
+        :param explain_parameters: Explain parameters that parametrize explain method,
+            that will be inserted into the model graph.
+        :type explain_parameters: ExplainParameters
+        """
         if explain_parameters is None:
             return ReciproCAMXAIMethod(model)
 
-        explain_method_name = explain_parameters.pop("explain_method_name", None)
-        if explain_method_name is None or explain_method_name.lower() == "reciprocam":
-            return ReciproCAMXAIMethod(model, **explain_parameters)
-        if explain_method_name.lower() == "activationmap":
-            return ActivationMapXAIMethod(model, **explain_parameters)
-        raise ValueError(f"Requested explain method {explain_method_name} is not implemented.")
+        explain_method_type = explain_parameters.explain_method_type
+        if explain_method_type == XAIMethodType.RECIPROCAM:
+            return ReciproCAMXAIMethod(model, explain_parameters.target_layer, explain_parameters.embed_normalization)
+        if explain_method_type == XAIMethodType.ACTIVATIONMAP:
+            return ActivationMapXAIMethod(
+                model, explain_parameters.target_layer, explain_parameters.embed_normalization
+            )
+        raise ValueError(f"Requested explain method {explain_method_type} is not implemented.")
 
 
 class XAIDetectionModel(XAIModel):
@@ -112,16 +183,27 @@ class XAIDetectionModel(XAIModel):
         return DetectionModel
 
     @classmethod
-    def _generate_explain_method(
-        cls, model: openvino.runtime.Model, explain_parameters: Dict[str, Any]
+    def generate_explain_method(
+            cls, model: openvino.runtime.Model, explain_parameters: DetectionExplainParametersWB
     ) -> XAIMethodBase:
+        """Generates instance of the detection explain method class.
+
+        :param model: OV IR model.
+        :type model: openvino.runtime.Model
+        :param explain_parameters: Explain parameters that parametrize explain method,
+            that will be inserted into the model graph.
+        :type explain_parameters: ExplainParameters
+        """
         if explain_parameters is None:
             raise ValueError("explain_parameters is required for the detection models.")
 
-        explain_method_name = explain_parameters.pop("explain_method_name")
-        if explain_method_name is None:
-            raise ValueError("explain_method_name is required for the detection models.")
-        if explain_method_name.lower() == "detclassprobabilitymap":
-            return DetClassProbabilityMapXAIMethod(model, **explain_parameters)
-        raise ValueError(f"Requested explain method {explain_method_name} is not implemented.")
-
+        explain_method_type = explain_parameters.explain_method_type
+        if explain_method_type == XAIMethodType.DETCLASSPROBABILITYMAP:
+            return DetClassProbabilityMapXAIMethod(
+                model,
+                explain_parameters.target_layer,
+                explain_parameters.num_anchors,
+                explain_parameters.saliency_map_size,
+                explain_parameters.embed_normalization,
+            )
+        raise ValueError(f"Requested explain method {explain_method_type} is not implemented.")

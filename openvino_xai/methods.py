@@ -1,6 +1,9 @@
+# Copyright (C) 2023 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from abc import ABC
 from abc import abstractmethod
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union, List
 
 import numpy as np
 
@@ -32,6 +35,7 @@ class XAIMethodBase(ABC):
 
     @staticmethod
     def _normalize_saliency_maps(saliency_maps: openvino.runtime.Node, per_class: bool) -> openvino.runtime.Node:
+        """Normalize saliency maps to [0, 255] range, per-map."""
         # TODO: unify for per-class and for per-image
         if per_class:
             # Normalization for per-class saliency maps
@@ -154,9 +158,9 @@ class DetClassProbabilityMapXAIMethod(XAIMethodBase):
     def __init__(
             self,
             model: openvino.runtime.Model,
-            target_layer: str,
-            num_anchors: int,
-            saliency_map_size: Tuple[int] = (13, 13),
+            target_layer: List[str],
+            num_anchors: List[int],
+            saliency_map_size: Union[Tuple[int, int], List[int]] = (13, 13),
             embed_normalization: bool = True,
     ):
         super().__init__(model, embed_normalization)

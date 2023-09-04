@@ -1,3 +1,0 @@
-openvino-model-api==0.1.5
-opencv-python
-numpy
