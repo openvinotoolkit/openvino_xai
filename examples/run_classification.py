@@ -77,10 +77,9 @@ def run_blackbox_w_postprocessing_parameters(args):
 
     model = ClassificationModel.create_model(args.model_path, configuration={"output_raw_scores": True})
     explainer = RISEExplainer(model)
-    post_processing_parameters = {
-        "normalize": True,
-        "overlay": True,
-    }
+    post_processing_parameters = PostProcessParameters(
+        overlay=True,
+    )
     explanation = explainer.explain(
         image,
         TargetExplainGroup.PREDICTED_CLASSES,
