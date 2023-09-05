@@ -23,7 +23,6 @@ repos:
       - id: mypy
         files: '^(openvino_xai|tests)/.*\.py'
         additional_dependencies: [
-            # numpy==1.19.5,
             types-PyYAML,
             attrs==21.2.*,
             types-requests,

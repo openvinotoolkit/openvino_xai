@@ -6,7 +6,7 @@ OpenVINO-XAI provides a suite of Explainable AI (XAI) algorithms for explanation
 OpenVINO-XAI API documentation can be found [here](https://curly-couscous-ovjvm29.pages.github.io/).
 
 # Installation
-Set up an isolated python environment:
+- Set up an isolated python environment:
 
 ```bash
 # Create virtual env.
@@ -16,17 +16,22 @@ python3 -m venv .ovxai
 source .ovxai/bin/activate
 ```
 
-- Package mode (for normal use):
+- Package installation:
 ```bash
+# Package mode (for normal use):
 pip install .
+
+# Editable mode (for development):
+pip install -e .[dev]
 ```
 
-- Editable mode (for development):
+- Verification:
 ```bash
-pip install -e .[dev]
-
-# Run tests for verification
+# Run tests 
 pytest -v -s ./tests/
+
+# Run code quality checks
+pre-commit run -a
 ```
 
 # Usage
@@ -78,10 +83,3 @@ For more details (numbers, model list, samples of generated saliency maps) see
 ## Black-box (slow, model-agnostic)
 ### Classification
 TODO: gz
-
-
-## Quality checks
-
-```python
-pre-commit run -a
-```

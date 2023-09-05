@@ -171,8 +171,8 @@ class RISEExplainer(BlackBoxExplainer):
         grid = grid.astype(np.float32)
 
         # Random shifts
-        x = np.random.randint(0, cell_size[0])
-        y = np.random.randint(0, cell_size[1])
+        x = rand_generator.integers(0, cell_size[0])
+        y = rand_generator.integers(0, cell_size[1])
         # Linear upsampling and cropping
         upsampled_mask = cv2.resize(grid, up_size, interpolation=cv2.INTER_LINEAR)
         mask = upsampled_mask[x : x + self.input_size[0], y : y + self.input_size[1]]
