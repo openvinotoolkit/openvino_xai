@@ -94,11 +94,11 @@ class ExplainResult:
     # TODO: Separate for task type, e.g. create ExplainResult <- ExplainResultClassification, etc.
 
     def __init__(
-            self,
-            raw_result: ClassificationResult,
-            target_explain_group: TargetExplainGroup,
-            explain_targets: Optional[List[int]] = None,
-            labels: List[str] = None,
+        self,
+        raw_result: ClassificationResult,
+        target_explain_group: TargetExplainGroup,
+        explain_targets: Optional[List[int]] = None,
+        labels: List[str] = None,
     ):
         raw_saliency_map = self._get_saliency_map_from_predictions(raw_result)
         self._saliency_map = self._select_target_saliency_maps(
@@ -137,7 +137,7 @@ class ExplainResult:
         return saliency_map
 
     def _select_target_saliency_maps(
-            self, saliency_map, target_explain_group, raw_predictions=None, explain_targets=None
+        self, saliency_map, target_explain_group, raw_predictions=None, explain_targets=None
     ) -> np.ndarray:
         # For classification
         if target_explain_group == TargetExplainGroup.IMAGE:
@@ -150,15 +150,20 @@ class ExplainResult:
             # TODO: keep track of which maps are selected (e.g. for which classes)
             assert self.get_layout(saliency_map) == SaliencyMapLayout.MULTIPLE_MAPS_PER_IMAGE_GRAY
             if target_explain_group == TargetExplainGroup.PREDICTED_CLASSES:
-                assert raw_predictions is not None, f"Raw model predictions has to be provided " \
-                                                    f"for {target_explain_group}."
-                assert raw_predictions.top_labels, "TargetExplainGroup.PREDICTED_CLASSES requires predictions " \
-                                                   "to be available, but currently model has no predictions. " \
-                                                   "Try to use different input data, confidence threshold" \
-                                                   " or retrain the model."
-                assert explain_targets is None, f"Explain targets do NOT have to be provided for " \
-                                                f"{target_explain_group}. Model prediction is used " \
-                                                f"to retrieve explain targets."
+                assert raw_predictions is not None, (
+                    f"Raw model predictions has to be provided " f"for {target_explain_group}."
+                )
+                assert raw_predictions.top_labels, (
+                    "TargetExplainGroup.PREDICTED_CLASSES requires predictions "
+                    "to be available, but currently model has no predictions. "
+                    "Try to use different input data, confidence threshold"
+                    " or retrain the model."
+                )
+                assert explain_targets is None, (
+                    f"Explain targets do NOT have to be provided for "
+                    f"{target_explain_group}. Model prediction is used "
+                    f"to retrieve explain targets."
+                )
                 # TODO: support mlc and h-label
                 labels = set([top_prediction[0] for top_prediction in raw_predictions.top_labels])
             else:
@@ -186,8 +191,9 @@ class ExplainResult:
         elif saliency_map.ndim == 4:
             return SaliencyMapLayout.MULTIPLE_MAPS_PER_IMAGE_GRAY
         else:
-            raise ValueError(f"Raw saliency map has to be three or four dimensional tensor, "
-                             f"but got {saliency_map.ndim}.")
+            raise ValueError(
+                f"Raw saliency map has to be three or four dimensional tensor, " f"but got {saliency_map.ndim}."
+            )
 
     def save(self, dir_path: str, name: Optional[str] = None) -> None:
         """Dumps saliency map."""
@@ -274,13 +280,13 @@ class PostProcessor:
             batch_size, n, h, w = saliency_map.shape
             saliency_map = saliency_map.reshape((batch_size, n, h * w))
             min_values, max_values = self._get_min_max(saliency_map)
-            saliency_map = (
-                    255 * (saliency_map - min_values[:, :, None]) / (max_values - min_values + 1e-12)[:, :, None]
-            )
+            saliency_map = 255 * (saliency_map - min_values[:, :, None]) / (max_values - min_values + 1e-12)[:, :, None]
             saliency_map = saliency_map.reshape((batch_size, n, h, w))
         else:
-            raise RuntimeError(f"Saliency map to normalize has to be grayscale. Layout must be in {GRAY_LAYOUTS}, "
-                               f"but got {layout}.")
+            raise RuntimeError(
+                f"Saliency map to normalize has to be grayscale. Layout must be in {GRAY_LAYOUTS}, "
+                f"but got {layout}."
+            )
         saliency_map = saliency_map.astype(np.uint8)
         self._saliency_map.map = saliency_map
 
@@ -305,8 +311,9 @@ class PostProcessor:
             x = x.transpose((2, 0, 1))
             self._saliency_map.map = x[np.newaxis, ...]
         else:
-            raise RuntimeError(f"Saliency map layout has to be in {GRAY_LAYOUTS}, "
-                               f"but got {self._saliency_map.layout}.")
+            raise RuntimeError(
+                f"Saliency map layout has to be in {GRAY_LAYOUTS}, " f"but got {self._saliency_map.layout}."
+            )
 
     def apply_colormap(self) -> None:
         """Applies cv2.applyColorMap to the saliency map."""
@@ -329,8 +336,9 @@ class PostProcessor:
             self._saliency_map.map = x[np.newaxis, ...]
             self._saliency_map.layout = SaliencyMapLayout.MULTIPLE_MAPS_PER_IMAGE_COLOR
         else:
-            raise RuntimeError(f"Saliency map layout has to be in {GRAY_LAYOUTS}, "
-                               f"but got {self._saliency_map.layout}.")
+            raise RuntimeError(
+                f"Saliency map layout has to be in {GRAY_LAYOUTS}, " f"but got {self._saliency_map.layout}."
+            )
 
     def apply_overlay(self) -> None:
         """Applies overlay of the saliency map with the original image."""
