@@ -159,7 +159,7 @@ def run_multiple_image_example(args):
 def run_ir_model_update_wo_inference(args):
     """Embedding XAI into the model graph and save updated IR, no actual inference performed.
     User suppose to use his/her own inference pipeline to get explanations along with the regular model outputs."""
-    XAIClassificationModel.insert_xai_into_native_ir(args.model_path, args.output)
+    model_with_xai = XAIClassificationModel.insert_xai_into_native_ir(args.model_path, args.output)
     logger.info(f"Model with XAI head saved to {args.output}")
 
 

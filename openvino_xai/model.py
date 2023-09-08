@@ -126,7 +126,7 @@ class XAIModel(ABC):
     @classmethod
     @abstractmethod
     def generate_explain_method(
-        cls, model_ir: openvino.runtime.Model, explain_parameters: ExplainParameters
+            cls, model_ir: openvino.runtime.Model, explain_parameters: ExplainParameters
     ) -> XAIMethodBase:
         """Generates instance of the explain method class.
 
@@ -195,7 +195,7 @@ class XAIDetectionModel(XAIModel):
 
     @classmethod
     def generate_explain_method(
-        cls, model: openvino.runtime.Model, explain_parameters: DetectionExplainParametersWB
+            cls, model: openvino.runtime.Model, explain_parameters: DetectionExplainParametersWB
     ) -> XAIMethodBase:
         """Generates instance of the detection explain method class.
 
