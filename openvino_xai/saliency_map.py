@@ -91,6 +91,7 @@ class ExplainResult:
     :param labels: List of all labels.
     :type labels: List[str]
     """
+
     # TODO: Separate for task type, e.g. create ExplainResult <- ExplainResultClassification, etc.
 
     def __init__(
@@ -167,7 +168,9 @@ class ExplainResult:
                 # TODO: support mlc and h-label
                 labels = set([top_prediction[0] for top_prediction in raw_predictions.top_labels])
             else:
-                assert explain_targets is not None, f"Explain targets has to be provided for {target_explain_group}."
+                assert (
+                    explain_targets is not None
+                ), f"Explain targets has to be provided for {target_explain_group}."
                 labels = set(explain_targets)
             saliency_map_predicted_classes = []
             x = saliency_map[0]
@@ -180,7 +183,9 @@ class ExplainResult:
                 x = np.array(saliency_map_predicted_classes)
             return x[np.newaxis, ...]
         else:
-            raise ValueError(f"Target explain group {target_explain_group} is not supported for classification.")
+            raise ValueError(
+                f"Target explain group {target_explain_group} is not supported for classification."
+            )
         # TODO: implement for detection, probably in a separate class
 
     @staticmethod
@@ -192,7 +197,8 @@ class ExplainResult:
             return SaliencyMapLayout.MULTIPLE_MAPS_PER_IMAGE_GRAY
         else:
             raise ValueError(
-                f"Raw saliency map has to be three or four dimensional tensor, " f"but got {saliency_map.ndim}."
+                f"Raw saliency map has to be three or four dimensional tensor, "
+                f"but got {saliency_map.ndim}."
             )
 
     def save(self, dir_path: str, name: Optional[str] = None) -> None:
@@ -280,7 +286,9 @@ class PostProcessor:
             batch_size, n, h, w = saliency_map.shape
             saliency_map = saliency_map.reshape((batch_size, n, h * w))
             min_values, max_values = self._get_min_max(saliency_map)
-            saliency_map = 255 * (saliency_map - min_values[:, :, None]) / (max_values - min_values + 1e-12)[:, :, None]
+            saliency_map = (
+                255 * (saliency_map - min_values[:, :, None]) / (max_values - min_values + 1e-12)[:, :, None]
+            )
             saliency_map = saliency_map.reshape((batch_size, n, h, w))
         else:
             raise RuntimeError(
@@ -318,8 +326,9 @@ class PostProcessor:
     def apply_colormap(self) -> None:
         """Applies cv2.applyColorMap to the saliency map."""
         #  TODO: support different (custom?) colormaps.
-        assert self._saliency_map.map.dtype == np.uint8, "Colormap requires saliency map to has uint8 dtype. " \
-                                                         "Enable 'normalize' flag for PostProcessor."
+        assert self._saliency_map.map.dtype == np.uint8, (
+            "Colormap requires saliency map to has uint8 dtype. " "Enable 'normalize' flag for PostProcessor."
+        )
         if self._saliency_map.layout == SaliencyMapLayout.ONE_MAP_PER_IMAGE_GRAY:
             x = self._saliency_map.map[0]
             x = cv2.applyColorMap(x, cv2.COLORMAP_JET)
@@ -342,7 +351,9 @@ class PostProcessor:
 
     def apply_overlay(self) -> None:
         """Applies overlay of the saliency map with the original image."""
-        assert self._saliency_map.layout in COLOR_MAPPED_LAYOUTS, "Color mapped saliency map are expected for overlay."
+        assert (
+            self._saliency_map.layout in COLOR_MAPPED_LAYOUTS
+        ), "Color mapped saliency map are expected for overlay."
         x = self._saliency_map.map[0]
         x = self._data * self._overlay_weight + x * (1 - self._overlay_weight)
         x[x > 255] = 255

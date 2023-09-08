@@ -12,9 +12,9 @@ from openvino_xai.utils import logger
 
 def get_argument_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('model_path')
-    parser.add_argument('image_path')
-    parser.add_argument('--output', default=None, type=str)
+    parser.add_argument("model_path")
+    parser.add_argument("image_path")
+    parser.add_argument("--output", default=None, type=str)
     return parser
 
 
@@ -44,12 +44,12 @@ def main(argv):
         saliency_map_size=(23, 23),  # Optional
         explain_method_type=XAIMethodType.DETCLASSPROBABILITYMAP,  # Optional
     )
-    model = XAIDetectionModel.create_model(args.model_path, model_type="ssd",
-                                                explain_parameters=explain_parameters)
+    model = XAIDetectionModel.create_model(args.model_path, model_type="ssd", explain_parameters=explain_parameters)
     explainer = WhiteBoxExplainer(model)
     explanation = explainer.explain(image)
-    logger.info(f"Generated detection saliency maps of layout {explanation.layout} "
-                f"with shape {explanation.map.shape}.")
+    logger.info(
+        f"Generated detection saliency maps of layout {explanation.layout} " f"with shape {explanation.map.shape}."
+    )
     if args.output is not None:
         explanation.save(args.output, image_name)
 

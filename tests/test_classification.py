@@ -65,10 +65,13 @@ class TestClsWB:
 
     @pytest.mark.parametrize("model_name", MODELS)
     @pytest.mark.parametrize("embed_normalization", [True, False])
-    @pytest.mark.parametrize("target_explain_group", [
-        TargetExplainGroup.ALL_CLASSES,
-        TargetExplainGroup.CUSTOM_CLASSES,
-    ])
+    @pytest.mark.parametrize(
+        "target_explain_group",
+        [
+            TargetExplainGroup.ALL_CLASSES,
+            TargetExplainGroup.CUSTOM_CLASSES,
+        ],
+    )
     def test_reciprocam(self, model_name, embed_normalization, target_explain_group):
         data_dir = ".data"
         retrieve_otx_model(data_dir, model_name)
@@ -77,7 +80,9 @@ class TestClsWB:
             embed_normalization=embed_normalization,
             explain_method_type=XAIMethodType.RECIPROCAM,
         )
-        model = XAIClassificationModel.create_model(model_path, "Classification", explain_parameters=explain_parameters)
+        model = XAIClassificationModel.create_model(
+            model_path, "Classification", explain_parameters=explain_parameters
+        )
 
         if target_explain_group == TargetExplainGroup.ALL_CLASSES:
             explanations = WhiteBoxExplainer(model).explain(np.zeros((224, 224, 3)), target_explain_group)
@@ -94,7 +99,9 @@ class TestClsWB:
                         pytest.skip("model already has xai head - this test cannot change it.")
                     assert np.sum(np.abs(actual_sal_vals - ref_sal_vals)) > 100
         if target_explain_group == TargetExplainGroup.CUSTOM_CLASSES:
-            explanations = WhiteBoxExplainer(model).explain(np.zeros((224, 224, 3)), target_explain_group, [0])
+            explanations = WhiteBoxExplainer(model).explain(
+                np.zeros((224, 224, 3)), target_explain_group, [0]
+            )
             assert explanations is not None
             assert explanations.map.ndim == 3
 
@@ -110,7 +117,9 @@ class TestClsWB:
             embed_normalization=embed_normalization,
             explain_method_type=XAIMethodType.ACTIVATIONMAP,
         )
-        model = XAIClassificationModel.create_model(model_path, "Classification", explain_parameters=explain_parameters)
+        model = XAIClassificationModel.create_model(
+            model_path, "Classification", explain_parameters=explain_parameters
+        )
 
         explanations = WhiteBoxExplainer(model).explain(np.zeros((224, 224, 3)))
         assert explanations is not None
@@ -126,7 +135,9 @@ class TestClsWB:
         explain_parameters = ClassificationExplainParametersWB(
             explain_method_type=explain_method_type,
         )
-        model = XAIClassificationModel.create_model(model_path, "Classification", explain_parameters=explain_parameters)
+        model = XAIClassificationModel.create_model(
+            model_path, "Classification", explain_parameters=explain_parameters
+        )
 
         target_explain_group = None
         if model_name == "classification_model_with_xai_head":
@@ -184,7 +195,9 @@ def test_ir_model_update_wo_inference(model_name):
     assert XAIModel.has_xai(model_with_xai), "Updated IR model should has XAI head."
     model_name = Path(model_path).stem
     if model_name != "classification_model_with_xai_head":
-        assert os.path.exists(os.path.join(output, model_name + "_xai.xml")), "Updated IR model should be saved."
+        assert os.path.exists(
+            os.path.join(output, model_name + "_xai.xml")
+        ), "Updated IR model should be saved."
 
 
 def test_classification_explain_parameters():

@@ -23,7 +23,7 @@ setup(
     author="Intel(R) Corporation",
     url="https://github.com/intel-sandbox/openvino_xai",
     packages=find_packages(SETUP_DIR),
-    setup_requires=['wheel'],
+    setup_requires=["wheel"],
     package_dir={"openvino_xai": str(SETUP_DIR / "openvino_xai")},
     classifiers=[
         "License :: OSI Approved :: Apache Software License",

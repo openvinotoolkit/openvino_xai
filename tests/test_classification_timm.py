@@ -110,7 +110,9 @@ def export_to_onnx(model: torch.nn.Module, save_path: str, data_sample: torch.Te
     """
     Export Torch model to ONNX format.
     """
-    torch.onnx.export(model, data_sample, save_path, export_params=True, opset_version=13, do_constant_folding=False)
+    torch.onnx.export(
+        model, data_sample, save_path, export_params=True, opset_version=13, do_constant_folding=False
+    )
 
 
 def export_to_ir(model_path: str, save_path: str, model_name: str) -> None:
@@ -223,7 +225,9 @@ class TestImageClassificationTimm:
 
         self.update_report(model_id)
 
-        timm_model = timm.create_model(model_id, num_classes=1000, in_chans=3, pretrained=True, checkpoint_path="")
+        timm_model = timm.create_model(
+            model_id, num_classes=1000, in_chans=3, pretrained=True, checkpoint_path=""
+        )
         if not os.path.isfile(os.path.join(output_model_dir, "model_fp32.xml")):
             input_size = [1] + list(timm_model.default_cfg["input_size"])
             dummy_tensor = torch.rand(input_size)
@@ -310,7 +314,10 @@ class TestImageClassificationTimm:
                 if last_row[i] != fields[i]:
                     last_row[i] = fields[i]
             bool_flags = np.array(
-                [[self.count(model[1]), self.count(model[2]), self.count(model[3])] for model in self.report[2:]]
+                [
+                    [self.count(model[1]), self.count(model[2]), self.count(model[3])]
+                    for model in self.report[2:]
+                ]
             )
             self.report[1][1] = str(bool_flags[:, 0].sum())
             self.report[1][2] = str(bool_flags[:, 1].sum())
@@ -325,7 +332,7 @@ class TestImageClassificationTimm:
             if os.path.isdir(ir_model_dir):
                 shutil.rmtree(ir_model_dir)
         if clean_huggingface_cash:
-            huggingface_hub_dir = os.path.join(os.path.expanduser('~'), ".cache/huggingface/hub/")
+            huggingface_hub_dir = os.path.join(os.path.expanduser("~"), ".cache/huggingface/hub/")
             if os.path.isdir(huggingface_hub_dir):
                 shutil.rmtree(huggingface_hub_dir)
 
