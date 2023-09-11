@@ -1,12 +1,23 @@
+# Tmp data folders
+.data
+
+# Default venv
+.ovxai
+venv*
+
 *.pyc
 __pycache__
 .idea/
 .vscode/
 
+# Distribution / packaging
 build/
 dist/
 *egg-info
+.eggs/
 
+# Default model directory
+otx_models/
 *.pth
 *.onnx
 *.xml
@@ -20,8 +31,6 @@ dist/
 .pytest_cache
 .mypy_cache
 .ruff_cache
-
-venv*
 
 *.jpg
 *.jpeg
