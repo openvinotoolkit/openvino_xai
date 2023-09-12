@@ -5,7 +5,6 @@ from typing import Dict, Any, Optional, List
 
 import cv2
 import numpy as np
-from PIL import Image
 from tqdm import tqdm
 
 from openvino.model_api.models import ClassificationResult
@@ -108,7 +107,7 @@ class RISEExplainer(BlackBoxExplainer):
         return mask
 
     def _resize_input(self, image):
-        image = cv2.resize(image, self.input_size, Image.BILINEAR)
+        image = cv2.resize(image, self.input_size, cv2.INTER_LINEAR)
         return image
 
     def _normalize_saliency_maps(self, saliency_map):
