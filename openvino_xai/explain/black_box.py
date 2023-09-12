@@ -82,7 +82,7 @@ class RISEExplainer(BlackBoxExplainer):
 
         sal_maps = self._normalize_saliency_maps(sal_maps)
         sal_maps = np.expand_dims(sal_maps, axis=0)
-        return sal_maps
+        return sal_maps.astype(np.uint8)
 
     def _generate_mask(self, cell_size, up_size, rand_generator):
         """Generate masks for RISE
