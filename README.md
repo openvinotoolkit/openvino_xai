@@ -41,21 +41,6 @@ pre-commit run -a
 
 # Usage
 
-## CLI usage
-
-- Model retreival
-
-```python
-# OTX classification model are downloaded and stored in .otx_models folder
-pytest tests/test_classification.py
-```
-
-- Classification model explainer
-
-```python
-python examples/run_classification.py otx_models/mlc_efficient_b0_voc.xml images/cute-cat.jpg --output multilabel_saliency_map
-```
-
 ## E2E model explanation
 
 ```python
@@ -77,12 +62,24 @@ explanation = WhiteBoxExplainer(mapi_model_wrapper).explain(cv2.imread("path/to/
 ir_model_with_xai = XAIClassificationModel.insert_xai_into_native_ir("path/to/model.xml")
 # Now, user suppose to use his/her own inference pipeline to infer ir_model_with_xai
 ```
+See more usage scenarios in [examples](./examples). 
 
-See more usage scenarios in [examples](./examples).
+### Running example scripts
+
+```python
+# Retrieve OTX models
+# Models are downloaded and stored in .data/otx_models
+pytest tests/test_classification.py
+
+# Run a bunch of classification examples
+# All outputs will be stored in the output directory
+python examples/run_classification.py .data/otx_models/mlc_efficient_b0_voc.xml \
+tests/assets/cheetah_class293.jpg --output output
+```
 
 # Scope of explained models
 
-## White-box explanation (fast, model-dependent)
+## White-box (fast, model-dependent)
 
 ### Classification
 
