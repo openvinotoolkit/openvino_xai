@@ -3,13 +3,14 @@
 
 import os
 from enum import Enum
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import cv2
 import numpy as np
 from openvino.model_api.models import ClassificationResult
 
 from openvino_xai.parameters import PostProcessParameters
+from openvino_xai.utils import reorder_sal_map
 
 
 class TargetExplainGroup(Enum):
@@ -100,8 +101,11 @@ class ExplainResult:
         target_explain_group: TargetExplainGroup,
         explain_targets: Optional[List[int]] = None,
         labels: List[str] = None,
+        hierarchical_info: Dict = None
     ):
         raw_saliency_map = self._get_saliency_map_from_predictions(raw_result)
+        if hierarchical_info:
+            raw_saliency_map = reorder_sal_map(raw_saliency_map, hierarchical_info, labels)
         self._saliency_map = self._select_target_saliency_maps(
             raw_saliency_map, target_explain_group, raw_result, explain_targets
         )

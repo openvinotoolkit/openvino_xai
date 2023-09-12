@@ -12,6 +12,7 @@ from openvino.model_api.models import ClassificationModel, ClassificationResult
 from openvino_xai.explain.base import Explainer
 from openvino_xai.parameters import PostProcessParameters
 from openvino_xai.saliency_map import ExplainResult, TargetExplainGroup
+from openvino_xai.utils import reorder_sal_map
 
 
 class BlackBoxExplainer(Explainer):
@@ -63,12 +64,17 @@ class RISEExplainer(BlackBoxExplainer):
         resized_data = self._resize_input(data)
         predicted_classes = self._model(resized_data)[0]
         cls_result = ClassificationResult(predicted_classes, raw_saliency_map, np.ndarray(0), np.ndarray(0))
-        
+
+        if self._model.hierarchical:
+            hierarchical_info = self._model.hierarchical_info["cls_heads_info"]
+        else:
+            hierarchical_info = None
+    
         target_explain_group = self._get_target_explain_group(target_explain_group)
-        explain_result = ExplainResult(cls_result, target_explain_group, explain_targets, self._labels)
+        raw_explain_result = ExplainResult(cls_result, target_explain_group, explain_targets, self._labels, hierarchical_info)
 
         processed_explain_result = self._get_processed_explain_result(
-            explain_result, data, post_processing_parameters
+            raw_explain_result, data, post_processing_parameters
         )
 
         return processed_explain_result
@@ -129,7 +135,7 @@ class RISEExplainer(BlackBoxExplainer):
         min_values = np.min(saliency_map)
         max_values = np.max(saliency_map)
         saliency_map = 255 * (saliency_map - min_values) / (max_values - min_values + 1e-12)
-        return saliency_map
+        return saliency_map.astype(np.uint8)
 
 
 class DRISEExplainer(BlackBoxExplainer):
