@@ -1,15 +1,16 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Dict, Any, Optional, List
+from typing import Optional, List
 
 import cv2
 import numpy as np
 from tqdm import tqdm
 
-from openvino.model_api.models import ClassificationResult
+from openvino.model_api.models import ClassificationModel, ClassificationResult
 
-from openvino_xai.explain import Explainer
+from openvino_xai.explain.base import Explainer
+from openvino_xai.parameters import PostProcessParameters
 from openvino_xai.saliency_map import ExplainResult, TargetExplainGroup
 
 
@@ -18,7 +19,11 @@ class BlackBoxExplainer(Explainer):
 
 
 class RISEExplainer(BlackBoxExplainer):
-    def __init__(self, model, num_masks=5000, num_cells=8, prob=0.5):
+    def __init__(self,
+                 model: ClassificationModel,
+                 num_masks: Optional[int] = 50,
+                 num_cells: Optional[int] = 8,
+                 prob: Optional[float] = 0.5):
         """RISE BlackBox Explainer
 
         Args:
@@ -37,12 +42,22 @@ class RISEExplainer(BlackBoxExplainer):
 
     def explain(
         self,
-        data,
+        data: np.ndarray,
         target_explain_group: Optional[TargetExplainGroup] = None,
         explain_targets: Optional[List[int]] = None,
-        post_processing_parameters: Optional[Dict[str, Any]] = None,
-    ):
-        """Explain the input."""
+        post_processing_parameters: PostProcessParameters = PostProcessParameters(),
+    ) -> ExplainResult:
+        """Explain the input in black box mode.
+
+        :param data: Data to explain.
+        :type data: np.ndarray
+        :param target_explain_group: Defines targets to explain: all classes, only predicted classes, etc.
+        :type target_explain_group: TargetExplainGroup
+        :param explain_targets: Provides list of custom targets, optional.
+        :type explain_targets: Optional[List[int]]
+        :param post_processing_parameters: Parameters that define post-processing.
+        :type post_processing_parameters: PostProcessParameters
+        """
         raw_saliency_map = self._generate_saliency_map(data)
 
         resized_data = self._resize_input(data)

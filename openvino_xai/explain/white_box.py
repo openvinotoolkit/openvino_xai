@@ -4,7 +4,7 @@
 from typing import Optional, List
 import numpy as np
 
-from openvino_xai.explain import Explainer
+from openvino_xai.explain.base import Explainer
 from openvino_xai.parameters import PostProcessParameters
 from openvino_xai.saliency_map import ExplainResult, TargetExplainGroup
 

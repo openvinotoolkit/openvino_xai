@@ -35,3 +35,5 @@ otx_models/
 *.jpg
 *.jpeg
 *.png
+
+html_build/

@@ -5,11 +5,11 @@ Explaining alforithms.
 # SPDX-License-Identifier: Apache-2.0
 
 
-from .base import Explainer
-from .black_box import BlackBoxExplainer, RISEExplainer
-from .white_box import WhiteBoxExplainer
+from openvino_xai.explain.base import Explainer
+from openvino_xai.explain.black_box import BlackBoxExplainer, RISEExplainer
+from openvino_xai.explain.white_box import WhiteBoxExplainer
 
-from .auto_explain import AutoExplainer, ClassificationAutoExplainer
+from openvino_xai.explain.auto_explain import AutoExplainer, ClassificationAutoExplainer
 
 __all__ = [
     "Explainer",

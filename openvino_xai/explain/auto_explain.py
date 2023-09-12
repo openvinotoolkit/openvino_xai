@@ -6,7 +6,10 @@ from typing import Optional
 import numpy as np
 import openvino
 
-from openvino_xai.explain import Explainer, RISEExplainer, WhiteBoxExplainer
+from openvino_xai.explain.base import Explainer
+from openvino_xai.explain.black_box import RISEExplainer
+from openvino_xai.explain.white_box import WhiteBoxExplainer
+
 from openvino_xai.model import XAIModel, XAIClassificationModel
 from openvino_xai.parameters import ExplainParameters
 
