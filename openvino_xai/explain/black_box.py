@@ -40,7 +40,9 @@ class RISEExplainer(BlackBoxExplainer):
             normalize (bool, optional): Whether to normalize output or not.
         """
         super().__init__(model)
-        self.input_size = model.inputs["data"].shape[-2:]
+        assert len(model.inputs) == 1, "Support only for models with single input."
+        input_name = next(iter(model.inputs))
+        self.input_size = model.inputs[input_name].shape[-2:]
         self.num_masks = num_masks
         self.num_cells = num_cells
         self.prob = prob
