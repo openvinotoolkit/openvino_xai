@@ -253,7 +253,7 @@ class TestImageClassificationTimm:
             explain_parameters=explain_parameters
         )
 
-        image = cv2.imread("assets/cheetah_class293.jpg")
+        image = cv2.imread("tests/assets/cheetah_class293.jpg")
         target_class = 293  # 293 is a cheetah class_id in the ImageNet dataset
         explanation = WhiteBoxExplainer(model).explain(
             image,
@@ -281,11 +281,7 @@ class TestImageClassificationTimm:
             post_processor = PostProcessor(
                 explanation,
                 image,
-                post_processing_parameters.normalize,
-                post_processing_parameters.resize,
-                post_processing_parameters.colormap,
-                post_processing_parameters.overlay,
-                post_processing_parameters.overlay_weight,
+                post_processing_parameters,
             )
 
             explain_result = post_processor.postprocess()
