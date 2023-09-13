@@ -27,7 +27,7 @@ def run_example_wo_explain_parameters(args):
     image = cv2.imread(args.image_path)
     image_name = Path(args.image_path).stem
 
-    model = XAIClassificationModel.create_model(args.model_path)
+    model = XAIClassificationModel.create_model(args.model_path, model_type="Classification")
     explainer = WhiteBoxExplainer(model)
     explanation = explainer.explain(image, target_explain_group=TargetExplainGroup.PREDICTED_CLASSES)
     logger.info(
@@ -48,7 +48,9 @@ def run_example_w_explain_parameters(args):
         # target_layer="/backbone/features/final_block/activate/Mul",  # OTX effnet
         explain_method_type=XAIMethodType.RECIPROCAM,
     )
-    model = XAIClassificationModel.create_model(args.model_path, explain_parameters=explain_parameters)
+    model = XAIClassificationModel.create_model(
+        args.model_path, model_type="Classification", explain_parameters=explain_parameters
+    )
     explainer = WhiteBoxExplainer(model)
     explanation = explainer.explain(image)
     logger.info(
@@ -64,7 +66,7 @@ def run_example_w_postprocessing_parameters(args):
     image = cv2.imread(args.image_path)
     image_name = Path(args.image_path).stem
 
-    model = XAIClassificationModel.create_model(args.model_path)
+    model = XAIClassificationModel.create_model(args.model_path, model_type="Classification")
     explainer = WhiteBoxExplainer(model)
     post_processing_parameters = PostProcessParameters(overlay=True)
     explanation = explainer.explain(
@@ -85,7 +87,9 @@ def run_blackbox_w_postprocessing_parameters(args):
     image = cv2.imread(args.image_path)
     image_name = Path(args.image_path).stem
 
-    model = ClassificationModel.create_model(args.model_path, configuration={"output_raw_scores": True})
+    model = ClassificationModel.create_model(
+        args.model_path, model_type="Classification", configuration={"output_raw_scores": True}
+    )
     explainer = RISEExplainer(model)
     post_processing_parameters = PostProcessParameters(
         overlay=True,
@@ -109,7 +113,7 @@ def run_auto_example(args):
     image = cv2.imread(args.image_path)
     image_name = Path(args.image_path).stem
 
-    model = ClassificationModel.create_model(args.model_path)
+    model = ClassificationModel.create_model(args.model_path, model_type="Classification")
     auto_explainer = ClassificationAutoExplainer(model)
     explanation = auto_explainer.explain(image)
     logger.info(
@@ -142,7 +146,7 @@ def run_multiple_image_example(args):
         for root, _, _ in os.walk(args.image_path):
             for format_ in img_data_formats:
                 img_files.extend([os.path.join(root, file.name) for file in Path(root).glob(f"*{format_}")])
-    model = XAIClassificationModel.create_model(args.model_path)
+    model = XAIClassificationModel.create_model(args.model_path, model_type="Classification")
     explainer = WhiteBoxExplainer(model)
     post_processing_parameters = PostProcessParameters(normalize=True, overlay=True)
     for image_path in img_files:

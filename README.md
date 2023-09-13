@@ -49,7 +49,7 @@ from openvino_xai.model import XAIClassificationModel
 from openvino_xai.explain import WhiteBoxExplainer
 
 # Create an OpenVINO™ ModelAPI model wrapper with XAI head inserted into the model graph
-mapi_model_wrapper = XAIClassificationModel.create_model("path/to/model.xml")
+mapi_model_wrapper = XAIClassificationModel.create_model("path/to/model.xml", model_type="Classification")
 
 # ModelAPI is used as an inference framework
 # Explanation is generated during inference along with the regular model output

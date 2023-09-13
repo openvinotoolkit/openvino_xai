@@ -248,7 +248,8 @@ class TestImageClassificationTimm:
         }
         explain_parameters = ClassificationExplainParametersWB(embed_normalization=False)
         model = XAIClassificationModel.create_model(
-            ir_path, "Classification",
+            ir_path,
+            "Classification",
             **mapi_params,
             explain_parameters=explain_parameters
         )
