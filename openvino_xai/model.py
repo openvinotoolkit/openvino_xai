@@ -12,10 +12,18 @@ from openvino.model_api.models import ClassificationModel
 from openvino.model_api.models import DetectionModel
 
 from openvino_xai.insert import InsertXAI
-from openvino_xai.methods import ReciproCAMXAIMethod, ActivationMapXAIMethod, DetClassProbabilityMapXAIMethod, \
-    XAIMethodBase
-from openvino_xai.parameters import ExplainParameters, ClassificationExplainParametersWB, DetectionExplainParametersWB, \
-    XAIMethodType
+from openvino_xai.methods import (
+    ReciproCAMXAIMethod,
+    ActivationMapXAIMethod,
+    DetClassProbabilityMapXAIMethod,
+    XAIMethodBase,
+)
+from openvino_xai.parameters import (
+    ExplainParameters,
+    ClassificationExplainParametersWB,
+    DetectionExplainParametersWB,
+    XAIMethodType,
+)
 from openvino_xai.utils import logger
 
 
@@ -68,8 +76,9 @@ class XAIModel(ABC):
         if model_api_wrapper.model_loaded:
             model_api_wrapper.load(force=True)
 
-        assert cls.has_xai(model_api_wrapper.inference_adapter.model), "Insertion of the XAI branch into the model " \
-                                                                       "was not successful."
+        assert cls.has_xai(model_api_wrapper.inference_adapter.model), (
+            "Insertion of the XAI branch into the model " "was not successful."
+        )
         logger.info("Insertion of the XAI branch into the model was successful.")
         return model_api_wrapper
 
@@ -167,7 +176,9 @@ class XAIClassificationModel(XAIModel):
 
         explain_method_type = explain_parameters.explain_method_type
         if explain_method_type == XAIMethodType.RECIPROCAM:
-            return ReciproCAMXAIMethod(model, explain_parameters.target_layer, explain_parameters.embed_normalization)
+            return ReciproCAMXAIMethod(
+                model, explain_parameters.target_layer, explain_parameters.embed_normalization
+            )
         if explain_method_type == XAIMethodType.ACTIVATIONMAP:
             return ActivationMapXAIMethod(
                 model, explain_parameters.target_layer, explain_parameters.embed_normalization
