@@ -41,7 +41,8 @@ pre-commit run -a
 
 # Usage
 
-## E2E model explanation
+## 1. E2E model explanation
+Generate explanations.
 
 ```python
 from openvino_xai.model import XAIClassificationModel
@@ -55,7 +56,8 @@ mapi_model_wrapper = XAIClassificationModel.create_model("path/to/model.xml")
 explanation = WhiteBoxExplainer(mapi_model_wrapper).explain(cv2.imread("path/to/image.jpg"))
 ```
 
-### Updating IR model
+## 2. Updating IR model
+Generate IR model with explanation output. 
 
 ```python
 # Embedding XAI branch into the model graph, no actual inference performed
@@ -67,13 +69,13 @@ See more usage scenarios in [examples](./examples).
 ### Running example scripts
 
 ```python
-# Retrieve OTX models
+# Retrieve OTX models by running tests
 # Models are downloaded and stored in .data/otx_models
 pytest tests/test_classification.py
 
 # Run a bunch of classification examples
-# All outputs will be stored in the output directory
-python examples/run_classification.py .data/otx_models/mlc_efficient_b0_voc.xml \
+# All outputs will be stored in the corresponding output directory
+python examples/run_classification.py .data/otx_models/mlc_mobilenetv3_large_voc.xml \
 tests/assets/cheetah_class293.jpg --output output
 ```
 
@@ -94,4 +96,4 @@ For more details (numbers, model list, samples of generated saliency maps) see
 
 ### Classification
 
-TODO: gz
+TODO: et
