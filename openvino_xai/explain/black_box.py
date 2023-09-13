@@ -21,7 +21,7 @@ class BlackBoxExplainer(Explainer):
 class RISEExplainer(BlackBoxExplainer):
     def __init__(self,
                  model: ClassificationModel,
-                 num_masks: Optional[int] = 50,
+                 num_masks: Optional[int] = 5000,
                  num_cells: Optional[int] = 8,
                  prob: Optional[float] = 0.5):
         """RISE BlackBox Explainer
