@@ -27,6 +27,7 @@ def reorder_sal_map(saliency_map, hierarchical_info, labels):
             label_idx = hierarchical_info["label_to_idx"][label_str]
             hierarchical_idx.append(label_idx)
 
-    reordered_map = np.array([saliency_map[0][i] for i in hierarchical_idx])
-    reordered_map = np.expand_dims(reordered_map, axis=0)
-    return reordered_map
+    reordered_map = {}
+    for i, h_idx in enumerate(hierarchical_idx):
+        reordered_map[h_idx] = saliency_map[i]
+    return dict(sorted(reordered_map.items()))
