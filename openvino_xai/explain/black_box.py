@@ -56,9 +56,9 @@ class RISEExplainer(BlackBoxExplainer):
         if num_classes:
             self.num_classes = num_classes
         else:
-            assert len(model.outputs) == 1, "Support only for models with single output."
-            output_name = next(iter(model.outputs))
-            self.num_classes = model.outputs[output_name].shape[-1]
+            dummy_input = np.zeros((*self.input_size, 3))
+            scores = self._model(dummy_input).raw_scores
+            self.num_classes = len(scores)
 
         self.normalize = normalize
 
