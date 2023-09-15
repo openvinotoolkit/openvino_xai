@@ -1,5 +1,5 @@
 """
-Explaining alforithms.
+Interface to Explainable AI (XAI) algorithms.
 """
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0

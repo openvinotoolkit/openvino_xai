@@ -12,7 +12,6 @@ from openvino.model_api.models import ClassificationModel, ClassificationResult
 from openvino_xai.explain.base import Explainer
 from openvino_xai.parameters import PostProcessParameters
 from openvino_xai.saliency_map import ExplainResult, TargetExplainGroup
-from openvino_xai.utils import reorder_sal_map
 
 
 class BlackBoxExplainer(Explainer):
@@ -20,26 +19,35 @@ class BlackBoxExplainer(Explainer):
 
 
 class RISEExplainer(BlackBoxExplainer):
+    """RISEExplainer explains classification models in black-box mode using RISE (https://arxiv.org/abs/1806.07421)."""
+
     def __init__(self,
                  model: ClassificationModel,
                  num_masks: Optional[int] = 5000,
                  num_cells: Optional[int] = 8,
-                 prob: Optional[float] = 0.5):
+                 prob: Optional[float] = 0.5,
+                 seed: Optional[int] = 0,
+                 normalize: Optional[bool] = True):
         """RISE BlackBox Explainer
 
         Args:
             num_masks (int, optional): number of generated masks to aggregate
             num_cells (int, optional): number of cells for low-dimensional RISE
-                random mask that later will be upscaled to the model input size
+                random mask that later will be up-scaled to the model input size
             prob (float, optional): with prob p, a low-res cell is set to 1;
                 otherwise, it's 0. Default: ``0.5``.
-
+            seed (int, optional): Seed for random mask generation.
+            normalize (bool, optional): Whether to normalize output or not.
         """
         super().__init__(model)
-        self.input_size = model.inputs["data"].shape[-2:]
+        assert len(model.inputs) == 1, "Support only for models with single input."
+        input_name = next(iter(model.inputs))
+        self.input_size = model.inputs[input_name].shape[-2:]
         self.num_masks = num_masks
         self.num_cells = num_cells
         self.prob = prob
+        self.seed = seed
+        self.normalize = normalize
 
     def explain(
         self,
@@ -87,23 +95,24 @@ class RISEExplainer(BlackBoxExplainer):
         """
         cell_size = np.ceil(np.array(self.input_size) / self.num_cells)
         up_size = np.array((self.num_cells + 1) * cell_size, dtype=np.uint32)
-        rand_generator = np.random.default_rng(seed=42)
+        rand_generator = np.random.default_rng(seed=self.seed)
 
         resized_data = self._resize_input(data)
 
         sal_maps = []
-        for i in tqdm(range(0, self.num_masks), desc="Explaining"):
+        for _ in tqdm(range(0, self.num_masks), desc="Explaining"):
             mask = self._generate_mask(cell_size, up_size, rand_generator)
-            # Add channel dimentions for masks
+            # Add channel dimensions for masks
             masked = np.expand_dims(mask, axis=2) * resized_data
             scores = self._model(masked).raw_scores
             sal = scores.reshape(-1, 1, 1) * mask
             sal_maps.append(sal)
         sal_maps = np.sum(sal_maps, axis=0)
 
-        sal_maps = self._normalize_saliency_maps(sal_maps)
+        if self.normalize:
+            sal_maps = self._normalize_saliency_maps(sal_maps)
         sal_maps = np.expand_dims(sal_maps, axis=0)
-        return sal_maps.astype(np.uint8)
+        return sal_maps
 
     def _generate_mask(self, cell_size, up_size, rand_generator):
         """Generate masks for RISE
@@ -121,7 +130,7 @@ class RISEExplainer(BlackBoxExplainer):
         # Random shifts
         x = rand_generator.integers(0, cell_size[0])
         y = rand_generator.integers(0, cell_size[1])
-        # Linear upsampling and cropping
+        # Linear up-sampling and cropping
         upsampled_mask = cv2.resize(grid, up_size, interpolation=cv2.INTER_LINEAR)
         mask = upsampled_mask[x : x + self.input_size[0], y : y + self.input_size[1]]
 
@@ -132,10 +141,15 @@ class RISEExplainer(BlackBoxExplainer):
         return image
 
     def _normalize_saliency_maps(self, saliency_map):
-        min_values = np.min(saliency_map)
-        max_values = np.max(saliency_map)
-        saliency_map = 255 * (saliency_map - min_values) / (max_values - min_values + 1e-12)
-        return saliency_map.astype(np.uint8)
+        n, h, w = saliency_map.shape
+        saliency_map = saliency_map.reshape((n, h * w))
+        min_values = np.min(saliency_map, axis=-1)
+        max_values = np.max(saliency_map, axis=-1)
+        saliency_map = (
+                255 * (saliency_map - min_values[:, None]) / (max_values - min_values + 1e-12)[:, None]
+        )
+        saliency_map = saliency_map.reshape((n, h, w)).astype(np.uint8)
+        return saliency_map
 
 
 class DRISEExplainer(BlackBoxExplainer):

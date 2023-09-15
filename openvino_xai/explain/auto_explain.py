@@ -19,7 +19,7 @@ from openvino_xai.utils import logger
 
 
 class AutoExplainer(Explainer):
-    """Explain in auto mode, using white box or black box approach."""
+    """Base class for auto-explainers, using white box or black box approach."""
 
     def __init__(self, model: openvino.model_api.models.Model, explain_parameters: Optional[ExplainParameters] = None):
         super().__init__(model)

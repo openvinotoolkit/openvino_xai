@@ -244,6 +244,8 @@ class PostProcessor:
     :type post_processing_parameters: PostProcessParameters
     """
 
+    # TODO: extract public staticmethod methods to operate at pure numpy array level
+
     def __init__(
         self,
         saliency_map: ExplainResult,
