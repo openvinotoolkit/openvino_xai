@@ -107,12 +107,12 @@ class ExplainResult:
         raw_saliency_map = self._get_saliency_map_from_predictions(raw_result)
         dict_sal_map = self._format_sal_map_as_dict(raw_saliency_map)
 
-        if hierarchical_info:
+        self._layout = self.get_layout(dict_sal_map)
+        if hierarchical_info and self._layout in MULTIPLE_MAP_LAYOUTS:
             dict_sal_map = reorder_sal_map(dict_sal_map, hierarchical_info, labels)
         self._saliency_map = self._select_target_saliency_maps(
             dict_sal_map, target_explain_group, raw_result, explain_targets
         )
-        self._layout = self.get_layout(self._saliency_map)
         self._predictions = raw_result.top_labels
 
     @property
@@ -177,7 +177,6 @@ class ExplainResult:
             assert self.get_layout(saliency_map) == SaliencyMapLayout.MULTIPLE_MAPS_PER_IMAGE_GRAY
             return saliency_map
         elif target_explain_group in SELECTED_CLASSES:
-            # TODO: keep track of which maps are selected (e.g. for which classes)
             assert self.get_layout(saliency_map) == SaliencyMapLayout.MULTIPLE_MAPS_PER_IMAGE_GRAY
             if target_explain_group == TargetExplainGroup.PREDICTED_CLASSES:
                 assert raw_predictions is not None, (
