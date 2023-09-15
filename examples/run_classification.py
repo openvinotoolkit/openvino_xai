@@ -228,16 +228,16 @@ def main(argv):
 
     # E2E model explanation examples: patching IR model with XAI branch and using ModelAPI as inference framework
     run_example_wo_explain_parameters(args)
-    # run_example_w_explain_parameters(args)
-    # run_example_w_postprocessing_parameters(args)
+    run_example_w_explain_parameters(args)
+    run_example_w_postprocessing_parameters(args)
     run_blackbox_w_postprocessing_parameters(args)
-    # run_auto_example(args)
-    # run_multiple_image_example(args)
+    run_auto_example(args)
+    run_multiple_image_example(args)
 
     # Embedding XAI into the model graph and save updated IR (no inference performed)
-    # run_ir_model_update_wo_inference(args)
+    run_ir_model_update_wo_inference(args)
     # To get explanations along with the regular model output, user suppose to use his/her own custom inference pipeline
-    # run_ir_model_update_w_custom_inference(args)
+    run_ir_model_update_w_custom_inference(args)
 
 
 if __name__ == "__main__":
