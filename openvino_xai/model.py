@@ -40,9 +40,14 @@ class XAIModel(ABC):
         logger.info("Created Model API wrapper.")
 
         if cls.has_xai(model_api_wrapper.inference_adapter.model):
-            logger.info("Provided IR model already contains XAI branch, return it as-is.")
+            logger.info("Provided model already contains XAI branch, return it as-is.")
             return model_api_wrapper
 
+        path_to_model = args[0]
+        model_suffix = Path(path_to_model).suffix
+        assert model_suffix == ".xml", f"XAI can be inserted only into OV IR, " \
+                                       f"but provided model has {model_suffix} extension. " \
+                                       f"Please provide path to OV IR for white-box explain methods."
         model_api_wrapper = cls.insert_xai(model_api_wrapper, explain_parameters)
         return model_api_wrapper
 

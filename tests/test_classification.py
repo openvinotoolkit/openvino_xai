@@ -68,6 +68,7 @@ class TestClsWB:
     @pytest.mark.parametrize(
         "target_explain_group",
         [
+            None,
             TargetExplainGroup.ALL_CLASSES,
             TargetExplainGroup.CUSTOM_CLASSES,
         ],
@@ -84,7 +85,9 @@ class TestClsWB:
             model_path, "Classification", explain_parameters=explain_parameters
         )
 
-        if target_explain_group == TargetExplainGroup.ALL_CLASSES:
+        if target_explain_group == TargetExplainGroup.ALL_CLASSES or target_explain_group is None:
+            if target_explain_group is None and model_name == "classification_model_with_xai_head":
+                pytest.skip("target_explain_group has to be provided.")
             explanations = WhiteBoxExplainer(model).explain(np.zeros((224, 224, 3)), target_explain_group)
             assert explanations is not None
             assert explanations.map.shape[1] == len(model.labels)
