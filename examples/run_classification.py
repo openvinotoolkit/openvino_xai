@@ -93,8 +93,8 @@ def run_blackbox_w_postprocessing_parameters(args):
         post_processing_parameters=post_processing_parameters,
     )
     logger.info(
-        f"Example from BlackBox explainer w/ post_processing_parameters: generated {len(explanation.map)} classification "
-        f"saliency maps of layout {explanation.layout} with shape {explanation.map[0].shape}."
+        f"Example from BlackBox explainer w/ post_processing_parameters: generated {len(explanation.map)} "
+        f"classification saliency maps of layout {explanation.layout} with shape {explanation.map[0].shape}."
     )
     if args.output is not None:
         explanation.save(args.output, image_name)

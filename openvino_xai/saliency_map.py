@@ -101,7 +101,7 @@ class ExplainResult:
         target_explain_group: TargetExplainGroup,
         explain_targets: Optional[List[int]] = None,
         labels: List[str] = None,
-        hierarchical_info: Dict = None
+        hierarchical_info: Dict = None,
     ):
         self._labels = labels
         raw_saliency_map = self._get_saliency_map_from_predictions(raw_result)
@@ -118,14 +118,14 @@ class ExplainResult:
     @property
     def map(self):
         return self._saliency_map
-    
-    @property
-    def predictions(self):
-        return self._predictions
 
     @map.setter
     def map(self, saliency_map: Dict[int, np.ndarray]):
         self._saliency_map = saliency_map
+
+    @property
+    def predictions(self):
+        return self._predictions
 
     @property
     def layout(self):
@@ -141,10 +141,10 @@ class ExplainResult:
         if raw_saliency_map.size == 0:
             raise RuntimeError("Model does not contain saliency_map output.")
         return raw_saliency_map
-    
+
     @staticmethod
     def _format_sal_map_as_dict(raw_saliency_map: np.ndarray) -> Dict[int, np.ndarray]:
-        """ Returns dict with {class_idx: class_saliency_map}."""
+        """Returns dict with saliency maps in format {class_idx: class_saliency_map}."""
         if raw_saliency_map.shape[0] > 1:
             raise RuntimeError("Batch size for returned saliency maps should be 1.")
         if raw_saliency_map.ndim == 3:
@@ -194,7 +194,6 @@ class ExplainResult:
                     f"{target_explain_group}. Model prediction is used "
                     f"to retrieve explain targets."
                 )
-                # TODO: support mlc and h-label
                 labels = set([top_prediction[0] for top_prediction in raw_predictions.top_labels])
             else:
                 assert (
@@ -218,7 +217,6 @@ class ExplainResult:
             return SaliencyMapLayout.ONE_MAP_PER_IMAGE_GRAY
         else:
             return SaliencyMapLayout.MULTIPLE_MAPS_PER_IMAGE_GRAY
-
 
     def save(self, dir_path: str, name: Optional[str] = None) -> None:
         """Dumps saliency map."""
@@ -247,10 +245,10 @@ class PostProcessor:
     """
 
     def __init__(
-            self,
-            saliency_map: ExplainResult,
-            data: np.ndarray = None,
-            post_processing_parameters: PostProcessParameters = PostProcessParameters(),
+        self,
+        saliency_map: ExplainResult,
+        data: np.ndarray = None,
+        post_processing_parameters: PostProcessParameters = PostProcessParameters(),
     ):
         self._saliency_map = saliency_map
         self._data = data
@@ -289,9 +287,9 @@ class PostProcessor:
         """Normalize saliency maps to [0, 255] range."""
         layout = self._saliency_map.layout
         assert layout in GRAY_LAYOUTS, (
-                f"Saliency map to normalize has to be grayscale. Layout must be in {GRAY_LAYOUTS}, "
-                f"but got {layout}."
-            )     
+            f"Saliency map to normalize has to be grayscale. Layout must be in {GRAY_LAYOUTS}, "
+            f"but got {layout}."
+        )
         saliency_map = self._saliency_map.map
         for idx, class_map in saliency_map.items():
             class_map = class_map.astype(np.float32)
@@ -312,9 +310,9 @@ class PostProcessor:
         # TODO: support resize to custom size.
         layout = self._saliency_map.layout
         assert layout in GRAY_LAYOUTS, (
-                f"Saliency map to normalize has to be grayscale. Layout must be in {GRAY_LAYOUTS}, "
-                f"but got {layout}."
-            )
+            f"Saliency map to normalize has to be grayscale. Layout must be in {GRAY_LAYOUTS}, "
+            f"but got {layout}."
+        )
         saliency_map = self._saliency_map.map
         for idx, class_map in saliency_map.items():
             class_map = cv2.resize(class_map, self._data.shape[:2][::-1])
@@ -329,9 +327,9 @@ class PostProcessor:
         )
         layout = self._saliency_map.layout
         assert layout in GRAY_LAYOUTS, (
-                f"Saliency map to normalize has to be grayscale. Layout must be in {GRAY_LAYOUTS}, "
-                f"but got {layout}."
-            )
+            f"Saliency map to normalize has to be grayscale. Layout must be in {GRAY_LAYOUTS}, "
+            f"but got {layout}."
+        )
 
         saliency_map = self._saliency_map.map
         for idx, class_map in saliency_map.items():
@@ -341,7 +339,6 @@ class PostProcessor:
         if layout == SaliencyMapLayout.MULTIPLE_MAPS_PER_IMAGE_GRAY:
             self._saliency_map.layout = SaliencyMapLayout.MULTIPLE_MAPS_PER_IMAGE_COLOR
         self._saliency_map.map = saliency_map
-        
 
     def apply_overlay(self) -> None:
         """Applies overlay of the saliency map with the original image."""

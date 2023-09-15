@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
-import numpy as np
 
 logger = logging.getLogger("openvino_xai")
 logger.setLevel(logging.INFO)
