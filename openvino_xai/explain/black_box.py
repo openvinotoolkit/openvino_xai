@@ -1,7 +1,7 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Optional, List
+from typing import Optional, List, Tuple
 
 import cv2
 import numpy as np
@@ -27,6 +27,8 @@ class RISEExplainer(BlackBoxExplainer):
                  num_cells: Optional[int] = 8,
                  prob: Optional[float] = 0.5,
                  seed: Optional[int] = 0,
+                 input_size: Optional[Tuple[int]] = None,
+                 num_classes: Optional[int] = None,
                  normalize: Optional[bool] = True):
         """RISE BlackBox Explainer
 
@@ -40,13 +42,24 @@ class RISEExplainer(BlackBoxExplainer):
             normalize (bool, optional): Whether to normalize output or not.
         """
         super().__init__(model)
-        assert len(model.inputs) == 1, "Support only for models with single input."
-        input_name = next(iter(model.inputs))
-        self.input_size = model.inputs[input_name].shape[-2:]
         self.num_masks = num_masks
         self.num_cells = num_cells
         self.prob = prob
         self.seed = seed
+
+        if input_size:
+            self.input_size = input_size
+        else:
+            assert len(model.inputs) == 1, "Support only for models with single input."
+            input_name = next(iter(model.inputs))
+            self.input_size = model.inputs[input_name].shape[-2:]
+        if num_classes:
+            self.num_classes = num_classes
+        else:
+            assert len(model.outputs) == 1, "Support only for models with single output."
+            output_name = next(iter(model.outputs))
+            self.num_classes = model.outputs[output_name].shape[-1]
+
         self.normalize = normalize
 
     def explain(
@@ -94,15 +107,14 @@ class RISEExplainer(BlackBoxExplainer):
 
         resized_data = self._resize_input(data)
 
-        sal_maps = []
+        sal_maps = np.zeros((self.num_classes, self.input_size[0], self.input_size[1]))
         for _ in tqdm(range(0, self.num_masks), desc="Explaining"):
             mask = self._generate_mask(cell_size, up_size, rand_generator)
             # Add channel dimensions for masks
             masked = np.expand_dims(mask, axis=2) * resized_data
             scores = self._model(masked).raw_scores
             sal = scores.reshape(-1, 1, 1) * mask
-            sal_maps.append(sal)
-        sal_maps = np.sum(sal_maps, axis=0)
+            sal_maps += sal
 
         if self.normalize:
             sal_maps = self._normalize_saliency_maps(sal_maps)
