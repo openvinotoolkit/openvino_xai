@@ -171,6 +171,9 @@ class ExplainResult:
                 assert (
                     explain_targets is not None
                 ), f"Explain targets has to be provided for {target_explain_group}."
+                assert (
+                    all(0 <= target <= len(saliency_map[0]) - 1 for target in explain_targets)
+                ), f"For class-wise targets, all explain targets has to be in range 0..{len(saliency_map[0]) - 1}"
                 labels = set(explain_targets)
             saliency_map_predicted_classes = []
             x = saliency_map[0]

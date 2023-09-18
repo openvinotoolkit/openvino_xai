@@ -34,8 +34,7 @@ class Explainer(ABC):
             if self._explain_method:
                 return self._explain_method.default_target_explain_group
             else:
-                raise ValueError("Model with XAI branch was created outside of Openvino-XAI library. "
-                                 "Please explicitly provide target_explain_group to the explain call.")
+                raise ValueError("Please explicitly provide target_explain_group to the explain call.")
 
     @staticmethod
     def _get_processed_explain_result(raw_explain_result, data, post_processing_parameters):

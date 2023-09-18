@@ -87,6 +87,7 @@ def run_blackbox_w_postprocessing_parameters(args):
     image = cv2.imread(args.image_path)
     image_name = Path(args.image_path).stem
 
+    # model in args.model_path can be both OV IR .xml file or ONNX .onnx file
     model = ClassificationModel.create_model(
         args.model_path, model_type="Classification", configuration={"output_raw_scores": True}
     )
