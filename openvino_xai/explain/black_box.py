@@ -28,7 +28,6 @@ class RISEExplainer(BlackBoxExplainer):
                  prob: Optional[float] = 0.5,
                  seed: Optional[int] = 0,
                  input_size: Optional[Tuple[int]] = None,
-                 num_classes: Optional[int] = None,
                  normalize: Optional[bool] = True):
         """RISE BlackBox Explainer
 
@@ -39,6 +38,7 @@ class RISEExplainer(BlackBoxExplainer):
             prob (float, optional): with prob p, a low-res cell is set to 1;
                 otherwise, it's 0. Default: ``0.5``.
             seed (int, optional): Seed for random mask generation.
+            input_size (Tuple[int], optional): Model input size.
             normalize (bool, optional): Whether to normalize output or not.
         """
         super().__init__(model)
@@ -53,12 +53,6 @@ class RISEExplainer(BlackBoxExplainer):
             assert len(model.inputs) == 1, "Support only for models with single input."
             input_name = next(iter(model.inputs))
             self.input_size = model.inputs[input_name].shape[-2:]
-        if num_classes:
-            self.num_classes = num_classes
-        else:
-            dummy_input = np.zeros((*self.input_size, 3))
-            scores = self._model(dummy_input).raw_scores
-            self.num_classes = len(scores)
 
         self.normalize = normalize
 
@@ -80,11 +74,12 @@ class RISEExplainer(BlackBoxExplainer):
         :param post_processing_parameters: Parameters that define post-processing.
         :type post_processing_parameters: PostProcessParameters
         """
-        raw_saliency_map = self._generate_saliency_map(data)
-
         resized_data = self._resize_input(data)
-        predicted_classes = self._model(resized_data)[0]
-        cls_result = ClassificationResult(predicted_classes, raw_saliency_map, np.ndarray(0), np.ndarray(0))
+        result = self._model(resized_data)
+        predictions = result.top_labels
+        num_classes = len(result.raw_scores)
+        raw_saliency_map = self._generate_saliency_map(data, num_classes)
+        cls_result = ClassificationResult(predictions, raw_saliency_map, np.ndarray(0), np.ndarray(0))
         
         target_explain_group = self._get_target_explain_group(target_explain_group)
         explain_result = ExplainResult(cls_result, target_explain_group, explain_targets, self._labels)
@@ -95,7 +90,7 @@ class RISEExplainer(BlackBoxExplainer):
 
         return processed_explain_result
 
-    def _generate_saliency_map(self, data):
+    def _generate_saliency_map(self, data: np.ndarray, num_classes: int) -> np.ndarray:
         """Generate RISE saliency map
         Returns:
             sal (np.ndarray): saliency map for each class
@@ -107,7 +102,7 @@ class RISEExplainer(BlackBoxExplainer):
 
         resized_data = self._resize_input(data)
 
-        sal_maps = np.zeros((self.num_classes, self.input_size[0], self.input_size[1]))
+        sal_maps = np.zeros((num_classes, self.input_size[0], self.input_size[1]))
         for _ in tqdm(range(0, self.num_masks), desc="Explaining"):
             mask = self._generate_mask(cell_size, up_size, rand_generator)
             # Add channel dimensions for masks
