@@ -3,14 +3,13 @@
 
 import os
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import cv2
 import numpy as np
 from openvino.model_api.models import ClassificationResult
 
 from openvino_xai.parameters import PostProcessParameters
-from openvino_xai.utils import reorder_sal_map
 
 
 class TargetExplainGroup(Enum):
@@ -109,11 +108,13 @@ class ExplainResult:
 
         self._layout = self.get_layout(dict_sal_map)
         if hierarchical_info and self._layout in MULTIPLE_MAP_LAYOUTS:
-            dict_sal_map = reorder_sal_map(dict_sal_map, hierarchical_info, labels)
+            dict_sal_map = self.reorder_sal_map(dict_sal_map, hierarchical_info, labels)
         self._saliency_map = self._select_target_saliency_maps(
             dict_sal_map, target_explain_group, raw_result, explain_targets
         )
-        self._predictions = raw_result.top_labels
+        if self._layout in MULTIPLE_MAP_LAYOUTS:
+            self._predictions = raw_result.top_labels
+        self.target_explain_group = target_explain_group
 
     @property
     def map(self):
@@ -140,16 +141,18 @@ class ExplainResult:
         raw_saliency_map = raw_result.saliency_map
         if raw_saliency_map.size == 0:
             raise RuntimeError("Model does not contain saliency_map output.")
+        if raw_saliency_map.shape[0] > 1:
+            raise RuntimeError("Batch size for returned saliency maps should be 1.")
         return raw_saliency_map
 
     @staticmethod
-    def _format_sal_map_as_dict(raw_saliency_map: np.ndarray) -> Dict[int, np.ndarray]:
-        """Returns dict with saliency maps in format {class_idx: class_saliency_map}."""
-        if raw_saliency_map.shape[0] > 1:
-            raise RuntimeError("Batch size for returned saliency maps should be 1.")
+    def _format_sal_map_as_dict(raw_saliency_map: np.ndarray) -> Dict[Union[int, str], np.ndarray]:
+        """Returns dict with saliency maps in format {target_id: class_saliency_map}."""
         if raw_saliency_map.ndim == 3:
-            dict_sal_map = {0: raw_saliency_map[0]}
+            # Per-image saliency map
+            dict_sal_map = {"per_image_map": raw_saliency_map[0]}
         elif raw_saliency_map.ndim == 4:
+            # Per-class saliency map
             dict_sal_map = {}
             for idx, class_sal in enumerate(raw_saliency_map[0]):
                 dict_sal_map[idx] = class_sal
@@ -167,8 +170,12 @@ class ExplainResult:
         return saliency_map
 
     def _select_target_saliency_maps(
-        self, saliency_map, target_explain_group, raw_predictions=None, explain_targets=None
-    ) -> np.ndarray:
+        self,
+        saliency_map: Dict[Union[int, str], np.ndarray],
+        target_explain_group: TargetExplainGroup,
+        raw_predictions: ClassificationResult = None,
+        explain_targets: List[int] = None
+    ) -> Dict[Union[int, str], np.ndarray]:
         # For classification
         if target_explain_group == TargetExplainGroup.IMAGE:
             assert self.get_layout(saliency_map) == SaliencyMapLayout.ONE_MAP_PER_IMAGE_GRAY
@@ -222,14 +229,34 @@ class ExplainResult:
         # TODO: add unit test
         os.makedirs(dir_path, exist_ok=True)
         save_name = f"{name}_" if name else ""
-        if self._layout in ONE_MAP_LAYOUTS:
-            map_to_save = self._saliency_map[0]
-            cv2.imwrite(os.path.join(dir_path, f"{save_name}map.jpg"), img=map_to_save)
-        else:
-            for idx, map_to_save in self._saliency_map.items():
-                class_name = self._labels[idx]
-                cv2.imwrite(os.path.join(dir_path, f"{save_name}map_{class_name}.jpg"), img=map_to_save)
+        for idx, map_to_save in self._saliency_map.items():
+            target_name = idx if idx == "per_image_map" else self._labels[idx]
+            cv2.imwrite(os.path.join(dir_path, f"{save_name}map_{target_name}.jpg"), img=map_to_save)
 
+    @staticmethod
+    def reorder_sal_map(saliency_map: Dict[int, np.array], hierarchical_info: Dict, labels: List):
+        """Reorder saliency maps from hierarchical model output to be adjusted to label-schema labels order."""
+        hierarchical_idx = []
+        for head_idx in range(hierarchical_info["num_multiclass_heads"]):
+            logits_begin, logits_end = hierarchical_info["head_idx_to_logits_range"][str(head_idx)]
+            for logit in range(0, logits_end - logits_begin):
+                label_str = hierarchical_info["all_groups"][head_idx][logit]
+                label_idx = hierarchical_info["label_to_idx"][label_str]
+                hierarchical_idx.append(label_idx)
+
+        if hierarchical_info["num_multilabel_classes"]:
+            logits_begin = hierarchical_info["num_single_label_classes"]
+            logits_end = len(labels)
+            for logit_idx, logit in enumerate(range(0, logits_end - logits_begin)):
+                label_str_idx = hierarchical_info["num_multiclass_heads"] + logit_idx
+                label_str = hierarchical_info["all_groups"][label_str_idx][0]
+                label_idx = hierarchical_info["label_to_idx"][label_str]
+                hierarchical_idx.append(label_idx)
+
+        reordered_map = {}
+        for i, h_idx in enumerate(hierarchical_idx):
+            reordered_map[h_idx] = saliency_map[i]
+        return dict(sorted(reordered_map.items()))
 
 class PostProcessor:
     """
@@ -265,6 +292,12 @@ class PostProcessor:
         Saliency map postprocess method.
         Returns ExplainResult object with processed saliency map, that can have one of SaliencyMapLayout layouts.
         """
+        saliency_map = self._saliency_map
+        if (saliency_map.layout == SaliencyMapLayout.MULTIPLE_MAPS_PER_IMAGE_GRAY) \
+            and (saliency_map.target_explain_group == TargetExplainGroup.ALL_CLASSES):
+            # convert to numpy array to use vectorized normalization and speed up lots of classes scenario:
+            self._saliency_map.map = np.array([map for _, map in saliency_map.map.items()], dtype=np.float32)
+
         if self._normalize:
             self.apply_normalization()
 
@@ -282,6 +315,7 @@ class PostProcessor:
                 self.apply_resize()
             if self._colormap:
                 self.apply_colormap()
+        self.convert_sal_map_to_dict()
         return self._saliency_map
 
     def apply_normalization(self) -> None:
@@ -292,17 +326,25 @@ class PostProcessor:
             f"but got {layout}."
         )
         saliency_map = self._saliency_map.map
-        for idx, class_map in saliency_map.items():
-            class_map = class_map.astype(np.float32)
-            min_values, max_values = self._get_min_max(class_map)
-            class_map = 255 * (class_map - min_values) / (max_values - min_values + 1e-12)
-            saliency_map[idx] = class_map.astype(np.uint8)
+        if isinstance(saliency_map, np.ndarray):
+            n, h, w = saliency_map.shape
+            saliency_map = saliency_map.reshape((n, h*w)) 
+            min_values, max_values = self._get_min_max(saliency_map, axis=-1)
+            saliency_map = 255 * (saliency_map - min_values[:, None]) / (max_values - min_values + 1e-12)[:, None]
+            saliency_map = saliency_map.reshape(n, h, w)
+            saliency_map = saliency_map.astype(np.uint8)
+        else:
+            for idx, class_map in saliency_map.items():
+                class_map = class_map.astype(np.float32)
+                min_values, max_values = self._get_min_max(class_map, axis=None)
+                class_map = 255 * (class_map - min_values) / (max_values - min_values + 1e-12)
+                saliency_map[idx] = class_map.astype(np.uint8)
         self._saliency_map.map = saliency_map
 
     @staticmethod
-    def _get_min_max(saliency_map: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        min_values = np.min(saliency_map)
-        max_values = np.max(saliency_map)
+    def _get_min_max(saliency_map: np.ndarray, axis: Union[int, None]) -> Tuple[np.ndarray, np.ndarray]:
+        min_values = np.min(saliency_map, axis=axis)
+        max_values = np.max(saliency_map, axis=axis)
         return min_values, max_values
 
     def apply_resize(self) -> None:
@@ -315,16 +357,22 @@ class PostProcessor:
             f"but got {layout}."
         )
         saliency_map = self._saliency_map.map
-        for idx, class_map in saliency_map.items():
-            class_map = cv2.resize(class_map, self._data.shape[:2][::-1])
-            saliency_map[idx] = class_map
+        if isinstance(saliency_map, np.ndarray):
+            x = saliency_map.transpose((1, 2, 0))
+            x = cv2.resize(x, self._data.shape[:2][::-1])
+            saliency_map = x.transpose((2, 0, 1))
+        else:
+            for idx, class_map in saliency_map.items():
+                class_map = cv2.resize(class_map, self._data.shape[:2][::-1])
+                saliency_map[idx] = class_map
         self._saliency_map.map = saliency_map
 
     def apply_colormap(self) -> None:
         """Applies cv2.applyColorMap to the saliency map."""
         #  TODO: support different (custom?) colormaps.
-        assert self._saliency_map.map[0].dtype == np.uint8, (
-            "Colormap requires saliency map to has uint8 dtype. " "Enable 'normalize' flag for PostProcessor."
+        assert next(iter(self._saliency_map.map)).dtype == np.uint8, (
+            "Colormap requires saliency map to has uint8 dtype. " 
+            "Enable 'normalize' flag for PostProcessor."
         )
         layout = self._saliency_map.layout
         assert layout in GRAY_LAYOUTS, (
@@ -333,8 +381,15 @@ class PostProcessor:
         )
 
         saliency_map = self._saliency_map.map
-        for idx, class_map in saliency_map.items():
-            saliency_map[idx] = cv2.applyColorMap(class_map, cv2.COLORMAP_JET)
+        if isinstance(saliency_map, np.ndarray):
+            color_mapped_saliency_map = []
+            for class_map in saliency_map:
+                color_mapped_saliency_map.append(cv2.applyColorMap(class_map, cv2.COLORMAP_JET))
+            saliency_map = np.array(color_mapped_saliency_map)
+        else:
+            for idx, class_map in saliency_map.items():
+                saliency_map[idx] = cv2.applyColorMap(class_map, cv2.COLORMAP_JET)
+
         if layout == SaliencyMapLayout.ONE_MAP_PER_IMAGE_GRAY:
             self._saliency_map.layout = SaliencyMapLayout.ONE_MAP_PER_IMAGE_COLOR
         if layout == SaliencyMapLayout.MULTIPLE_MAPS_PER_IMAGE_GRAY:
@@ -347,8 +402,26 @@ class PostProcessor:
             self._saliency_map.layout in COLOR_MAPPED_LAYOUTS
         ), "Color mapped saliency map are expected for overlay."
         saliency_map = self._saliency_map.map
-        for idx, class_map in saliency_map.items():
-            class_map = self._data * self._overlay_weight + class_map * (1 - self._overlay_weight)
-            class_map[class_map > 255] = 255
-            saliency_map[idx] = class_map.astype(np.uint8)
+        if isinstance(saliency_map, np.ndarray):
+            x = saliency_map
+            x = self._data * self._overlay_weight + x * (1 - self._overlay_weight)
+            x[x > 255] = 255
+            saliency_map = x.astype(np.uint8)
+        else:
+            for idx, class_map in saliency_map.items():
+                class_map = self._data * self._overlay_weight + class_map * (1 - self._overlay_weight)
+                class_map[class_map > 255] = 255
+                saliency_map[idx] = class_map.astype(np.uint8)
         self._saliency_map.map = saliency_map
+
+    def convert_sal_map_to_dict(self) -> None:
+        saliency_map = self._saliency_map.map
+        if isinstance(saliency_map, np.ndarray):
+            if self._saliency_map.layout in ONE_MAP_LAYOUTS:
+                dict_sal_map = {"per_image_map": saliency_map}
+                self._saliency_map.map = dict_sal_map
+            elif self._saliency_map.layout in MULTIPLE_MAP_LAYOUTS:
+                dict_sal_map = {}
+                for idx, class_sal in enumerate(saliency_map):
+                    dict_sal_map[idx] = class_sal
+            self._saliency_map.map = dict_sal_map

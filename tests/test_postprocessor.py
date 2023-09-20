@@ -5,7 +5,7 @@ from openvino_xai.parameters import PostProcessParameters
 from openvino_xai.saliency_map import TargetExplainGroup, ExplainResult, PostProcessor
 
 RAW_PREDICTIONS = [
-    type("raw_predictions", (), dict(saliency_map=np.ones((1, 5, 5), dtype=np.uint8), top_labels=[[0]])),
+    type("raw_predictions", (), dict(saliency_map=np.ones((1, 5, 5), dtype=np.uint8))),
     type("raw_predictions", (), dict(saliency_map=np.ones((1, 2, 5, 5), dtype=np.uint8), top_labels=[[0]])),
 ]
 
@@ -50,7 +50,7 @@ class TestPostProcessor:
         else:
             explain_targets = None
 
-        if raw_predictions.saliency_map[0].ndim == 2:
+        if raw_predictions.saliency_map.ndim == 3:
             target_explain_group = TargetExplainGroup.IMAGE
             explain_targets = None
         saliency_map_obj = ExplainResult(
