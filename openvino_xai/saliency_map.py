@@ -293,7 +293,7 @@ class PostProcessor:
         Returns ExplainResult object with processed saliency map, that can have one of SaliencyMapLayout layouts.
         """
         saliency_map = self._saliency_map
-        if (saliency_map.layout == SaliencyMapLayout.MULTIPLE_MAPS_PER_IMAGE_GRAY) \
+        if (saliency_map.layout in MULTIPLE_MAP_LAYOUTS) \
             and (saliency_map.target_explain_group == TargetExplainGroup.ALL_CLASSES):
             # convert to numpy array to use vectorized normalization and speed up lots of classes scenario:
             self._saliency_map.map = np.array([map for _, map in saliency_map.map.items()])
