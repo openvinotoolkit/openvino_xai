@@ -162,6 +162,7 @@ class TestClsWB:
         if explain_method_type == XAIMethodType.ACTIVATIONMAP:
             if model_name == "classification_model_with_xai_head":
                 pytest.skip("model already has xai head - this test cannot change it.")
+            assert "per_image_map" in explanations.map
             if overlay:
                 assert explanations.map["per_image_map"].shape == (224, 224, 3)
             else:
