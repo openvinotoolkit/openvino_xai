@@ -296,7 +296,7 @@ class PostProcessor:
         if (saliency_map.layout == SaliencyMapLayout.MULTIPLE_MAPS_PER_IMAGE_GRAY) \
             and (saliency_map.target_explain_group == TargetExplainGroup.ALL_CLASSES):
             # convert to numpy array to use vectorized normalization and speed up lots of classes scenario:
-            self._saliency_map.map = np.array([map for _, map in saliency_map.map.items()], dtype=np.float32)
+            self._saliency_map.map = np.array([map for _, map in saliency_map.map.items()])
 
         if self._normalize:
             self.apply_normalization()
@@ -328,7 +328,8 @@ class PostProcessor:
         saliency_map = self._saliency_map.map
         if isinstance(saliency_map, np.ndarray):
             n, h, w = saliency_map.shape
-            saliency_map = saliency_map.reshape((n, h*w)) 
+            saliency_map = saliency_map.reshape((n, h*w))
+            saliency_map.astype(np.float32) 
             min_values, max_values = self._get_min_max(saliency_map, axis=-1)
             saliency_map = 255 * (saliency_map - min_values[:, None]) / (max_values - min_values + 1e-12)[:, None]
             saliency_map = saliency_map.reshape(n, h, w)
@@ -370,7 +371,15 @@ class PostProcessor:
     def apply_colormap(self) -> None:
         """Applies cv2.applyColorMap to the saliency map."""
         #  TODO: support different (custom?) colormaps.
-        assert next(iter(self._saliency_map.map)).dtype == np.uint8, (
+        
+        saliency_map = self._saliency_map.map
+        if isinstance(saliency_map, np.ndarray):
+            dtype = saliency_map.dtype
+        else:
+            idx = next(iter(saliency_map))
+            dtype = saliency_map[idx].dtype
+
+        assert dtype == np.uint8, (
             "Colormap requires saliency map to has uint8 dtype. " 
             "Enable 'normalize' flag for PostProcessor."
         )
@@ -380,7 +389,6 @@ class PostProcessor:
             f"but got {layout}."
         )
 
-        saliency_map = self._saliency_map.map
         if isinstance(saliency_map, np.ndarray):
             color_mapped_saliency_map = []
             for class_map in saliency_map:

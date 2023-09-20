@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+import cv2
 import numpy as np
 import pytest
 from urllib.request import urlretrieve
@@ -8,7 +9,7 @@ from urllib.request import urlretrieve
 from openvino.model_api.models import ClassificationModel
 import openvino.runtime as ov
 
-from openvino_xai.explain import WhiteBoxExplainer, ClassificationAutoExplainer
+from openvino_xai.explain import WhiteBoxExplainer, ClassificationAutoExplainer, RISEExplainer
 from openvino_xai.parameters import ClassificationExplainParametersWB, PostProcessParameters, XAIMethodType
 from openvino_xai.saliency_map import TargetExplainGroup
 from openvino_xai.model import XAIClassificationModel, XAIModel
@@ -123,7 +124,8 @@ class TestClsWB:
 
         explanations = WhiteBoxExplainer(model).explain(np.zeros((224, 224, 3)))
         assert explanations is not None
-        assert explanations.map[0].ndim == 2
+        assert "per_image_map" in explanations.map
+        assert explanations.map["per_image_map"].ndim == 2
 
     @pytest.mark.parametrize("model_name", MODELS)
     @pytest.mark.parametrize("explain_method_type", [XAIMethodType.RECIPROCAM, XAIMethodType.ACTIVATIONMAP])
@@ -161,9 +163,9 @@ class TestClsWB:
             if model_name == "classification_model_with_xai_head":
                 pytest.skip("model already has xai head - this test cannot change it.")
             if overlay:
-                assert explanations.map[0].shape == (224, 224, 3)
+                assert explanations.map["per_image_map"].shape == (224, 224, 3)
             else:
-                assert explanations.map[0].shape == (7, 7)
+                assert explanations.map["per_image_map"].shape == (7, 7)
 
 
 @pytest.mark.parametrize("model_name", MODELS)
@@ -207,3 +209,67 @@ def test_classification_explain_parameters():
     assert cls_explain_params.target_layer is None
     assert cls_explain_params.embed_normalization
     assert cls_explain_params.explain_method_type == XAIMethodType.RECIPROCAM
+
+class TestClsBB:
+    @pytest.mark.parametrize("model_name", MODELS)
+    @pytest.mark.parametrize("overlay", [True, False])
+    @pytest.mark.parametrize(
+        "target_explain_group",
+        [
+            TargetExplainGroup.ALL_CLASSES,
+            TargetExplainGroup.CUSTOM_CLASSES,
+        ],
+    )
+    def test_classification_black_box_postprocessing(self, model_name, overlay, target_explain_group):
+        data_dir = ".data"
+        retrieve_otx_model(data_dir, model_name)
+        model_path = os.path.join(data_dir, "otx_models", model_name + ".xml")
+
+        model = ClassificationModel.create_model(
+        model_path, model_type="Classification", configuration={"output_raw_scores": True}
+        )
+        explainer = RISEExplainer(model)
+        post_processing_parameters = PostProcessParameters(
+            overlay=overlay,
+        )
+        if target_explain_group == TargetExplainGroup.CUSTOM_CLASSES:
+            explanation = explainer.explain(
+                np.zeros((224, 224, 3)),
+                target_explain_group,
+                [0]
+            )
+            assert explanation is not None
+            assert explanation.map[0].ndim == 2
+        else:
+            explanation = explainer.explain(
+                np.zeros((224, 224, 3)),
+                target_explain_group,
+                post_processing_parameters=post_processing_parameters,
+            )
+            assert explanation is not None
+            if overlay:
+                assert len(explanation.map) == MODELS_NUM_CLASSES[model_name]
+                assert explanation.map[0].shape == (224, 224, 3)
+            else:
+                assert len(explanation.map) == MODELS_NUM_CLASSES[model_name]
+                assert explanation.map[0].shape == (224, 224)
+
+    @pytest.mark.parametrize("model_name", MODELS)
+    def test_classification_black_box_pred_class(self, model_name):
+        data_dir = ".data"
+        retrieve_otx_model(data_dir, model_name)
+        model_path = os.path.join(data_dir, "otx_models", model_name + ".xml")
+
+        model = ClassificationModel.create_model(
+        model_path, model_type="Classification", configuration={"output_raw_scores": True}
+        )
+        explainer = RISEExplainer(model)
+
+        image = cv2.imread("tests/assets/cheetah_class293.jpg")
+        explanation = explainer.explain(
+            image,
+            TargetExplainGroup.PREDICTED_CLASSES)
+        assert explanation is not None
+        assert len(explanation.map) > 0
+        idx = next(iter(explanation.map))
+        assert explanation.map[idx].shape == (224, 224)
