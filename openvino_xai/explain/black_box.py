@@ -1,7 +1,7 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Optional, List
+from typing import Optional, List, Tuple
 
 import cv2
 import numpy as np
@@ -27,6 +27,7 @@ class RISEExplainer(BlackBoxExplainer):
                  num_cells: Optional[int] = 8,
                  prob: Optional[float] = 0.5,
                  seed: Optional[int] = 0,
+                 input_size: Optional[Tuple[int]] = None,
                  normalize: Optional[bool] = True):
         """RISE BlackBox Explainer
 
@@ -37,16 +38,22 @@ class RISEExplainer(BlackBoxExplainer):
             prob (float, optional): with prob p, a low-res cell is set to 1;
                 otherwise, it's 0. Default: ``0.5``.
             seed (int, optional): Seed for random mask generation.
+            input_size (Tuple[int], optional): Model input size.
             normalize (bool, optional): Whether to normalize output or not.
         """
         super().__init__(model)
-        assert len(model.inputs) == 1, "Support only for models with single input."
-        input_name = next(iter(model.inputs))
-        self.input_size = model.inputs[input_name].shape[-2:]
         self.num_masks = num_masks
         self.num_cells = num_cells
         self.prob = prob
         self.seed = seed
+
+        if input_size:
+            self.input_size = input_size
+        else:
+            assert len(model.inputs) == 1, "Support only for models with single input."
+            input_name = next(iter(model.inputs))
+            self.input_size = model.inputs[input_name].shape[-2:]
+
         self.normalize = normalize
 
     def explain(
@@ -67,17 +74,18 @@ class RISEExplainer(BlackBoxExplainer):
         :param post_processing_parameters: Parameters that define post-processing.
         :type post_processing_parameters: PostProcessParameters
         """
-        raw_saliency_map = self._generate_saliency_map(data)
-
         resized_data = self._resize_input(data)
-        predicted_classes = self._model(resized_data)[0]
-        cls_result = ClassificationResult(predicted_classes, raw_saliency_map, np.ndarray(0), np.ndarray(0))
-
         if self._model.hierarchical:
             hierarchical_info = self._model.hierarchical_info["cls_heads_info"]
         else:
             hierarchical_info = None
     
+        result = self._model(resized_data)
+        predictions = result.top_labels
+        num_classes = len(result.raw_scores)
+        raw_saliency_map = self._generate_saliency_map(data, num_classes)
+        cls_result = ClassificationResult(predictions, raw_saliency_map, np.ndarray(0), np.ndarray(0))
+        
         target_explain_group = self._get_target_explain_group(target_explain_group)
         raw_explain_result = ExplainResult(cls_result, target_explain_group, explain_targets, self._labels, hierarchical_info)
 
@@ -87,7 +95,7 @@ class RISEExplainer(BlackBoxExplainer):
 
         return processed_explain_result
 
-    def _generate_saliency_map(self, data):
+    def _generate_saliency_map(self, data: np.ndarray, num_classes: int) -> np.ndarray:
         """Generate RISE saliency map
         Returns:
             sal (np.ndarray): saliency map for each class
@@ -99,15 +107,14 @@ class RISEExplainer(BlackBoxExplainer):
 
         resized_data = self._resize_input(data)
 
-        sal_maps = []
+        sal_maps = np.zeros((num_classes, self.input_size[0], self.input_size[1]))
         for _ in tqdm(range(0, self.num_masks), desc="Explaining"):
             mask = self._generate_mask(cell_size, up_size, rand_generator)
             # Add channel dimensions for masks
             masked = np.expand_dims(mask, axis=2) * resized_data
             scores = self._model(masked).raw_scores
             sal = scores.reshape(-1, 1, 1) * mask
-            sal_maps.append(sal)
-        sal_maps = np.sum(sal_maps, axis=0)
+            sal_maps += sal
 
         if self.normalize:
             sal_maps = self._normalize_saliency_maps(sal_maps)
