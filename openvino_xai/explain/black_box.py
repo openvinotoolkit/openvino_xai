@@ -36,16 +36,17 @@ class RISEExplainer(BlackBoxExplainer):
         """RISE BlackBox Explainer
 
         Args:
-            num_masks (int): number of generated masks to aggregate
-            num_cells (int): number of cells for low-dimensional RISE
+            model (openvino.model_api.models.ClassificationModel): ModelAPI wrapper
+            num_masks (int, optional): number of generated masks to aggregate
+            num_cells (int, optional): number of cells for low-dimensional RISE
                 random mask that later will be up-scaled to the model input size
-            prob (float): with prob p, a low-res cell is set to 1;
+            prob (float, optional): with prob p, a low-res cell is set to 1;
                 otherwise, it's 0. Default: ``0.5``.
-            seed (int): Seed for random mask generation.
-            input_size (Tuple[int], optional): Model input size.
-            asynchronous_inference (bool): Whether to run inference in asynchronous mode or not.
-            throughput_inference (bool): Whether to run inference in throughput mode or not.
-            normalize (bool): Whether to normalize output or not.
+            seed (int, optional): seed for random mask generation.
+            input_size (Tuple[int], optional): model input size.
+            asynchronous_inference (bool, optional): whether to run inference in asynchronous mode or not.
+            throughput_inference (bool, optional): whether to run asynchronous inference in throughput mode or not.
+            normalize (bool, optional): whether to normalize output or not.
         """
         if asynchronous_inference and throughput_inference:
             model.inference_adapter.plugin_config.update({"PERFORMANCE_HINT": "THROUGHPUT"})
