@@ -57,7 +57,7 @@ class TestPostProcessor:
             raw_predictions, target_explain_group=target_explain_group, explain_targets=explain_targets
         )
 
-        raw_sal_map_dims = saliency_map_obj.map[0].ndim
+        raw_sal_map_dims = len(saliency_map_obj.sal_map_shape)
         data = np.ones((10, 10, 3))
         post_processor = PostProcessor(
             saliency_map_obj,
@@ -70,4 +70,4 @@ class TestPostProcessor:
         expected_dims = raw_sal_map_dims
         if colormap or overlay:
             expected_dims += 1
-        assert saliency_map_processed.map[0].ndim == expected_dims
+        assert len(saliency_map_processed.sal_map_shape) == expected_dims

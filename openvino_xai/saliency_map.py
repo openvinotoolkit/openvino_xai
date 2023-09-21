@@ -227,8 +227,7 @@ class ExplainResult:
     @staticmethod
     def get_layout(saliency_map: Dict[int, np.ndarray]) -> SaliencyMapLayout:
         """Estimate and return SaliencyMapLayout. Requires raw saliency map."""
-        num_classes = len(saliency_map)
-        if num_classes == 1:
+        if "per_image_map" in saliency_map:
             return SaliencyMapLayout.ONE_MAP_PER_IMAGE_GRAY
         else:
             return SaliencyMapLayout.MULTIPLE_MAPS_PER_IMAGE_GRAY
