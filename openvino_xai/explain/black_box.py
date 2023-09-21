@@ -69,9 +69,13 @@ class RISEExplainer(BlackBoxExplainer):
         self.normalize = normalize
 
         # TODO: Temporary workaround, fix in https://github.com/intel-sandbox/openvino_xai/issues/19
-        self._explain_method = type(
-            'DummyExplainMethodClass', (object,), {'default_target_explain_group': TargetExplainGroup.PREDICTED_CLASSES}
-        )()
+        explain_method_namespace = {
+            "default_target_explain_group": TargetExplainGroup.PREDICTED_CLASSES,
+            "supported_target_explain_groups": {TargetExplainGroup.ALL_CLASSES,
+                                                TargetExplainGroup.PREDICTED_CLASSES,
+                                                TargetExplainGroup.CUSTOM_CLASSES}
+        }
+        self._explain_method = type("DummyExplainMethodClass", (object,), explain_method_namespace)()
 
     def explain(
         self,
