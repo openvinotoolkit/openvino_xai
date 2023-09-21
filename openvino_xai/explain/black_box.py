@@ -104,22 +104,7 @@ class RISEExplainer(BlackBoxExplainer):
             )
         predictions = result.top_labels
         num_classes = len(result.raw_scores)
-        if target_explain_group in SELECTED_CLASSES:
-            if target_explain_group == TargetExplainGroup.PREDICTED_CLASSES:
-                assert explain_targets is None, f"For {TargetExplainGroup.PREDICTED_CLASSES} explain group, " \
-                                                f"targets will be estimated from the model prediction. " \
-                                                f"explain_targets should not be provided."
-                target_classes = [prediction[0] for prediction in predictions]
-            if target_explain_group == TargetExplainGroup.CUSTOM_CLASSES:
-                assert (
-                    explain_targets is not None
-                ), f"Explain targets has to be provided for {target_explain_group}."
-                assert (
-                    all(0 <= target <= num_classes - 1 for target in explain_targets)
-                ), f"For class-wise targets, all explain targets has to be in range 0..{num_classes - 1}"
-                target_classes = explain_targets
-        else:
-            target_classes = None
+        target_classes = self._get_target_classes(num_classes, target_explain_group, explain_targets, predictions)
 
         raw_saliency_map = self._generate_saliency_map(data, num_classes, target_classes)
         cls_result = ClassificationResult(predictions, raw_saliency_map, np.ndarray(0), np.ndarray(0))
@@ -130,8 +115,29 @@ class RISEExplainer(BlackBoxExplainer):
         processed_explain_result = self._get_processed_explain_result(
             explain_result, data, post_processing_parameters
         )
-
         return processed_explain_result
+
+    @staticmethod
+    def _get_target_classes(num_classes, target_explain_group, explain_targets, predictions):
+        if target_explain_group in SELECTED_CLASSES:
+            if target_explain_group == TargetExplainGroup.PREDICTED_CLASSES:
+                assert explain_targets is None, f"For {TargetExplainGroup.PREDICTED_CLASSES} explain group, " \
+                                                f"targets will be estimated from the model prediction. " \
+                                                f"explain_targets should not be provided."
+                target_classes = [prediction[0] for prediction in predictions]
+            elif target_explain_group == TargetExplainGroup.CUSTOM_CLASSES:
+                assert (
+                    explain_targets is not None
+                ), f"Explain targets has to be provided for {target_explain_group}."
+                assert (
+                    all(0 <= target <= num_classes - 1 for target in explain_targets)
+                ), f"For class-wise targets, all explain targets has to be in range 0..{num_classes - 1}"
+                target_classes = explain_targets
+            else:
+                raise ValueError(f"Target explain group {target_explain_group} is not supported.")
+        else:
+            target_classes = None
+        return target_classes
 
     def _generate_saliency_map(
             self, data: np.ndarray, num_classes: int, target_classes: Optional[List[int]]
