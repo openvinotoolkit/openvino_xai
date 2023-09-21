@@ -93,7 +93,7 @@ For more details (statistic, model list, samples of generated saliency maps) see
 
 ## Black-box (slow, model-agnostic)
 ### Classification
-We benchmarked black-box explanation (using RISE explain method) using 528 CNN models and XXX transformer-based models. 
+We benchmarked black-box explanation (using RISE explain method) using 528 CNN models and 115 transformer-based models. 
 Black-box explainer support all types of models that output logits (e.g. CNNs, transformers, etc.).
 
 For more details (statistic, model list, samples of generated saliency maps) see
