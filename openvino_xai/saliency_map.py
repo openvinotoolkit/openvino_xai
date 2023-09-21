@@ -125,6 +125,12 @@ class ExplainResult:
         self._saliency_map = saliency_map
 
     @property
+    def sal_map_shape(self):
+        idx = next(iter(self._saliency_map))
+        sal_map_shape = self._saliency_map[idx].shape
+        return sal_map_shape
+
+    @property
     def predictions(self):
         return self._predictions
 

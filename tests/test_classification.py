@@ -158,10 +158,10 @@ class TestClsWB:
         if explain_method_type == XAIMethodType.RECIPROCAM:
             if overlay:
                 assert len(explanations.map) == MODELS_NUM_CLASSES[model_name]
-                assert explanations.map[0].shape == (224, 224, 3)
+                assert explanations.sal_map_shape == (224, 224, 3)
             else:
                 assert len(explanations.map) == MODELS_NUM_CLASSES[model_name]
-                assert explanations.map[0].shape == (7, 7)
+                assert explanations.sal_map_shape == (7, 7)
         if explain_method_type == XAIMethodType.ACTIVATIONMAP:
             if model_name == "classification_model_with_xai_head":
                 pytest.skip("model already has xai head - this test cannot change it.")
@@ -232,7 +232,7 @@ class TestClsBB:
         model = ClassificationModel.create_model(
         model_path, model_type="Classification", configuration={"output_raw_scores": True}
         )
-        explainer = RISEExplainer(model)
+        explainer = RISEExplainer(model, num_masks=50)
         post_processing_parameters = PostProcessParameters(
             overlay=overlay,
         )
@@ -253,10 +253,10 @@ class TestClsBB:
             assert explanation is not None
             if overlay:
                 assert len(explanation.map) == MODELS_NUM_CLASSES[model_name]
-                assert explanation.map[0].shape == (224, 224, 3)
+                assert explanation.sal_map_shape == (224, 224, 3)
             else:
                 assert len(explanation.map) == MODELS_NUM_CLASSES[model_name]
-                assert explanation.map[0].shape == (224, 224)
+                assert explanation.sal_map_shape == (224, 224)
 
     @pytest.mark.parametrize("model_name", MODELS)
     def test_classification_black_box_pred_class(self, model_name):
@@ -267,7 +267,7 @@ class TestClsBB:
         model = ClassificationModel.create_model(
         model_path, model_type="Classification", configuration={"output_raw_scores": True}
         )
-        explainer = RISEExplainer(model)
+        explainer = RISEExplainer(model, num_masks=50)
 
         image = cv2.imread("tests/assets/cheetah_class293.jpg")
         explanation = explainer.explain(
@@ -275,5 +275,4 @@ class TestClsBB:
             TargetExplainGroup.PREDICTED_CLASSES)
         assert explanation is not None
         assert len(explanation.map) > 0
-        idx = next(iter(explanation.map))
-        assert explanation.map[idx].shape == (224, 224)
+        assert explanation.sal_map_shape == (224, 224)
