@@ -11,7 +11,11 @@ from openvino_xai.saliency_map import ExplainResult, PostProcessor
 
 
 class Explainer(ABC):
-    """A base interface for explainer."""
+    """A base interface for explainer.
+
+    :param model: ModelAPI wrapper.
+    :type model: openvino.model_api.models.Model
+    """
 
     def __init__(self, model: openvino.model_api.models.Model):
         self._model = model

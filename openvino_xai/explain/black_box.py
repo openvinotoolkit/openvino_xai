@@ -21,7 +21,29 @@ class BlackBoxExplainer(Explainer):
 
 
 class RISEExplainer(BlackBoxExplainer):
-    """RISEExplainer explains classification models in black-box mode using RISE (https://arxiv.org/abs/1806.07421)."""
+    """RISEExplainer explains classification models in black-box mode using RISE (https://arxiv.org/abs/1806.07421).
+
+    :param model: ModelAPI wrapper.
+    :type model: openvino.model_api.models.ClassificationModel
+    :param num_masks: Number of generated masks to aggregate.
+    :type num_masks: int
+    :param num_cells: Number of cells for low-dimensional RISE
+        random mask that later will be up-scaled to the model input size.
+    :type num_cells: int
+    :param prob: With prob p, a low-res cell is set to 1;
+        otherwise, it's 0. Default: ``0.5``.
+    :type prob: float
+    :param seed: Seed for random mask generation.
+    :type seed: int
+    :param input_size: Model input size.
+    :type input_size: Tuple[int]
+    :param asynchronous_inference: Whether to run inference in asynchronous mode or not.
+    :type asynchronous_inference: bool
+    :param throughput_inference: Whether to run asynchronous inference in throughput mode or not.
+    :type throughput_inference: bool
+    :param normalize: Whether to normalize output or not.
+    :type normalize: bool
+    """
 
     def __init__(self,
                  model: ClassificationModel,
@@ -33,21 +55,6 @@ class RISEExplainer(BlackBoxExplainer):
                  asynchronous_inference: bool = True,
                  throughput_inference: bool = True,
                  normalize: bool = True):
-        """RISE BlackBox Explainer
-
-        Args:
-            model (openvino.model_api.models.ClassificationModel): ModelAPI wrapper
-            num_masks (int, optional): number of generated masks to aggregate
-            num_cells (int, optional): number of cells for low-dimensional RISE
-                random mask that later will be up-scaled to the model input size
-            prob (float, optional): with prob p, a low-res cell is set to 1;
-                otherwise, it's 0. Default: ``0.5``.
-            seed (int, optional): seed for random mask generation.
-            input_size (Tuple[int], optional): model input size.
-            asynchronous_inference (bool, optional): whether to run inference in asynchronous mode or not.
-            throughput_inference (bool, optional): whether to run asynchronous inference in throughput mode or not.
-            normalize (bool, optional): whether to normalize output or not.
-        """
         if asynchronous_inference and throughput_inference:
             model.inference_adapter.plugin_config.update({"PERFORMANCE_HINT": "THROUGHPUT"})
             model.load(force=True)
