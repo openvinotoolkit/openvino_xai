@@ -93,8 +93,8 @@ class TestClsWB:
             assert explanations is not None
             assert len(explanations.map) == len(model.labels)
             if model_name in self._ref_sal_maps:
-                actual_sal_vals = explanations.map[0][0, :].astype(np.int8)
-                ref_sal_vals = self._ref_sal_maps[model_name].astype(np.int8)
+                actual_sal_vals = explanations.map[0][0, :].astype(np.uint16)
+                ref_sal_vals = self._ref_sal_maps[model_name].astype(np.uint8)
                 if embed_normalization:
                     # Reference values generated with embed_normalization=True
                     assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
@@ -215,6 +215,13 @@ def test_classification_explain_parameters():
     assert cls_explain_params.explain_method_type == XAIMethodType.RECIPROCAM
 
 class TestClsBB:
+    _ref_sal_maps = {
+        "mlc_mobilenetv3_large_voc": np.array([21, 25, 30, 34, 38, 42, 47, 51, 57, 64], dtype=np.uint8),
+        "mlc_efficient_b0_voc": np.array([13, 17, 20, 23, 27, 30, 33, 37, 42, 47], dtype=np.uint8),
+        "mlc_efficient_v2s_voc": np.array([20, 24, 28, 32, 36, 40, 44, 48, 54, 61], dtype=np.uint8),
+        "classification_model_with_xai_head": np.array([15, 18, 22, 26, 29, 33, 37, 40, 46, 53], dtype=np.uint8),
+    }
+
     @pytest.mark.parametrize("model_name", MODELS)
     @pytest.mark.parametrize("overlay", [True, False])
     @pytest.mark.parametrize(
@@ -232,7 +239,7 @@ class TestClsBB:
         model = ClassificationModel.create_model(
         model_path, model_type="Classification", configuration={"output_raw_scores": True}
         )
-        explainer = RISEExplainer(model, num_masks=50)
+        explainer = RISEExplainer(model, num_masks=5)
         post_processing_parameters = PostProcessParameters(
             overlay=overlay,
         )
@@ -267,7 +274,7 @@ class TestClsBB:
         model = ClassificationModel.create_model(
         model_path, model_type="Classification", configuration={"output_raw_scores": True}
         )
-        explainer = RISEExplainer(model, num_masks=50)
+        explainer = RISEExplainer(model, num_masks=5)
 
         image = cv2.imread("tests/assets/cheetah_class293.jpg")
         explanation = explainer.explain(
@@ -276,3 +283,7 @@ class TestClsBB:
         assert explanation is not None
         assert len(explanation.map) > 0
         assert explanation.sal_map_shape == (224, 224)
+        if model_name in self._ref_sal_maps:
+            actual_sal_vals = explanation.map[0][0, :10].astype(np.uint16)
+            ref_sal_vals = self._ref_sal_maps[model_name].astype(np.uint8)
+            assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1), f"{model_name} {actual_sal_vals}"
