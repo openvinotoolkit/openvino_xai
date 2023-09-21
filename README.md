@@ -80,20 +80,21 @@ tests/assets/cheetah_class293.jpg --output output
 ```
 
 # Scope of explained models
+Models from [Pytorch Image Models (timm)](https://github.com/huggingface/pytorch-image-models) are used for benchmark.
 
 ## White-box (fast, model-dependent)
-
 ### Classification
-
-We support 542 models from [Pytorch Image Models (timm)](https://github.com/huggingface/pytorch-image-models).
-Currently, we support only CNN-based architectures in white-box mode (using ReciproCAM explain method),
+We benchmarked white-box explanation (using ReciproCAM explain method) using 519 models.
+Currently, we support only CNN-based architectures in white-box mode,
 transformers will be supported in the upcoming weeks.
 
-For more details (numbers, model list, samples of generated saliency maps) see
+For more details (statistic, model list, samples of generated saliency maps) see
 [#11](https://github.com/intel-sandbox/openvino_xai/pull/11).
 
 ## Black-box (slow, model-agnostic)
-
 ### Classification
+We benchmarked black-box explanation (using RISE explain method) using 528 CNN models and 115 transformer-based models. 
+Black-box explainer support all types of models that output logits (e.g. CNNs, transformers, etc.).
 
-TODO: et
+For more details (statistic, model list, samples of generated saliency maps) see
+[#23](https://github.com/intel-sandbox/openvino_xai/pull/23).
