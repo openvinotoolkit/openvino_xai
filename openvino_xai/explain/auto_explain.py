@@ -19,7 +19,13 @@ from openvino_xai.utils import logger
 
 
 class AutoExplainer(Explainer):
-    """Base class for auto-explainers, using white box or black box approach."""
+    """Base class for auto-explainers, using white box or black box approach.
+
+    :param model: ModelAPI wrapper.
+    :type model: openvino.model_api.models.Model
+    :param explain_parameters: Explain parameters.
+    :type explain_parameters: Optional[ExplainParameters]
+    """
 
     def __init__(self, model: openvino.model_api.models.Model, explain_parameters: Optional[ExplainParameters] = None):
         super().__init__(model)
