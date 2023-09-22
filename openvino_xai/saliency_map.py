@@ -409,6 +409,7 @@ class PostProcessor:
                 self._saliency_map.map = dict_sal_map
             elif self._saliency_map.layout in MULTIPLE_MAP_LAYOUTS:
                 dict_sal_map = {}
-                for idx, class_sal in enumerate(saliency_map):
+                predicted_idx = [pred[0] for pred in self._saliency_map.predictions]
+                for idx, class_sal in zip(predicted_idx, saliency_map):
                     dict_sal_map[idx] = class_sal
             self._saliency_map.map = dict_sal_map
