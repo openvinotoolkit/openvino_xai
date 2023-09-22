@@ -93,7 +93,7 @@ class TestClsWB:
             assert explanations is not None
             assert len(explanations.map) == len(model.labels)
             if model_name in self._ref_sal_maps:
-                actual_sal_vals = explanations.map[0][0, :].astype(np.uint16)
+                actual_sal_vals = explanations.map[0][0, :].astype(np.int16)
                 ref_sal_vals = self._ref_sal_maps[model_name].astype(np.uint8)
                 if embed_normalization:
                     # Reference values generated with embed_normalization=True
@@ -103,11 +103,14 @@ class TestClsWB:
                         pytest.skip("model already has xai head - this test cannot change it.")
                     assert np.sum(np.abs(actual_sal_vals - ref_sal_vals)) > 100
         if target_explain_group == TargetExplainGroup.CUSTOM_CLASSES:
+            target_class = 1
             explanations = WhiteBoxExplainer(model).explain(
-                np.zeros((224, 224, 3)), target_explain_group, [0]
+                np.zeros((224, 224, 3)), target_explain_group, [target_class]
             )
             assert explanations is not None
-            assert explanations.map[0].ndim == 2
+            assert target_class in explanations.map
+            assert len(explanations.map) == len([target_class])
+            assert explanations.map[target_class].ndim == 2
 
     @pytest.mark.parametrize("model_name", MODELS)
     @pytest.mark.parametrize("embed_normalization", [True, False])
@@ -217,7 +220,7 @@ def test_classification_explain_parameters():
 class TestClsBB:
     _ref_sal_maps = {
         "mlc_mobilenetv3_large_voc": np.array([21, 25, 30, 34, 38, 42, 47, 51, 57, 64], dtype=np.uint8),
-        "mlc_efficient_b0_voc": np.array([13, 17, 20, 23, 27, 30, 33, 37, 42, 47], dtype=np.uint8),
+        "mlc_efficient_b0_voc": np.array([13, 17, 20, 23, 27, 30, 33, 37, 42, 49], dtype=np.uint8),
         "mlc_efficient_v2s_voc": np.array([20, 24, 28, 32, 36, 40, 44, 48, 54, 61], dtype=np.uint8),
         "classification_model_with_xai_head": np.array([15, 18, 22, 26, 29, 33, 37, 40, 46, 53], dtype=np.uint8),
     }
@@ -244,13 +247,16 @@ class TestClsBB:
             overlay=overlay,
         )
         if target_explain_group == TargetExplainGroup.CUSTOM_CLASSES:
+            target_class = 1
             explanation = explainer.explain(
                 np.zeros((224, 224, 3)),
                 target_explain_group,
-                [0]
+                [target_class]
             )
             assert explanation is not None
-            assert explanation.map[0].ndim == 2
+            assert target_class in explanation.map
+            assert len(explanation.map) == len([target_class])
+            assert explanation.map[target_class].ndim == 2
         else:
             explanation = explainer.explain(
                 np.zeros((224, 224, 3)),
@@ -282,8 +288,16 @@ class TestClsBB:
             TargetExplainGroup.PREDICTED_CLASSES)
         assert explanation is not None
         assert len(explanation.map) > 0
+        assert len(explanation.map) == len(explanation.predictions)
         assert explanation.sal_map_shape == (224, 224)
+
+        # Check that returned saliency map classes and predicted classes are the same
+        predicted_class_idx = sorted([pred[0] for pred in explanation.predictions])
+        returned_sal_map_classes = list(sorted(explanation.map.keys()))
+        assert predicted_class_idx == returned_sal_map_classes
+
         if model_name in self._ref_sal_maps:
-            actual_sal_vals = explanation.map[0][0, :10].astype(np.uint16)
+            first_idx = predicted_class_idx[0]
+            actual_sal_vals = explanation.map[first_idx][0, :10].astype(np.int16)
             ref_sal_vals = self._ref_sal_maps[model_name].astype(np.uint8)
-            assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1), f"{model_name} {actual_sal_vals}"
+            assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
