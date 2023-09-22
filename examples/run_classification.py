@@ -31,8 +31,8 @@ def run_example_wo_explain_parameters(args):
     explainer = WhiteBoxExplainer(model)
     explanation = explainer.explain(image, target_explain_group=TargetExplainGroup.PREDICTED_CLASSES)
     logger.info(
-        f"Example w/o explain_parameters: generated classification saliency maps "
-        f"of layout {explanation.layout} with shape {explanation.map.shape}."
+        f"Example w/o explain_parameters: generated {len(explanation.map)} classification "
+        f"saliency maps of layout {explanation.layout} with shape {explanation.sal_map_shape}."
     )
     if args.output is not None:
         output = os.path.join(args.output, "wo_explain_parameters")
@@ -54,8 +54,8 @@ def run_example_w_explain_parameters(args):
     explainer = WhiteBoxExplainer(model)
     explanation = explainer.explain(image)
     logger.info(
-        f"Example w/ explain_parameters: generated classification saliency maps "
-        f"of layout {explanation.layout} with shape {explanation.map.shape}."
+        f"Example w/ explain_parameters: generated {len(explanation.map)} classification "
+        f"saliency maps of layout {explanation.layout} with shape {explanation.sal_map_shape}."
     )
     if args.output is not None:
         output = os.path.join(args.output, "w_explain_parameters")
@@ -75,8 +75,8 @@ def run_example_w_postprocessing_parameters(args):
         post_processing_parameters=post_processing_parameters,
     )
     logger.info(
-        f"Example w/ post_processing_parameters: generated classification saliency maps "
-        f"of layout {explanation.layout} with shape {explanation.map.shape}."
+        f"Example w/ post_processing_parameters: generated {len(explanation.map)} classification "
+        f"saliency maps of layout {explanation.layout} with shape {explanation.sal_map_shape}."
     )
     if args.output is not None:
         output = os.path.join(args.output, "w_postprocessing_parameters")
@@ -101,8 +101,8 @@ def run_blackbox_w_postprocessing_parameters(args):
         post_processing_parameters=post_processing_parameters,
     )
     logger.info(
-        f"Example from BlackBox explainer w/ post_processing_parameters: generated classification saliency maps "
-        f"of layout {explanation.layout} with shape {explanation.map.shape}."
+        f"Example from BlackBox explainer w/ post_processing_parameters: generated {len(explanation.map)} "
+        f"classification saliency maps of layout {explanation.layout} with shape {explanation.sal_map_shape}."
     )
     if args.output is not None:
         output = os.path.join(args.output, "blackbox_w_postprocessing_parameters")
@@ -118,8 +118,8 @@ def run_auto_example(args):
     auto_explainer = ClassificationAutoExplainer(model)
     explanation = auto_explainer.explain(image)
     logger.info(
-        f"Auto example: generated classification saliency maps "
-        f"of layout {explanation.layout} with shape {explanation.map.shape}."
+        f"Auto example: generated {len(explanation.map)} classification "
+        f"saliency maps of layout {explanation.layout} with shape {explanation.sal_map_shape}."
     )
     if args.output is not None:
         output = os.path.join(args.output, "auto_example")
@@ -159,8 +159,8 @@ def run_multiple_image_example(args):
             post_processing_parameters=post_processing_parameters,
         )
         logger.info(
-            f"Example w/ multiple images to explain: generated classification saliency maps "
-            f"of layout {explanation.layout} with shape {explanation.map.shape}"
+            f"Example w/ multiple images to explain: generated {len(explanation.map)} classification "
+            f"saliency maps of layout {explanation.layout} with shape {explanation.sal_map_shape}."
         )
         if args.output is not None:
             output = os.path.join(args.output, "multiple_image_example")

@@ -204,6 +204,8 @@ NON_CONVERTABLE_CNN_MODELS = [
 
 
 class TestImageClassificationTimm:
+    # TODO(negevet): this test process explanation.map a numpy.array (batch, class, w, h)
+    # Need to update it to process explanation.map as a dict {class: np.array}
     data_dir = ".data"
     fields = ["Model", "Exported to ONNX", "Exported to OV IR", "Explained", "Map size", "Map saved"]
     counter_row = ["Counters", "0", "0", "0", "-", "-"]

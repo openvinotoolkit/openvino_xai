@@ -103,6 +103,11 @@ class RISEExplainer(BlackBoxExplainer):
         :type post_processing_parameters: PostProcessParameters
         """
         resized_data = self._resize_input(data)
+        if self._model.hierarchical:
+            hierarchical_info = self._model.hierarchical_info["cls_heads_info"]
+        else:
+            hierarchical_info = None
+    
         result = self._model(resized_data)
         if result.raw_scores.size == 0:
             raise ValueError(
@@ -117,10 +122,10 @@ class RISEExplainer(BlackBoxExplainer):
         cls_result = ClassificationResult(predictions, raw_saliency_map, np.ndarray(0), np.ndarray(0))
         
         target_explain_group = self._get_target_explain_group(target_explain_group)
-        explain_result = ExplainResult(cls_result, target_explain_group, explain_targets, self._labels)
+        raw_explain_result = ExplainResult(cls_result, target_explain_group, explain_targets, self._labels, hierarchical_info)
 
         processed_explain_result = self._get_processed_explain_result(
-            explain_result, data, post_processing_parameters
+            raw_explain_result, data, post_processing_parameters
         )
         return processed_explain_result
 

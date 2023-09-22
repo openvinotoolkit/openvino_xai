@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+import cv2
 import numpy as np
 import pytest
 from urllib.request import urlretrieve
@@ -8,7 +9,7 @@ from urllib.request import urlretrieve
 from openvino.model_api.models import ClassificationModel
 import openvino.runtime as ov
 
-from openvino_xai.explain import WhiteBoxExplainer, ClassificationAutoExplainer
+from openvino_xai.explain import WhiteBoxExplainer, ClassificationAutoExplainer, RISEExplainer
 from openvino_xai.parameters import ClassificationExplainParametersWB, PostProcessParameters, XAIMethodType
 from openvino_xai.saliency_map import TargetExplainGroup
 from openvino_xai.model import XAIClassificationModel, XAIModel
@@ -90,10 +91,10 @@ class TestClsWB:
                 pytest.skip("target_explain_group has to be provided.")
             explanations = WhiteBoxExplainer(model).explain(np.zeros((224, 224, 3)), target_explain_group)
             assert explanations is not None
-            assert explanations.map.shape[1] == len(model.labels)
+            assert len(explanations.map) == len(model.labels)
             if model_name in self._ref_sal_maps:
-                actual_sal_vals = explanations.map[0, 0, 0, :].astype(np.int8)
-                ref_sal_vals = self._ref_sal_maps[model_name].astype(np.int8)
+                actual_sal_vals = explanations.map[0][0, :].astype(np.uint16)
+                ref_sal_vals = self._ref_sal_maps[model_name].astype(np.uint8)
                 if embed_normalization:
                     # Reference values generated with embed_normalization=True
                     assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
@@ -106,7 +107,7 @@ class TestClsWB:
                 np.zeros((224, 224, 3)), target_explain_group, [0]
             )
             assert explanations is not None
-            assert explanations.map.ndim == 3
+            assert explanations.map[0].ndim == 2
 
     @pytest.mark.parametrize("model_name", MODELS)
     @pytest.mark.parametrize("embed_normalization", [True, False])
@@ -126,7 +127,8 @@ class TestClsWB:
 
         explanations = WhiteBoxExplainer(model).explain(np.zeros((224, 224, 3)))
         assert explanations is not None
-        assert explanations.map.ndim == 3
+        assert "per_image_map" in explanations.map
+        assert explanations.map["per_image_map"].ndim == 2
 
     @pytest.mark.parametrize("model_name", MODELS)
     @pytest.mark.parametrize("explain_method_type", [XAIMethodType.RECIPROCAM, XAIMethodType.ACTIVATIONMAP])
@@ -155,16 +157,19 @@ class TestClsWB:
         assert explanations is not None
         if explain_method_type == XAIMethodType.RECIPROCAM:
             if overlay:
-                assert explanations.map.shape == (1, MODELS_NUM_CLASSES[model_name], 224, 224, 3)
+                assert len(explanations.map) == MODELS_NUM_CLASSES[model_name]
+                assert explanations.sal_map_shape == (224, 224, 3)
             else:
-                assert explanations.map.shape == (1, MODELS_NUM_CLASSES[model_name], 7, 7)
+                assert len(explanations.map) == MODELS_NUM_CLASSES[model_name]
+                assert explanations.sal_map_shape == (7, 7)
         if explain_method_type == XAIMethodType.ACTIVATIONMAP:
             if model_name == "classification_model_with_xai_head":
                 pytest.skip("model already has xai head - this test cannot change it.")
+            assert "per_image_map" in explanations.map
             if overlay:
-                assert explanations.map.shape == (1, 224, 224, 3)
+                assert explanations.map["per_image_map"].shape == (224, 224, 3)
             else:
-                assert explanations.map.shape == (1, 7, 7)
+                assert explanations.map["per_image_map"].shape == (7, 7)
 
 
 @pytest.mark.parametrize("model_name", MODELS)
@@ -208,3 +213,77 @@ def test_classification_explain_parameters():
     assert cls_explain_params.target_layer is None
     assert cls_explain_params.embed_normalization
     assert cls_explain_params.explain_method_type == XAIMethodType.RECIPROCAM
+
+class TestClsBB:
+    _ref_sal_maps = {
+        "mlc_mobilenetv3_large_voc": np.array([21, 25, 30, 34, 38, 42, 47, 51, 57, 64], dtype=np.uint8),
+        "mlc_efficient_b0_voc": np.array([13, 17, 20, 23, 27, 30, 33, 37, 42, 47], dtype=np.uint8),
+        "mlc_efficient_v2s_voc": np.array([20, 24, 28, 32, 36, 40, 44, 48, 54, 61], dtype=np.uint8),
+        "classification_model_with_xai_head": np.array([15, 18, 22, 26, 29, 33, 37, 40, 46, 53], dtype=np.uint8),
+    }
+
+    @pytest.mark.parametrize("model_name", MODELS)
+    @pytest.mark.parametrize("overlay", [True, False])
+    @pytest.mark.parametrize(
+        "target_explain_group",
+        [
+            TargetExplainGroup.ALL_CLASSES,
+            TargetExplainGroup.CUSTOM_CLASSES,
+        ],
+    )
+    def test_classification_black_box_postprocessing(self, model_name, overlay, target_explain_group):
+        data_dir = ".data"
+        retrieve_otx_model(data_dir, model_name)
+        model_path = os.path.join(data_dir, "otx_models", model_name + ".xml")
+
+        model = ClassificationModel.create_model(
+        model_path, model_type="Classification", configuration={"output_raw_scores": True}
+        )
+        explainer = RISEExplainer(model, num_masks=5)
+        post_processing_parameters = PostProcessParameters(
+            overlay=overlay,
+        )
+        if target_explain_group == TargetExplainGroup.CUSTOM_CLASSES:
+            explanation = explainer.explain(
+                np.zeros((224, 224, 3)),
+                target_explain_group,
+                [0]
+            )
+            assert explanation is not None
+            assert explanation.map[0].ndim == 2
+        else:
+            explanation = explainer.explain(
+                np.zeros((224, 224, 3)),
+                target_explain_group,
+                post_processing_parameters=post_processing_parameters,
+            )
+            assert explanation is not None
+            if overlay:
+                assert len(explanation.map) == MODELS_NUM_CLASSES[model_name]
+                assert explanation.sal_map_shape == (224, 224, 3)
+            else:
+                assert len(explanation.map) == MODELS_NUM_CLASSES[model_name]
+                assert explanation.sal_map_shape == (224, 224)
+
+    @pytest.mark.parametrize("model_name", MODELS)
+    def test_classification_black_box_pred_class(self, model_name):
+        data_dir = ".data"
+        retrieve_otx_model(data_dir, model_name)
+        model_path = os.path.join(data_dir, "otx_models", model_name + ".xml")
+
+        model = ClassificationModel.create_model(
+        model_path, model_type="Classification", configuration={"output_raw_scores": True}
+        )
+        explainer = RISEExplainer(model, num_masks=5)
+
+        image = cv2.imread("tests/assets/cheetah_class293.jpg")
+        explanation = explainer.explain(
+            image,
+            TargetExplainGroup.PREDICTED_CLASSES)
+        assert explanation is not None
+        assert len(explanation.map) > 0
+        assert explanation.sal_map_shape == (224, 224)
+        if model_name in self._ref_sal_maps:
+            actual_sal_vals = explanation.map[0][0, :10].astype(np.uint16)
+            ref_sal_vals = self._ref_sal_maps[model_name].astype(np.uint8)
+            assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1), f"{model_name} {actual_sal_vals}"
