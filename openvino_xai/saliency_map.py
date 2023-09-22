@@ -301,7 +301,7 @@ class PostProcessor:
         """
         saliency_map = self._saliency_map
         # convert to numpy array to use vectorized normalization and speed up lots of classes scenario:
-        self._saliency_map.map = np.array([map for _, map in saliency_map.map.items()])
+        self._saliency_map.map = np.array(list(saliency_map.map.values()))
 
         if self._normalize:
             self._apply_normalization()
