@@ -211,8 +211,8 @@ class ExplainResult:
                     explain_targets is not None
                 ), f"Explain targets has to be provided for {target_explain_group}."
                 assert (
-                    all(0 <= target <= len(saliency_map[0]) - 1 for target in explain_targets)
-                ), f"For class-wise targets, all explain targets has to be in range 0..{len(saliency_map[0]) - 1}"
+                    all(0 <= target <= len(saliency_map) - 1 for target in explain_targets)
+                ), f"For class-wise targets, all explain targets has to be in range 0..{len(saliency_map) - 1}"
                 labels = set(explain_targets)
 
             saliency_map_predicted_classes = {i: saliency_map[i] for i in labels}
@@ -300,8 +300,9 @@ class PostProcessor:
         Returns ExplainResult object with processed saliency map, that can have one of SaliencyMapLayout layouts.
         """
         saliency_map = self._saliency_map
+        class_idx_to_return = list(saliency_map.map.keys())
         # convert to numpy array to use vectorized normalization and speed up lots of classes scenario:
-        self._saliency_map.map = np.array(list(saliency_map.map.values()))
+        self._saliency_map.map = np.array(list(saliency_map.map.values()))   
 
         if self._normalize:
             self._apply_normalization()
@@ -320,7 +321,7 @@ class PostProcessor:
                 self._apply_resize()
             if self._colormap:
                 self._apply_colormap()
-        self.convert_sal_map_to_dict()
+        self.convert_sal_map_to_dict(class_idx_to_return)
         return self._saliency_map
 
     def _apply_normalization(self) -> None:
@@ -401,7 +402,7 @@ class PostProcessor:
         x[x > 255] = 255
         self._saliency_map.map = x.astype(np.uint8)
 
-    def convert_sal_map_to_dict(self) -> None:
+    def convert_sal_map_to_dict(self, class_idx: List) -> None:
         saliency_map = self._saliency_map.map
         if isinstance(saliency_map, np.ndarray):
             if self._saliency_map.layout in ONE_MAP_LAYOUTS:
@@ -409,6 +410,6 @@ class PostProcessor:
                 self._saliency_map.map = dict_sal_map
             elif self._saliency_map.layout in MULTIPLE_MAP_LAYOUTS:
                 dict_sal_map = {}
-                for idx, class_sal in enumerate(saliency_map):
+                for idx, class_sal in zip(class_idx, saliency_map):
                     dict_sal_map[idx] = class_sal
             self._saliency_map.map = dict_sal_map
