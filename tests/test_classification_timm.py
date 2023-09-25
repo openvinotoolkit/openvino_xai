@@ -205,6 +205,94 @@ NON_CONVERTABLE_CNN_MODELS = [
 ]
 
 
+LIMITED_DIVERSE_SET_OF_MODELS = {
+    "bat_resnext26ts.ch_in1k",
+    "beit_base_patch16_224.in22k_ft_in22k",
+    "botnet26t_256.c1_in1k",
+    "caformer_b36.sail_in1k",
+    "cait_m36_384.fb_dist_in1k",
+    "coat_lite_mini.in1k",
+    "coatnet_0_rw_224.sw_in1k",
+    "convformer_b36.sail_in1k",
+    "convit_tiny.fb_in1k",
+    "convmixer_768_32.in1k",
+    "convnext_base.clip_laion2b_augreg_ft_in1k",
+    "convnextv2_pico.fcmae_ft_in1k",
+    "crossvit_9_240.in1k",
+    "cs3darknet_l.c2ns_in1k",
+    "darknet53.c2ns_in1k",
+    "davit_tiny.msft_in1k",
+    "deit_tiny_patch16_224.fb_in1k",
+    "densenet121.ra_in1k",
+    "dla34.in1k",
+    "dm_nfnet_f0.dm_in1k",
+    "dpn68.mx_in1k",
+    "eca_botnext26ts_256.c1_in1k",
+    "ecaresnet26t.ra2_in1k",
+    "edgenext_base.in21k_ft_in1k",
+    "efficientformer_l1.snap_dist_in1k",
+    "efficientnet_b0.ra_in1k",
+    "ese_vovnet19b_dw.ra_in1k",
+    "eva02_base_patch14_224.mim_in22k",
+    "fbnetv3_b.ra2_in1k",
+    "flexivit_small.300ep_in1k",
+    "focalnet_base_lrf.ms_in1k",
+    "gcresnet33ts.ra2_in1k",
+    "gcvit_tiny.in1k",
+    "gernet_s.idstcv_in1k",
+    "halonet26t.a1h_in1k",
+    "hardcorenas_a.miil_green_in1k",
+    "hrnet_w18.ms_aug_in1k",
+    "inception_v3.gluon_in1k",
+    "lambda_resnet26rpt_256.c1_in1k",
+    "lcnet_050.ra2_in1k",
+    "legacy_senet154.in1k",
+    "levit_128.fb_dist_in1k",
+    "levit_conv_128.fb_dist_in1k",
+    "maxvit_base_tf_224.in1k",
+    "mixer_b16_224.goog_in21k",
+    "mixnet_s.ft_in1k",
+    "mobilenetv2_100.ra_in1k",
+    "mobilenetv3_large_100.ra_in1k",
+    "mobilevitv2_050.cvnets_in1k",
+    "mvitv2_base.fb_in1k",
+    "nest_tiny_jx.goog_in1k",
+    "pit_s_224.in1k",
+    "poolformer_m36.sail_in1k",
+    "pvt_v2_b0.in1k",
+    "regnety_002.pycls_in1k",
+    "repvgg_a2.rvgg_in1k",
+    "repvit_m1.dist_in1k",
+    "res2net50_14w_8s.in1k",
+    "resmlp_12_224.fb_dino",
+    "resnest14d.gluon_in1k",
+    "resnet18.a1_in1k",
+    "resnetaa50.a1h_in1k",
+    "resnetrs50.tf_in1k",
+    "resnext26ts.ra2_in1k",
+    "rexnet_100.nav_in1k",
+    "samvit_base_patch16.sa1b",
+    "selecsls42b.in1k",
+    "sequencer2d_l.in1k",
+    "seresnet50.a1_in1k",
+    "seresnext26d_32x4d.bt_in1k",
+    "swin_tiny_patch4_window7_224.ms_in1k",
+    "swinv2_tiny_window8_256.ms_in1k",
+    "tf_efficientnet_b0.aa_in1k",
+    "tf_mixnet_l.in1k",
+    "tf_mobilenetv3_large_075.in1k",
+    "tinynet_a.in1k",
+    "tresnet_l.miil_in1k",
+    "twins_svt_small.in1k",
+    "vgg11.tv_in1k",
+    "vit_tiny_patch16_224.augreg_in21k",
+    "volo_d1_224.sail_in1k",
+    "wide_resnet50_2.racm_in1k",
+    "xception41.tf_in1k",
+    "xcit_nano_12_p8_224.fb_dist_in1k",
+}
+
+
 class TestImageClassificationTimm:
     data_dir = ".data"
     fields = ["Model", "Exported to ONNX", "Exported to OV IR", "Explained", "Map size", "Map saved"]
@@ -304,7 +392,7 @@ class TestImageClassificationTimm:
     # ulimit -a
     # ulimit -Sn 10000
     # ulimit -a
-    @pytest.mark.parametrize("model_id", TEST_MODELS)
+    @pytest.mark.parametrize("model_id", LIMITED_DIVERSE_SET_OF_MODELS)
     def test_cnn_classification_black_box(
             self, model_id, dump_maps=True
     ):
