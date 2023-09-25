@@ -38,7 +38,9 @@ class WhiteBoxExplainer(Explainer):
             hierarchical_info = None
 
         target_explain_group = self._get_target_explain_group(target_explain_group)
-        raw_explain_result = ExplainResult(raw_result, target_explain_group, explain_targets, self._labels, hierarchical_info)
+        raw_explain_result = ExplainResult(
+            raw_result, target_explain_group, explain_targets, self._labels, hierarchical_info
+        )
 
         processed_explain_result = self._get_processed_explain_result(
             raw_explain_result, data, post_processing_parameters

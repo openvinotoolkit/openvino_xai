@@ -265,6 +265,7 @@ class ExplainResult:
             reordered_map[h_idx] = saliency_map[i]
         return dict(sorted(reordered_map.items()))
 
+
 class PostProcessor:
     """
     PostProcessor implements post-processing for the saliency map.
@@ -278,6 +279,7 @@ class PostProcessor:
     """
 
     # TODO: extract public staticmethod methods to operate at pure numpy array level
+    # TODO: add unit tests with reference values for each of methods
 
     def __init__(
         self,
@@ -304,7 +306,7 @@ class PostProcessor:
         # convert to numpy array to use vectorized normalization and speed up lots of classes scenario:
         self._saliency_map.map = np.array(list(saliency_map.map.values()))   
 
-        if self._normalize:
+        if self._normalize and not self._resize and not self._overlay:
             self._apply_normalization()
 
         if self._overlay:
@@ -334,7 +336,7 @@ class PostProcessor:
         saliency_map = self._saliency_map.map
         n, h, w = saliency_map.shape
         saliency_map = saliency_map.reshape((n, h*w))
-        saliency_map.astype(np.float32)
+        saliency_map = saliency_map.astype(np.float32)
 
         min_values, max_values = self._get_min_max(saliency_map)
         saliency_map = 255 * (saliency_map - min_values[:, None]) / (max_values - min_values + 1e-12)[:, None]
@@ -366,6 +368,9 @@ class PostProcessor:
         else:
             saliency_map = x.transpose((2, 0, 1))
         self._saliency_map.map = saliency_map
+
+        # Normalization has to be applied after resize to keep map in range 0..255
+        self._apply_normalization()
 
     def _apply_colormap(self) -> None:
         """Applies cv2.applyColorMap to the saliency map."""

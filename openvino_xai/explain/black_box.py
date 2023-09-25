@@ -11,6 +11,7 @@ from openvino.model_api.models import ClassificationModel, ClassificationResult
 from openvino.model_api.pipelines import AsyncPipeline
 
 from openvino_xai.explain.base import Explainer
+from openvino_xai.model import XAIModel
 from openvino_xai.parameters import PostProcessParameters
 from openvino_xai.saliency_map import ExplainResult, TargetExplainGroup, SELECTED_CLASSES
 from openvino_xai.utils import logger
@@ -55,6 +56,16 @@ class RISEExplainer(BlackBoxExplainer):
                  asynchronous_inference: bool = True,
                  throughput_inference: bool = True,
                  normalize: bool = True):
+        if not isinstance(model, ClassificationModel):
+            raise ValueError(f"Input model suppose to be openvino.model_api.models.ClassificationModel instance, "
+                             f"but got {type(model)}.")
+
+        if XAIModel.has_xai(model.inference_adapter.model):
+            logger.info(f"Input model has XAI branch inserted, which might lead to additional "
+                        f"computational overhead, deu to to XAI computation. "
+                        f"Consider providing pure openvino.model_api.models.ClassificationModel "
+                        f"for better performance.")
+
         if asynchronous_inference and throughput_inference:
             model.inference_adapter.plugin_config.update({"PERFORMANCE_HINT": "THROUGHPUT"})
             model.load(force=True)
