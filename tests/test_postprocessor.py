@@ -4,9 +4,12 @@ import pytest
 from openvino_xai.parameters import PostProcessParameters
 from openvino_xai.saliency_map import TargetExplainGroup, ExplainResult, PostProcessor
 
+
 RAW_PREDICTIONS = [
-    type("raw_predictions", (), dict(saliency_map=np.ones((1, 5, 5), dtype=np.uint8))),
-    type("raw_predictions", (), dict(saliency_map=np.ones((1, 2, 5, 5), dtype=np.uint8), top_labels=[[0]])),
+    type("raw_predictions", (), dict(saliency_map=(np.random.rand(1, 5, 5) * 255).astype(np.uint8))),
+    type(
+        "raw_predictions", (), dict(saliency_map=(np.random.rand(1, 2, 5, 5) * 255).astype(np.uint8), top_labels=[[0]])
+    ),
 ]
 
 
@@ -58,7 +61,7 @@ class TestPostProcessor:
         )
 
         raw_sal_map_dims = len(saliency_map_obj.sal_map_shape)
-        data = np.ones((10, 10, 3))
+        data = np.ones((20, 20, 3))
         post_processor = PostProcessor(
             saliency_map_obj,
             data,
@@ -71,3 +74,11 @@ class TestPostProcessor:
         if colormap or overlay:
             expected_dims += 1
         assert len(saliency_map_processed.sal_map_shape) == expected_dims
+
+        if normalize and not colormap and not overlay:
+            for map_ in saliency_map_processed.map.values():
+                assert map_.min() == 0, f"{map_.min()}"
+                assert map_.max() in {254, 255}, f"{map_.max()}"
+        if resize or overlay:
+            for map_ in saliency_map_processed.map.values():
+                assert map_.shape[:2] == data.shape[:2]

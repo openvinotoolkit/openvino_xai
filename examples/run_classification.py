@@ -188,8 +188,7 @@ def run_ir_model_update_w_custom_inference(args):
     compiled_model = core.compile_model(model_with_xai, "CPU")
 
     # Load and pre-process input image
-    # The model expects images in RGB format.
-    image = cv2.cvtColor(cv2.imread(filename=args.image_path), code=cv2.COLOR_BGR2RGB)
+    image = cv2.imread(filename=args.image_path)
     image_name = Path(args.image_path).stem
     # Resize to imagenet image shape.
     input_image = cv2.resize(src=image, dsize=(224, 224))

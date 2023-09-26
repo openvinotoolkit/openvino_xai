@@ -74,4 +74,5 @@ class IRParserCls(IRParser):
             if "Pool" in op.get_friendly_name():
                 return op
 
-        raise RuntimeError("Cannot find required node in auto mode, please provide target_layer name.")
+        raise RuntimeError("Cannot find required target node in auto mode, please provide target_layer "
+                           "in explain_parameters.")

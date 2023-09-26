@@ -102,7 +102,7 @@ class ReciproCAMXAIMethod(XAIMethodBase):
             TargetExplainGroup.PREDICTED_CLASSES,
             TargetExplainGroup.CUSTOM_CLASSES,
         ]
-        self.default_target_explain_group = TargetExplainGroup.ALL_CLASSES
+        self.default_target_explain_group = TargetExplainGroup.PREDICTED_CLASSES
         self._target_layer = target_layer
 
     def generate_xai_branch(self) -> openvino.runtime.Node:
