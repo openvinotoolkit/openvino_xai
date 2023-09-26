@@ -61,7 +61,7 @@ class RISEExplainer(BlackBoxExplainer):
                              f"but got {type(model)}.")
         if XAIModel.has_xai(model.inference_adapter.model):
             logger.warning(f"Input model has XAI branch inserted, which might lead to additional "
-                           f"computational overhead, deu to computation in XAI head. "
+                           f"computational overhead, due to computation in XAI head. "
                            f"Consider providing pure openvino.model_api.models.ClassificationModel "
                            f"to black-box explainer for better performance.")
 

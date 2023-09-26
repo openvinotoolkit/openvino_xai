@@ -161,7 +161,7 @@ class TestClsWB:
 
         explain_targets = None
         if target_explain_group == TargetExplainGroup.CUSTOM_CLASSES:
-            explain_targets = [0]
+            explain_targets = [1]
         post_processing_parameters = PostProcessParameters(overlay=overlay)
         explanations = WhiteBoxExplainer(model).explain(
             self.image,
@@ -176,6 +176,7 @@ class TestClsWB:
             assert len(explanations.map) == len(explanations.predictions)
         if target_explain_group == TargetExplainGroup.CUSTOM_CLASSES:
             assert len(explanations.map) == len(explain_targets)
+            assert 1 in explanations.map
         if overlay:
             assert explanations.sal_map_shape == (354, 500, 3)
         else:
