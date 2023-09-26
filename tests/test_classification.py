@@ -271,15 +271,16 @@ class TestClsBB:
             TargetExplainGroup.CUSTOM_CLASSES,
         ],
     )
-    def test_classification_black_box_postprocessing(self, model_name, overlay, target_explain_group):
+    @pytest.mark.parametrize("normalize", [True, False])
+    def test_classification_black_box_postprocessing(self, model_name, overlay, target_explain_group, normalize):
         data_dir = ".data"
         retrieve_otx_model(data_dir, model_name)
         model_path = os.path.join(data_dir, "otx_models", model_name + ".xml")
 
         model = ClassificationModel.create_model(
-        model_path, model_type="Classification", configuration={"output_raw_scores": True}
+            model_path, model_type="Classification", configuration={"output_raw_scores": True}
         )
-        explainer = RISEExplainer(model, num_masks=5)
+        explainer = RISEExplainer(model, num_masks=5, asynchronous_inference=False, normalize=normalize)
         post_processing_parameters = PostProcessParameters(
             overlay=overlay,
         )
@@ -307,9 +308,15 @@ class TestClsBB:
             else:
                 assert len(explanation.map) == MODELS_NUM_CLASSES[model_name]
                 assert explanation.sal_map_shape == (224, 224)
+                if normalize:
+                    for map_ in explanation.map.values():
+                        assert map_.min() == 0, f"{map_.min()}"
+                        assert map_.max() in {254, 255}, f"{map_.max()}"
 
     @pytest.mark.parametrize("model_name", MODELS)
-    def test_classification_black_box_pred_class(self, model_name):
+    @pytest.mark.parametrize("asynchronous_inference", [True, False])
+    @pytest.mark.parametrize("throughput_inference", [True, False])
+    def test_classification_black_box_pred_class(self, model_name, asynchronous_inference, throughput_inference):
         data_dir = ".data"
         retrieve_otx_model(data_dir, model_name)
         model_path = os.path.join(data_dir, "otx_models", model_name + ".xml")
@@ -317,7 +324,9 @@ class TestClsBB:
         model = ClassificationModel.create_model(
         model_path, model_type="Classification", configuration={"output_raw_scores": True}
         )
-        explainer = RISEExplainer(model, num_masks=5)
+        explainer = RISEExplainer(
+            model, num_masks=5, asynchronous_inference=asynchronous_inference, throughput_inference=throughput_inference
+        )
 
         explanation = explainer.explain(
             self.image,

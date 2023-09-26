@@ -237,8 +237,14 @@ class ExplainResult:
         os.makedirs(dir_path, exist_ok=True)
         save_name = f"{name}_" if name else ""
         for idx, map_to_save in self._saliency_map.items():
-            target_name = idx if idx == "per_image_map" else self._labels[idx]
-            cv2.imwrite(os.path.join(dir_path, f"{save_name}map_{target_name}.jpg"), img=map_to_save)
+            if idx == "per_image_map":
+                target_name = "per_image_map"
+            else:
+                if self._labels:
+                    target_name = self._labels[idx]
+                else:
+                    target_name = idx
+            cv2.imwrite(os.path.join(dir_path, f"{save_name}target_{target_name}.jpg"), img=map_to_save)
 
     @staticmethod
     def reorder_hierarch_sal_map(saliency_map: Dict[int, np.array], hierarchical_info: Dict, labels: List):

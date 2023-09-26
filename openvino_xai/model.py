@@ -151,6 +151,8 @@ class XAIModel(ABC):
         :type model: openvino.runtime.Model
         :return: True is the model has XAI head, False otherwise.
         """
+        if not isinstance(model, openvino.runtime.Model):
+            raise ValueError(f"Input model has to be openvino.runtime.Model instance, but got{type(model)}.")
         for output in model.outputs:
             if "saliency_map" in output.get_names():
                 return True

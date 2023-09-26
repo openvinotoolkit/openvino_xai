@@ -59,12 +59,11 @@ class RISEExplainer(BlackBoxExplainer):
         if not isinstance(model, ClassificationModel):
             raise ValueError(f"Input model suppose to be openvino.model_api.models.ClassificationModel instance, "
                              f"but got {type(model)}.")
-
         if XAIModel.has_xai(model.inference_adapter.model):
-            logger.info(f"Input model has XAI branch inserted, which might lead to additional "
-                        f"computational overhead, deu to to XAI computation. "
-                        f"Consider providing pure openvino.model_api.models.ClassificationModel "
-                        f"for better performance.")
+            logger.warning(f"Input model has XAI branch inserted, which might lead to additional "
+                           f"computational overhead, deu to computation in XAI head. "
+                           f"Consider providing pure openvino.model_api.models.ClassificationModel "
+                           f"to black-box explainer for better performance.")
 
         if asynchronous_inference and throughput_inference:
             model.inference_adapter.plugin_config.update({"PERFORMANCE_HINT": "THROUGHPUT"})
