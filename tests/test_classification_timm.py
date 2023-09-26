@@ -13,7 +13,9 @@ import time
 from pathlib import Path
 from typing import Dict
 
-from openvino_xai.explain import WhiteBoxExplainer
+from openvino.model_api.models import ClassificationModel
+
+from openvino_xai.explain import WhiteBoxExplainer, RISEExplainer
 from openvino_xai.model import XAIClassificationModel
 from openvino_xai.parameters import ClassificationExplainParametersWB, PostProcessParameters
 from openvino_xai.saliency_map import TargetExplainGroup, PostProcessor
@@ -111,7 +113,7 @@ def export_to_onnx(model: torch.nn.Module, save_path: str, data_sample: torch.Te
     Export Torch model to ONNX format.
     """
     torch.onnx.export(
-        model, data_sample, save_path, export_params=True, opset_version=13, do_constant_folding=False
+        model, data_sample, save_path, export_params=True, opset_version=14, do_constant_folding=False
     )
 
 
@@ -203,6 +205,91 @@ NON_CONVERTABLE_CNN_MODELS = [
 ]
 
 
+LIMITED_DIVERSE_SET_OF_MODELS = {
+    "bat_resnext26ts.ch_in1k",
+    "beit_base_patch16_224.in22k_ft_in22k",
+    "botnet26t_256.c1_in1k",
+    "caformer_b36.sail_in1k",
+    "cait_m36_384.fb_dist_in1k",
+    "coat_lite_mini.in1k",
+    "coatnet_0_rw_224.sw_in1k",
+    "convformer_b36.sail_in1k",
+    "convit_tiny.fb_in1k",
+    "convmixer_768_32.in1k",
+    "convnext_base.clip_laion2b_augreg_ft_in1k",
+    "convnextv2_pico.fcmae_ft_in1k",
+    "crossvit_9_240.in1k",
+    "cs3darknet_l.c2ns_in1k",
+    "darknet53.c2ns_in1k",
+    "davit_tiny.msft_in1k",
+    "deit_tiny_patch16_224.fb_in1k",
+    "densenet121.ra_in1k",
+    "dla34.in1k",
+    "dpn68.mx_in1k",
+    "eca_botnext26ts_256.c1_in1k",
+    "ecaresnet26t.ra2_in1k",
+    "edgenext_base.in21k_ft_in1k",
+    "efficientformer_l1.snap_dist_in1k",
+    "efficientnet_b0.ra_in1k",
+    "ese_vovnet19b_dw.ra_in1k",
+    "eva02_base_patch14_224.mim_in22k",
+    "fbnetv3_b.ra2_in1k",
+    "flexivit_small.300ep_in1k",
+    "focalnet_base_lrf.ms_in1k",
+    "gcresnet33ts.ra2_in1k",
+    "gcvit_tiny.in1k",
+    "gernet_s.idstcv_in1k",
+    "hardcorenas_a.miil_green_in1k",
+    "hrnet_w18.ms_aug_in1k",
+    "inception_v3.gluon_in1k",
+    "lambda_resnet26rpt_256.c1_in1k",
+    "lcnet_050.ra2_in1k",
+    "legacy_senet154.in1k",
+    "levit_128.fb_dist_in1k",
+    "levit_conv_128.fb_dist_in1k",
+    "maxvit_base_tf_224.in1k",
+    "mixer_b16_224.goog_in21k",
+    "mixnet_s.ft_in1k",
+    "mobilenetv2_100.ra_in1k",
+    "mobilenetv3_large_100.ra_in1k",
+    "mobilevitv2_050.cvnets_in1k",
+    "mvitv2_base.fb_in1k",
+    "nest_tiny_jx.goog_in1k",
+    "pit_s_224.in1k",
+    "poolformer_m36.sail_in1k",
+    "pvt_v2_b0.in1k",
+    "regnety_002.pycls_in1k",
+    "repvgg_a2.rvgg_in1k",
+    "repvit_m1.dist_in1k",
+    "res2net50_14w_8s.in1k",
+    "resmlp_12_224.fb_dino",
+    "resnest14d.gluon_in1k",
+    "resnet18.a1_in1k",
+    "resnetaa50.a1h_in1k",
+    "resnetrs50.tf_in1k",
+    "resnext26ts.ra2_in1k",
+    "rexnet_100.nav_in1k",
+    "samvit_base_patch16.sa1b",
+    "selecsls42b.in1k",
+    "sequencer2d_l.in1k",
+    "seresnet50.a1_in1k",
+    "seresnext26d_32x4d.bt_in1k",
+    "swin_tiny_patch4_window7_224.ms_in1k",
+    "swinv2_tiny_window8_256.ms_in1k",
+    "tf_efficientnet_b0.aa_in1k",
+    "tf_mixnet_l.in1k",
+    "tf_mobilenetv3_large_075.in1k",
+    "tinynet_a.in1k",
+    "tresnet_l.miil_in1k",
+    "twins_svt_small.in1k",
+    "vgg11.tv_in1k",
+    "vit_tiny_patch16_224.augreg_in21k",
+    "wide_resnet50_2.racm_in1k",
+    "xception41.tf_in1k",
+    "xcit_nano_12_p8_224.fb_dist_in1k",
+}
+
+
 class TestImageClassificationTimm:
     # TODO(negevet): this test process explanation.map a numpy.array (batch, class, w, h)
     # Need to update it to process explanation.map as a dict {class: np.array}
@@ -210,66 +297,66 @@ class TestImageClassificationTimm:
     fields = ["Model", "Exported to ONNX", "Exported to OV IR", "Explained", "Map size", "Map saved"]
     counter_row = ["Counters", "0", "0", "0", "-", "-"]
     report = [fields, counter_row]
+    should_clean_cash = True
+    supported_num_classes = {
+        1000: 293,  # 293 is a cheetah class_id in the ImageNet-1k dataset
+        21841: 2441,  # 2441 is a cheetah class_id in the ImageNet-21k dataset
+        11821: 1652,  # 1652 is a cheetah class_id in the ImageNet-12k dataset
+    }
 
     @pytest.mark.parametrize("model_id", TEST_MODELS)
     def test_cnn_classification_white_box(
-            self, model_id, clean_ir_cash=True, clean_huggingface_cash=True, dump_maps=True
+            self, model_id, dump_maps=True
     ):
         if not any(cnn_model_key in model_id for cnn_model_key in CNN_MODELS):
             pytest.skip(f"Model {model_id} is not CNN-based.")
         if any(cnn_model_key in model_id for cnn_model_key in NON_CONVERTABLE_CNN_MODELS):
             pytest.skip(f"Model {model_id} is non-convertable ether to ONNX or to OV representation.")
 
+        self.check_for_saved_map(model_id, "timm_models/maps_wb/")
+
         output_dir = os.path.join(self.data_dir, "timm_models", "converted_models", model_id)
         output_model_dir = Path(output_dir)
         output_model_dir.mkdir(parents=True, exist_ok=True)
         ir_path = output_model_dir / "model_fp32.xml"
 
-        self.update_report(model_id)
+        timm_model, model_cfg = self.get_timm_model(model_id)
 
-        timm_model = timm.create_model(
-            model_id, num_classes=1000, in_chans=3, pretrained=True, checkpoint_path=""
-        )
+        self.update_report("report_wb.csv", model_id)
         if not os.path.isfile(os.path.join(output_model_dir, "model_fp32.xml")):
             input_size = [1] + list(timm_model.default_cfg["input_size"])
             dummy_tensor = torch.rand(input_size)
             onnx_path = output_model_dir / "model_fp32.onnx"
             export_to_onnx(timm_model, onnx_path, dummy_tensor)
-            self.update_report(model_id, "True")
+            self.update_report("report_wb.csv", model_id, "True")
             export_to_ir(onnx_path, output_model_dir, model_name="model_fp32")
-            self.update_report(model_id, "True", "True")
+            self.update_report("report_wb.csv", model_id, "True", "True")
         else:
-            self.update_report(model_id, "True", "True")
+            self.update_report("report_wb.csv", model_id, "True", "True")
 
-        model_cfg = timm_model.default_cfg
-        mapi_params = {
-            "configuration": {
-                "mean_values": [(item * 255) for item in model_cfg["mean"]],
-                "scale_values": [(item * 255) for item in model_cfg["std"]],
-            }
-        }
-        explain_parameters = ClassificationExplainParametersWB(embed_normalization=False)
+        mapi_params = self.get_mapi_params(model_cfg)
         model = XAIClassificationModel.create_model(
             ir_path,
             "Classification",
             **mapi_params,
-            explain_parameters=explain_parameters
+            explain_parameters=ClassificationExplainParametersWB(embed_normalization=False),
         )
 
         image = cv2.imread("tests/assets/cheetah_class293.jpg")
-        target_class = 293  # 293 is a cheetah class_id in the ImageNet dataset
+        target_class = self.supported_num_classes[model_cfg["num_classes"]]
         explanation = WhiteBoxExplainer(model).explain(
             image,
             TargetExplainGroup.CUSTOM_CLASSES,
             [target_class],
         )
+
         assert explanation is not None
         assert explanation.map.shape[-1] > 1 and explanation.map.shape[-2] > 1
         print(f"{model_id}: Generated classification saliency maps with shape {explanation.map.shape}.")
-        self.update_report(model_id, "True", "True", "True")
+        self.update_report("report_wb.csv", model_id, "True", "True", "True")
         raw_shape = explanation.map.shape
         shape = "H=" + str(raw_shape[1]) + ", W=" + str(raw_shape[2])
-        self.update_report(model_id, "True", "True", "True", shape)
+        self.update_report("report_wb.csv", model_id, "True", "True", "True", shape)
 
         if dump_maps:
             # timm workaround to remove outlier activations at corners
@@ -279,24 +366,143 @@ class TestImageClassificationTimm:
             raw_sal_map[-1, 0] = np.mean(np.delete(raw_sal_map[-2:, :2].flatten(), 2))
             raw_sal_map[-1, -1] = np.mean(np.delete(raw_sal_map[-2:, -2:].flatten(), 3))
             explanation.map = raw_sal_map[None, ...]
-
             post_processing_parameters = PostProcessParameters(normalize=True, overlay=True)
             post_processor = PostProcessor(
                 explanation,
                 image,
                 post_processing_parameters,
             )
+            explanation = post_processor.postprocess()
 
-            explain_result = post_processor.postprocess()
-            explain_result.save(os.path.join(self.data_dir, "timm_models/maps/"), model_id)
+            target_confidence = model(image).raw_scores[target_class]
+            self.put_confidence_into_map_overlay(explanation, target_confidence)
+
+            explanation.save(os.path.join(self.data_dir, "timm_models/maps_wb/"), model_id)
             map_saved = os.path.exists(
-                os.path.join(os.path.join(self.data_dir, "timm_models/maps/"), model_id + ".jpg")
+                os.path.join(os.path.join(self.data_dir, "timm_models/maps_wb/"), model_id + ".jpg")
             )
-            self.update_report(model_id, "True", "True", "True", shape, str(map_saved))
-        self.clean_cash(clean_ir_cash, clean_huggingface_cash)
+            self.update_report("report_wb.csv", model_id, "True", "True", "True", shape, str(map_saved))
+        self.clean_cash()
+
+    # sudo ln -s /usr/local/cuda-11.8/ cuda
+    # pip uninstall torch torchvision
+    # pip3 install --pre torch torchvision --index-url https://download.pytorch.org/whl/nightly/cu118
+    #
+    # ulimit -a
+    # ulimit -Sn 10000
+    # ulimit -a
+    @pytest.mark.parametrize("model_id", LIMITED_DIVERSE_SET_OF_MODELS)
+    def test_cnn_classification_black_box(
+            self, model_id, dump_maps=True
+    ):
+        self.check_for_saved_map(model_id, "timm_models/maps_bb/")
+
+        timm_model, model_cfg = self.get_timm_model(model_id)
+
+        self.update_report("report_bb.csv", model_id)
+
+        output_dir = os.path.join(self.data_dir, "timm_models", "converted_models", model_id)
+        output_model_dir = Path(output_dir)
+        output_model_dir.mkdir(parents=True, exist_ok=True)
+        onnx_path = output_model_dir / "model_fp32.onnx"
+
+        if not os.path.isfile(os.path.join(output_model_dir, "model_fp32.onnx")):
+            input_size = [1] + list(timm_model.default_cfg["input_size"])
+            dummy_tensor = torch.rand(input_size)
+            onnx_path = output_model_dir / "model_fp32.onnx"
+            export_to_onnx(timm_model, onnx_path, dummy_tensor)
+            self.update_report("report_bb.csv", model_id, "True", "True")
+        else:
+            self.update_report("report_bb.csv", model_id, "True", "True")
+
+        mapi_params = self.get_mapi_params(model_cfg)
+        model = ClassificationModel.create_model(
+            onnx_path,
+            model_type="Classification",
+            **mapi_params,
+        )
+
+        explainer = RISEExplainer(model)
+        image = cv2.imread("tests/assets/cheetah_class293.jpg")
+        target_class = self.supported_num_classes[model_cfg["num_classes"]]
+        explanation = explainer.explain(
+            image,
+            TargetExplainGroup.CUSTOM_CLASSES,
+            [target_class],
+            post_processing_parameters=PostProcessParameters(overlay=True),
+        )
+
+        assert explanation is not None
+        assert explanation.map.shape[-1] > 1 and explanation.map.shape[-2] > 1
+        print(f"{model_id}: Generated classification saliency maps with shape {explanation.map.shape}.")
+        self.update_report("report_bb.csv", model_id, "True", "True", "True")
+        raw_shape = explanation.map.shape
+        shape = "H=" + str(raw_shape[1]) + ", W=" + str(raw_shape[2])
+        self.update_report("report_bb.csv", model_id, "True", "True", "True", shape)
+
+        if dump_maps:
+            target_confidence = model(image).raw_scores[target_class]
+            self.put_confidence_into_map_overlay(explanation, target_confidence)
+
+            explanation.save(os.path.join(self.data_dir, "timm_models/maps_bb/"), model_id)
+            map_saved = os.path.exists(
+                os.path.join(os.path.join(self.data_dir, "timm_models/maps_bb/"), model_id + ".jpg")
+            )
+            self.update_report("report_bb.csv", model_id, "True", "True", "True", shape, str(map_saved))
+        self.clean_cash()
+
+    def check_for_saved_map(self, model_id, directory):
+        map_saved = os.path.exists(
+            os.path.join(os.path.join(self.data_dir, directory), model_id + ".jpg")
+        )
+        if map_saved:
+            saved_map = cv2.imread(os.path.join(os.path.join(self.data_dir, directory), model_id + ".jpg"))
+            saved_map_shape = saved_map.shape
+            shape = "H=" + str(saved_map_shape[0]) + ", W=" + str(saved_map_shape[1])
+            self.update_report("report_wb.csv", model_id, "True", "True", "True", shape, str(map_saved))
+            self.clean_cash()
+            pytest.skip(f"Model {model_id} is already explained.")
+
+    def get_timm_model(self, model_id):
+        timm_model = timm.create_model(
+            model_id, in_chans=3, pretrained=True, checkpoint_path=""
+        )
+        model_cfg = timm_model.default_cfg
+        num_classes = model_cfg["num_classes"]
+        if num_classes not in self.supported_num_classes:
+            self.clean_cash()
+            pytest.skip(f"Number of model classes {num_classes} unknown")
+        return timm_model, model_cfg
+
+    @staticmethod
+    def get_mapi_params(model_cfg):
+        mapi_params = {
+            "configuration": {
+                "mean_values": [(item * 255) for item in model_cfg["mean"]],
+                "scale_values": [(item * 255) for item in model_cfg["std"]],
+                "output_raw_scores": True,
+            }
+        }
+        return mapi_params
+
+    @staticmethod
+    def put_confidence_into_map_overlay(explanation, target_confidence):
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        org = (50, 50)
+        fontScale = 1
+        if target_confidence > 0.5:
+            color = (0, 255, 0)
+        else:
+            color = (0, 0, 255)
+        thickness = 2
+        map_ = cv2.putText(
+            explanation.map[0], f"{target_confidence:.2f}", org, font, fontScale, color, thickness, cv2.LINE_AA
+        )
+        explanation.map = map_[np.newaxis, ...]
 
     def update_report(
             self,
+            report_name,
             model_id,
             exported_to_onnx="False",
             exported_to_ov_ir="False",
@@ -321,16 +527,15 @@ class TestImageClassificationTimm:
             self.report[1][1] = str(bool_flags[:, 0].sum())
             self.report[1][2] = str(bool_flags[:, 1].sum())
             self.report[1][3] = str(bool_flags[:, 2].sum())
-        with open(os.path.join(self.data_dir, "timm_models/report.csv"), "w") as f:
+        with open(os.path.join(self.data_dir, os.path.join("timm_models", report_name)), "w") as f:
             write = csv.writer(f)
             write.writerows(self.report)
 
-    def clean_cash(self, clean_ir_cash, clean_huggingface_cash):
-        if clean_ir_cash:
+    def clean_cash(self):
+        if self.should_clean_cash:
             ir_model_dir = os.path.join(self.data_dir, "timm_models", "converted_models")
             if os.path.isdir(ir_model_dir):
                 shutil.rmtree(ir_model_dir)
-        if clean_huggingface_cash:
             huggingface_hub_dir = os.path.join(os.path.expanduser("~"), ".cache/huggingface/hub/")
             if os.path.isdir(huggingface_hub_dir):
                 shutil.rmtree(huggingface_hub_dir)
