@@ -1,7 +1,7 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Optional
+from typing import Optional, Tuple
 
 import openvino
 
@@ -42,9 +42,9 @@ class IRParserCls(IRParser):
         )
         return logit_node
 
-    @staticmethod
+    @classmethod
     def get_output_backbone_node(
-            model: openvino.runtime.Model, output_backbone_node_name: Optional[str] = None
+            cls, model: openvino.runtime.Model, output_backbone_node_name: Optional[str] = None
     ) -> openvino.runtime.Node:
         if output_backbone_node_name:
             for op in model.get_ordered_ops():
@@ -52,27 +52,47 @@ class IRParserCls(IRParser):
                     return op
             raise ValueError(f"Cannot find {output_backbone_node_name} node.")
 
-        # Make an attempt to use heuristics
-        first_head_node = IRParserCls.get_input_head_node(model)
+        # Make an attempt to search for a first_head_node
+        first_head_node = cls.get_input_head_node(model)
         output_backbone_node = first_head_node.input(0).get_source_output().get_node()
+        spacial_shape = cls._has_spacial_shape(output_backbone_node)
+        if spacial_shape is not None:
+            if not spacial_shape:
+                # output_backbone_node suppose to have spacial dimensions
+                raise RuntimeError(f"Cannot find output backbone_node in auto mode, please provide target_layer.")
+
         return output_backbone_node
 
-    @staticmethod
+    @classmethod
     def get_input_head_node(
-            model, output_backbone_node_name: Optional[str] = None, output_backbone_id: int = 0
+            cls, model, output_backbone_node_name: Optional[str] = None, output_backbone_id: int = 0
     ) -> openvino.runtime.Node:
         if output_backbone_node_name:
-            output_backbone_node = IRParserCls.get_output_backbone_node(model, output_backbone_node_name)
+            output_backbone_node = cls.get_output_backbone_node(model, output_backbone_node_name)
             target_inputs = output_backbone_node.output(output_backbone_id).get_target_inputs()
             target_input_nodes = [target_input.get_node() for target_input in target_inputs]
             assert len(target_input_nodes) == 1, "Support only single target input."
             return target_input_nodes[0]
 
-        # Apply heuristic - pick the last pooling layer
-        # TODO: add more heuristics, e.g. check node type, not name
         for op in model.get_ordered_ops()[::-1]:
-            if "Pool" in op.get_friendly_name():
+            if cls._is_first_head_node(op):
                 return op
 
-        raise RuntimeError("Cannot find required target node in auto mode, please provide target_layer "
-                           "in explain_parameters.")
+        raise RuntimeError("Cannot find first head node in auto mode, please explicitly provide input parameters.")
+
+    @classmethod
+    def _is_first_head_node(cls, op: openvino.runtime.Node) -> bool:
+        checks = {
+            "last_pooling_layer": "Pool" in op.get_friendly_name() and not cls._has_spacial_shape(op),
+        }
+        return all(checks.values())
+
+    @staticmethod
+    def _has_spacial_shape(
+            node: openvino.runtime.Node, output_id: int = 0, axis: Tuple[int] = (2, 3)
+    ) -> Optional[bool]:
+        node_output_shape = node.output(output_id).partial_shape
+        h, w, = node_output_shape[axis[0]], node_output_shape[axis[1]]
+        dynamic = h.is_dynamic or w.is_dynamic
+        if not dynamic:
+            return h.get_length() > 1 and w.get_length() > 1
