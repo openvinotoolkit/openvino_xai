@@ -76,7 +76,7 @@ pytest tests/test_classification.py
 # Run a bunch of classification examples
 # All outputs will be stored in the corresponding output directory
 python examples/run_classification.py .data/otx_models/mlc_mobilenetv3_large_voc.xml \
-tests/assets/cheetah_class293.jpg --output output
+tests/assets/cheetah_person.jpg --output output
 ```
 
 # Scope of explained models

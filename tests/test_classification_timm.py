@@ -342,7 +342,7 @@ class TestImageClassificationTimm:
             explain_parameters=ClassificationExplainParametersWB(embed_normalization=False),
         )
 
-        image = cv2.imread("tests/assets/cheetah_class293.jpg")
+        image = cv2.imread("tests/assets/cheetah_person.jpg")
         target_class = self.supported_num_classes[model_cfg["num_classes"]]
         explanation = WhiteBoxExplainer(model).explain(
             image,
@@ -423,7 +423,7 @@ class TestImageClassificationTimm:
         )
 
         explainer = RISEExplainer(model)
-        image = cv2.imread("tests/assets/cheetah_class293.jpg")
+        image = cv2.imread("tests/assets/cheetah_person.jpg")
         target_class = self.supported_num_classes[model_cfg["num_classes"]]
         explanation = explainer.explain(
             image,

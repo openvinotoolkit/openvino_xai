@@ -57,7 +57,7 @@ def retrieve_otx_model(data_dir, model_name):
 
 
 class TestClsWB:
-    image = cv2.imread("tests/assets/cheetah_class293.jpg")
+    image = cv2.imread("tests/assets/cheetah_person.jpg")
     _ref_sal_maps_reciprocam = {
         "mlc_mobilenetv3_large_voc": np.array([215, 214, 233, 239, 218, 206, 210], dtype=np.uint8),
         "mlc_efficient_b0_voc": np.array([73, 242, 156, 219, 197, 239, 69], dtype=np.uint8),
@@ -219,7 +219,7 @@ def test_classification_auto(model_name):
     if model_name == "classification_model_with_xai_head":
         target_explain_group = TargetExplainGroup.ALL_CLASSES
     explanations = ClassificationAutoExplainer(model).explain(
-        cv2.imread("tests/assets/cheetah_class293.jpg"), target_explain_group
+        cv2.imread("tests/assets/cheetah_person.jpg"), target_explain_group
     )
     assert explanations is not None
 
@@ -255,7 +255,7 @@ def test_classification_explain_parameters():
 
 
 class TestClsBB:
-    image = cv2.imread("tests/assets/cheetah_class293.jpg")
+    image = cv2.imread("tests/assets/cheetah_person.jpg")
     _ref_sal_maps = {
         "mlc_mobilenetv3_large_voc": np.array([21, 25, 30, 34, 38, 42, 47, 51, 57, 64], dtype=np.uint8),
         "mlc_efficient_b0_voc": np.array([13, 17, 20, 23, 27, 30, 33, 37, 42, 49], dtype=np.uint8),
