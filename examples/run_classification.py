@@ -29,7 +29,7 @@ def run_example_wo_explain_parameters(args):
 
     model = XAIClassificationModel.create_model(args.model_path, model_type="Classification")
     explainer = WhiteBoxExplainer(model)
-    explanation = explainer.explain(image, target_explain_group=TargetExplainGroup.PREDICTED_CLASSES)
+    explanation = explainer.explain(image)
     logger.info(
         f"Example w/o explain_parameters: generated {len(explanation.map)} classification "
         f"saliency maps of layout {explanation.layout} with shape {explanation.sal_map_shape}."
@@ -52,7 +52,7 @@ def run_example_w_explain_parameters(args):
         args.model_path, model_type="Classification", explain_parameters=explain_parameters
     )
     explainer = WhiteBoxExplainer(model)
-    explanation = explainer.explain(image)
+    explanation = explainer.explain(image, target_explain_group=TargetExplainGroup.ALL_CLASSES)
     logger.info(
         f"Example w/ explain_parameters: generated {len(explanation.map)} classification "
         f"saliency maps of layout {explanation.layout} with shape {explanation.sal_map_shape}."
