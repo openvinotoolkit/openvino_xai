@@ -194,12 +194,13 @@ class ExplainResult:
                 assert raw_predictions is not None, (
                     f"Raw model predictions has to be provided " f"for {target_explain_group}."
                 )
-                assert raw_predictions.top_labels, (
-                    "TargetExplainGroup.PREDICTED_CLASSES requires predictions "
-                    "to be available, but currently model has no predictions. "
-                    "Try to use different input data, confidence threshold"
-                    " or retrain the model."
-                )
+                if not raw_predictions.top_labels:
+                    raise ValueError(
+                        "TargetExplainGroup.PREDICTED_CLASSES requires predictions "
+                        "to be available, but currently model has no predictions. "
+                        "Try to: (1) adjust preprocessing, (2) use different input, "
+                        "(3) increase confidence threshold, (4) retrain/re-export the model, etc."
+                    )
                 assert explain_targets is None, (
                     f"Explain targets do NOT have to be provided for "
                     f"{target_explain_group}. Model prediction is used "
