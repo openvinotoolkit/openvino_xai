@@ -107,7 +107,7 @@ class ReciproCAMXAIMethod(XAIMethodBase):
 
     def generate_xai_branch(self) -> openvino.runtime.Node:
         _model_clone = self._model_ori.clone()
-        _model_clone.get_parameters()[0].set_friendly_name('data_clone')  # for debug
+        # _model_clone.get_parameters()[0].set_friendly_name('data_clone')  # for debug
 
         # TODO: support models with multiple inputs.
         assert len(_model_clone.inputs) == 1, "Support only for models with single input."
@@ -117,7 +117,8 @@ class ReciproCAMXAIMethod(XAIMethodBase):
             _model_clone.reshape(partial_shape)
 
         output_backbone_node_ori = IRParserCls.get_output_backbone_node(self._model_ori, self._target_layer)
-        first_head_node_clone = IRParserCls.get_input_head_node(_model_clone, self._target_layer)
+        output_backbone_node_name = self._target_layer or output_backbone_node_ori.get_friendly_name()
+        first_head_node_clone = IRParserCls.get_input_head_node(_model_clone, output_backbone_node_name)
 
         logit_node = IRParserCls.get_logit_node(self._model_ori)
         logit_node_clone_model = IRParserCls.get_logit_node(_model_clone)
@@ -127,6 +128,8 @@ class ReciproCAMXAIMethod(XAIMethodBase):
 
         _, c, h, w = output_backbone_node_ori.get_output_partial_shape(0)
         c, h, w = c.get_length(), h.get_length(), w.get_length()
+        if not self.is_valid_layout(c, h, w):
+            raise ValueError(f"ReciproCAM supports only NCHW layout, but got NHWC, with shape: [N, {c}, {h}, {w}]")
 
         feature_map_repeated = opset.tile(output_backbone_node_ori.output(0), (h * w, 1, 1, 1))
         mosaic_feature_map_mask = np.zeros((h * w, c, h, w), dtype=np.float32)
@@ -150,6 +153,10 @@ class ReciproCAMXAIMethod(XAIMethodBase):
         if self._embed_normalization:
             saliency_maps = self._normalize_saliency_maps(saliency_maps, self.per_class)
         return saliency_maps
+
+    @staticmethod
+    def is_valid_layout(c, h, w):
+        return h < c and w < c
 
 
 class DetClassProbabilityMapXAIMethod(XAIMethodBase):
