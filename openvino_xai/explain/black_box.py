@@ -264,8 +264,9 @@ class RISEExplainer(BlackBoxExplainer):
         x = self.rand_generator.integers(0, cell_size[0])
         y = self.rand_generator.integers(0, cell_size[1])
         # Linear up-sampling and cropping
-        upsampled_mask = cv2.resize(grid, up_size, interpolation=cv2.INTER_LINEAR)
+        upsampled_mask = cv2.resize(grid, up_size, interpolation=cv2.INTER_CUBIC)
         mask = upsampled_mask[x : x + self.input_size[0], y : y + self.input_size[1]]
+        mask = np.clip(mask, 0, 1)
         return mask
 
     def _resize_input(self, image: np.ndarray) -> np.ndarray:

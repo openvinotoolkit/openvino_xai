@@ -257,10 +257,10 @@ def test_classification_explain_parameters():
 class TestClsBB:
     image = cv2.imread("tests/assets/cheetah_person.jpg")
     _ref_sal_maps = {
-        "mlc_mobilenetv3_large_voc": np.array([21, 25, 30, 34, 38, 42, 47, 51, 57, 64], dtype=np.uint8),
-        "mlc_efficient_b0_voc": np.array([13, 17, 20, 23, 27, 30, 33, 37, 42, 49], dtype=np.uint8),
-        "mlc_efficient_v2s_voc": np.array([20, 24, 28, 32, 36, 40, 44, 48, 54, 61], dtype=np.uint8),
-        "classification_model_with_xai_head": np.array([15, 18, 22, 26, 29, 33, 37, 40, 46, 53], dtype=np.uint8),
+        "mlc_mobilenetv3_large_voc": np.array([13, 18, 23, 29, 34, 40, 45, 51, 57, 65], dtype=np.uint8),
+        "mlc_efficient_b0_voc": np.array([9, 14, 20, 25, 31, 37, 43, 48, 55, 63], dtype=np.uint8),
+        "mlc_efficient_v2s_voc": np.array([14, 19, 24, 30, 36, 41, 47, 53, 60, 67], dtype=np.uint8),
+        "classification_model_with_xai_head": np.array([8, 13, 18, 24, 29, 35, 40, 46, 52, 60], dtype=np.uint8),
     }
 
     @pytest.mark.parametrize("model_name", MODELS)
