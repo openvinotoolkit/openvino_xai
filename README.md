@@ -84,7 +84,7 @@ Models from [Pytorch Image Models (timm)](https://github.com/huggingface/pytorch
 
 ## White-box (fast, model-dependent)
 ### Classification
-We benchmarked white-box explanation (using ReciproCAM explain method) using 519 models.
+We benchmarked white-box explanation (using ReciproCAM explain method) using 528 models.
 Currently, we support only CNN-based architectures in white-box mode,
 transformers will be supported in the upcoming weeks.
 
