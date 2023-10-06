@@ -126,14 +126,13 @@ class RISEExplainer(BlackBoxExplainer):
             )
         predictions = result.top_labels
         num_classes = len(result.raw_scores)
+        target_explain_group = self._get_target_explain_group(target_explain_group)
         target_classes = self._get_target_classes(num_classes, target_explain_group, explain_targets, predictions)
 
         raw_saliency_map = self._generate_saliency_map(data, num_classes, target_classes)
         cls_result = ClassificationResult(predictions, raw_saliency_map, np.ndarray(0), np.ndarray(0))
-        
-        target_explain_group = self._get_target_explain_group(target_explain_group)
-        raw_explain_result = ExplainResult(cls_result, target_explain_group, explain_targets, self._labels, hierarchical_info)
 
+        raw_explain_result = ExplainResult(cls_result, target_explain_group, explain_targets, self._labels, hierarchical_info)
         processed_explain_result = self._get_processed_explain_result(
             raw_explain_result, data, post_processing_parameters
         )
