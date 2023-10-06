@@ -42,19 +42,26 @@ class IRParser:
         return True
 
     @staticmethod
-    def _has_spacial_size(
-            node: openvino.runtime.Node, output_id: int = 0, axis: Tuple[int] = (2, 3)
-    ) -> Optional[bool]:
+    def _is_op_w_single_spacial_output(op: openvino.runtime.Node) -> bool:
+        if op.get_type_name() == "Constant":
+            return False
+        if len(op.outputs()) > 1:
+            return False
+        node_output_shape = op.output(0).partial_shape
+        if node_output_shape.rank.get_length() != 4:
+            return False
+        c, h, w, = node_output_shape[1].get_length(), node_output_shape[2].get_length(), node_output_shape[3].get_length()
+        return 1 < h < c and 1 < w < c
+
+    @staticmethod
+    def _has_spacial_size(node: openvino.runtime.Node, output_id: int = 0) -> Optional[bool]:
         node_output_shape = node.output(output_id).partial_shape
 
         # NCHW
         h, w, = node_output_shape[2].get_length(), node_output_shape[3].get_length()
         # NHWC
         h_, w_, = node_output_shape[1].get_length(), node_output_shape[2].get_length()
-
         return (h != 1 and w != 1) or (h_ != 1 and w_ != 1)
-
-        # return h.get_length() > 1 and w.get_length() > 1
 
 
 class IRParserCls(IRParser):
@@ -89,17 +96,17 @@ class IRParserCls(IRParser):
                 return output_backbone_node
             raise ValueError(f"Cannot find {output_backbone_node_name} node.")
 
+        # Make an attempt to search for last node with spacial dimensions
+        reversed_ops = model.get_ordered_ops()[::-1]
+        last_op_w_spacial_output = cls.get_node_by_condition(reversed_ops, cls._is_op_w_single_spacial_output)
+        if last_op_w_spacial_output is not None:
+            return last_op_w_spacial_output
+
         # Make an attempt to search for last backbone node via a first head node
         first_head_node = cls.get_input_head_node(model)
         output_backbone_node = first_head_node.input(0).get_source_output().get_node()
         if cls._has_spacial_size(output_backbone_node):
             return output_backbone_node
-
-        # Make an attempt to search for a last conv node
-        reversed_ops = model.get_ordered_ops()[::-1]
-        last_conv_node = cls.get_node_by_condition(reversed_ops, cls._is_conv_node_w_spacial_size)
-        if last_conv_node is not None:
-            return last_conv_node
 
         raise RuntimeError(f"Cannot find output backbone_node in auto mode, please provide target_layer.")
 
