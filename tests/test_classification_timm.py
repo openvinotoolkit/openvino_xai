@@ -291,8 +291,6 @@ LIMITED_DIVERSE_SET_OF_MODELS = {
 
 
 class TestImageClassificationTimm:
-    # TODO(negevet): this test process explanation.map a numpy.array (batch, class, w, h)
-    # Need to update it to process explanation.map as a dict {class: np.array}
     data_dir = ".data"
     fields = ["Model", "Exported to ONNX", "Exported to OV IR", "Explained", "Map size", "Map saved"]
     counter_row = ["Counters", "0", "0", "0", "-", "-"]
@@ -351,21 +349,21 @@ class TestImageClassificationTimm:
         )
 
         assert explanation is not None
-        assert explanation.map.shape[-1] > 1 and explanation.map.shape[-2] > 1
-        print(f"{model_id}: Generated classification saliency maps with shape {explanation.map.shape}.")
+        assert explanation.sal_map_shape[-1] > 1 and explanation.sal_map_shape[-2] > 1
+        print(f"{model_id}: Generated classification saliency maps with shape {explanation.sal_map_shape}.")
         self.update_report("report_wb.csv", model_id, "True", "True", "True")
-        raw_shape = explanation.map.shape
-        shape = "H=" + str(raw_shape[1]) + ", W=" + str(raw_shape[2])
+        raw_shape = explanation.sal_map_shape
+        shape = "H=" + str(raw_shape[0]) + ", W=" + str(raw_shape[1])
         self.update_report("report_wb.csv", model_id, "True", "True", "True", shape)
 
         if dump_maps:
             # timm workaround to remove outlier activations at corners
-            raw_sal_map = explanation.map[0]
+            raw_sal_map = explanation.map[target_class]
             raw_sal_map[0, 0] = np.mean(np.delete(raw_sal_map[:2, :2].flatten(), 0))
             raw_sal_map[0, -1] = np.mean(np.delete(raw_sal_map[:2, -2:].flatten(), 1))
             raw_sal_map[-1, 0] = np.mean(np.delete(raw_sal_map[-2:, :2].flatten(), 2))
             raw_sal_map[-1, -1] = np.mean(np.delete(raw_sal_map[-2:, -2:].flatten(), 3))
-            explanation.map = raw_sal_map[None, ...]
+            explanation.map[target_class] = raw_sal_map
             post_processing_parameters = PostProcessParameters(normalize=True, overlay=True)
             post_processor = PostProcessor(
                 explanation,
@@ -375,7 +373,7 @@ class TestImageClassificationTimm:
             explanation = post_processor.postprocess()
 
             target_confidence = model(image).raw_scores[target_class]
-            self.put_confidence_into_map_overlay(explanation, target_confidence)
+            self.put_confidence_into_map_overlay(explanation, target_confidence, target_class)
 
             explanation.save(os.path.join(self.data_dir, "timm_models/maps_wb/"), model_id)
             map_saved = os.path.exists(
@@ -433,16 +431,16 @@ class TestImageClassificationTimm:
         )
 
         assert explanation is not None
-        assert explanation.map.shape[-1] > 1 and explanation.map.shape[-2] > 1
-        print(f"{model_id}: Generated classification saliency maps with shape {explanation.map.shape}.")
+        assert explanation.sal_map_shape[-1] > 1 and explanation.sal_map_shape[-2] > 1
+        print(f"{model_id}: Generated classification saliency maps with shape {explanation.sal_map_shape}.")
         self.update_report("report_bb.csv", model_id, "True", "True", "True")
-        raw_shape = explanation.map.shape
-        shape = "H=" + str(raw_shape[1]) + ", W=" + str(raw_shape[2])
+        raw_shape = explanation.sal_map_shape
+        shape = "H=" + str(raw_shape[0]) + ", W=" + str(raw_shape[1])
         self.update_report("report_bb.csv", model_id, "True", "True", "True", shape)
 
         if dump_maps:
             target_confidence = model(image).raw_scores[target_class]
-            self.put_confidence_into_map_overlay(explanation, target_confidence)
+            self.put_confidence_into_map_overlay(explanation, target_confidence, target_class)
 
             explanation.save(os.path.join(self.data_dir, "timm_models/maps_bb/"), model_id)
             map_saved = os.path.exists(
@@ -452,16 +450,20 @@ class TestImageClassificationTimm:
         self.clean_cash()
 
     def check_for_saved_map(self, model_id, directory):
-        map_saved = os.path.exists(
-            os.path.join(os.path.join(self.data_dir, directory), model_id + ".jpg")
-        )
-        if map_saved:
-            saved_map = cv2.imread(os.path.join(os.path.join(self.data_dir, directory), model_id + ".jpg"))
-            saved_map_shape = saved_map.shape
-            shape = "H=" + str(saved_map_shape[0]) + ", W=" + str(saved_map_shape[1])
-            self.update_report("report_wb.csv", model_id, "True", "True", "True", shape, str(map_saved))
-            self.clean_cash()
-            pytest.skip(f"Model {model_id} is already explained.")
+        for target in self.supported_num_classes.values():
+            map_name = model_id + "_target_" + str(target)
+            map_saved = os.path.exists(
+                os.path.join(os.path.join(self.data_dir, directory), map_name + ".jpg")
+            )
+            if map_saved:
+                saved_map = cv2.imread(
+                    os.path.join(os.path.join(self.data_dir, directory), map_name + ".jpg")
+                )
+                saved_map_shape = saved_map.shape
+                shape = "H=" + str(saved_map_shape[0]) + ", W=" + str(saved_map_shape[1])
+                self.update_report("report_wb.csv", model_id, "True", "True", "True", shape, str(map_saved))
+                self.clean_cash()
+                pytest.skip(f"Model {model_id} is already explained.")
 
     def get_timm_model(self, model_id):
         timm_model = timm.create_model(
@@ -486,7 +488,7 @@ class TestImageClassificationTimm:
         return mapi_params
 
     @staticmethod
-    def put_confidence_into_map_overlay(explanation, target_confidence):
+    def put_confidence_into_map_overlay(explanation, target_confidence, target_class):
         font = cv2.FONT_HERSHEY_SIMPLEX
         org = (50, 50)
         fontScale = 1
@@ -496,9 +498,9 @@ class TestImageClassificationTimm:
             color = (0, 0, 255)
         thickness = 2
         map_ = cv2.putText(
-            explanation.map[0], f"{target_confidence:.2f}", org, font, fontScale, color, thickness, cv2.LINE_AA
+            explanation.map[target_class], f"{target_confidence:.2f}", org, font, fontScale, color, thickness, cv2.LINE_AA
         )
-        explanation.map = map_[np.newaxis, ...]
+        explanation.map[target_class] = map_
 
     def update_report(
             self,
