@@ -205,7 +205,10 @@ NON_CONVERTABLE_CNN_MODELS = [
 ]
 
 
-LIMITED_DIVERSE_SET_OF_MODELS = {
+LIMITED_DIVERSE_SET_OF_MODELS = [
+    "resnet18.a1_in1k",
+    "mobilenetv3_large_100.ra_in1k",
+    "tf_efficientnet_b0.aa_in1k",
     "bat_resnext26ts.ch_in1k",
     "beit_base_patch16_224.in22k_ft_in22k",
     "botnet26t_256.c1_in1k",
@@ -251,7 +254,6 @@ LIMITED_DIVERSE_SET_OF_MODELS = {
     "mixer_b16_224.goog_in21k",
     "mixnet_s.ft_in1k",
     "mobilenetv2_100.ra_in1k",
-    "mobilenetv3_large_100.ra_in1k",
     "mobilevitv2_050.cvnets_in1k",
     "mvitv2_base.fb_in1k",
     "nest_tiny_jx.goog_in1k",
@@ -264,7 +266,6 @@ LIMITED_DIVERSE_SET_OF_MODELS = {
     "res2net50_14w_8s.in1k",
     "resmlp_12_224.fb_dino",
     "resnest14d.gluon_in1k",
-    "resnet18.a1_in1k",
     "resnetaa50.a1h_in1k",
     "resnetrs50.tf_in1k",
     "resnext26ts.ra2_in1k",
@@ -276,7 +277,6 @@ LIMITED_DIVERSE_SET_OF_MODELS = {
     "seresnext26d_32x4d.bt_in1k",
     "swin_tiny_patch4_window7_224.ms_in1k",
     "swinv2_tiny_window8_256.ms_in1k",
-    "tf_efficientnet_b0.aa_in1k",
     "tf_mixnet_l.in1k",
     "tf_mobilenetv3_large_075.in1k",
     "tinynet_a.in1k",
@@ -287,15 +287,16 @@ LIMITED_DIVERSE_SET_OF_MODELS = {
     "wide_resnet50_2.racm_in1k",
     "xception41.tf_in1k",
     "xcit_nano_12_p8_224.fb_dist_in1k",
-}
+]
 
 
 class TestImageClassificationTimm:
-    data_dir = ".data"
+    data_dir = Path(".data")
     fields = ["Model", "Exported to ONNX", "Exported to OV IR", "Explained", "Map size", "Map saved"]
     counter_row = ["Counters", "0", "0", "0", "-", "-"]
     report = [fields, counter_row]
-    should_clean_cash = True
+    clean_cash_converted_models = True
+    clean_cash_hf_models = True
     supported_num_classes = {
         1000: 293,  # 293 is a cheetah class_id in the ImageNet-1k dataset
         21841: 2441,  # 2441 is a cheetah class_id in the ImageNet-21k dataset
@@ -313,15 +314,14 @@ class TestImageClassificationTimm:
 
         self.check_for_saved_map(model_id, "timm_models/maps_wb/")
 
-        output_dir = os.path.join(self.data_dir, "timm_models", "converted_models", model_id)
-        output_model_dir = Path(output_dir)
+        output_model_dir = self.data_dir / "timm_models" / "converted_models" / model_id
         output_model_dir.mkdir(parents=True, exist_ok=True)
         ir_path = output_model_dir / "model_fp32.xml"
 
         timm_model, model_cfg = self.get_timm_model(model_id)
 
         self.update_report("report_wb.csv", model_id)
-        if not os.path.isfile(os.path.join(output_model_dir, "model_fp32.xml")):
+        if not (output_model_dir / "model_fp32.xml").is_file():
             input_size = [1] + list(timm_model.default_cfg["input_size"])
             dummy_tensor = torch.rand(input_size)
             onnx_path = output_model_dir / "model_fp32.onnx"
@@ -353,8 +353,8 @@ class TestImageClassificationTimm:
         print(f"{model_id}: Generated classification saliency maps with shape {explanation.sal_map_shape}.")
         self.update_report("report_wb.csv", model_id, "True", "True", "True")
         raw_shape = explanation.sal_map_shape
-        shape = "H=" + str(raw_shape[-2]) + ", W=" + str(raw_shape[-1])
-        self.update_report("report_wb.csv", model_id, "True", "True", "True", shape)
+        shape_str = "H=" + str(raw_shape[0]) + ", W=" + str(raw_shape[1])
+        self.update_report("report_wb.csv", model_id, "True", "True", "True", shape_str)
 
         if dump_maps:
             # timm workaround to remove outlier activations at corners
@@ -375,11 +375,11 @@ class TestImageClassificationTimm:
             target_confidence = model(image).raw_scores[target_class]
             self.put_confidence_into_map_overlay(explanation, target_confidence, target_class)
 
-            explanation.save(os.path.join(self.data_dir, "timm_models/maps_wb/"), model_id)
-            map_saved = os.path.exists(
-                os.path.join(os.path.join(self.data_dir, "timm_models/maps_wb/"), model_id + ".jpg")
-            )
-            self.update_report("report_wb.csv", model_id, "True", "True", "True", shape, str(map_saved))
+            save_dir = self.data_dir / "timm_models" / "maps_wb"
+            explanation.save(save_dir, model_id)
+            file_name = model_id + "_target_" + str(target_class) + ".jpg"
+            map_saved = (save_dir / file_name).is_file()
+            self.update_report("report_wb.csv", model_id, "True", "True", "True", shape_str, str(map_saved))
         self.clean_cash()
 
     # sudo ln -s /usr/local/cuda-11.8/ cuda
@@ -399,12 +399,11 @@ class TestImageClassificationTimm:
 
         self.update_report("report_bb.csv", model_id)
 
-        output_dir = os.path.join(self.data_dir, "timm_models", "converted_models", model_id)
-        output_model_dir = Path(output_dir)
+        output_model_dir = self.data_dir / "timm_models" / "converted_models" / model_id
         output_model_dir.mkdir(parents=True, exist_ok=True)
         onnx_path = output_model_dir / "model_fp32.onnx"
 
-        if not os.path.isfile(os.path.join(output_model_dir, "model_fp32.onnx")):
+        if not (output_model_dir / "model_fp32.onnx").is_file():
             input_size = [1] + list(timm_model.default_cfg["input_size"])
             dummy_tensor = torch.rand(input_size)
             onnx_path = output_model_dir / "model_fp32.onnx"
@@ -434,31 +433,28 @@ class TestImageClassificationTimm:
         assert explanation.sal_map_shape[-1] > 1 and explanation.sal_map_shape[-2] > 1
         print(f"{model_id}: Generated classification saliency maps with shape {explanation.sal_map_shape}.")
         self.update_report("report_bb.csv", model_id, "True", "True", "True")
-        raw_shape = explanation.sal_map_shape
-        shape = "H=" + str(raw_shape[-2]) + ", W=" + str(raw_shape[-1])
-        self.update_report("report_bb.csv", model_id, "True", "True", "True", shape)
+        shape = explanation.sal_map_shape
+        shape_str = "H=" + str(shape[0]) + ", W=" + str(shape[1])
+        self.update_report("report_bb.csv", model_id, "True", "True", "True", shape_str)
 
         if dump_maps:
             target_confidence = model(image).raw_scores[target_class]
             self.put_confidence_into_map_overlay(explanation, target_confidence, target_class)
 
-            explanation.save(os.path.join(self.data_dir, "timm_models/maps_bb/"), model_id)
-            map_saved = os.path.exists(
-                os.path.join(os.path.join(self.data_dir, "timm_models/maps_bb/"), model_id + ".jpg")
-            )
-            self.update_report("report_bb.csv", model_id, "True", "True", "True", shape, str(map_saved))
+            save_dir = self.data_dir / "timm_models" / "maps_bb"
+            explanation.save(save_dir, model_id)
+            file_name = model_id + "_target_" + str(target_class) + ".jpg"
+            map_saved = (save_dir / file_name).is_file()
+            self.update_report("report_bb.csv", model_id, "True", "True", "True", shape_str, str(map_saved))
         self.clean_cash()
 
     def check_for_saved_map(self, model_id, directory):
         for target in self.supported_num_classes.values():
-            map_name = model_id + "_target_" + str(target)
-            map_saved = os.path.exists(
-                os.path.join(os.path.join(self.data_dir, directory), map_name + ".jpg")
-            )
+            map_name = model_id + "_target_" + str(target) + ".jpg"
+            map_path = self.data_dir / directory / map_name
+            map_saved = map_path.is_file()
             if map_saved:
-                saved_map = cv2.imread(
-                    os.path.join(os.path.join(self.data_dir, directory), map_name + ".jpg")
-                )
+                saved_map = cv2.imread(map_path._str)
                 saved_map_shape = saved_map.shape
                 shape = "H=" + str(saved_map_shape[0]) + ", W=" + str(saved_map_shape[1])
                 self.update_report("report_wb.csv", model_id, "True", "True", "True", shape, str(map_saved))
@@ -529,17 +525,18 @@ class TestImageClassificationTimm:
             self.report[1][1] = str(bool_flags[:, 0].sum())
             self.report[1][2] = str(bool_flags[:, 1].sum())
             self.report[1][3] = str(bool_flags[:, 2].sum())
-        with open(os.path.join(self.data_dir, os.path.join("timm_models", report_name)), "w") as f:
+        with open(self.data_dir / "timm_models" / report_name, "w") as f:
             write = csv.writer(f)
             write.writerows(self.report)
 
     def clean_cash(self):
-        if self.should_clean_cash:
-            ir_model_dir = os.path.join(self.data_dir, "timm_models", "converted_models")
-            if os.path.isdir(ir_model_dir):
+        if self.clean_cash_converted_models:
+            ir_model_dir = self.data_dir / "timm_models" / "converted_models"
+            if ir_model_dir.is_dir():
                 shutil.rmtree(ir_model_dir)
-            huggingface_hub_dir = os.path.join(os.path.expanduser("~"), ".cache/huggingface/hub/")
-            if os.path.isdir(huggingface_hub_dir):
+        if self.clean_cash_hf_models:
+            huggingface_hub_dir = Path(os.path.expanduser("~")) / ".cache/huggingface/hub/"
+            if huggingface_hub_dir.is_dir():
                 shutil.rmtree(huggingface_hub_dir)
 
     @staticmethod
