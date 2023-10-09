@@ -1,7 +1,7 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Optional, Tuple
+from typing import Optional, List, Callable
 
 import openvino
 
@@ -20,7 +20,7 @@ class IRParser:
         return logit_node
 
     @staticmethod
-    def get_node_by_condition(ops, condition):
+    def get_node_by_condition(ops: List[openvino.runtime.Node], condition: Callable):
         for op in ops:
             if condition(op):
                 return op
