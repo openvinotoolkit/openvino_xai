@@ -353,7 +353,7 @@ class TestImageClassificationTimm:
         print(f"{model_id}: Generated classification saliency maps with shape {explanation.sal_map_shape}.")
         self.update_report("report_wb.csv", model_id, "True", "True", "True")
         raw_shape = explanation.sal_map_shape
-        shape = "H=" + str(raw_shape[0]) + ", W=" + str(raw_shape[1])
+        shape = "H=" + str(raw_shape[-2]) + ", W=" + str(raw_shape[-1])
         self.update_report("report_wb.csv", model_id, "True", "True", "True", shape)
 
         if dump_maps:
@@ -435,7 +435,7 @@ class TestImageClassificationTimm:
         print(f"{model_id}: Generated classification saliency maps with shape {explanation.sal_map_shape}.")
         self.update_report("report_bb.csv", model_id, "True", "True", "True")
         raw_shape = explanation.sal_map_shape
-        shape = "H=" + str(raw_shape[0]) + ", W=" + str(raw_shape[1])
+        shape = "H=" + str(raw_shape[-2]) + ", W=" + str(raw_shape[-1])
         self.update_report("report_bb.csv", model_id, "True", "True", "True", shape)
 
         if dump_maps:
