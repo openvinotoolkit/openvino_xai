@@ -3,6 +3,7 @@
 
 import os
 from enum import Enum
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
 import cv2
@@ -232,7 +233,7 @@ class ExplainResult:
         else:
             return SaliencyMapLayout.MULTIPLE_MAPS_PER_IMAGE_GRAY
 
-    def save(self, dir_path: str, name: Optional[str] = None) -> None:
+    def save(self, dir_path: Union[Path, str], name: Optional[str] = None) -> None:
         """Dumps saliency map."""
         # TODO: add unit test
         os.makedirs(dir_path, exist_ok=True)
