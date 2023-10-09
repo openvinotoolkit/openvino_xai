@@ -127,6 +127,14 @@ class RISEExplainer(BlackBoxExplainer):
         predictions = result.top_labels
         num_classes = len(result.raw_scores)
         target_explain_group = self._get_target_explain_group(target_explain_group)
+        if target_explain_group == TargetExplainGroup.PREDICTED_CLASSES and predictions == []:
+            raise ValueError(
+                "TargetExplainGroup.PREDICTED_CLASSES requires predictions "
+                "to be available, but currently model has no predictions. "
+                "Try to: (1) adjust preprocessing, (2) use different input, "
+                "(3) increase confidence threshold, (4) retrain/re-export the model, etc."
+            )
+
         target_classes = self._get_target_classes(num_classes, target_explain_group, explain_targets, predictions)
 
         raw_saliency_map = self._generate_saliency_map(data, num_classes, target_classes)
