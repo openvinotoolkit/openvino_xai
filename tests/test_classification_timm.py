@@ -535,7 +535,7 @@ class TestImageClassificationTimm:
             if ir_model_dir.is_dir():
                 shutil.rmtree(ir_model_dir)
         if self.clean_cash_hf_models:
-            huggingface_hub_dir = Path(os.path.expanduser("~")) / ".cache/huggingface/hub/"
+            huggingface_hub_dir = Path.home() / ".cache/huggingface/hub/"
             if huggingface_hub_dir.is_dir():
                 shutil.rmtree(huggingface_hub_dir)
 
