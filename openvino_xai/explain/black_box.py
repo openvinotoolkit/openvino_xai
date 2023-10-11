@@ -297,6 +297,286 @@ class RISEExplainer(BlackBoxExplainer):
         return saliency_map
 
 
+import matplotlib.pyplot as plt
+class PFExplainer(RISEExplainer):
+    def __init__(self, *args, **kwargs):
+        clip = kwargs.pop("clip") if "clip" in kwargs else 0.5
+        self.min_prob = 0 # + clip  # TODO: investigate
+        self.max_prob = 1 - clip  # TODO: this can be done with reducing num_particles
+        self.num_particles = kwargs.pop("num_particles") if "num_particles" in kwargs else 50000
+        num_mask_per_step = kwargs.pop("num_mask_per_step") if "num_mask_per_step" in kwargs else None
+        num_steps = kwargs.pop("num_steps") if "num_steps" in kwargs else None
+        super().__init__(*args, **kwargs)
+
+        if num_mask_per_step is None and num_steps is None:
+            self.default_num_steps = 5
+            self.num_steps = self.default_num_steps
+            self.num_mask_per_step = self.num_masks // self.num_steps
+        elif num_mask_per_step is not None and num_steps is not None:
+            raise ValueError("Only one of num_mask_per_step or num_steps should be provided")
+        elif num_steps is None and num_mask_per_step is not None:
+            self.num_mask_per_step = num_mask_per_step
+            self.num_steps = self.num_masks // self.num_mask_per_step
+        elif num_mask_per_step is None and num_steps is not None:
+            self.num_steps = num_steps
+            self.num_mask_per_step = self.num_masks // self.num_steps
+
+        self.prob = np.zeros((self.num_cells, self.num_cells)) + 0.5  # init with equal probabilities
+        self.create_uniform_particles([0, 1], [0, 1], self.num_particles)
+
+        # self.num_cells_list = [3, 5, 7, 10, 12, 14, 16]
+        # self.num_mask_per_step_list = [100, 200, 350, 500, 1000, 3000, 5000]
+        # # self.num_cells_list = [3, 5, 7, 10, 12]
+        # # self.num_mask_per_step_list = [75, 125, 175, 225, 400]
+        # num_cells = self.num_cells_list[0]
+        # self.prob = np.zeros((num_cells, num_cells)) + 0.5
+
+    def _generate_saliency_map(
+            self, data: np.ndarray, num_classes: int, target_classes: Optional[List[int]]
+    ) -> np.ndarray:
+        """Generate RISE saliency map
+        Returns:
+            sal (np.ndarray): saliency map for each class
+
+        """
+        resized_data = self._resize_input(data)
+        saliency_maps = self._run_explanation(resized_data, num_classes, target_classes)
+
+        if self.normalize:
+            saliency_maps = self._normalize_saliency_maps(saliency_maps)
+        saliency_maps = np.expand_dims(saliency_maps, axis=0)
+        return saliency_maps
+
+    def _run_explanation(
+            self, resized_data: np.ndarray, num_classes: int, target_classes: Optional[List[int]]
+    ):
+        if target_classes is None:
+            num_targets = num_classes
+        else:
+            num_targets = len(target_classes)
+
+        sal_maps_res = np.zeros((num_targets, self.input_size[0], self.input_size[1]))
+        print("num_steps", self.num_steps)
+        for i in range(self.num_steps):
+
+            # self.num_cells = self.num_cells_list[i]
+            # self.num_mask_per_step = self.num_mask_per_step_list[i]
+
+            sal_maps = self.observe_sal_map(resized_data, num_targets, target_classes)
+            sal_maps_res += sal_maps
+
+            self.update(sal_maps)
+            if self.do_resample():
+                print("Resample")
+                self.simple_resample()
+                # if i < self.num_steps - 1:
+                #     self.num_cells = self.num_cells_list[i + 1]
+                self.update_probabilities_from_particles()
+
+                portion_eff_prob_cells = np.sum(self.prob) / (self.num_cells ** 2 / 2)
+                print("portion_eff_prob_cells", portion_eff_prob_cells)
+                # if portion_eff_prob_cells < some_val:
+                #     upsample num_cells
+
+                # plt.gca().invert_yaxis()
+                # plt.scatter(self.particles[:, 1], self.particles[:, 0], marker = 'o', s = 1)
+                # plt.grid()
+                # plt.show()
+
+        if target_classes is not None:
+            sal_maps_res = self._reconstruct_sparce_saliency_map(sal_maps_res, num_classes, target_classes)
+        return sal_maps_res
+
+    def do_resample(self):
+        # Investigate: resample while have confident predictions of masked input
+        return True
+        # n_eff = self.neff()
+        # print("n_eff", n_eff)
+        # return n_eff < self.num_particles * 0.9  # n_eff < self.num_particles / 2
+
+    def observe_sal_map(self, resized_data, num_targets, target_classes):
+        """
+        Mimic measurements.
+        It makes sense to resamples only if measurement with relatively low level of noise is obtained.
+
+        increasing self.num_mask_per_step decrease noise
+        increasing self.num_cells increase noise
+
+        We want to keep noise level under control
+        higher self.num_cells -> more self.num_mask_per_step
+
+        num_cells -> num_masks_per_step ???
+        3 -> 100
+        5 -> 150
+        8 -> 200
+        10 -> 350
+        12 -> 500
+        14 -> 750
+        16 -> 1000
+
+        """
+        # Async infer
+        masks = []
+        async_pipeline = AsyncPipeline(self._model)
+        for i in range(self.num_mask_per_step):
+            mask = self._generate_mask()
+            masks.append(mask)
+            # Add channel dimensions for masks
+            masked = np.expand_dims(mask, axis=2) * resized_data
+            async_pipeline.submit_data(masked, i)
+        async_pipeline.await_all()
+
+        sal_maps = np.zeros((num_targets, self.input_size[0], self.input_size[1]))
+        for j in range(self.num_mask_per_step):
+            result, _ = async_pipeline.get_result(j)
+            raw_scores = result.raw_scores
+            sal = self._get_scored_mask(raw_scores, masks[j], target_classes)
+            sal_maps += sal
+        return sal_maps
+
+        # # Sync infer
+        # sal_maps = np.zeros((num_targets, self.input_size[0], self.input_size[1]))
+        # for _ in tqdm(range(0, self.num_mask_per_step), desc="Explaining in synchronous mode"):
+        #     mask = self._generate_mask()
+        #     masked = np.expand_dims(mask, axis=2) * resized_data
+        #     raw_scores = self._model(masked).raw_scores
+        #     sal = self._get_scored_mask(raw_scores, mask, target_classes)
+        #     sal_maps += sal
+        # return sal_maps
+
+    def create_uniform_particles(self, x_range, y_range, N):
+        # TODO: uniform -> quasi-random
+        particles = np.empty((N, 2))
+        particles[:, 0] = self.rand_generator.uniform(x_range[0], x_range[1], size=N)
+        particles[:, 1] = self.rand_generator.uniform(y_range[0], y_range[1], size=N)
+        self.particles = particles
+        self.weights = np.zeros(N) + 1 / N
+
+    def update(self, observed_map):
+        particles_scaled = (self.particles * 224).astype(np.uint8)
+
+        # take weight update from observed so far saliency map
+        weight_update = observed_map[0, particles_scaled[:, 0], particles_scaled[:, 1]]
+
+        self.weights *= weight_update
+        self.weights += 1.e-300  # avoid round-off to zero
+        self.weights /= sum(self.weights)  # normalize
+
+    def neff(self):
+        return 1. / np.sum(np.square(self.weights))
+
+    def simple_resample(self):
+        N = len(self.particles)
+        cumulative_sum = np.cumsum(self.weights)
+        cumulative_sum[-1] = 1.  # avoid round-off error
+        indexes = np.searchsorted(cumulative_sum, self.rand_generator.random(N))
+
+        # resample according to indexes
+        self.particles[:] = self.particles[indexes]
+        self.weights.fill(1.0 / N)
+
+    def update_probabilities_from_particles(self):
+        counter = np.zeros((self.num_cells, self.num_cells))
+        for p in self.particles:
+            counter[int(p[0] * self.num_cells), int(p[1] * self.num_cells)] += 1
+        average_num_particles_per_cell = self.num_particles / self.num_cells ** 2
+        probabilities = (counter / average_num_particles_per_cell) * 0.5
+        self.prob = np.clip(probabilities, self.min_prob, self.max_prob)
+
+
+class AISEExplainer(RISEExplainer):
+    def _generate_saliency_map(
+            self, data: np.ndarray, num_classes: int, target_classes: Optional[List[int]]
+    ) -> np.ndarray:
+        """Generate RISE saliency map
+        Returns:
+            sal (np.ndarray): saliency map for each class
+
+        """
+        resized_data = self._resize_input(data)
+        saliency_maps = self._run_synchronous_explanation(resized_data, num_classes, target_classes)
+
+        if self.normalize:
+            saliency_maps = self._normalize_saliency_maps(saliency_maps)
+        saliency_maps = np.expand_dims(saliency_maps, axis=0)
+        return saliency_maps
+
+    def _run_synchronous_explanation(
+            self, resized_data: np.ndarray, num_classes: int, target_classes: Optional[List[int]]
+    ):
+        if target_classes is None:
+            num_targets = num_classes
+        else:
+            num_targets = len(target_classes)
+
+        # sal_maps = np.zeros((num_targets, self.input_size[0], self.input_size[1]))
+        # for _ in tqdm(range(0, self.num_masks), desc="Explaining in synchronous mode"):
+        #     mask = self._generate_mask()
+        #     # Add channel dimensions for masks
+        #     masked = np.expand_dims(mask, axis=2) * resized_data
+        #     raw_scores = self._model(masked).raw_scores
+        #     sal = self._get_scored_mask(raw_scores, mask, target_classes)
+        #     sal_maps += sal
+
+
+        from scipy.optimize import direct, Bounds
+        self.resized_data = resized_data
+        self.target_class = target_classes[0]
+        self.score_hist = []
+        self.mask_hist = []
+        self.mask_hist_raw = []
+        num_vars = self.num_cells ** 2
+        bounds = Bounds([0.0] * num_vars, [1] * num_vars)
+        res = direct(self._objective_function,
+                     bounds,
+                     # eps=solver_epsilon,
+                     maxfun=self.num_masks,
+                     len_tol=1e-2,
+                     # locally_biased=locally_biased,
+        )
+        print(res)
+
+        mask_vals = np.array(res.x)
+        mask = mask_vals.reshape(self.num_cells, self.num_cells)
+        sal_maps = cv2.resize(mask, self.input_size, interpolation=cv2.INTER_CUBIC)
+        sal_maps = np.clip(sal_maps, 0, 1)
+        sal_maps = sal_maps[None, ...]
+
+        # sal_maps = np.zeros((1, self.input_size[0], self.input_size[1]))
+        # for i in range(len(self.mask_hist)):
+        #     mask = self.mask_hist[i]
+        #     mask = cv2.resize(mask, self.input_size, interpolation=cv2.INTER_CUBIC)
+        #     mask = np.clip(mask, 0, 1)
+        #     raw_scores = self.score_hist[i]
+        #     sal = self._get_scored_mask(raw_scores, mask, None)
+        #     sal_maps += sal
+        # sal_maps = self._normalize_saliency_maps(sal_maps)
+
+        if target_classes is not None:
+            sal_maps = self._reconstruct_sparce_saliency_map(sal_maps, num_classes, target_classes)
+        return sal_maps
+
+    def _objective_function(self, args):
+        # TODO: add jitter
+        mask_vals = np.array(args)
+        mask = mask_vals.reshape(self.num_cells, self.num_cells)
+        self.mask_hist_raw.append(mask)
+        mask = cv2.resize(mask, self.input_size, interpolation=cv2.INTER_CUBIC)
+        mask = np.clip(mask, 0, 1)
+
+        mask = self._normalize_saliency_maps(mask[None, ...])
+        mask = mask[0]
+
+        self.mask_hist.append(mask)
+        masked = np.expand_dims(mask, axis=2) * self.resized_data
+        raw_scores = self._model(masked).raw_scores
+        score = raw_scores[self.target_class]
+        self.score_hist.append(score)
+
+        loss = - (score - abs(len(args) * 0.1 - sum(args)))
+        return loss
+
+
 class DRISEExplainer(BlackBoxExplainer):
     def explain(self, data: np.ndarray) -> ExplainResult:
         """Explain the input."""

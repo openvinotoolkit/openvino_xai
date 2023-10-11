@@ -9,6 +9,7 @@ from openvino.model_api.models import ClassificationModel
 import openvino.runtime as ov
 
 from openvino_xai.explain import ClassificationAutoExplainer, RISEExplainer, WhiteBoxExplainer
+from openvino_xai.explain.black_box import PFExplainer
 from openvino_xai.parameters import ClassificationExplainParametersWB, PostProcessParameters, XAIMethodType
 from openvino_xai.saliency_map import TargetExplainGroup
 from openvino_xai.model import XAIClassificationModel
@@ -107,6 +108,57 @@ def run_blackbox_w_postprocessing_parameters(args):
     if args.output is not None:
         output = os.path.join(args.output, "blackbox_w_postprocessing_parameters")
         explanation.save(output, image_name)
+
+
+def run_pf(args):
+    import itertools
+
+    image = cv2.imread(args.image_path)
+    image_name = Path(args.image_path).stem
+
+    mapi_params = {
+        "configuration": {
+            # "mean_values": [123.675, 116.28, 103.53],
+            # "scale_values": [58.395, 57.120000000000005, 57.375],
+            "output_raw_scores": True,
+        }
+    }
+    model = ClassificationModel.create_model(args.model_path, model_type="Classification", **mapi_params)
+
+    num_masks_ = [1000]
+    num_cells_ = [7]
+    clip_ = [0.5]
+    num_particles_ = [50000]
+    num_mask_per_step_ = [200]
+    num_steps_ = [10]
+
+    for num_masks, num_cells, clip, num_particles, num_mask_per_step, num_steps in itertools.product(
+            num_masks_, num_cells_, clip_, num_particles_, num_mask_per_step_, num_steps_
+    ):
+        print(f"num_masks {num_masks}, num_cells {num_cells}, clip {clip}, num_particles {num_particles}, "
+              f"num_mask_per_step {num_mask_per_step}, num_steps {num_steps}")
+        explainer = PFExplainer(
+            model,
+            num_masks=num_masks,
+            num_cells=num_cells,
+            clip=clip,
+            num_particles=num_particles,
+            # num_mask_per_step=num_mask_per_step,
+            num_steps=num_steps,
+        )
+        explanation = explainer.explain(
+            image,
+            TargetExplainGroup.CUSTOM_CLASSES,
+            explain_targets=[14],
+            post_processing_parameters=PostProcessParameters(overlay=True),
+        )
+        logger.info(
+            f"Example from BlackBox explainer w/ post_processing_parameters: generated {len(explanation.map)} "
+            f"classification saliency maps of layout {explanation.layout} with shape {explanation.sal_map_shape}."
+        )
+        if args.output is not None:
+            output = os.path.join(args.output, "pf")
+            explanation.save(output, image_name)
 
 
 def run_auto_example(args):
@@ -225,18 +277,20 @@ def main(argv):
     parser = get_argument_parser()
     args = parser.parse_args(argv)
 
-    # E2E model explanation examples: patching IR model with XAI branch and using ModelAPI as inference framework
-    run_example_wo_explain_parameters(args)
-    run_example_w_explain_parameters(args)
-    run_example_w_postprocessing_parameters(args)
-    run_blackbox_w_postprocessing_parameters(args)
-    run_auto_example(args)
-    run_multiple_image_example(args)
+    # # E2E model explanation examples: patching IR model with XAI branch and using ModelAPI as inference framework
+    # run_example_wo_explain_parameters(args)
+    # run_example_w_explain_parameters(args)
+    # run_example_w_postprocessing_parameters(args)
+    # run_blackbox_w_postprocessing_parameters(args)
+    # run_auto_example(args)
+    # run_multiple_image_example(args)
+    #
+    # # Embedding XAI into the model graph and save updated IR (no inference performed)
+    # run_ir_model_update_wo_inference(args)
+    # # To get explanations along with the regular model output, user suppose to use his/her own custom inference pipeline
+    # run_ir_model_update_w_custom_inference(args)
 
-    # Embedding XAI into the model graph and save updated IR (no inference performed)
-    run_ir_model_update_wo_inference(args)
-    # To get explanations along with the regular model output, user suppose to use his/her own custom inference pipeline
-    run_ir_model_update_w_custom_inference(args)
+    run_pf(args)
 
 
 if __name__ == "__main__":
