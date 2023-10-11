@@ -3,6 +3,7 @@
 
 import os
 from enum import Enum
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
 import cv2
@@ -194,12 +195,13 @@ class ExplainResult:
                 assert raw_predictions is not None, (
                     f"Raw model predictions has to be provided " f"for {target_explain_group}."
                 )
-                assert raw_predictions.top_labels, (
-                    "TargetExplainGroup.PREDICTED_CLASSES requires predictions "
-                    "to be available, but currently model has no predictions. "
-                    "Try to use different input data, confidence threshold"
-                    " or retrain the model."
-                )
+                if not raw_predictions.top_labels:
+                    raise ValueError(
+                        "TargetExplainGroup.PREDICTED_CLASSES requires predictions "
+                        "to be available, but currently model has no predictions. "
+                        "Try to: (1) adjust preprocessing, (2) use different input, "
+                        "(3) increase confidence threshold, (4) retrain/re-export the model, etc."
+                    )
                 assert explain_targets is None, (
                     f"Explain targets do NOT have to be provided for "
                     f"{target_explain_group}. Model prediction is used "
@@ -231,7 +233,7 @@ class ExplainResult:
         else:
             return SaliencyMapLayout.MULTIPLE_MAPS_PER_IMAGE_GRAY
 
-    def save(self, dir_path: str, name: Optional[str] = None) -> None:
+    def save(self, dir_path: Union[Path, str], name: Optional[str] = None) -> None:
         """Dumps saliency map."""
         # TODO: add unit test
         os.makedirs(dir_path, exist_ok=True)
