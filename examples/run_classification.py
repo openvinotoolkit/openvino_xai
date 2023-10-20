@@ -114,9 +114,17 @@ def run_auto_example(args):
     image = cv2.imread(args.image_path)
     image_name = Path(args.image_path).stem
 
-    model = ClassificationModel.create_model(args.model_path, model_type="Classification")
+    model = ClassificationModel.create_model(args.model_path, model_type="Classification",
+                                             configuration={"output_raw_scores": True})
     auto_explainer = ClassificationAutoExplainer(model)
-    explanation = auto_explainer.explain(image)
+    post_processing_parameters = PostProcessParameters(
+        overlay=True,
+    )
+    explanation = auto_explainer.explain(
+        image,
+        TargetExplainGroup.PREDICTED_CLASSES,
+        post_processing_parameters=post_processing_parameters,
+    )
     logger.info(
         f"Auto example: generated {len(explanation.map)} classification "
         f"saliency maps of layout {explanation.layout} with shape {explanation.sal_map_shape}."

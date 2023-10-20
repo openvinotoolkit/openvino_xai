@@ -4,7 +4,6 @@ from pathlib import Path
 import cv2
 import numpy as np
 import pytest
-from urllib.request import urlretrieve
 
 from openvino.model_api.models import ClassificationModel
 import openvino.runtime as ov
@@ -13,6 +12,7 @@ from openvino_xai.explain import WhiteBoxExplainer, ClassificationAutoExplainer,
 from openvino_xai.parameters import ClassificationExplainParametersWB, PostProcessParameters, XAIMethodType
 from openvino_xai.saliency_map import TargetExplainGroup
 from openvino_xai.model import XAIClassificationModel, XAIModel
+from openvino_xai.utils import retrieve_otx_model
 
 
 MODELS = [
@@ -39,21 +39,6 @@ MODELS_NUM_CLASSES = {
     "classification_model_with_xai_head": 4,  # verified
 }
 
-
-def retrieve_otx_model(data_dir, model_name):
-    destination_folder = Path(data_dir) / "otx_models"
-    os.makedirs(destination_folder, exist_ok=True)
-
-    if not os.path.isfile(os.path.join(destination_folder, model_name + ".xml")):
-        urlretrieve(
-            f"https://storage.openvinotoolkit.org/repositories/model_api/test/otx_models/{model_name}/openvino.xml",
-            f"{destination_folder}/{model_name}.xml",
-        )
-    if not os.path.isfile(os.path.join(destination_folder, model_name + ".bin")):
-        urlretrieve(
-            f"https://storage.openvinotoolkit.org/repositories/model_api/test/otx_models/{model_name}/openvino.bin",
-            f"{destination_folder}/{model_name}.bin",
-        )
 
 
 class TestClsWB:

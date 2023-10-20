@@ -1,7 +1,7 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Optional
+from typing import List, Optional
 
 import numpy as np
 import openvino
@@ -11,7 +11,7 @@ from openvino_xai.explain.black_box import RISEExplainer
 from openvino_xai.explain.white_box import WhiteBoxExplainer
 
 from openvino_xai.model import XAIModel, XAIClassificationModel
-from openvino_xai.parameters import ExplainParameters
+from openvino_xai.parameters import ExplainParameters, PostProcessParameters
 
 from openvino_xai.saliency_map import ExplainResult, TargetExplainGroup
 from openvino_xai.utils import logger
@@ -35,7 +35,13 @@ class AutoExplainer(Explainer):
 class ClassificationAutoExplainer(AutoExplainer):
     """Explain classification models in auto mode, using white box or black box approach."""
 
-    def explain(self, data: np.ndarray, target_explain_group: Optional[TargetExplainGroup] = None) -> ExplainResult:
+    def explain(
+        self,
+        data: np.ndarray,
+        target_explain_group: Optional[TargetExplainGroup] = None,
+        explain_targets: Optional[List[int]] = None,
+        post_processing_parameters: PostProcessParameters = PostProcessParameters(),
+    ) -> ExplainResult:
         """
         Implements three explain scenarios, for different IR models:
             1. IR model contain xai branch -> infer Model API wrapper.
@@ -46,21 +52,29 @@ class ClassificationAutoExplainer(AutoExplainer):
         :type data: np.ndarray
         :param target_explain_group: Target explain group.
         :type target_explain_group: TargetExplainGroup
+        :param explain_targets: Provides list of custom targets, optional.
+        :type explain_targets: Optional[List[int]]
+        :param post_processing_parameters: Parameters that define post-processing.
+        :type post_processing_parameters: PostProcessParameters
         """
+        extra_params = {"target_explain_group": target_explain_group,
+                        "explain_targets": explain_targets,
+                        "post_processing_parameters": post_processing_parameters}
+
         if XAIModel.has_xai(self._model.inference_adapter.model):
             logger.info("Model already has XAI - using White Box explainer.")
-            explanations = WhiteBoxExplainer(self._model).explain(data, target_explain_group)
+            explanations = WhiteBoxExplainer(self._model).explain(data, **extra_params)
             return explanations
         else:
             try:
                 logger.info("Model does not have XAI - trying to insert XAI and use White Box explainer.")
                 self._model = XAIClassificationModel.insert_xai(self._model, self._explain_parameters)
-                explanations = WhiteBoxExplainer(self._model).explain(data)
+                explanations = WhiteBoxExplainer(self._model).explain(data, **extra_params)
                 return explanations
             except Exception as e:
                 print(e)
                 logger.info("Failed to insert XAI into the model. Calling Black Box explainer.")
-                explanations = RISEExplainer(self._model).explain(data)
+                explanations = RISEExplainer(self._model).explain(data, **extra_params)
                 return explanations
 
 

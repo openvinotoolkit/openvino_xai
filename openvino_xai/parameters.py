@@ -80,7 +80,7 @@ class PostProcessParameters:
     :parameter overlay: If True, generate overlay of the saliency map over the input image.
     :type overlay: bool
     :parameter overlay_weight: Weight of the saliency map when overlaying the input data with the saliency map.
-    :type overlay_weight: bool
+    :type overlay_weight: float
     """
 
     normalize: bool = False
