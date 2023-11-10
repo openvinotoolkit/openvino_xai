@@ -6,13 +6,16 @@ import numpy as np
 import pytest
 
 from openvino.model_api.models import ClassificationModel
+import openvino.model_api as mapi
 import openvino.runtime as ov
 
-from openvino_xai.explain import WhiteBoxExplainer, ClassificationAutoExplainer, RISEExplainer
-from openvino_xai.parameters import ClassificationExplainParametersWB, PostProcessParameters, XAIMethodType
-from openvino_xai.saliency_map import TargetExplainGroup
-from openvino_xai.model import XAIClassificationModel, XAIModel
-from openvino_xai.utils import retrieve_otx_model
+import openvino_xai as ovxai
+from openvino_xai.common.utils import retrieve_otx_model
+from openvino_xai.explanation.explainers import WhiteBoxExplainer
+from openvino_xai.explanation.explanation_parameters import PostProcessParameters, TargetExplainGroup, \
+    ExplanationParameters
+from openvino_xai.insertion.insertion_parameters import ClassificationInsertionParameters
+from openvino_xai.common.parameters import XAIMethodType
 
 
 MODELS = [
@@ -40,7 +43,6 @@ MODELS_NUM_CLASSES = {
 }
 
 
-
 class TestClsWB:
     image = cv2.imread("tests/assets/cheetah_person.jpg")
     _ref_sal_maps_reciprocam = {
@@ -58,29 +60,34 @@ class TestClsWB:
     @pytest.mark.parametrize(
         "target_explain_group",
         [
-            TargetExplainGroup.ALL_CLASSES,
-            TargetExplainGroup.PREDICTED_CLASSES,
-            TargetExplainGroup.CUSTOM_CLASSES,
+            TargetExplainGroup.ALL,
+            TargetExplainGroup.PREDICTIONS,
+            TargetExplainGroup.CUSTOM,
         ],
     )
     def test_reciprocam(self, model_name, embed_normalization, target_explain_group):
         data_dir = ".data"
         retrieve_otx_model(data_dir, model_name)
         model_path = os.path.join(data_dir, "otx_models", model_name + ".xml")
-        explain_parameters = ClassificationExplainParametersWB(
+        mapi_wrapper = mapi.models.ClassificationModel.create_model(
+            model_path, "Classification"
+        )
+        insertion_parameters = ClassificationInsertionParameters(
             embed_normalization=embed_normalization,
             explain_method_type=XAIMethodType.RECIPROCAM,
         )
-        model = XAIClassificationModel.create_model(
-            model_path, "Classification", explain_parameters=explain_parameters
-        )
+        mapi_wrapper_xai = ovxai.insertion.insert_xai_into_mapi_wrapper(mapi_wrapper, insertion_parameters)
 
-        if target_explain_group == TargetExplainGroup.ALL_CLASSES:
-            explanations = WhiteBoxExplainer(model).explain(self.image, target_explain_group)
+        if target_explain_group == TargetExplainGroup.ALL:
+            explanation_parameters = ExplanationParameters(
+                target_explain_group=target_explain_group,
+                post_processing_parameters=PostProcessParameters(),
+            )
+            explanations = ovxai.explain(mapi_wrapper_xai, self.image, explanation_parameters)
             assert explanations is not None
-            assert len(explanations.map) == len(model.labels)
+            assert len(explanations.saliency_map) == len(mapi_wrapper_xai.labels)
             if model_name in self._ref_sal_maps_reciprocam:
-                actual_sal_vals = explanations.map[0][0, :].astype(np.int16)
+                actual_sal_vals = explanations.saliency_map[0][0, :].astype(np.int16)
                 ref_sal_vals = self._ref_sal_maps_reciprocam[model_name].astype(np.uint8)
                 if embed_normalization:
                     # Reference values generated with embed_normalization=True
@@ -89,19 +96,26 @@ class TestClsWB:
                     if model_name == "classification_model_with_xai_head":
                         pytest.skip("model already has fixed xai head - this test cannot change it.")
                     assert np.sum(np.abs(actual_sal_vals - ref_sal_vals)) > 100
-        if target_explain_group == TargetExplainGroup.PREDICTED_CLASSES:
-            explanations = WhiteBoxExplainer(model).explain(self.image, target_explain_group)
-            assert explanations is not None
-            assert len(explanations.map) == len(explanations.predictions)
-        if target_explain_group == TargetExplainGroup.CUSTOM_CLASSES:
-            target_class = 1
-            explanations = WhiteBoxExplainer(model).explain(
-                self.image, target_explain_group, [target_class]
+        if target_explain_group == TargetExplainGroup.PREDICTIONS:
+            explanation_parameters = ExplanationParameters(
+                target_explain_group=target_explain_group,
+                post_processing_parameters=PostProcessParameters(),
             )
+            explanations = ovxai.explain(mapi_wrapper_xai, self.image, explanation_parameters)
             assert explanations is not None
-            assert target_class in explanations.map
-            assert len(explanations.map) == len([target_class])
-            assert explanations.map[target_class].ndim == 2
+            assert len(explanations.saliency_map) == len(explanations.prediction)
+        if target_explain_group == TargetExplainGroup.CUSTOM:
+            target_class = 1
+            explanation_parameters = ExplanationParameters(
+                target_explain_group=target_explain_group,
+                explain_targets=[target_class],
+                post_processing_parameters=PostProcessParameters(),
+            )
+            explanations = ovxai.explain(mapi_wrapper_xai, self.image, explanation_parameters)
+            assert explanations is not None
+            assert target_class in explanations.saliency_map
+            assert len(explanations.saliency_map) == len([target_class])
+            assert explanations.saliency_map[target_class].ndim == 2
 
     @pytest.mark.parametrize("model_name", MODELS)
     @pytest.mark.parametrize("embed_normalization", [True, False])
@@ -111,30 +125,30 @@ class TestClsWB:
         data_dir = ".data"
         retrieve_otx_model(data_dir, model_name)
         model_path = os.path.join(data_dir, "otx_models", model_name + ".xml")
-        explain_parameters = ClassificationExplainParametersWB(
+        explain_parameters = ClassificationInsertionParameters(
             embed_normalization=embed_normalization,
             explain_method_type=XAIMethodType.ACTIVATIONMAP,
         )
-        model = XAIClassificationModel.create_model(
+        model = MAPIClassificationModelXAI.create_model(
             model_path, "Classification", explain_parameters=explain_parameters
         )
 
         explanations = WhiteBoxExplainer(model).explain(self.image)
         if model_name in self._ref_sal_maps_activationmap and embed_normalization:
-            actual_sal_vals = explanations.map["per_image_map"][0, :].astype(np.int16)
+            actual_sal_vals = explanations.saliency_map["per_image_map"][0, :].astype(np.int16)
             ref_sal_vals = self._ref_sal_maps_activationmap[model_name].astype(np.uint8)
             # Reference values generated with embed_normalization=True
             assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
         assert explanations is not None
-        assert "per_image_map" in explanations.map
-        assert explanations.map["per_image_map"].ndim == 2
+        assert "per_image_map" in explanations.saliency_map
+        assert explanations.saliency_map["per_image_map"].ndim == 2
 
     @pytest.mark.parametrize(
         "target_explain_group",
         [
-            TargetExplainGroup.ALL_CLASSES,
-            TargetExplainGroup.PREDICTED_CLASSES,
-            TargetExplainGroup.CUSTOM_CLASSES,
+            TargetExplainGroup.ALL,
+            TargetExplainGroup.PREDICTIONS,
+            TargetExplainGroup.CUSTOM,
         ],
     )
     @pytest.mark.parametrize("overlay", [True, False])
@@ -142,10 +156,10 @@ class TestClsWB:
         data_dir = ".data"
         retrieve_otx_model(data_dir, DEFAULT_MODEL)
         model_path = os.path.join(data_dir, "otx_models", DEFAULT_MODEL + ".xml")
-        model = XAIClassificationModel.create_model(model_path, "Classification")
+        model = MAPIClassificationModelXAI.create_model(model_path, "Classification")
 
         explain_targets = None
-        if target_explain_group == TargetExplainGroup.CUSTOM_CLASSES:
+        if target_explain_group == TargetExplainGroup.CUSTOM:
             explain_targets = [1]
         post_processing_parameters = PostProcessParameters(overlay=overlay)
         explanations = WhiteBoxExplainer(model).explain(
@@ -155,18 +169,18 @@ class TestClsWB:
             post_processing_parameters=post_processing_parameters,
         )
         assert explanations is not None
-        if target_explain_group == TargetExplainGroup.ALL_CLASSES:
-            assert len(explanations.map) == MODELS_NUM_CLASSES[DEFAULT_MODEL]
-        if target_explain_group == TargetExplainGroup.PREDICTED_CLASSES:
-            assert len(explanations.map) == len(explanations.predictions)
-        if target_explain_group == TargetExplainGroup.CUSTOM_CLASSES:
-            assert len(explanations.map) == len(explain_targets)
-            assert 1 in explanations.map
+        if target_explain_group == TargetExplainGroup.ALL:
+            assert len(explanations.saliency_map) == MODELS_NUM_CLASSES[DEFAULT_MODEL]
+        if target_explain_group == TargetExplainGroup.PREDICTIONS:
+            assert len(explanations.saliency_map) == len(explanations.predictions)
+        if target_explain_group == TargetExplainGroup.CUSTOM:
+            assert len(explanations.saliency_map) == len(explain_targets)
+            assert 1 in explanations.saliency_map
         if overlay:
             assert explanations.sal_map_shape == (354, 500, 3)
         else:
             assert explanations.sal_map_shape == (7, 7)
-            for map_ in explanations.map.values():
+            for map_ in explanations.saliency_map.values():
                 assert map_.min() == 0, f"{map_.min()}"
                 assert map_.max() in {254, 255}, f"{map_.max()}"
 
@@ -174,35 +188,35 @@ class TestClsWB:
         data_dir = ".data"
         retrieve_otx_model(data_dir, DEFAULT_MODEL)
         model_path = os.path.join(data_dir, "otx_models", DEFAULT_MODEL + ".xml")
-        model = XAIClassificationModel.create_model(
-            model_path, "Classification", explain_parameters=ClassificationExplainParametersWB(embed_normalization=True)
+        model = MAPIClassificationModelXAI.create_model(
+            model_path, "Classification", explain_parameters=ClassificationInsertionParameters(embed_normalization=True)
         )
         explanations = WhiteBoxExplainer(model).explain(
             self.image,
-            target_explain_group=TargetExplainGroup.ALL_CLASSES,
+            target_explain_group=TargetExplainGroup.ALL,
             post_processing_parameters=PostProcessParameters(normalize=True),
         )
 
-        actual_sal_vals = explanations.map[0][0, :].astype(np.int16)
+        actual_sal_vals = explanations.saliency_map[0][0, :].astype(np.int16)
         ref_sal_vals = self._ref_sal_maps_reciprocam[DEFAULT_MODEL].astype(np.uint8)
         # Reference values generated with embed_normalization=True
         assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
 
-        for map_ in explanations.map.values():
+        for map_ in explanations.saliency_map.values():
             assert map_.min() == 0, f"{map_.min()}"
             assert map_.max() in {254, 255}, f"{map_.max()}"
 
 
 @pytest.mark.parametrize("model_name", MODELS)
 def test_classification_auto(model_name):
-    # TODO provide incorrect explain params so that WB fails and BB will work
+    # TODO provide incorrect explanation params so that WB fails and BB will work
     data_dir = ".data"
     retrieve_otx_model(data_dir, model_name)
     model_path = os.path.join(data_dir, "otx_models", model_name + ".xml")
     model = ClassificationModel.create_model(model_path, "Classification")
     target_explain_group = None
     if model_name == "classification_model_with_xai_head":
-        target_explain_group = TargetExplainGroup.ALL_CLASSES
+        target_explain_group = TargetExplainGroup.ALL
     explanations = ClassificationAutoExplainer(model).explain(
         cv2.imread("tests/assets/cheetah_person.jpg"), target_explain_group
     )
@@ -217,14 +231,14 @@ def test_ir_model_update_wo_inference(model_name):
 
     model_ir = ov.Core().read_model(model_path)
     if model_name != "classification_model_with_xai_head":
-        assert not XAIModel.has_xai(model_ir), "Input IR model should not have XAI head."
+        assert not MAPIModelXAI.has_xai(model_ir), "Input IR model should not have XAI head."
     if model_name == "classification_model_with_xai_head":
-        assert XAIModel.has_xai(model_ir), "Input IR model should have XAI head."
+        assert MAPIModelXAI.has_xai(model_ir), "Input IR model should have XAI head."
 
     output = os.path.join(data_dir, "otx_models")
-    model_with_xai = XAIClassificationModel.insert_xai_into_native_ir(model_path, output)
+    model_with_xai = MAPIClassificationModelXAI.insert_xai_into_native_ir(model_path, output)
 
-    assert XAIModel.has_xai(model_with_xai), "Updated IR model should has XAI head."
+    assert MAPIModelXAI.has_xai(model_with_xai), "Updated IR model should has XAI head."
     model_name = Path(model_path).stem
     if model_name != "classification_model_with_xai_head":
         assert os.path.exists(
@@ -233,7 +247,7 @@ def test_ir_model_update_wo_inference(model_name):
 
 
 def test_classification_explain_parameters():
-    cls_explain_params = ClassificationExplainParametersWB()
+    cls_explain_params = ClassificationInsertionParameters()
     assert cls_explain_params.target_layer is None
     assert cls_explain_params.embed_normalization
     assert cls_explain_params.explain_method_type == XAIMethodType.RECIPROCAM
@@ -253,8 +267,8 @@ class TestClsBB:
     @pytest.mark.parametrize(
         "target_explain_group",
         [
-            TargetExplainGroup.ALL_CLASSES,
-            TargetExplainGroup.CUSTOM_CLASSES,
+            TargetExplainGroup.ALL,
+            TargetExplainGroup.CUSTOM,
         ],
     )
     @pytest.mark.parametrize("normalize", [True, False])
@@ -270,7 +284,7 @@ class TestClsBB:
         post_processing_parameters = PostProcessParameters(
             overlay=overlay,
         )
-        if target_explain_group == TargetExplainGroup.CUSTOM_CLASSES:
+        if target_explain_group == TargetExplainGroup.CUSTOM:
             target_class = 1
             explanation = explainer.explain(
                 self.image,
@@ -278,9 +292,9 @@ class TestClsBB:
                 [target_class]
             )
             assert explanation is not None
-            assert target_class in explanation.map
-            assert len(explanation.map) == len([target_class])
-            assert explanation.map[target_class].ndim == 2
+            assert target_class in explanation.saliency_map
+            assert len(explanation.saliency_map) == len([target_class])
+            assert explanation.saliency_map[target_class].ndim == 2
         else:
             explanation = explainer.explain(
                 self.image,
@@ -289,13 +303,13 @@ class TestClsBB:
             )
             assert explanation is not None
             if overlay:
-                assert len(explanation.map) == MODELS_NUM_CLASSES[model_name]
+                assert len(explanation.saliency_map) == MODELS_NUM_CLASSES[model_name]
                 assert explanation.sal_map_shape == (354, 500, 3)
             else:
-                assert len(explanation.map) == MODELS_NUM_CLASSES[model_name]
+                assert len(explanation.saliency_map) == MODELS_NUM_CLASSES[model_name]
                 assert explanation.sal_map_shape == (224, 224)
                 if normalize:
-                    for map_ in explanation.map.values():
+                    for map_ in explanation.saliency_map.values():
                         assert map_.min() == 0, f"{map_.min()}"
                         assert map_.max() in {254, 255}, f"{map_.max()}"
 
@@ -316,20 +330,20 @@ class TestClsBB:
 
         explanation = explainer.explain(
             self.image,
-            TargetExplainGroup.PREDICTED_CLASSES)
+            TargetExplainGroup.PREDICTIONS)
         assert explanation is not None
-        assert len(explanation.map) > 0
-        assert len(explanation.map) == len(explanation.predictions)
+        assert len(explanation.saliency_map) > 0
+        assert len(explanation.saliency_map) == len(explanation.predictions)
         assert explanation.sal_map_shape == (224, 224)
 
         # Check that returned saliency map classes and predicted classes are the same
         predicted_class_idx = sorted([pred[0] for pred in explanation.predictions])
-        returned_sal_map_classes = list(sorted(explanation.map.keys()))
+        returned_sal_map_classes = list(sorted(explanation.saliency_map.keys()))
         assert predicted_class_idx == returned_sal_map_classes
 
         if model_name in self._ref_sal_maps:
             first_idx = predicted_class_idx[0]
-            actual_sal_vals = explanation.map[first_idx][0, :10].astype(np.int16)
+            actual_sal_vals = explanation.saliency_map[first_idx][0, :10].astype(np.int16)
             ref_sal_vals = self._ref_sal_maps[model_name].astype(np.uint8)
             assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
 
@@ -338,15 +352,15 @@ class TestClsBB:
         retrieve_otx_model(data_dir, DEFAULT_MODEL)
         model_path = os.path.join(data_dir, "otx_models", DEFAULT_MODEL + ".xml")
 
-        model = XAIClassificationModel.create_model(
+        model = MAPIClassificationModelXAI.create_model(
             model_path, model_type="Classification", configuration={"output_raw_scores": True}
         )
-        assert XAIModel.has_xai(model.inference_adapter.model), "Updated IR model should has XAI head."
+        assert MAPIModelXAI.has_xai(model.inference_adapter.model), "Updated IR model should has XAI head."
         explainer = RISEExplainer(model, num_masks=5)
         explanation = explainer.explain(self.image)
 
         predicted_class_idx = sorted([pred[0] for pred in explanation.predictions])
         first_idx = predicted_class_idx[0]
-        actual_sal_vals = explanation.map[first_idx][0, :10].astype(np.int16)
+        actual_sal_vals = explanation.saliency_map[first_idx][0, :10].astype(np.int16)
         ref_sal_vals = self._ref_sal_maps[DEFAULT_MODEL].astype(np.uint8)
         assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)

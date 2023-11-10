@@ -4,15 +4,22 @@ import argparse
 from pathlib import Path
 
 import cv2
-import numpy as np
+import openvino
 from openvino.model_api.models import ClassificationModel
 import openvino.runtime as ov
 
-from openvino_xai.explain import ClassificationAutoExplainer, RISEExplainer, WhiteBoxExplainer
-from openvino_xai.parameters import ClassificationExplainParametersWB, PostProcessParameters, XAIMethodType
-from openvino_xai.saliency_map import TargetExplainGroup
-from openvino_xai.model import XAIClassificationModel
-from openvino_xai.utils import logger
+import openvino_xai as ovxai
+from openvino_xai.common.parameters import ModelType, XAIMethodType
+from openvino_xai.explanation.explanation_parameters import ExplainMode, PostProcessParameters, TargetExplainGroup, \
+    ExplanationParameters
+from openvino_xai.explanation.model_inferrer import ClassificationModelInferrer
+from openvino_xai.insertion.insertion_parameters import ClassificationInsertionParameters
+from openvino_xai.common.utils import logger
+
+
+# USE_CUSTOM_INFERRER - if True, use provided custom model inference pipelene,
+# otherwise, use Model API wrapper for inference.
+USE_CUSTOM_INFERRER = True
 
 
 def get_argument_parser():
@@ -23,119 +30,187 @@ def get_argument_parser():
     return parser
 
 
-def run_example_wo_explain_parameters(args):
-    image = cv2.imread(args.image_path)
-    image_name = Path(args.image_path).stem
+def insert_xai(args):
+    """
+    White-box scenario.
+    Insertion of the XAI branch into the IR, thus IR has additional 'saliency_map' output.
+    """
 
-    model = XAIClassificationModel.create_model(args.model_path, model_type="Classification")
-    explainer = WhiteBoxExplainer(model)
-    explanation = explainer.explain(image)
-    logger.info(
-        f"Example w/o explain_parameters: generated {len(explanation.map)} classification "
-        f"saliency maps of layout {explanation.layout} with shape {explanation.sal_map_shape}."
+    # Create ov.Model
+    model: ov.Model
+    model = ov.Core().read_model(args.model_path)
+
+    # insert XAI branch
+    model_xai: ov.Model
+    model_xai = ovxai.insert_xai(
+        model,
+        model_type=ModelType.CLASSIFICATION,
     )
-    if args.output is not None:
-        output = os.path.join(args.output, "wo_explain_parameters")
-        explanation.save(output, image_name)
+
+    logger.info(f"insert_xai: XAI branch inserted into IR.")
+
+    # ***** Downstream task: user's code that infers model_xai and picks 'saliency_map' output *****
+
+    return model_xai
 
 
-def run_example_w_explain_parameters(args):
-    image = cv2.imread(args.image_path)
-    image_name = Path(args.image_path).stem
+def insert_xai_w_params(args):
+    """
+    White-box scenario.
+    Insertion of the XAI branch into the IR with insertion parameters, thus IR has additional 'saliency_map' output.
+    """
 
-    explain_parameters = ClassificationExplainParametersWB(
+    # Create ov.Model
+    model: ov.Model
+    model = ov.Core().read_model(args.model_path)
+
+    # Define insertion parameters
+    insertion_parameters = ClassificationInsertionParameters(
         target_layer="/backbone/conv/conv.2/Div",  # OTX mnet_v3
         # target_layer="/backbone/features/final_block/activate/Mul",  # OTX effnet
+        embed_normalization=True,
         explain_method_type=XAIMethodType.RECIPROCAM,
     )
-    model = XAIClassificationModel.create_model(
-        args.model_path, model_type="Classification", explain_parameters=explain_parameters
+
+    # insert XAI branch
+    model_xai: ov.Model
+    model_xai = ovxai.insert_xai(
+        model,
+        model_type=ModelType.CLASSIFICATION,
+        insertion_parameters=insertion_parameters,
     )
-    explainer = WhiteBoxExplainer(model)
-    explanation = explainer.explain(image, target_explain_group=TargetExplainGroup.ALL_CLASSES)
+
+    logger.info(f"insert_xai_w_params: XAI branch inserted into IR with parameters.")
+
+    # ***** Downstream task: user's code that infers model_xai and picks 'saliency_map' output *****
+
+    return model_xai
+
+
+def insert_xai_into_mapi_wrapper(args):
+    """
+    White-box scenario.
+    Insertion of the XAI branch into the Model API wrapper, thus Model API wrapper has additional 'saliency_map' output.
+    """
+
+    # Create openvino.model_api.models.Model
+    mapi_wrapper: openvino.model_api.models.Model
+    mapi_wrapper = openvino.model_api.models.ClassificationModel.create_model(
+        args.model_path,
+        model_type="Classification",
+    )
+
+    # insert XAI branch into Model API wrapper
+    mapi_wrapper_xai: openvino.model_api.models.Model
+    mapi_wrapper_xai = ovxai.insertion.insert_xai_into_mapi_wrapper(mapi_wrapper)
+
+    logger.info(f"insert_xai_into_mapi_wrapper: XAI branch inserted into Model API wrapper.")
+
+    # ***** Downstream task: user's code that infers model_xai and picks 'saliency_map' output *****
+
+    return mapi_wrapper_xai
+
+
+def insert_xai_and_explain(args):
+    """
+    White-box scenario.
+    Insertion of the XAI branch into the IR, thus IR has additional 'saliency_map' output.
+    Definition of a callable model_inferrer.
+    Generate explanation.
+    Save saliency maps.
+    """
+
+    # insert XAI branch into IR
+    model_xai = insert_xai(args)
+
+    # ***** Start of user's code that creates a callable model_inferrer *****
+    # inference_result = model_inferrer(image)  # inference_result: ovxai.explanation.utils.InferenceResult
+    if USE_CUSTOM_INFERRER:
+        model_inferrer = ovxai.explanation.model_inferrer.ClassificationModelInferrer(model_xai)
+    else:
+        model_inferrer = insert_xai_into_mapi_wrapper(args)
+    # ***** End of user's code that creates a callable model_inferrer *****
+
+    # Generate explanation
+    image = cv2.imread(args.image_path)
+    explanation = ovxai.explain(
+        model_inferrer,
+        image,
+    )
+
     logger.info(
-        f"Example w/ explain_parameters: generated {len(explanation.map)} classification "
+        f"insert_xai_and_explain: Generated {len(explanation.saliency_map)} classification "
         f"saliency maps of layout {explanation.layout} with shape {explanation.sal_map_shape}."
     )
+
+    # Save saliency maps
     if args.output is not None:
-        output = os.path.join(args.output, "w_explain_parameters")
-        explanation.save(output, image_name)
+        output = Path(args.output) / "explain"
+        explanation.save(output, Path(args.image_path).stem)
 
 
-def run_example_w_postprocessing_parameters(args):
-    image = cv2.imread(args.image_path)
-    image_name = Path(args.image_path).stem
+def insert_xai_and_explain_w_params(args):
+    """
+    White-box scenario.
+    Insertion of the XAI branch into the IR, thus IR has additional 'saliency_map' output.
+    Definition of a callable model_inferrer.
+    Generate explanation.
+    Save saliency maps.
+    """
 
-    model = XAIClassificationModel.create_model(args.model_path, model_type="Classification")
-    explainer = WhiteBoxExplainer(model)
-    post_processing_parameters = PostProcessParameters(overlay=True)
-    explanation = explainer.explain(
-        image,
-        TargetExplainGroup.PREDICTED_CLASSES,
-        post_processing_parameters=post_processing_parameters,
+    # insert XAI branch into IR
+    model_xai = insert_xai(args)
+
+    # ***** Start of user's code that creates a callable model_inferrer *****
+    # inference_result = model_inferrer(image)  # inference_result: ovxai.explanation.utils.InferenceResult
+    if USE_CUSTOM_INFERRER:
+        model_inferrer = ovxai.explanation.model_inferrer.ClassificationModelInferrer(model_xai)
+    else:
+        model_inferrer = insert_xai_into_mapi_wrapper(args)
+    # ***** End of user's code that creates a callable model_inferrer *****
+
+    # Create explanation_parameters (optional)
+    voc_labels = ['aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car', 'cat', 'chair', 'cow', 'diningtable',
+              'dog', 'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor']
+    explanation_parameters = ExplanationParameters(
+        explain_mode=ExplainMode.WHITEBOX,  # by default, run white-box XAI
+        target_explain_group=TargetExplainGroup.PREDICTIONS,  # by default, explains only predicted classes
+        post_processing_parameters=PostProcessParameters(overlay=True),  # by default, saliency map overlays over image
+        explain_target_names=voc_labels,  # optional
+        confidence_threshold=0.6,  # defaults to 0.5
     )
+
+    # Generate explanation
+    image = cv2.imread(args.image_path)
+    explanation = ovxai.explain(
+        model_inferrer,
+        image,
+        explanation_parameters=explanation_parameters,
+    )
+
     logger.info(
-        f"Example w/ post_processing_parameters: generated {len(explanation.map)} classification "
+        f"insert_xai_and_explain_w_params: Generated {len(explanation.saliency_map)} classification "
         f"saliency maps of layout {explanation.layout} with shape {explanation.sal_map_shape}."
     )
+
+    # Save saliency maps
     if args.output is not None:
-        output = os.path.join(args.output, "w_postprocessing_parameters")
-        explanation.save(output, image_name)
+        output = Path(args.output) / "explain_w_parameters"
+        explanation.save(output, Path(args.image_path).stem)
 
 
-def run_blackbox_w_postprocessing_parameters(args):
-    image = cv2.imread(args.image_path)
-    image_name = Path(args.image_path).stem
+def insert_xai_and_explain_multiple_images(args):
+    """
+    White-box scenario.
+    Insertion of the XAI branch into the IR, thus IR has additional 'saliency_map' output.
+    Definition of a callable model_inferrer.
+    Generate explanation, per-image.
+    Save saliency maps, per-image.
+    """
 
-    # model in args.model_path can be both OV IR .xml file or ONNX .onnx file
-    model = ClassificationModel.create_model(
-        args.model_path, model_type="Classification", configuration={"output_raw_scores": True}
-    )
-    explainer = RISEExplainer(model)
-    post_processing_parameters = PostProcessParameters(
-        overlay=True,
-    )
-    explanation = explainer.explain(
-        image,
-        TargetExplainGroup.PREDICTED_CLASSES,
-        post_processing_parameters=post_processing_parameters,
-    )
-    logger.info(
-        f"Example from BlackBox explainer w/ post_processing_parameters: generated {len(explanation.map)} "
-        f"classification saliency maps of layout {explanation.layout} with shape {explanation.sal_map_shape}."
-    )
-    if args.output is not None:
-        output = os.path.join(args.output, "blackbox_w_postprocessing_parameters")
-        explanation.save(output, image_name)
+    # TODO: wrap it into ovxai.explain()?
 
-
-def run_auto_example(args):
-    """Auto example - try to get explanation with white-box method, if fails - use black-box"""
-    image = cv2.imread(args.image_path)
-    image_name = Path(args.image_path).stem
-
-    model = ClassificationModel.create_model(args.model_path, model_type="Classification",
-                                             configuration={"output_raw_scores": True})
-    auto_explainer = ClassificationAutoExplainer(model)
-    post_processing_parameters = PostProcessParameters(
-        overlay=True,
-    )
-    explanation = auto_explainer.explain(
-        image,
-        TargetExplainGroup.PREDICTED_CLASSES,
-        post_processing_parameters=post_processing_parameters,
-    )
-    logger.info(
-        f"Auto example: generated {len(explanation.map)} classification "
-        f"saliency maps of layout {explanation.layout} with shape {explanation.sal_map_shape}."
-    )
-    if args.output is not None:
-        output = os.path.join(args.output, "auto_example")
-        explanation.save(output, image_name)
-
-
-def run_multiple_image_example(args):
-    # TODO: wrap it into the explainer.explain() and enable async inference
+    # Create list of images
     img_data_formats = (
         ".jpg",
         ".jpeg",
@@ -145,7 +220,6 @@ def run_multiple_image_example(args):
         ".tiff",
         ".png",
     )
-    # single image path
     if args.image_path.lower().endswith(img_data_formats):
         # args.image_path is a path to the image
         img_files = [args.image_path]
@@ -155,96 +229,103 @@ def run_multiple_image_example(args):
         for root, _, _ in os.walk(args.image_path):
             for format_ in img_data_formats:
                 img_files.extend([os.path.join(root, file.name) for file in Path(root).glob(f"*{format_}")])
-    model = XAIClassificationModel.create_model(args.model_path, model_type="Classification")
-    explainer = WhiteBoxExplainer(model)
-    post_processing_parameters = PostProcessParameters(normalize=True, overlay=True)
+
+    # insert XAI branch into IR
+    model_xai = insert_xai(args)
+
+    # ***** Start of user's code that creates a callable model_inferrer *****
+    # inference_result = model_inferrer(image)  # inference_result: ovxai.explanation.utils.InferenceResult
+    if USE_CUSTOM_INFERRER:
+        model_inferrer = ovxai.explanation.model_inferrer.ClassificationModelInferrer(model_xai)
+    else:
+        model_inferrer = insert_xai_into_mapi_wrapper(args)
+    # ***** End of user's code that creates a callable model_inferrer *****
+
+    # Create explanation_parameters (optional)
+    post_processing_parameters = PostProcessParameters(overlay=True)
+    explanation_parameters = ExplanationParameters(
+        post_processing_parameters=post_processing_parameters,
+    )
+
     for image_path in img_files:
         image = cv2.imread(image_path)
-        image_name = Path(image_path).stem
-        explanation = explainer.explain(
+        explanation = ovxai.explain(
+            model_inferrer,
             image,
-            TargetExplainGroup.PREDICTED_CLASSES,
-            post_processing_parameters=post_processing_parameters,
+            explanation_parameters=explanation_parameters,
         )
+
         logger.info(
-            f"Example w/ multiple images to explain: generated {len(explanation.map)} classification "
+            f"insert_xai_and_explain_multiple_images: generated {len(explanation.saliency_map)} classification "
             f"saliency maps of layout {explanation.layout} with shape {explanation.sal_map_shape}."
         )
+
         if args.output is not None:
-            output = os.path.join(args.output, "multiple_image_example")
-            explanation.save(output, image_name)
+            output = Path(args.output) / "multiple_images"
+            explanation.save(output, Path(image_path).stem)
 
 
-def run_ir_model_update_wo_inference(args):
-    """Embedding XAI into the model graph and save updated IR, no actual inference performed.
-    User suppose to use his/her own inference pipeline to get explanations along with the regular model outputs."""
-    if args.output is not None:
-        output = os.path.join(args.output, "ir_model_update_wo_inference")
-        model_with_xai = XAIClassificationModel.insert_xai_into_native_ir(args.model_path, output)
-        logger.info(f"Model with XAI head saved to {output}")
+def explain_black_box(args):
+    """
+    Black-box scenario.
+    Definition of a callable model_inferrer.
+    Generate explanation in black-box mode.
+    Save saliency maps.
+    """
+
+    # Create ov.Model
+    model = ov.Core().read_model(args.model_path)
+
+    # ***** Start of user's code that creates a callable model_inferrer *****
+    # inference_result = model_inferrer(image)  # inference_result: ovxai.explanation.utils.InferenceResult
+    if USE_CUSTOM_INFERRER:
+        model_inferrer = ovxai.explanation.model_inferrer.ClassificationModelInferrer(model)
     else:
-        model_with_xai = XAIClassificationModel.insert_xai_into_native_ir(args.model_path)
+        model_inferrer = openvino.model_api.models.ClassificationModel.create_model(
+            args.model_path, model_type="Classification",  configuration={"output_raw_scores": True}
+        )
+    # ***** End of user's code that creates a callable model_inferrer *****
 
+    # Create explanation_parameters
+    explanation_parameters = ExplanationParameters(
+        explain_mode=ExplainMode.BLACKBOX,
+    )
 
-def run_ir_model_update_w_custom_inference(args):
-    """Embedding XAI into the model graph and using custom inference pipeline to get explanations."""
-    # Create IR with XAI head inserted
-    model_with_xai = XAIClassificationModel.insert_xai_into_native_ir(args.model_path)
-
-    # Load the model
-    core = ov.Core()
-    compiled_model = core.compile_model(model_with_xai, "CPU")
-
-    # Load and pre-process input image
-    image = cv2.imread(filename=args.image_path)
-    image_name = Path(args.image_path).stem
-    # Resize to imagenet image shape.
-    input_image = cv2.resize(src=image, dsize=(224, 224))
-    # Reshape to model input shape.
-    input_image = input_image.transpose((2, 0, 1))
-    input_image = np.expand_dims(input_image, 0)
-
-    # Inference model and parce the result
-    result_infer = compiled_model([input_image])
-    logits = result_infer["logits"]
-    result_index = np.argmax(logits)
-    saliency_map = result_infer["saliency_map"]
-    saliency_map_of_predicted_class_raw = saliency_map[0][result_index]
-
-    # Post-process saliency map
-    saliency_map = cv2.resize(saliency_map_of_predicted_class_raw, image.shape[:2][::-1])
-    saliency_map = cv2.applyColorMap(saliency_map, cv2.COLORMAP_JET)
-    saliency_map = image * 0.5 + saliency_map * 0.5
-    saliency_map[saliency_map > 255] = 255
-    saliency_map = saliency_map.astype(np.uint8)
+    # Generate explanation
+    image = cv2.imread(args.image_path)
+    explanation = ovxai.explain(
+        model_inferrer,
+        image,
+        explanation_parameters=explanation_parameters,
+    )
 
     logger.info(
-        f"Example w/ IR update and custom inference: "
-        f"generated classification saliency maps with shape {saliency_map.shape}"
+        f"explain_black_box: Generated {len(explanation.saliency_map)} classification "
+        f"saliency maps of layout {explanation.layout} with shape {explanation.sal_map_shape}."
     )
+
+    # Save saliency maps
     if args.output is not None:
-        # Save saliency map
-        output = os.path.join(args.output, "ir_model_update_w_custom_inference")
-        os.makedirs(output, exist_ok=True)
-        cv2.imwrite(os.path.join(output, f"{image_name}_class{result_index}.jpg"), img=saliency_map)
+        output = Path(args.output) / "black_box"
+        explanation.save(output, Path(args.image_path).stem)
 
 
 def main(argv):
     parser = get_argument_parser()
     args = parser.parse_args(argv)
 
-    # E2E model explanation examples: patching IR model with XAI branch and using ModelAPI as inference framework
-    run_example_wo_explain_parameters(args)
-    run_example_w_explain_parameters(args)
-    run_example_w_postprocessing_parameters(args)
-    run_blackbox_w_postprocessing_parameters(args)
-    run_auto_example(args)
-    run_multiple_image_example(args)
+    # Insert XAI branch
+    insert_xai(args)
+    insert_xai_w_params(args)
+    insert_xai_into_mapi_wrapper(args)
 
-    # Embedding XAI into the model graph and save updated IR (no inference performed)
-    run_ir_model_update_wo_inference(args)
-    # To get explanations along with the regular model output, user suppose to use his/her own custom inference pipeline
-    run_ir_model_update_w_custom_inference(args)
+    # Insert XAI branch + get explanation in white-box mode
+    insert_xai_and_explain(args)
+    insert_xai_and_explain_w_params(args)
+    insert_xai_and_explain_multiple_images(args)
+
+    # Get explanation in black-box mode
+    explain_black_box(args)
 
 
 if __name__ == "__main__":

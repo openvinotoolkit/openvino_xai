@@ -1,6 +1,6 @@
 # OpenVINO-XAI
 
-OpenVINO-XAI provides a suite of Explainable AI (XAI) algorithms for explanation of
+OpenVINO-XAI provides a suite of eXplainable AI (XAI) algorithms for explanation of
 [OpenVINO™](https://github.com/openvinotoolkit/openvino) Intermediate Representation (IR).
 
 # Documentation
@@ -39,31 +39,121 @@ pytest -v -s ./tests/
 pre-commit run -a
 ```
 
-# Usage
+# Usage in white-box mode
 
-## 1. E2E model explanation
-Generate explanations.
-
+## Insertion: insert XAI branch into the model
 ```python
-from openvino_xai.model import XAIClassificationModel
-from openvino_xai.explain import WhiteBoxExplainer
+import openvino.runtime as ov
+import openvino_xai as ovxai
+from openvino_xai.common.parameters import ModelType
 
-# Create an OpenVINO™ ModelAPI model wrapper with XAI head inserted into the model graph
-mapi_model_wrapper = XAIClassificationModel.create_model("path/to/model.xml", model_type="Classification")
 
-# ModelAPI is used as an inference framework
-# Explanation is generated during inference along with the regular model output
-explanation = WhiteBoxExplainer(mapi_model_wrapper).explain(cv2.imread("path/to/image.jpg"))
+# Creating original model
+model: ov.Model
+model = ov.Core().read_model("path/to/model.xml")
+
+# Inserting XAI branch into the model graph
+model_xai: ov.Model
+model_xai = ovxai.insert_xai(model, model_type=ModelType.CLASSIFICATION)
+
+# ***** Downstream task: user's code that infers model_xai and picks 'saliency_map' output *****
 ```
 
-## 2. Updating IR model
-Generate IR model with explanation output. 
+## Explanation: generate explanation via inference
+### Get raw saliency maps: use original model inference pipeline
 
 ```python
-# Embedding XAI branch into the model graph, no actual inference performed
-ir_model_with_xai = XAIClassificationModel.insert_xai_into_native_ir("path/to/model.xml")
-# Now, user suppose to use his/her own inference pipeline to infer ir_model_with_xai
+# Compile model with XAI branch
+compiled_model = ov.Core().compile_model(model_xai, "CPU")
+
+# User's code that creates a callable model_inferrer
+def model_inferrer(image: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    # Custom inference pipeline
+    image_processed = preprocess(image)
+    result = compiled_model([image_processed])
+    logits = postprocess(result["logits"])
+    raw_saliency_map = result["saliency_map"]  # "saliency_map" is an additional model output added during insertion
+    return logits, raw_saliency_map
+
+# Get raw saliency map via model_inferrer call
+logits, raw_saliency_map = model_inferrer(cv2.imread("path/to/image.jpg"))
+raw_saliency_map: np.ndarray  # e.g. 20x7x7 uint8 array
 ```
+
+### Get processed saliency maps: 1. modify output format of the original model inference pipeline and 2. call .explain()
+
+```python
+from openvino_xai.explanation.utils import InferenceResult
+from openvino_xai.explanation.explanation_parameters import ExplanationParameters
+from openvino_xai.explanation.explanation_parameters import PostProcessParameters
+
+
+# Compile model with XAI branch
+compiled_model = ov.Core().compile_model(model_xai, "CPU")
+
+# User's code that creates a callable model_inferrer with InferenceResult output
+def model_inferrer(image: np.ndarray) -> InferenceResult:
+    # Custom inference pipeline
+    image_processed = preprocess(image)
+    result = compiled_model([image_processed])
+    logits = postprocess(result["logits"])
+    raw_saliency_map = result["saliency_map"]  # "saliency_map" is an additional output added during insertion
+    
+    # Create InferenceResult object
+    inference_result = InferenceResult(prediction=logits, saliency_map=raw_saliency_map)
+    return inference_result
+
+# Create explanation parameters, default parameter values are highlighted below
+explanation_parameters = ExplanationParameters(
+    explain_mode=ExplainMode.WHITEBOX,  # by default, run white-box XAI
+    target_explain_group=TargetExplainGroup.PREDICTIONS,  # by default, explains only predicted classes
+    post_processing_parameters=PostProcessParameters(overlay=True),  # by default, saliency map overlays over image
+)
+# Generate processed saliency map via .explain(model_inferrer, image) call
+explanation = ovxai.explain(
+    model_inferrer=model_inferrer, 
+    data=cv2.imread("path/to/image.jpg"),
+    explanation_parameters=explanation_parameters,
+)
+explanation: ExplanationResult
+explanation.saliency_map: Dict[int: np.ndarray]  # key - class id, value - processed saliency map e.g. 3x354x500
+```
+
+# Usage in black-box mode
+## Explanation: generate explanation
+```python
+# Create original model
+model: ov.Model
+model = ov.Core().read_model("path/to/model.xml")
+
+# Compile original model (no XAI branch inserted)
+compiled_model = ov.Core().compile_model(model, "CPU")
+
+# User's code that creates a callable model_inferrer
+def model_inferrer(image: np.ndarray) -> InferenceResult:
+    # Custom inference pipeline
+    image_processed = preprocess(image)
+    result = compiled_model([image_processed])
+    logits = postprocess(result["logits"])
+    
+    # Create InferenceResult object, w/o saliency map. 
+    # Saliency map can be available in InferenceResult, but will be ignored when explain_mode=ExplainMode.BLACKBOX
+    inference_result = InferenceResult(prediction=logits, saliency_map=None)
+    return inference_result
+
+# Generate explanation
+explanation_parameters = ExplanationParameters(
+    explain_mode=ExplainMode.BLACKBOX,  # Black-box XAI method will be used under .explain() call
+)
+explanation = ovxai.explain(
+    model_inferrer=model_inferrer,
+    data=cv2.imread("path/to/image.jpg"),
+    explanation_parameters=explanation_parameters,
+)
+explanation: ExplanationResult
+explanation.saliency_map: Dict[int: np.ndarray]  # key - class id, value - processed saliency map e.g. 354x500x3
+```
+
 See more usage scenarios in [examples](./examples). 
 
 ### Running example scripts
@@ -80,7 +170,8 @@ tests/assets/cheetah_person.jpg --output output
 ```
 
 # Scope of explained models
-Models from [Pytorch Image Models (timm)](https://github.com/huggingface/pytorch-image-models) are used for benchmark.
+Models from [Pytorch Image Models (timm)](https://github.com/huggingface/pytorch-image-models) are used 
+for classification benchmark.
 
 ## White-box (fast, model-dependent)
 ### Classification

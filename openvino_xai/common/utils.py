@@ -1,5 +1,8 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+"""
+Common functionality.
+"""
 
 import os
 from pathlib import Path
@@ -7,8 +10,33 @@ from pathlib import Path
 import logging
 from urllib.request import urlretrieve
 
+import openvino.runtime as ov
+
+
 logger = logging.getLogger("openvino_xai")
+handler = logging.StreamHandler()
+formatter = logging.Formatter("%(levelname)s:%(name)s:%(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 logger.setLevel(logging.INFO)
+
+
+SALIENCY_MAP_OUTPUT_NAME = "saliency_map"
+
+
+def has_xai(model: ov.Model) -> bool:
+    """Check if the model contains XAI branch.
+
+    :param model: OV IR model.
+    :type model: openvino.runtime.Model
+    :return: True is the model has XAI head, False otherwise.
+    """
+    if not isinstance(model, ov.Model):
+        raise ValueError(f"Input model has to be openvino.runtime.Model instance, but got{type(model)}.")
+    for output in model.outputs:
+        if SALIENCY_MAP_OUTPUT_NAME in output.get_names():
+            return True
+    return False
 
 
 def retrieve_otx_model(data_dir, model_name, dir_url=None):

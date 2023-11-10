@@ -1,9 +1,9 @@
 import numpy as np
 import pytest
 
-from openvino_xai.parameters import PostProcessParameters
-from openvino_xai.saliency_map import TargetExplainGroup, ExplainResult, PostProcessor
-
+from openvino_xai.explanation.explanation_parameters import PostProcessParameters, TargetExplainGroup
+from openvino_xai.explanation.explanation_result import ExplanationResult
+from openvino_xai.explanation.post_process import PostProcessor
 
 RAW_PREDICTIONS = [
     type("raw_predictions", (), dict(saliency_map=(np.random.rand(1, 5, 5) * 255).astype(np.uint8))),
@@ -14,9 +14,9 @@ RAW_PREDICTIONS = [
 
 
 TARGET_EXPLAIN_GROUPS = [
-    TargetExplainGroup.ALL_CLASSES,
-    TargetExplainGroup.PREDICTED_CLASSES,
-    TargetExplainGroup.CUSTOM_CLASSES,
+    TargetExplainGroup.ALL,
+    TargetExplainGroup.PREDICTIONS,
+    TargetExplainGroup.CUSTOM,
 ]
 
 
@@ -48,7 +48,7 @@ class TestPostProcessor:
             overlay_weight=overlay_weight,
         )
 
-        if target_explain_group == TargetExplainGroup.CUSTOM_CLASSES:
+        if target_explain_group == TargetExplainGroup.CUSTOM:
             explain_targets = [0]
         else:
             explain_targets = None
@@ -56,7 +56,7 @@ class TestPostProcessor:
         if raw_predictions.saliency_map.ndim == 3:
             target_explain_group = TargetExplainGroup.IMAGE
             explain_targets = None
-        saliency_map_obj = ExplainResult(
+        saliency_map_obj = ExplanationResult(
             raw_predictions, target_explain_group=target_explain_group, explain_targets=explain_targets
         )
 
@@ -76,9 +76,9 @@ class TestPostProcessor:
         assert len(saliency_map_processed.sal_map_shape) == expected_dims
 
         if normalize and not colormap and not overlay:
-            for map_ in saliency_map_processed.map.values():
+            for map_ in saliency_map_processed.saliency_map.values():
                 assert map_.min() == 0, f"{map_.min()}"
                 assert map_.max() in {254, 255}, f"{map_.max()}"
         if resize or overlay:
-            for map_ in saliency_map_processed.map.values():
+            for map_ in saliency_map_processed.saliency_map.values():
                 assert map_.shape[:2] == data.shape[:2]

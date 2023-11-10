@@ -10,16 +10,16 @@ import numpy as np
 import openvino
 from openvino.runtime import opset10 as opset
 
-from openvino_xai.saliency_map import TargetExplainGroup
-from openvino_xai.parse import IRParserCls
+from openvino_xai.explanation.explanation_parameters import TargetExplainGroup
+from openvino_xai.algorithms.white_box.parse_model import IRParserCls
 
 
-class XAIMethodBase(ABC):
+class WhiteBoxXAIMethodBase(ABC):
     """Base class for methods that generates XAI branch of the model."""
 
     def __init__(self, model: openvino.runtime.Model, embed_normalization: bool = True):
         self._model_ori = model
-        self._embed_normalization = embed_normalization
+        self.embed_normalization = embed_normalization
 
     @property
     def model_ori(self):
@@ -63,7 +63,7 @@ class XAIMethodBase(ABC):
             return saliency_maps
 
 
-class ActivationMapXAIMethod(XAIMethodBase):
+class ActivationMapXAIMethod(WhiteBoxXAIMethodBase):
     """Implements ActivationMap"""
 
     def __init__(
@@ -81,12 +81,12 @@ class ActivationMapXAIMethod(XAIMethodBase):
     def generate_xai_branch(self) -> openvino.runtime.Node:
         output_backbone_node_ori = IRParserCls.get_output_backbone_node(self._model_ori, self._target_layer)
         saliency_maps = opset.reduce_mean(output_backbone_node_ori.output(0), 1)
-        if self._embed_normalization:
+        if self.embed_normalization:
             saliency_maps = self._normalize_saliency_maps(saliency_maps, self.per_class)
         return saliency_maps
 
 
-class ReciproCAMXAIMethod(XAIMethodBase):
+class ReciproCAMXAIMethod(WhiteBoxXAIMethodBase):
     """Implements Recipro-CAM"""
 
     def __init__(
@@ -98,11 +98,11 @@ class ReciproCAMXAIMethod(XAIMethodBase):
         super().__init__(model, embed_normalization)
         self.per_class = True
         self.supported_target_explain_groups = [
-            TargetExplainGroup.ALL_CLASSES,
-            TargetExplainGroup.PREDICTED_CLASSES,
-            TargetExplainGroup.CUSTOM_CLASSES,
+            TargetExplainGroup.ALL,
+            TargetExplainGroup.PREDICTIONS,
+            TargetExplainGroup.CUSTOM,
         ]
-        self.default_target_explain_group = TargetExplainGroup.PREDICTED_CLASSES
+        self.default_target_explain_group = TargetExplainGroup.PREDICTIONS
         self._target_layer = target_layer
 
     def generate_xai_branch(self) -> openvino.runtime.Node:
@@ -150,7 +150,7 @@ class ReciproCAMXAIMethod(XAIMethodBase):
         _, num_classes = logit_node.get_output_partial_shape(0)
         saliency_maps = opset.reshape(tmp, (1, num_classes.get_length(), h, w), False)
 
-        if self._embed_normalization:
+        if self.embed_normalization:
             saliency_maps = self._normalize_saliency_maps(saliency_maps, self.per_class)
         return saliency_maps
 
@@ -159,7 +159,7 @@ class ReciproCAMXAIMethod(XAIMethodBase):
         return h < c and w < c
 
 
-class DetClassProbabilityMapXAIMethod(XAIMethodBase):
+class DetClassProbabilityMapXAIMethod(WhiteBoxXAIMethodBase):
     """Implements DetClassProbabilityMap, used for single-stage detectors, e.g. SSD, YOLOX or ATSS."""
 
     def __init__(
@@ -173,11 +173,11 @@ class DetClassProbabilityMapXAIMethod(XAIMethodBase):
         super().__init__(model, embed_normalization)
         self.per_class = True
         self.supported_target_explain_groups = [
-            TargetExplainGroup.ALL_CLASSES,
-            TargetExplainGroup.PREDICTED_CLASSES,
-            TargetExplainGroup.CUSTOM_CLASSES,
+            TargetExplainGroup.ALL,
+            TargetExplainGroup.PREDICTIONS,
+            TargetExplainGroup.CUSTOM,
         ]
-        self.default_target_explain_group = TargetExplainGroup.ALL_CLASSES
+        self.default_target_explain_group = TargetExplainGroup.ALL
         self._target_layer = target_layer
         self._num_anchors = num_anchors  # Either num_anchors or num_classes has to be provided to process cls head output
         self._saliency_map_size = saliency_map_size  # Not always can be obtained from model -> defined externally
@@ -219,6 +219,6 @@ class DetClassProbabilityMapXAIMethod(XAIMethodBase):
             )
         saliency_maps = opset.reduce_mean(opset.concat(cls_head_output_nodes, 0), 0, keep_dims=True)
 
-        if self._embed_normalization:
+        if self.embed_normalization:
             saliency_maps = self._normalize_saliency_maps(saliency_maps, self.per_class)
         return saliency_maps

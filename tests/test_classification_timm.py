@@ -15,10 +15,12 @@ from typing import Dict
 
 from openvino.model_api.models import ClassificationModel
 
-from openvino_xai.explain import WhiteBoxExplainer, RISEExplainer
-from openvino_xai.model import XAIClassificationModel
-from openvino_xai.parameters import ClassificationExplainParametersWB, PostProcessParameters
-from openvino_xai.saliency_map import TargetExplainGroup, PostProcessor
+from openvino_xai.explanation import RISEExplainer
+from openvino_xai.explanation.explainers import WhiteBoxExplainer
+from openvino_xai.explanation.model_inferrer import MAPIClassificationModelXAI
+from openvino_xai.explanation.explanation_parameters import PostProcessParameters, TargetExplainGroup
+from openvino_xai.insertion.insertion_parameters import ClassificationInsertionParameters
+from openvino_xai.explanation.post_process import PostProcessor
 
 timm = pytest.importorskip("timm")
 torch = pytest.importorskip("torch")
@@ -333,18 +335,18 @@ class TestImageClassificationTimm:
             self.update_report("report_wb.csv", model_id, "True", "True")
 
         mapi_params = self.get_mapi_params(model_cfg)
-        model = XAIClassificationModel.create_model(
+        model = MAPIClassificationModelXAI.create_model(
             ir_path,
             "Classification",
             **mapi_params,
-            explain_parameters=ClassificationExplainParametersWB(embed_normalization=False),
+            explain_parameters=ClassificationInsertionParameters(embed_normalization=False),
         )
 
         image = cv2.imread("tests/assets/cheetah_person.jpg")
         target_class = self.supported_num_classes[model_cfg["num_classes"]]
         explanation = WhiteBoxExplainer(model).explain(
             image,
-            TargetExplainGroup.CUSTOM_CLASSES,
+            TargetExplainGroup.CUSTOM,
             [target_class],
         )
 
@@ -358,12 +360,12 @@ class TestImageClassificationTimm:
 
         if dump_maps:
             # timm workaround to remove outlier activations at corners
-            raw_sal_map = explanation.map[target_class]
+            raw_sal_map = explanation.saliency_map[target_class]
             raw_sal_map[0, 0] = np.mean(np.delete(raw_sal_map[:2, :2].flatten(), 0))
             raw_sal_map[0, -1] = np.mean(np.delete(raw_sal_map[:2, -2:].flatten(), 1))
             raw_sal_map[-1, 0] = np.mean(np.delete(raw_sal_map[-2:, :2].flatten(), 2))
             raw_sal_map[-1, -1] = np.mean(np.delete(raw_sal_map[-2:, -2:].flatten(), 3))
-            explanation.map[target_class] = raw_sal_map
+            explanation.saliency_map[target_class] = raw_sal_map
             post_processing_parameters = PostProcessParameters(normalize=True, overlay=True)
             post_processor = PostProcessor(
                 explanation,
@@ -424,7 +426,7 @@ class TestImageClassificationTimm:
         target_class = self.supported_num_classes[model_cfg["num_classes"]]
         explanation = explainer.explain(
             image,
-            TargetExplainGroup.CUSTOM_CLASSES,
+            TargetExplainGroup.CUSTOM,
             [target_class],
             post_processing_parameters=PostProcessParameters(overlay=True),
         )
@@ -494,9 +496,9 @@ class TestImageClassificationTimm:
             color = (0, 0, 255)
         thickness = 2
         map_ = cv2.putText(
-            explanation.map[target_class], f"{target_confidence:.2f}", org, font, fontScale, color, thickness, cv2.LINE_AA
+            explanation.saliency_map[target_class], f"{target_confidence:.2f}", org, font, fontScale, color, thickness, cv2.LINE_AA
         )
-        explanation.map[target_class] = map_
+        explanation.saliency_map[target_class] = map_
 
     def update_report(
             self,
