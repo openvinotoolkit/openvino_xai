@@ -336,12 +336,6 @@ class TestImageClassificationTimm:
             self.update_report("report_wb.csv", model_id, "True", "True")
 
         mapi_params = self.get_mapi_params(model_cfg)
-        model = ClassificationModel.create_model(
-            ir_path,
-            "Classification",
-            **mapi_params,
-        )
-
         mapi_wrapper = mapi.models.ClassificationModel.create_model(
             ir_path, "Classification", **mapi_params,
         )
@@ -384,7 +378,7 @@ class TestImageClassificationTimm:
             )
             explanation = post_processor.postprocess()
 
-            target_confidence = model(image).raw_scores[target_class]
+            target_confidence = mapi_wrapper(image).raw_scores[target_class]
             self.put_confidence_into_map_overlay(explanation, target_confidence, target_class)
 
             save_dir = self.data_dir / "timm_models" / "maps_wb"
