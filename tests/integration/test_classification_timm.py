@@ -431,16 +431,8 @@ class TestImageClassificationTimm:
             **mapi_params,
         )
 
-        # explainer = RISEExplainer(model)
         image = cv2.imread("tests/assets/cheetah_person.jpg")
         target_class = self.supported_num_classes[model_cfg["num_classes"]]
-        # explanation = explainer.explain(
-        #     image,
-        #     TargetExplainGroup.CUSTOM,
-        #     [target_class],
-        #     post_processing_parameters=PostProcessParameters(overlay=True),
-        # )
-
         explanation_parameters = ExplanationParameters(
             explain_mode=ExplainMode.BLACKBOX,
             target_explain_group=TargetExplainGroup.CUSTOM,
