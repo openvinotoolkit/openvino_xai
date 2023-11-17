@@ -1,15 +1,18 @@
 import numpy as np
 import pytest
 
+# TODO: rm this import. AttributeError: module 'openvino.model_api' has no attribute 'models'
+from openvino.model_api.models import ClassificationModel
+
+from openvino_xai.explanation.utils import InferenceResult
 from openvino_xai.explanation.explanation_parameters import PostProcessParameters, TargetExplainGroup
 from openvino_xai.explanation.explanation_result import ExplanationResult
 from openvino_xai.explanation.post_process import PostProcessor
 
+
 RAW_PREDICTIONS = [
-    type("raw_predictions", (), dict(saliency_map=(np.random.rand(1, 5, 5) * 255).astype(np.uint8))),
-    type(
-        "raw_predictions", (), dict(saliency_map=(np.random.rand(1, 2, 5, 5) * 255).astype(np.uint8), top_labels=[[0]])
-    ),
+    InferenceResult(prediction=np.ones((1, 2)), saliency_map=(np.random.rand(1, 5, 5) * 255).astype(np.uint8)),
+    InferenceResult(prediction=np.ones((1, 2)), saliency_map=(np.random.rand(1, 2, 5, 5) * 255).astype(np.uint8)),
 ]
 
 
@@ -57,7 +60,7 @@ class TestPostProcessor:
             target_explain_group = TargetExplainGroup.IMAGE
             explain_targets = None
         saliency_map_obj = ExplanationResult(
-            raw_predictions, target_explain_group=target_explain_group, explain_targets=explain_targets
+            raw_predictions, target_explain_group=target_explain_group, custom_target_indices=explain_targets
         )
 
         raw_sal_map_dims = len(saliency_map_obj.sal_map_shape)

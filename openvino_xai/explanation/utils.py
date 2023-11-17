@@ -59,7 +59,7 @@ def check_prediction_from_model_output(prediction: np.ndarray) -> None:
         raise RuntimeError("Model output does not contain valid prediction.")
     if prediction.shape[0] > 1:
         raise RuntimeError("Batch size for raw prediction should be 1.")
-    if not 0 < prediction.min() <= prediction.max() < 1:
+    if not 0 <= prediction.min() <= prediction.max() <= 1:
         raise ValueError(f"Prediction has to be activated.")
 
 

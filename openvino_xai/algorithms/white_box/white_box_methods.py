@@ -11,7 +11,7 @@ import openvino
 from openvino.runtime import opset10 as opset
 
 from openvino_xai.explanation.explanation_parameters import TargetExplainGroup
-from openvino_xai.algorithms.white_box.parse_model import IRParserCls
+from openvino_xai.insertion.parse_model import IRParserCls
 
 
 class WhiteBoxXAIMethodBase(ABC):

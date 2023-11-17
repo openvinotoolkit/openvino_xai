@@ -14,11 +14,12 @@ from pathlib import Path
 from typing import Dict
 
 from openvino.model_api.models import ClassificationModel
+import openvino.model_api as mapi
+from openvino_xai.common.parameters import XAIMethodType
 
-from openvino_xai.explanation import RISEExplainer
-from openvino_xai.explanation.explainers import WhiteBoxExplainer
-from openvino_xai.explanation.model_inferrer import MAPIClassificationModelXAI
-from openvino_xai.explanation.explanation_parameters import PostProcessParameters, TargetExplainGroup
+import openvino_xai as ovxai
+from openvino_xai.explanation.explanation_parameters import PostProcessParameters, TargetExplainGroup, \
+    ExplanationParameters, ExplainMode
 from openvino_xai.insertion.insertion_parameters import ClassificationInsertionParameters
 from openvino_xai.explanation.post_process import PostProcessor
 
@@ -297,8 +298,8 @@ class TestImageClassificationTimm:
     fields = ["Model", "Exported to ONNX", "Exported to OV IR", "Explained", "Map size", "Map saved"]
     counter_row = ["Counters", "0", "0", "0", "-", "-"]
     report = [fields, counter_row]
-    clean_cash_converted_models = True
-    clean_cash_hf_models = True
+    clean_cash_converted_models = False
+    clean_cash_hf_models = False
     supported_num_classes = {
         1000: 293,  # 293 is a cheetah class_id in the ImageNet-1k dataset
         21841: 2441,  # 2441 is a cheetah class_id in the ImageNet-21k dataset
@@ -335,20 +336,28 @@ class TestImageClassificationTimm:
             self.update_report("report_wb.csv", model_id, "True", "True")
 
         mapi_params = self.get_mapi_params(model_cfg)
-        model = MAPIClassificationModelXAI.create_model(
+        model = ClassificationModel.create_model(
             ir_path,
             "Classification",
             **mapi_params,
-            explain_parameters=ClassificationInsertionParameters(embed_normalization=False),
         )
 
-        image = cv2.imread("tests/assets/cheetah_person.jpg")
-        target_class = self.supported_num_classes[model_cfg["num_classes"]]
-        explanation = WhiteBoxExplainer(model).explain(
-            image,
-            TargetExplainGroup.CUSTOM,
-            [target_class],
+        mapi_wrapper = mapi.models.ClassificationModel.create_model(
+            ir_path, "Classification", **mapi_params,
         )
+        insertion_parameters = ClassificationInsertionParameters(
+            embed_normalization=False,
+            explain_method_type=XAIMethodType.RECIPROCAM,
+        )
+        mapi_wrapper_xai = ovxai.insertion.insert_xai_into_mapi_wrapper(mapi_wrapper, insertion_parameters)
+        target_class = self.supported_num_classes[model_cfg["num_classes"]]
+        explanation_parameters = ExplanationParameters(
+            target_explain_group=TargetExplainGroup.CUSTOM,
+            custom_target_indices=[target_class],
+            post_processing_parameters=PostProcessParameters(),
+        )
+        image = cv2.imread("tests/assets/cheetah_person.jpg")
+        explanation = ovxai.explain(mapi_wrapper_xai, image, explanation_parameters)
 
         assert explanation is not None
         assert explanation.sal_map_shape[-1] > 1 and explanation.sal_map_shape[-2] > 1
@@ -360,6 +369,7 @@ class TestImageClassificationTimm:
 
         if dump_maps:
             # timm workaround to remove outlier activations at corners
+            # TODO: find a root cause
             raw_sal_map = explanation.saliency_map[target_class]
             raw_sal_map[0, 0] = np.mean(np.delete(raw_sal_map[:2, :2].flatten(), 0))
             raw_sal_map[0, -1] = np.mean(np.delete(raw_sal_map[:2, -2:].flatten(), 1))
@@ -421,14 +431,26 @@ class TestImageClassificationTimm:
             **mapi_params,
         )
 
-        explainer = RISEExplainer(model)
+        # explainer = RISEExplainer(model)
         image = cv2.imread("tests/assets/cheetah_person.jpg")
         target_class = self.supported_num_classes[model_cfg["num_classes"]]
-        explanation = explainer.explain(
+        # explanation = explainer.explain(
+        #     image,
+        #     TargetExplainGroup.CUSTOM,
+        #     [target_class],
+        #     post_processing_parameters=PostProcessParameters(overlay=True),
+        # )
+
+        explanation_parameters = ExplanationParameters(
+            explain_mode=ExplainMode.BLACKBOX,
+            target_explain_group=TargetExplainGroup.CUSTOM,
+            custom_target_indices=[target_class],
+            black_box_method=XAIMethodType.RISE,
+        )
+        explanation = ovxai.explain(
+            model,
             image,
-            TargetExplainGroup.CUSTOM,
-            [target_class],
-            post_processing_parameters=PostProcessParameters(overlay=True),
+            explanation_parameters=explanation_parameters,
         )
 
         assert explanation is not None
