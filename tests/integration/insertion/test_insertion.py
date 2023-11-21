@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 import pytest
 from openvino import runtime as ov
@@ -11,9 +11,9 @@ from tests.integration.test_classification import MODELS
 
 @pytest.mark.parametrize("model_name", MODELS)
 def test_insertion(model_name):
-    data_dir = ".data"
+    data_dir = Path(".data")
     retrieve_otx_model(data_dir, model_name)
-    model_path = os.path.join(data_dir, "otx_models", model_name + ".xml")
+    model_path = data_dir / "otx_models" / (model_name + ".xml")
 
     model_ir = ov.Core().read_model(model_path)
     if model_name != "classification_model_with_xai_head":

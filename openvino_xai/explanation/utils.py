@@ -4,7 +4,7 @@ from typing import Optional, Union, Tuple, List
 
 import numpy as np
 
-import openvino.model_api as mapi
+from openvino.model_api.models import ClassificationResult, DetectionResult
 
 from openvino_xai.common.utils import logger
 from openvino_xai.explanation.explanation_parameters import TargetExplainGroup
@@ -25,7 +25,7 @@ class InferenceResult:
 
 
 def get_prediction_from_model_output(
-        inference_result: Union[InferenceResult, mapi.models.ClassificationResult, mapi.models.DetectionResult],
+        inference_result: Union[InferenceResult, ClassificationResult, DetectionResult],
         confidence_threshold: float
 ) -> Tuple:
     """Generate prediction and prediction_raw."""
@@ -38,9 +38,9 @@ def get_prediction_from_model_output(
         prediction = [
             (index, score) for index, score in enumerate(prediction_raw) if score > confidence_threshold
         ]
-    elif isinstance(inference_result, mapi.models.ClassificationResult):
+    elif isinstance(inference_result, ClassificationResult):
         prediction, prediction_raw = inference_result.top_labels, inference_result.raw_scores
-    elif isinstance(inference_result, mapi.models.DetectionResult):
+    elif isinstance(inference_result, DetectionResult):
         objects = inference_result.objects
         # Currently support only for DetClassProbabilityMapXAIMethod
         # TODO: generalize

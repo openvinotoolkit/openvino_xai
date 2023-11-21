@@ -1,9 +1,6 @@
 import numpy as np
 import pytest
 
-# TODO: rm this import. AttributeError: module 'openvino.model_api' has no attribute 'models'
-from openvino.model_api.models import ClassificationModel
-
 from openvino_xai.explanation.utils import InferenceResult
 from openvino_xai.explanation.explanation_parameters import PostProcessParameters, TargetExplainGroup
 from openvino_xai.explanation.explanation_result import ExplanationResult

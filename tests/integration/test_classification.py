@@ -1,10 +1,9 @@
-import os
+from pathlib import Path
 
 import cv2
 import numpy as np
 import pytest
 
-from openvino.model_api.models import ClassificationModel
 import openvino.model_api as mapi
 
 import openvino_xai as ovxai
@@ -49,6 +48,7 @@ MODELS_NUM_CLASSES = {
 
 class TestClsWB:
     image = cv2.imread("tests/assets/cheetah_person.jpg")
+    data_dir = Path(".data")
     _ref_sal_maps_reciprocam = {
         "mlc_mobilenetv3_large_voc": np.array([215, 214, 233, 239, 218, 206, 210], dtype=np.uint8),
         "mlc_efficient_b0_voc": np.array([73, 242, 156, 219, 197, 239, 69], dtype=np.uint8),
@@ -70,9 +70,8 @@ class TestClsWB:
         ],
     )
     def test_reciprocam(self, model_name, embed_normalization, target_explain_group):
-        data_dir = ".data"
-        retrieve_otx_model(data_dir, model_name)
-        model_path = os.path.join(data_dir, "otx_models", model_name + ".xml")
+        retrieve_otx_model(self.data_dir, model_name)
+        model_path = self.data_dir / "otx_models" / (model_name + ".xml")
         mapi_wrapper = mapi.models.ClassificationModel.create_model(
             model_path, "Classification"
         )
@@ -126,9 +125,8 @@ class TestClsWB:
     def test_activationmap(self, model_name, embed_normalization):
         if model_name == "classification_model_with_xai_head":
             pytest.skip("model already has reciprocam xai head - this test cannot change it.")
-        data_dir = ".data"
-        retrieve_otx_model(data_dir, model_name)
-        model_path = os.path.join(data_dir, "otx_models", model_name + ".xml")
+        retrieve_otx_model(self.data_dir, model_name)
+        model_path = self.data_dir / "otx_models" / (model_name + ".xml")
         mapi_wrapper = mapi.models.ClassificationModel.create_model(
             model_path, "Classification"
         )
@@ -161,9 +159,8 @@ class TestClsWB:
     )
     @pytest.mark.parametrize("overlay", [True, False])
     def test_classification_postprocessing(self, target_explain_group, overlay):
-        data_dir = ".data"
-        retrieve_otx_model(data_dir, DEFAULT_MODEL)
-        model_path = os.path.join(data_dir, "otx_models", DEFAULT_MODEL + ".xml")
+        retrieve_otx_model(self.data_dir, DEFAULT_MODEL)
+        model_path = self.data_dir / "otx_models" / (DEFAULT_MODEL + ".xml")
         mapi_wrapper = mapi.models.ClassificationModel.create_model(
             model_path, "Classification"
         )
@@ -197,9 +194,8 @@ class TestClsWB:
                 assert map_.max() in {254, 255}, f"{map_.max()}"
 
     def test_two_sequential_norms(self):
-        data_dir = ".data"
-        retrieve_otx_model(data_dir, DEFAULT_MODEL)
-        model_path = os.path.join(data_dir, "otx_models", DEFAULT_MODEL + ".xml")
+        retrieve_otx_model(self.data_dir, DEFAULT_MODEL)
+        model_path = self.data_dir / "otx_models" / (DEFAULT_MODEL + ".xml")
         mapi_wrapper = mapi.models.ClassificationModel.create_model(
             model_path, "Classification"
         )
@@ -223,6 +219,7 @@ class TestClsWB:
 
 class TestClsBB:
     image = cv2.imread("tests/assets/cheetah_person.jpg")
+    data_dir = Path(".data")
     _ref_sal_maps = {
         "mlc_mobilenetv3_large_voc": np.array([13, 18, 23, 29, 34, 40, 45, 51, 57, 65], dtype=np.uint8),
         "mlc_efficient_b0_voc": np.array([9, 14, 20, 25, 31, 37, 43, 48, 55, 63], dtype=np.uint8),
@@ -241,11 +238,10 @@ class TestClsBB:
     )
     @pytest.mark.parametrize("normalize", [True, False])
     def test_classification_black_box_postprocessing(self, model_name, overlay, target_explain_group, normalize):
-        data_dir = ".data"
-        retrieve_otx_model(data_dir, model_name)
-        model_path = os.path.join(data_dir, "otx_models", model_name + ".xml")
+        retrieve_otx_model(self.data_dir, model_name)
+        model_path = self.data_dir / "otx_models" / (model_name + ".xml")
 
-        model = ClassificationModel.create_model(
+        model = mapi.models.ClassificationModel.create_model(
             model_path, model_type="Classification", configuration={"output_raw_scores": True}
         )
 
@@ -304,11 +300,10 @@ class TestClsBB:
     @pytest.mark.parametrize("asynchronous_inference", [True, False])
     @pytest.mark.parametrize("throughput_inference", [True, False])
     def test_classification_black_box_pred_class(self, model_name, asynchronous_inference, throughput_inference):
-        data_dir = ".data"
-        retrieve_otx_model(data_dir, model_name)
-        model_path = os.path.join(data_dir, "otx_models", model_name + ".xml")
+        retrieve_otx_model(self.data_dir, model_name)
+        model_path = self.data_dir / "otx_models" / (model_name + ".xml")
 
-        model = ClassificationModel.create_model(
+        model = mapi.models.ClassificationModel.create_model(
             model_path, model_type="Classification", configuration={"output_raw_scores": True}
         )
 
@@ -340,10 +335,9 @@ class TestClsBB:
             assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
 
     def test_classification_black_box_xai_model_as_input(self):
-        data_dir = ".data"
-        retrieve_otx_model(data_dir, DEFAULT_MODEL)
-        model_path = os.path.join(data_dir, "otx_models", DEFAULT_MODEL + ".xml")
-        model = ClassificationModel.create_model(
+        retrieve_otx_model(self.data_dir, DEFAULT_MODEL)
+        model_path = self.data_dir / "otx_models" / (DEFAULT_MODEL + ".xml")
+        model = mapi.models.ClassificationModel.create_model(
             model_path, model_type="Classification", configuration={"output_raw_scores": True}
         )
         model = ovxai.insertion.insert_xai_into_mapi_wrapper(model)
