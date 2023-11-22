@@ -180,7 +180,7 @@ class RISE(BlackBoxXAIMethodBase):
     def _run_asynchronous_explanation(
             self, resized_data: np.ndarray, num_classes: int, target_classes: Optional[List[int]]
     ) -> np.ndarray:
-        logger.info(f"RISEExplainer explains the model in asynchronous mode "
+        logger.info(f"RISE explains the model in asynchronous mode "
                     f"with {self.num_masks} masks (inference calls)...")
         masks = []
         async_pipeline = AsyncPipeline(self._model_inferrer)
