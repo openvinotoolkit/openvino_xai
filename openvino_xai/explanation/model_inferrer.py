@@ -24,9 +24,10 @@ class ClassificationModelInferrer:
     :type model: ov.Model
     """
 
-    def __init__(self, model: ov.Model):
+    def __init__(self, model: ov.Model, sigmoid: bool = True):
         self.compiled_model = ov.Core().compile_model(model, "CPU")
         self.has_xai = has_xai(model)
+        self.sigmoid = sigmoid  # disable activation if it is already inserted into the model graph
 
     @staticmethod
     def preprocess(x: np.ndarray) -> np.ndarray:
@@ -43,11 +44,13 @@ class ClassificationModelInferrer:
 
     def postprocess(self, x: ov.utils.data_helpers.wrappers.OVDict) -> InferenceResult:
         # Process model prediction
-        sigmoidv = np.vectorize(sigmoid)
-        prediction_processed = sigmoidv(x["logits"])
+        prediction = x["logits"]
+        if self.sigmoid:
+            sigmoidv = np.vectorize(sigmoid)
+            prediction = sigmoidv(prediction)
 
         # Create inference result object
-        inference_result = self._create_inference_result(x, prediction_processed)
+        inference_result = self._create_inference_result(x, prediction)
         return inference_result
 
     def _create_inference_result(self, raw_output, prediction_processed):

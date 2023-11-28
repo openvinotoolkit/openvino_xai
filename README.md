@@ -42,11 +42,11 @@ pre-commit run -a
 # Usage in white-box mode
 
 ## Insertion: insert XAI branch into the model
+
 ```python
 import openvino.runtime as ov
 import openvino_xai as ovxai
-from openvino_xai.common.parameters import ModelType
-
+from openvino_xai.common.parameters import TaskType
 
 # Creating original model
 model: ov.Model
@@ -54,7 +54,7 @@ model = ov.Core().read_model("path/to/model.xml")
 
 # Inserting XAI branch into the model graph
 model_xai: ov.Model
-model_xai = ovxai.insert_xai(model, model_type=ModelType.CLASSIFICATION)
+model_xai = ovxai.insert_xai(model, task_type=TaskType.CLASSIFICATION)
 
 # ***** Downstream task: user's code that infers model_xai and picks 'saliency_map' output *****
 ```

@@ -11,6 +11,7 @@ import openvino
 from openvino.runtime import opset10 as opset
 
 from openvino_xai.explanation.explanation_parameters import TargetExplainGroup
+from openvino_xai.insertion.insertion_parameters import ModelType
 from openvino_xai.insertion.parse_model import IRParserCls
 
 
@@ -32,6 +33,15 @@ class WhiteBoxXAIMethodBase(ABC):
     @abstractmethod
     def generate_xai_branch(self):
         """Implements specific XAI algorithm"""
+
+    @staticmethod
+    def _propagate_dynamic_batch_dimension(model: openvino.runtime.Model):
+        # TODO: support models with multiple inputs.
+        assert len(model.inputs) == 1, "Support only for models with a single input."
+        if not model.input(0).partial_shape[0].is_dynamic:
+            partial_shape = model.input(0).partial_shape
+            partial_shape[0] = -1  # make batch dimensions to be dynamic
+            model.reshape(partial_shape)
 
     @staticmethod
     def _normalize_saliency_maps(saliency_maps: openvino.runtime.Node, per_class: bool) -> openvino.runtime.Node:
@@ -74,13 +84,14 @@ class ActivationMapXAIMethod(WhiteBoxXAIMethodBase):
     ):
         super().__init__(model, embed_normalization)
         self.per_class = False
+        self.model_type = ModelType.CNN
         self.supported_target_explain_groups = [TargetExplainGroup.IMAGE]
         self.default_target_explain_group = TargetExplainGroup.IMAGE
         self._target_layer = target_layer
 
     def generate_xai_branch(self) -> openvino.runtime.Node:
-        output_backbone_node_ori = IRParserCls.get_output_backbone_node(self._model_ori, self._target_layer)
-        saliency_maps = opset.reduce_mean(output_backbone_node_ori.output(0), 1)
+        target_node_ori = IRParserCls.get_target_node(self._model_ori, self.model_type, self._target_layer)
+        saliency_maps = opset.reduce_mean(target_node_ori.output(0), 1)
         if self.embed_normalization:
             saliency_maps = self._normalize_saliency_maps(saliency_maps, self.per_class)
         return saliency_maps
@@ -97,6 +108,7 @@ class ReciproCAMXAIMethod(WhiteBoxXAIMethodBase):
     ):
         super().__init__(model, embed_normalization)
         self.per_class = True
+        self.model_type = ModelType.CNN
         self.supported_target_explain_groups = [
             TargetExplainGroup.ALL,
             TargetExplainGroup.PREDICTIONS,
@@ -107,31 +119,25 @@ class ReciproCAMXAIMethod(WhiteBoxXAIMethodBase):
 
     def generate_xai_branch(self) -> openvino.runtime.Node:
         _model_clone = self._model_ori.clone()
-        # _model_clone.get_parameters()[0].set_friendly_name('data_clone')  # for debug
+        self._propagate_dynamic_batch_dimension(_model_clone)
 
-        # TODO: support models with multiple inputs.
-        assert len(_model_clone.inputs) == 1, "Support only for models with single input."
-        if not _model_clone.input(0).partial_shape[0].is_dynamic:
-            partial_shape = _model_clone.input(0).partial_shape
-            partial_shape[0] = -1  # make batch dimensions to be dynamic
-            _model_clone.reshape(partial_shape)
+        target_node_ori = IRParserCls.get_target_node(self._model_ori, self.model_type, self._target_layer)
+        target_node_name = self._target_layer or target_node_ori.get_friendly_name()
+        post_target_node_clone = IRParserCls.get_post_target_node(_model_clone, self.model_type, target_node_name)
 
-        output_backbone_node_ori = IRParserCls.get_output_backbone_node(self._model_ori, self._target_layer)
-        output_backbone_node_name = self._target_layer or output_backbone_node_ori.get_friendly_name()
-        first_head_node_clone = IRParserCls.get_input_head_node(_model_clone, output_backbone_node_name)
+        logit_node = IRParserCls.get_logit_node(self._model_ori, search_softmax=True)
+        logit_node_clone_model = IRParserCls.get_logit_node(_model_clone, search_softmax=True)
 
-        logit_node = IRParserCls.get_logit_node(self._model_ori)
-        logit_node_clone_model = IRParserCls.get_logit_node(_model_clone)
+        if not logit_node_clone_model.output(0).partial_shape[0].is_dynamic:
+            raise ValueError("Batch shape of the output should be dynamic, but it is static. "
+                             "Make sure that the dynamic inputs can propagate through the model graph.")
 
-        # logit_node.set_friendly_name("logits_ori")  # for debug
-        # logit_node_clone_model.set_friendly_name("logits_clone")  # for debug
-
-        _, c, h, w = output_backbone_node_ori.get_output_partial_shape(0)
+        _, c, h, w = target_node_ori.get_output_partial_shape(0)
         c, h, w = c.get_length(), h.get_length(), w.get_length()
         if not self.is_valid_layout(c, h, w):
             raise ValueError(f"ReciproCAM supports only NCHW layout, but got NHWC, with shape: [N, {c}, {h}, {w}]")
 
-        feature_map_repeated = opset.tile(output_backbone_node_ori.output(0), (h * w, 1, 1, 1))
+        feature_map_repeated = opset.tile(target_node_ori.output(0), (h * w, 1, 1, 1))
         mosaic_feature_map_mask = np.zeros((h * w, c, h, w), dtype=np.float32)
         tmp = np.arange(h * w)
         spacial_order = np.reshape(tmp, (h, w))
@@ -142,7 +148,8 @@ class ReciproCAMXAIMethod(WhiteBoxXAIMethodBase):
         mosaic_feature_map_mask = opset.constant(mosaic_feature_map_mask)
         mosaic_feature_map = opset.multiply(feature_map_repeated, mosaic_feature_map_mask)
 
-        first_head_node_clone.input(0).replace_source_output(mosaic_feature_map.output(0))
+        for node in post_target_node_clone:
+            node.input(0).replace_source_output(mosaic_feature_map.output(0))
 
         mosaic_prediction = logit_node_clone_model
 
@@ -157,6 +164,119 @@ class ReciproCAMXAIMethod(WhiteBoxXAIMethodBase):
     @staticmethod
     def is_valid_layout(c, h, w):
         return h < c and w < c
+
+
+class ViTReciproCAMXAIMethod(WhiteBoxXAIMethodBase):
+    """Implements ViTRecipro-CAM"""
+
+    def __init__(
+            self,
+            model: openvino.runtime.Model,
+            target_layer: Optional[str] = None,
+            embed_normalization: bool = True,
+            use_gaussian: bool = True,
+            cls_token: bool = True,
+            final_norm: bool = True,
+            k: int = 2,
+    ):
+        super().__init__(model, embed_normalization)
+        self.per_class = True
+        self.model_type = ModelType.TRANSFORMER
+        self.supported_target_explain_groups = [
+            TargetExplainGroup.ALL,
+            TargetExplainGroup.PREDICTIONS,
+            TargetExplainGroup.CUSTOM,
+        ]
+        self.default_target_explain_group = TargetExplainGroup.PREDICTIONS
+        self._target_layer = target_layer
+        self._use_gaussian = use_gaussian
+        self._cls_token = cls_token
+
+        # Count of target "Add" node, from the output
+        self._k = k + int(final_norm)
+
+    def generate_xai_branch(self) -> openvino.runtime.Node:
+        _model_clone = self._model_ori.clone()
+        self._propagate_dynamic_batch_dimension(_model_clone)
+
+        target_node_ori = IRParserCls.get_target_node(self._model_ori, self.model_type, self._target_layer, self._k)
+        target_node_name = self._target_layer or target_node_ori.get_friendly_name()
+        post_target_node_clone = IRParserCls.get_post_target_node(_model_clone, self.model_type, target_node_name)
+
+        logit_node = IRParserCls.get_logit_node(self._model_ori, search_softmax=False)
+        logit_node_clone_model = IRParserCls.get_logit_node(_model_clone, search_softmax=False)
+
+        if not logit_node_clone_model.output(0).partial_shape[0].is_dynamic:
+            raise ValueError("Batch shape of the output should be dynamic, but it is static. "
+                             "Make sure that the dynamic inputs can propagate through the model graph.")
+
+        _, num_classes = logit_node.get_output_partial_shape(0)
+
+        _, token_number, dim = target_node_ori.get_output_partial_shape(0)
+        token_number, dim = token_number.get_length(), dim.get_length()
+        h = w = int((token_number - 1) ** 0.5)
+
+        if self._use_gaussian:
+            if self._cls_token:
+                cls_token = opset.slice(target_node_ori, np.array([0]), np.array([1]), np.array([1]), np.array([1]))
+            else:
+                cls_token = opset.constant(np.zeros((1, 1, dim)), dtype=np.float32)
+            cls_token = opset.tile(cls_token.output(0), (h * w, 1, 1))
+
+            target_node_ori_wo_cls_token = opset.slice(
+                target_node_ori, np.array([1]), np.array([h * w + 1]), np.array([1]), np.array([1])
+            )
+            feature_map_spacial = opset.reshape(target_node_ori_wo_cls_token, (1, h, w, dim), False)
+            feature_map_spacial_repeated = opset.tile(feature_map_spacial.output(0), (h * w, 1, 1, 1))
+
+            tmp = np.arange(h * w)
+            spacial_order = np.reshape(tmp, (h, w))
+            gaussian = np.array(
+                [[1 / 16.0, 1 / 8.0, 1 / 16.0], [1 / 8.0, 1 / 4.0, 1 / 8.0], [1 / 16.0, 1 / 8.0, 1 / 16.0]]
+            )
+            mosaic_feature_map_mask_padded = np.zeros((h * w, h + 2, w + 2), dtype=np.float32)
+            for i in range(h):
+                for j in range(w):
+                    k = spacial_order[i, j]
+                    i_pad = i + 1
+                    j_pad = j + 1
+                    mosaic_feature_map_mask_padded[k, i_pad - 1 : i_pad + 2, j_pad - 1 : j_pad + 2] = gaussian
+            mosaic_feature_map_mask = mosaic_feature_map_mask_padded[:, 1:-1, 1:-1]
+            mosaic_feature_map_mask = np.expand_dims(mosaic_feature_map_mask, 3)
+            mosaic_feature_map_mask = opset.constant(mosaic_feature_map_mask)
+            mosaic_feature_map_mask = opset.tile(mosaic_feature_map_mask.output(0), (1, 1, 1, dim))
+
+            mosaic_fm_wo_cls_token = opset.multiply(feature_map_spacial_repeated, mosaic_feature_map_mask)
+            mosaic_fm_wo_cls_token = opset.reshape(mosaic_fm_wo_cls_token, (h * w, h * w, dim), False)
+            mosaic_feature_map = opset.concat([cls_token, mosaic_fm_wo_cls_token], 1)
+        else:
+            mosaic_feature_map_mask_wo_cls_token = np.zeros((h * w, h * w), dtype=np.float32)
+            for i in range(h * w):
+                mosaic_feature_map_mask_wo_cls_token[i, i] = 1
+            if self._cls_token:
+                cls_token_mask = np.ones((h * w, 1), dtype=np.float32)
+            else:
+                cls_token_mask = np.zeros((h * w, 1), dtype=np.float32)
+            mosaic_feature_map_mask = np.hstack((cls_token_mask, mosaic_feature_map_mask_wo_cls_token))
+
+            mosaic_feature_map_mask = np.expand_dims(mosaic_feature_map_mask, 2)
+
+            mosaic_feature_map_mask = opset.constant(mosaic_feature_map_mask)
+            mosaic_feature_map_mask = opset.tile(mosaic_feature_map_mask.output(0), (1, 1, dim))  # e.g. 784x785x768
+            feature_map_repeated = opset.tile(target_node_ori.output(0), (h * w, 1, 1))  # e.g. 784x785x768
+            mosaic_feature_map = opset.multiply(feature_map_repeated, mosaic_feature_map_mask)
+
+        for node in post_target_node_clone:
+            node.input(0).replace_source_output(mosaic_feature_map.output(0))
+
+        mosaic_prediction = logit_node_clone_model
+
+        tmp = opset.transpose(mosaic_prediction.output(0), (1, 0))
+        saliency_maps = opset.reshape(tmp, (1, num_classes.get_length(), h, w), False)
+
+        if self.embed_normalization:
+            saliency_maps = self._normalize_saliency_maps(saliency_maps, self.per_class)
+        return saliency_maps
 
 
 class DetClassProbabilityMapXAIMethod(WhiteBoxXAIMethodBase):

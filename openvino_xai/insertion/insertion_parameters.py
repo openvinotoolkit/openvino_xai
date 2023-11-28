@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from dataclasses import dataclass
+from enum import Enum
 from typing import List, Optional, Tuple, Union
 
 from openvino_xai.common.parameters import XAIMethodType
@@ -55,3 +56,10 @@ class DetectionInsertionParameters(InsertionParameters):
     embed_normalization: bool = True
 
     explain_method_type: XAIMethodType = XAIMethodType.DETCLASSPROBABILITYMAP
+
+
+class ModelType(Enum):
+    """Enum representing the different model types."""
+
+    CNN = "cnn"
+    TRANSFORMER = "transformer"

@@ -4,8 +4,8 @@
 from enum import Enum
 
 
-class ModelType(Enum):
-    """Enum representing the different model types."""
+class TaskType(Enum):
+    """Enum representing the different task types."""
 
     CLASSIFICATION = "Classification"
     DETECTION = "Detection"
@@ -16,6 +16,7 @@ class XAIMethodType(Enum):
 
     ACTIVATIONMAP = "activationmap"
     RECIPROCAM = "reciprocam"
+    VITRECIPROCAM = "vitreciprocam"
     DETCLASSPROBABILITYMAP = "detclassprobabilitymap"
     RISE = "RISE"
 

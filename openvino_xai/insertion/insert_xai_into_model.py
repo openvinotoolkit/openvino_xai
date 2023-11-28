@@ -11,14 +11,14 @@ import openvino.model_api as mapi
 
 from openvino_xai.algorithms.white_box.create_method import create_white_box_classification_explain_method, \
     create_white_box_detection_explain_method
-from openvino_xai.common.parameters import ModelType
+from openvino_xai.common.parameters import TaskType
 from openvino_xai.insertion.insertion_parameters import InsertionParameters
 from openvino_xai.common.utils import logger, has_xai, SALIENCY_MAP_OUTPUT_NAME
 
 
 def insert_xai(
         model: Union[ov.Model, str],
-        model_type: ModelType,
+        task_type: TaskType,
         insertion_parameters: Optional[InsertionParameters] = None,
 ) -> ov.Model:
     """
@@ -26,8 +26,8 @@ def insert_xai(
 
     :param model: Original IR or path to .xml.
     :type model: Union[ov.Model, str]
-    :param model_type: Type of the model.
-    :type model_type: ModelType
+    :param task_type: Type of the model.
+    :type task_type: TaskType
     :param insertion_parameters: Insertion parameters that parametrize white-box method,
         that will be inserted into the model graph.
     :type insertion_parameters: InsertionParameters
@@ -46,7 +46,7 @@ def insert_xai(
         logger.info("Provided IR model already contains XAI branch, return it as-is.")
         return model
 
-    model_xai = _insert_xai_branch_into_model(model, model_type, insertion_parameters)
+    model_xai = _insert_xai_branch_into_model(model, task_type, insertion_parameters)
 
     if not has_xai(model_xai):
         raise RuntimeError("Insertion of the XAI branch into the model was not successful.")
@@ -57,15 +57,15 @@ def insert_xai(
 
 def _insert_xai_branch_into_model(
         model: ov.Model,
-        model_type: ModelType,
+        task_type: TaskType,
         insertion_parameters: Optional[InsertionParameters]
 ) -> ov.Model:
-    if model_type == ModelType.CLASSIFICATION:
+    if task_type == TaskType.CLASSIFICATION:
         explain_method = create_white_box_classification_explain_method(model, insertion_parameters)
-    elif model_type == ModelType.DETECTION:
+    elif task_type == TaskType.DETECTION:
         explain_method = create_white_box_detection_explain_method(model, insertion_parameters)
     else:
-        raise ValueError(f"Model type {model_type} is not supported")
+        raise ValueError(f"Model type {task_type} is not supported")
 
     xai_output_node = explain_method.generate_xai_branch()
     model_ori_outputs = model.outputs
@@ -109,13 +109,13 @@ def insert_xai_into_mapi_wrapper(
     model = mapi_wrapper.get_model()
 
     if isinstance(mapi_wrapper, openvino.model_api.models.ClassificationModel):
-        model_type = ModelType.CLASSIFICATION
+        task_type = TaskType.CLASSIFICATION
     elif isinstance(mapi_wrapper, openvino.model_api.models.DetectionModel):
-        model_type = ModelType.DETECTION
+        task_type = TaskType.DETECTION
     else:
         raise ValueError(f"Model type {type(mapi_wrapper)} is not supported.")
 
-    model_xai = insert_xai(model, model_type=model_type, insertion_parameters=insertion_parameters)
+    model_xai = insert_xai(model, task_type=task_type, insertion_parameters=insertion_parameters)
 
     # Update Model API wrapper
     mapi_wrapper.inference_adapter.model = model_xai
