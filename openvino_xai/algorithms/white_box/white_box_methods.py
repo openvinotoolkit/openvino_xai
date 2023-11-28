@@ -167,7 +167,7 @@ class DetClassProbabilityMapXAIMethod(WhiteBoxXAIMethodBase):
             model: openvino.runtime.Model,
             target_layer: List[str],
             num_anchors: List[int],
-            saliency_map_size: Union[Tuple[int, int], List[int]] = (13, 13),
+            saliency_map_size: Union[Tuple[int, int], List[int]] = (23, 23),
             embed_normalization: bool = True,
     ):
         super().__init__(model, embed_normalization)
@@ -189,8 +189,6 @@ class DetClassProbabilityMapXAIMethod(WhiteBoxXAIMethodBase):
                 cls_head_output_nodes.append(op)
         if len(cls_head_output_nodes) != len(self._target_layer):
             raise ValueError("Not all target layers were found.")
-
-        cls_head_output_nodes = [opset.softmax(node.output(0), 1) for node in cls_head_output_nodes]
 
         # TODO: better handle num_classes num_anchors availability
         _, num_channels, _, _ = cls_head_output_nodes[-1].get_output_partial_shape(0)
@@ -217,7 +215,9 @@ class DetClassProbabilityMapXAIMethod(WhiteBoxXAIMethodBase):
                 mode="linear",
                 shape_calculation_mode="sizes"
             )
+
         saliency_maps = opset.reduce_mean(opset.concat(cls_head_output_nodes, 0), 0, keep_dims=True)
+        saliency_maps = opset.softmax(saliency_maps.output(0), 1)
 
         if self.embed_normalization:
             saliency_maps = self._normalize_saliency_maps(saliency_maps, self.per_class)
