@@ -97,8 +97,16 @@ class ActivationMapXAIMethod(WhiteBoxXAIMethodBase):
         return saliency_maps
 
 
-class ReciproCAMXAIMethod(WhiteBoxXAIMethodBase):
-    """Implements Recipro-CAM"""
+class FeatureMapPerturbationBase(WhiteBoxXAIMethodBase):
+    """Base class for Recipro-CAM methods.
+
+    :param model: OpenVino model.
+    :type model: openvino.runtime.Model
+    :parameter target_layer: Target layer (node) name after which the XAI branch will be inserted.
+    :type target_layer: str
+    :param embed_normalization: Whether to normalize output or not.
+    :type embed_normalization: bool
+    """
 
     def __init__(
             self,
@@ -108,7 +116,6 @@ class ReciproCAMXAIMethod(WhiteBoxXAIMethodBase):
     ):
         super().__init__(model, embed_normalization)
         self.per_class = True
-        self.model_type = ModelType.CNN
         self.supported_target_explain_groups = [
             TargetExplainGroup.ALL,
             TargetExplainGroup.PREDICTIONS,
@@ -117,24 +124,74 @@ class ReciproCAMXAIMethod(WhiteBoxXAIMethodBase):
         self.default_target_explain_group = TargetExplainGroup.PREDICTIONS
         self._target_layer = target_layer
 
-    def generate_xai_branch(self) -> openvino.runtime.Node:
+    @abstractmethod
+    def _get_nodes(self, model_clone):
+        raise NotImplementedError
+
+    def generate_xai_branch(self):
+        """Generates XAI branch."""
         _model_clone = self._model_ori.clone()
         self._propagate_dynamic_batch_dimension(_model_clone)
 
-        target_node_ori = IRParserCls.get_target_node(self._model_ori, self.model_type, self._target_layer)
-        target_node_name = self._target_layer or target_node_ori.get_friendly_name()
-        post_target_node_clone = IRParserCls.get_post_target_node(_model_clone, self.model_type, target_node_name)
-
-        logit_node = IRParserCls.get_logit_node(self._model_ori, search_softmax=True)
-        logit_node_clone_model = IRParserCls.get_logit_node(_model_clone, search_softmax=True)
+        target_node_ori, post_target_node_clone, logit_node, logit_node_clone_model = self._get_nodes(_model_clone)
 
         if not logit_node_clone_model.output(0).partial_shape[0].is_dynamic:
             raise ValueError("Batch shape of the output should be dynamic, but it is static. "
                              "Make sure that the dynamic inputs can propagate through the model graph.")
 
+        saliency_maps = self._get_saliency_map(
+            target_node_ori,
+            post_target_node_clone,
+            logit_node,
+            logit_node_clone_model,
+        )
+
+        if self.embed_normalization:
+            saliency_maps = self._normalize_saliency_maps(saliency_maps, self.per_class)
+        return saliency_maps
+
+    @abstractmethod
+    def _get_saliency_map(
+            self,
+            target_node_ori: openvino.runtime.Node,
+            post_target_node_clone: openvino.runtime.Node,
+            logit_node: openvino.runtime.Node,
+            logit_node_clone_model: openvino.runtime.Node,
+    ):
+        raise NotImplementedError
+
+
+class ReciproCAMXAIMethod(FeatureMapPerturbationBase):
+    """Implements Recipro-CAM for CNN models"""
+
+    def __init__(
+            self,
+            model: openvino.runtime.Model,
+            target_layer: Optional[str] = None,
+            embed_normalization: bool = True,
+    ):
+        super().__init__(model, target_layer, embed_normalization)
+        self.model_type = ModelType.CNN
+
+    def _get_nodes(self, model_clone):
+        target_node_ori = IRParserCls.get_target_node(self._model_ori, self.model_type, self._target_layer)
+        target_node_name = self._target_layer or target_node_ori.get_friendly_name()
+        post_target_node_clone = IRParserCls.get_post_target_node(model_clone, self.model_type, target_node_name)
+
+        logit_node = IRParserCls.get_logit_node(self._model_ori, search_softmax=True)
+        logit_node_clone_model = IRParserCls.get_logit_node(model_clone, search_softmax=True)
+        return target_node_ori, post_target_node_clone, logit_node, logit_node_clone_model
+
+    def _get_saliency_map(
+            self,
+            target_node_ori: openvino.runtime.Node,
+            post_target_node_clone: openvino.runtime.Node,
+            logit_node: openvino.runtime.Node,
+            logit_node_clone_model: openvino.runtime.Node,
+    ):
         _, c, h, w = target_node_ori.get_output_partial_shape(0)
         c, h, w = c.get_length(), h.get_length(), w.get_length()
-        if not self.is_valid_layout(c, h, w):
+        if not self._is_valid_layout(c, h, w):
             raise ValueError(f"ReciproCAM supports only NCHW layout, but got NHWC, with shape: [N, {c}, {h}, {w}]")
 
         feature_map_repeated = opset.tile(target_node_ori.output(0), (h * w, 1, 1, 1))
@@ -156,18 +213,25 @@ class ReciproCAMXAIMethod(WhiteBoxXAIMethodBase):
         tmp = opset.transpose(mosaic_prediction.output(0), (1, 0))
         _, num_classes = logit_node.get_output_partial_shape(0)
         saliency_maps = opset.reshape(tmp, (1, num_classes.get_length(), h, w), False)
-
-        if self.embed_normalization:
-            saliency_maps = self._normalize_saliency_maps(saliency_maps, self.per_class)
         return saliency_maps
 
     @staticmethod
-    def is_valid_layout(c, h, w):
+    def _is_valid_layout(c: int, h: int, w: int):
         return h < c and w < c
 
 
-class ViTReciproCAMXAIMethod(WhiteBoxXAIMethodBase):
-    """Implements ViTRecipro-CAM"""
+class ViTReciproCAMXAIMethod(FeatureMapPerturbationBase):
+    """Implements ViTRecipro-CAM for transformer models.
+
+    :param use_gaussian: Whether to use Gaussian for mask generation or not.
+    :type use_gaussian: bool
+    :param cls_token: Whether to use cls token for mosaic prediction or not.
+    :type cls_token: bool
+    :param final_norm: Whether the model has normalization after the last transformer block.
+    :type final_norm: bool
+    :param k: Count of the transformer block (from head) before which XAI branch will be inserted.
+    :type k: int
+    """
 
     def __init__(
             self,
@@ -177,39 +241,32 @@ class ViTReciproCAMXAIMethod(WhiteBoxXAIMethodBase):
             use_gaussian: bool = True,
             cls_token: bool = True,
             final_norm: bool = True,
-            k: int = 2,
+            k: int = 1,
     ):
-        super().__init__(model, embed_normalization)
-        self.per_class = True
+        super().__init__(model, target_layer, embed_normalization)
         self.model_type = ModelType.TRANSFORMER
-        self.supported_target_explain_groups = [
-            TargetExplainGroup.ALL,
-            TargetExplainGroup.PREDICTIONS,
-            TargetExplainGroup.CUSTOM,
-        ]
-        self.default_target_explain_group = TargetExplainGroup.PREDICTIONS
-        self._target_layer = target_layer
         self._use_gaussian = use_gaussian
         self._cls_token = cls_token
 
-        # Count of target "Add" node, from the output
-        self._k = k + int(final_norm)
+        # Count of target "Add" node, from the output, 1-indexed
+        self._k = k * 2 + int(final_norm)
 
-    def generate_xai_branch(self) -> openvino.runtime.Node:
-        _model_clone = self._model_ori.clone()
-        self._propagate_dynamic_batch_dimension(_model_clone)
-
+    def _get_nodes(self, model_clone):
         target_node_ori = IRParserCls.get_target_node(self._model_ori, self.model_type, self._target_layer, self._k)
         target_node_name = self._target_layer or target_node_ori.get_friendly_name()
-        post_target_node_clone = IRParserCls.get_post_target_node(_model_clone, self.model_type, target_node_name)
+        post_target_node_clone = IRParserCls.get_post_target_node(model_clone, self.model_type, target_node_name)
 
         logit_node = IRParserCls.get_logit_node(self._model_ori, search_softmax=False)
-        logit_node_clone_model = IRParserCls.get_logit_node(_model_clone, search_softmax=False)
+        logit_node_clone_model = IRParserCls.get_logit_node(model_clone, search_softmax=False)
+        return target_node_ori, post_target_node_clone, logit_node, logit_node_clone_model
 
-        if not logit_node_clone_model.output(0).partial_shape[0].is_dynamic:
-            raise ValueError("Batch shape of the output should be dynamic, but it is static. "
-                             "Make sure that the dynamic inputs can propagate through the model graph.")
-
+    def _get_saliency_map(
+            self,
+            target_node_ori: openvino.runtime.Node,
+            post_target_node_clone: openvino.runtime.Node,
+            logit_node: openvino.runtime.Node,
+            logit_node_clone_model: openvino.runtime.Node,
+    ):
         _, num_classes = logit_node.get_output_partial_shape(0)
 
         _, token_number, dim = target_node_ori.get_output_partial_shape(0)
@@ -240,7 +297,7 @@ class ViTReciproCAMXAIMethod(WhiteBoxXAIMethodBase):
                     k = spacial_order[i, j]
                     i_pad = i + 1
                     j_pad = j + 1
-                    mosaic_feature_map_mask_padded[k, i_pad - 1 : i_pad + 2, j_pad - 1 : j_pad + 2] = gaussian
+                    mosaic_feature_map_mask_padded[k, i_pad - 1: i_pad + 2, j_pad - 1: j_pad + 2] = gaussian
             mosaic_feature_map_mask = mosaic_feature_map_mask_padded[:, 1:-1, 1:-1]
             mosaic_feature_map_mask = np.expand_dims(mosaic_feature_map_mask, 3)
             mosaic_feature_map_mask = opset.constant(mosaic_feature_map_mask)
@@ -273,9 +330,6 @@ class ViTReciproCAMXAIMethod(WhiteBoxXAIMethodBase):
 
         tmp = opset.transpose(mosaic_prediction.output(0), (1, 0))
         saliency_maps = opset.reshape(tmp, (1, num_classes.get_length(), h, w), False)
-
-        if self.embed_normalization:
-            saliency_maps = self._normalize_saliency_maps(saliency_maps, self.per_class)
         return saliency_maps
 
 

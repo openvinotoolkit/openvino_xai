@@ -34,11 +34,16 @@ def create_white_box_classification_explain_method(
     explain_method_type = insertion_parameters.explain_method_type
     if explain_method_type == XAIMethodType.RECIPROCAM:
         return ReciproCAMXAIMethod(
-            model, insertion_parameters.target_layer, insertion_parameters.embed_normalization
+            model,
+            insertion_parameters.target_layer,
+            insertion_parameters.embed_normalization,
         )
     if explain_method_type == XAIMethodType.VITRECIPROCAM:
         return ViTReciproCAMXAIMethod(
-            model, insertion_parameters.target_layer, insertion_parameters.embed_normalization
+            model,
+            insertion_parameters.target_layer,
+            insertion_parameters.embed_normalization,
+            **insertion_parameters.white_box_method_kwargs,
         )
     if explain_method_type == XAIMethodType.ACTIVATIONMAP:
         return ActivationMapXAIMethod(
