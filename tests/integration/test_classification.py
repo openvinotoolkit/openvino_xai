@@ -4,14 +4,15 @@ import cv2
 import numpy as np
 import pytest
 
-import openvino.model_api as mapi
+import openvino.runtime as ov
 
 import openvino_xai as ovxai
+from openvino_xai.explanation.model_inferrer import ClassificationModelInferrer
 from openvino_xai.common.utils import retrieve_otx_model, has_xai
 from openvino_xai.explanation.explanation_parameters import PostProcessParameters, TargetExplainGroup, \
     ExplanationParameters, ExplainMode
 from openvino_xai.insertion.insertion_parameters import ClassificationInsertionParameters
-from openvino_xai.common.parameters import XAIMethodType
+from openvino_xai.common.parameters import XAIMethodType, TaskType
 
 MODELS = [
     "mlc_mobilenetv3_large_voc",  # verified
@@ -24,12 +25,23 @@ MODELS = [
     "classification_model_with_xai_head",  # verified
 ]
 
+MODEL_NUM_CLASSES = {
+    "mlc_mobilenetv3_large_voc": 20,
+    "mlc_efficient_b0_voc": 20,
+    "mlc_efficient_v2s_voc": 20,
+    "cls_mobilenetv3_large_cars": 196,
+    "cls_efficient_b0_cars": 196,
+    "cls_efficient_v2s_cars": 196,
+    "mobilenet_v3_large_hc_cf": 8,
+    "classification_model_with_xai_head": 4,
+    "deit-tiny": 10,
+}
+
 MODELS_VOC = [
     "mlc_mobilenetv3_large_voc",  # verified
     "mlc_efficient_b0_voc",  # verified
     "mlc_efficient_v2s_voc",  # verified
     "mobilenet_v3_large_hc_cf",
-    "classification_model_with_xai_head",  # verified
 ]
 
 DEFAULT_MODEL = "mlc_mobilenetv3_large_voc"
@@ -55,6 +67,9 @@ class TestClsWB:
         "mlc_efficient_v2s_voc": np.array([157, 166, 166, 181, 162, 151, 147], dtype=np.uint8),
         "classification_model_with_xai_head": np.array([172, 173, 235, 236, 237, 238, 227], dtype=np.uint8),
     }
+    _ref_sal_maps_vitreciprocam = {
+        "deit-tiny": np.array([246, 243, 244, 246, 246, 248, 248, 247, 244, 243, 222, 217, 215, 239], dtype=np.uint8)
+    }
     _ref_sal_maps_activationmap = {
         "mlc_mobilenetv3_large_voc": np.array([7, 7, 13, 16, 3, 0, 5], dtype=np.uint8),
     }
@@ -72,23 +87,26 @@ class TestClsWB:
     def test_reciprocam(self, model_name, embed_normalization, target_explain_group):
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
-        mapi_wrapper = mapi.models.ClassificationModel.create_model(
-            model_path, "Classification"
-        )
+        model = ov.Core().read_model(model_path)
         insertion_parameters = ClassificationInsertionParameters(
             embed_normalization=embed_normalization,
             explain_method_type=XAIMethodType.RECIPROCAM,
         )
-        mapi_wrapper_xai = ovxai.insertion.insert_xai_into_mapi_wrapper(mapi_wrapper, insertion_parameters)
+        model_xai = ovxai.insert_xai(
+            model,
+            task_type=TaskType.CLASSIFICATION,
+            insertion_parameters=insertion_parameters,
+        )
+        model_inferrer = ClassificationModelInferrer(model_xai)
 
         if target_explain_group == TargetExplainGroup.ALL:
             explanation_parameters = ExplanationParameters(
                 target_explain_group=target_explain_group,
                 post_processing_parameters=PostProcessParameters(),
             )
-            explanations = ovxai.explain(mapi_wrapper_xai, self.image, explanation_parameters)
+            explanations = ovxai.explain(model_inferrer, self.image, explanation_parameters)
             assert explanations is not None
-            assert len(explanations.saliency_map) == len(mapi_wrapper_xai.labels)
+            assert len(explanations.saliency_map) == MODEL_NUM_CLASSES[model_name]
             if model_name in self._ref_sal_maps_reciprocam:
                 actual_sal_vals = explanations.saliency_map[0][0, :].astype(np.int16)
                 ref_sal_vals = self._ref_sal_maps_reciprocam[model_name].astype(np.uint8)
@@ -104,7 +122,7 @@ class TestClsWB:
                 target_explain_group=target_explain_group,
                 post_processing_parameters=PostProcessParameters(),
             )
-            explanations = ovxai.explain(mapi_wrapper_xai, self.image, explanation_parameters)
+            explanations = ovxai.explain(model_inferrer, self.image, explanation_parameters)
             assert explanations is not None
             assert len(explanations.saliency_map) == len(explanations.prediction)
         if target_explain_group == TargetExplainGroup.CUSTOM:
@@ -114,7 +132,70 @@ class TestClsWB:
                 custom_target_indices=[target_class],
                 post_processing_parameters=PostProcessParameters(),
             )
-            explanations = ovxai.explain(mapi_wrapper_xai, self.image, explanation_parameters)
+            explanations = ovxai.explain(model_inferrer, self.image, explanation_parameters)
+            assert explanations is not None
+            assert target_class in explanations.saliency_map
+            assert len(explanations.saliency_map) == len([target_class])
+            assert explanations.saliency_map[target_class].ndim == 2
+
+    @pytest.mark.parametrize("embed_normalization", [True, False])
+    @pytest.mark.parametrize(
+        "target_explain_group",
+        [
+            TargetExplainGroup.ALL,
+            TargetExplainGroup.PREDICTIONS,
+            TargetExplainGroup.CUSTOM,
+        ],
+    )
+    def test_vitreciprocam(self, embed_normalization, target_explain_group):
+        model_name = "deit-tiny"
+        retrieve_otx_model(self.data_dir, model_name)
+        model_path = self.data_dir / "otx_models" / (model_name + ".xml")
+
+        model = ov.Core().read_model(model_path)
+        insertion_parameters = ClassificationInsertionParameters(
+            embed_normalization=embed_normalization,
+            explain_method_type=XAIMethodType.VITRECIPROCAM,
+        )
+        model_xai = ovxai.insert_xai(
+            model,
+            task_type=TaskType.CLASSIFICATION,
+            insertion_parameters=insertion_parameters,
+        )
+        model_inferrer = ClassificationModelInferrer(model_xai, sigmoid=False)
+
+        if target_explain_group == TargetExplainGroup.ALL:
+            explanation_parameters = ExplanationParameters(
+                target_explain_group=target_explain_group,
+                post_processing_parameters=PostProcessParameters(),
+            )
+            explanations = ovxai.explain(model_inferrer, self.image, explanation_parameters)
+            assert explanations is not None
+            assert len(explanations.saliency_map) == MODEL_NUM_CLASSES[model_name]
+            if model_name in self._ref_sal_maps_vitreciprocam:
+                actual_sal_vals = explanations.saliency_map[0][0, :].astype(np.int16)
+                ref_sal_vals = self._ref_sal_maps_vitreciprocam[model_name].astype(np.uint8)
+                if embed_normalization:
+                    # Reference values generated with embed_normalization=True
+                    assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
+                else:
+                    assert np.sum(np.abs(actual_sal_vals - ref_sal_vals)) > 100
+        if target_explain_group == TargetExplainGroup.PREDICTIONS:
+            explanation_parameters = ExplanationParameters(
+                target_explain_group=target_explain_group,
+                post_processing_parameters=PostProcessParameters(),
+            )
+            explanations = ovxai.explain(model_inferrer, self.image, explanation_parameters)
+            assert explanations is not None
+            assert len(explanations.saliency_map) == len(explanations.prediction)
+        if target_explain_group == TargetExplainGroup.CUSTOM:
+            target_class = 1
+            explanation_parameters = ExplanationParameters(
+                target_explain_group=target_explain_group,
+                custom_target_indices=[target_class],
+                post_processing_parameters=PostProcessParameters(),
+            )
+            explanations = ovxai.explain(model_inferrer, self.image, explanation_parameters)
             assert explanations is not None
             assert target_class in explanations.saliency_map
             assert len(explanations.saliency_map) == len([target_class])
@@ -127,19 +208,22 @@ class TestClsWB:
             pytest.skip("model already has reciprocam xai head - this test cannot change it.")
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
-        mapi_wrapper = mapi.models.ClassificationModel.create_model(
-            model_path, "Classification"
-        )
+        model = ov.Core().read_model(model_path)
         insertion_parameters = ClassificationInsertionParameters(
             embed_normalization=embed_normalization,
             explain_method_type=XAIMethodType.ACTIVATIONMAP,
         )
-        mapi_wrapper_xai = ovxai.insertion.insert_xai_into_mapi_wrapper(mapi_wrapper, insertion_parameters)
+        model_xai = ovxai.insert_xai(
+            model,
+            task_type=TaskType.CLASSIFICATION,
+            insertion_parameters=insertion_parameters,
+        )
+        model_inferrer = ClassificationModelInferrer(model_xai)
 
         explanation_parameters = ExplanationParameters(
             post_processing_parameters=PostProcessParameters(),
         )
-        explanations = ovxai.explain(mapi_wrapper_xai, self.image, explanation_parameters=explanation_parameters)
+        explanations = ovxai.explain(model_inferrer, self.image, explanation_parameters=explanation_parameters)
         if model_name in self._ref_sal_maps_activationmap and embed_normalization:
             actual_sal_vals = explanations.saliency_map["per_image_map"][0, :].astype(np.int16)
             ref_sal_vals = self._ref_sal_maps_activationmap[model_name].astype(np.uint8)
@@ -161,10 +245,12 @@ class TestClsWB:
     def test_classification_postprocessing(self, target_explain_group, overlay):
         retrieve_otx_model(self.data_dir, DEFAULT_MODEL)
         model_path = self.data_dir / "otx_models" / (DEFAULT_MODEL + ".xml")
-        mapi_wrapper = mapi.models.ClassificationModel.create_model(
-            model_path, "Classification"
+        model = ov.Core().read_model(model_path)
+        model_xai = ovxai.insert_xai(
+            model,
+            task_type=TaskType.CLASSIFICATION,
         )
-        mapi_wrapper_xai = ovxai.insertion.insert_xai_into_mapi_wrapper(mapi_wrapper)
+        model_inferrer = ClassificationModelInferrer(model_xai)
 
         explain_targets = None
         if target_explain_group == TargetExplainGroup.CUSTOM:
@@ -176,7 +262,7 @@ class TestClsWB:
             custom_target_indices=explain_targets,
             post_processing_parameters=post_processing_parameters,
         )
-        explanations = ovxai.explain(mapi_wrapper_xai, self.image, explanation_parameters=explanation_parameters)
+        explanations = ovxai.explain(model_inferrer, self.image, explanation_parameters=explanation_parameters)
         assert explanations is not None
         if target_explain_group == TargetExplainGroup.ALL:
             assert len(explanations.saliency_map) == MODELS_NUM_CLASSES[DEFAULT_MODEL]
@@ -196,16 +282,18 @@ class TestClsWB:
     def test_two_sequential_norms(self):
         retrieve_otx_model(self.data_dir, DEFAULT_MODEL)
         model_path = self.data_dir / "otx_models" / (DEFAULT_MODEL + ".xml")
-        mapi_wrapper = mapi.models.ClassificationModel.create_model(
-            model_path, "Classification"
+        model = ov.Core().read_model(model_path)
+        model_xai = ovxai.insert_xai(
+            model,
+            task_type=TaskType.CLASSIFICATION,
         )
-        mapi_wrapper_xai = ovxai.insertion.insert_xai_into_mapi_wrapper(mapi_wrapper)
+        model_inferrer = ClassificationModelInferrer(model_xai)
 
         explanation_parameters = ExplanationParameters(
             target_explain_group=TargetExplainGroup.ALL,
             post_processing_parameters=PostProcessParameters(normalize=True),
         )
-        explanations = ovxai.explain(mapi_wrapper_xai, self.image, explanation_parameters=explanation_parameters)
+        explanations = ovxai.explain(model_inferrer, self.image, explanation_parameters=explanation_parameters)
 
         actual_sal_vals = explanations.saliency_map[0][0, :].astype(np.int16)
         ref_sal_vals = self._ref_sal_maps_reciprocam[DEFAULT_MODEL].astype(np.uint8)
@@ -240,10 +328,8 @@ class TestClsBB:
     def test_classification_black_box_postprocessing(self, model_name, overlay, target_explain_group, normalize):
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
-
-        model = mapi.models.ClassificationModel.create_model(
-            model_path, model_type="Classification", configuration={"output_raw_scores": True}
-        )
+        model = ov.Core().read_model(model_path)
+        model_inferrer = ClassificationModelInferrer(model)
 
         post_processing_parameters = PostProcessParameters(
             overlay=overlay,
@@ -259,7 +345,7 @@ class TestClsBB:
                 black_box_method_kwargs={"num_masks": 5, "asynchronous_inference": False, "normalize": normalize}
             )
             explanation = ovxai.explain(
-                model,
+                model_inferrer,
                 self.image,
                 explanation_parameters=explanation_parameters,
             )
@@ -279,7 +365,7 @@ class TestClsBB:
                 black_box_method_kwargs={"num_masks": 5, "asynchronous_inference": False, "normalize": normalize}
             )
             explanation = ovxai.explain(
-                model,
+                model_inferrer,
                 self.image,
                 explanation_parameters=explanation_parameters,
             )
@@ -302,19 +388,19 @@ class TestClsBB:
     def test_classification_black_box_pred_class(self, model_name, asynchronous_inference, throughput_inference):
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
-
-        model = mapi.models.ClassificationModel.create_model(
-            model_path, model_type="Classification", configuration={"output_raw_scores": True}
-        )
+        model = ov.Core().read_model(model_path)
+        model_inferrer = ClassificationModelInferrer(model)
 
         explanation_parameters = ExplanationParameters(
             explain_mode=ExplainMode.BLACKBOX,
             post_processing_parameters=PostProcessParameters(overlay=False),
-            black_box_method_kwargs={"num_masks": 5, "asynchronous_inference": False, "throughput_inference": throughput_inference}
+            black_box_method_kwargs={
+                "num_masks": 5, "asynchronous_inference": False, "throughput_inference": False
+            }
         )
 
         explanation = ovxai.explain(
-            model,
+            model_inferrer,
             self.image,
             explanation_parameters=explanation_parameters,
         )
@@ -337,12 +423,13 @@ class TestClsBB:
     def test_classification_black_box_xai_model_as_input(self):
         retrieve_otx_model(self.data_dir, DEFAULT_MODEL)
         model_path = self.data_dir / "otx_models" / (DEFAULT_MODEL + ".xml")
-        model = mapi.models.ClassificationModel.create_model(
-            model_path, model_type="Classification", configuration={"output_raw_scores": True}
+        model = ov.Core().read_model(model_path)
+        model_xai = ovxai.insert_xai(
+            model,
+            task_type=TaskType.CLASSIFICATION,
         )
-        model = ovxai.insertion.insert_xai_into_mapi_wrapper(model)
-
-        assert has_xai(model.inference_adapter.model), "Updated IR model should has XAI head."
+        assert has_xai(model_xai), "Updated IR model should has XAI head."
+        model_inferrer = ClassificationModelInferrer(model_xai)
 
         explanation_parameters = ExplanationParameters(
             explain_mode=ExplainMode.BLACKBOX,
@@ -350,7 +437,7 @@ class TestClsBB:
             black_box_method_kwargs={"num_masks": 5}
         )
         explanation = ovxai.explain(
-            model,
+            model_inferrer,
             self.image,
             explanation_parameters=explanation_parameters,
         )
