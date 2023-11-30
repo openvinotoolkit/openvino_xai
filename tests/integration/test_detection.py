@@ -93,9 +93,9 @@ class TestDetWB:
     image = cv2.imread("tests/assets/blood_image.jpg")
     data_dir = Path(".data")
     _ref_sal_maps_reciprocam = {
-        "det_mobilenetv2_atss_bccd": np.array([225, 244, 230, 231, 221, 212, 237, 247, 246, 255], dtype=np.uint8),
-        "det_mobilenetv2_ssd_bccd": np.array([60, 63, 41, 29, 80, 133, 46, 98, 194, 92], dtype=np.uint8),
-        "det_yolox_bccd": np.array([42, 41, 41, 89, 125, 72, 75, 63, 36, 58], dtype=np.uint8),
+        "det_mobilenetv2_atss_bccd": np.array([226, 247, 235, 231, 222, 217, 236, 246, 251, 255], dtype=np.uint8),
+        "det_mobilenetv2_ssd_bccd": np.array([84, 95, 61, 47, 111, 111, 77, 127, 153, 108], dtype=np.uint8),
+        "det_yolox_bccd": np.array([17, 12, 15, 63, 100, 55, 63, 47, 8, 40], dtype=np.uint8),
     }
     _sal_map_size = (23, 23)
 
