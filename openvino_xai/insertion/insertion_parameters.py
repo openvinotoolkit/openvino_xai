@@ -51,7 +51,7 @@ class DetectionInsertionParameters(InsertionParameters):
 
     target_layer: List[str]
     num_anchors: List[int]
-    saliency_map_size: Union[Tuple[int, int], List[int]] = (13, 13)
+    saliency_map_size: Union[Tuple[int, int], List[int]] = (23, 23)
     embed_normalization: bool = True
 
     explain_method_type: XAIMethodType = XAIMethodType.DETCLASSPROBABILITYMAP

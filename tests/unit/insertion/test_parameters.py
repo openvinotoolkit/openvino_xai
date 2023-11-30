@@ -17,6 +17,6 @@ def test_detection_insertion_parameters():
     det_insertion_params = DetectionInsertionParameters(["target_layer_name"], [5, 5, 5])
     assert det_insertion_params.target_layer == ["target_layer_name"]
     assert det_insertion_params.num_anchors == [5, 5, 5]
-    assert det_insertion_params.saliency_map_size == (13, 13)
+    assert det_insertion_params.saliency_map_size == (23, 23)
     assert det_insertion_params.embed_normalization
     assert det_insertion_params.explain_method_type == XAIMethodType.DETCLASSPROBABILITYMAP

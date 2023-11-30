@@ -9,7 +9,12 @@ import openvino.model_api as mapi
 
 import openvino_xai as ovxai
 from openvino_xai.algorithms.white_box.create_method import create_white_box_detection_explain_method
-from openvino_xai.algorithms.white_box.white_box_methods import DetClassProbabilityMapXAIMethod
+from openvino_xai.algorithms.white_box.white_box_methods import (
+    WhiteBoxXAIMethodBase,
+    ReciproCAMXAIMethod,
+    ActivationMapXAIMethod,
+    DetClassProbabilityMapXAIMethod,
+)
 from openvino_xai.insertion.insertion_parameters import DetectionInsertionParameters
 from openvino_xai.common.utils import retrieve_otx_model
 from openvino_xai.explanation.explanation_parameters import (
@@ -50,7 +55,6 @@ MODEL_ANCHORS = {
     "det_mobilenetv2_ssd_bccd": [4, 5],
     "det_yolox_bccd": [1, 1, 1, 1, 1],
 }
-
 MODELS_NUM_CLASSES = {
     "det_mobilenetv2_atss_bccd": 3,
     "det_mobilenetv2_ssd_bccd": 4,
