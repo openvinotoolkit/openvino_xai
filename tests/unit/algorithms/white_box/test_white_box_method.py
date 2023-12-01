@@ -13,6 +13,9 @@ from openvino_xai.common.utils import retrieve_otx_model
 class TestDetProbMapXAI:
     """Tests for DetClassProbabilityMapXAIMethod."""
 
+    # TODO: Support check xai_branch == xai_branch_reference
+    # TODO: Create small model to use it as mocker model
+    # TODO: Add check that model with XAI branch is equal to reference graph (DFS)
     _ref_sal_maps = {
         "det_mobilenetv2_atss_bccd": np.array([234, 203, 190, 196, 208, 206, 201, 199, 192, 186], dtype=np.uint8)
     }
@@ -21,8 +24,6 @@ class TestDetProbMapXAI:
     def setUp(self) -> None:
         """Setup the test case."""
         data_dir = Path(".data")
-        # TODO: Create small model to use it as mocker model
-        # TODO: Add check that model with XAI branch is equal to reference graph (DFS)
         self.model_name = "det_mobilenetv2_atss_bccd"
         retrieve_otx_model(data_dir, self.model_name)
         model_path = data_dir / "otx_models" / (self.model_name + ".xml")

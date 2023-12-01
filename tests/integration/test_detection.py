@@ -59,7 +59,7 @@ MODELS = list(MODEL_CONFIGS.keys())
 
 DEFAULT_MODEL = "det_mobilenetv2_atss_bccd"
 
-TARGETS_EXPLAIN_GROUPS = [
+TARGET_EXPLAIN_GROUPS = [
     TargetExplainGroup.ALL,
     TargetExplainGroup.PREDICTIONS,
     TargetExplainGroup.CUSTOM,
@@ -103,7 +103,7 @@ class TestDetWB:
 
     @pytest.mark.parametrize("model_name", MODELS)
     @pytest.mark.parametrize("embed_normalization", [True, False])
-    @pytest.mark.parametrize("target_explain_group", TARGETS_EXPLAIN_GROUPS)
+    @pytest.mark.parametrize("target_explain_group", TARGET_EXPLAIN_GROUPS)
     def test_detclassprobabilitymap(self, model_name, embed_normalization, target_explain_group):
         model_wrapper = get_mapi_model_wrapper(model_name)
         cls_head_output_node_names = MODEL_CONFIGS[model_name].node_names
@@ -152,8 +152,8 @@ class TestDetWB:
             assert explanations.saliency_map[target_class].ndim == 2
             assert explanations.saliency_map[target_class].shape == self._sal_map_size
 
-    @pytest.mark.parametrize("target_explain_group", TARGETS_EXPLAIN_GROUPS)
-    def test_classification_postprocessing(self, target_explain_group):
+    @pytest.mark.parametrize("target_explain_group", TARGET_EXPLAIN_GROUPS)
+    def test_detection_postprocessing(self, target_explain_group):
         model_wrapper = get_mapi_model_wrapper(DEFAULT_MODEL)
         cls_head_output_node_names = MODEL_CONFIGS[DEFAULT_MODEL].node_names
         insertion_parameters = DetectionInsertionParameters(
