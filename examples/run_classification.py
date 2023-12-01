@@ -9,7 +9,7 @@ from openvino.model_api.models import ClassificationModel
 import openvino.runtime as ov
 
 import openvino_xai as ovxai
-from openvino_xai.common.parameters import ModelType, XAIMethodType
+from openvino_xai.common.parameters import TaskType, XAIMethodType
 from openvino_xai.explanation.explanation_parameters import ExplainMode, PostProcessParameters, TargetExplainGroup, \
     ExplanationParameters
 from openvino_xai.explanation.model_inferrer import ClassificationModelInferrer
@@ -17,7 +17,7 @@ from openvino_xai.insertion.insertion_parameters import ClassificationInsertionP
 from openvino_xai.common.utils import logger
 
 
-# USE_CUSTOM_INFERRER - if True, use provided custom model inference pipelene,
+# USE_CUSTOM_INFERRER - if True, use provided custom model inference pipeline,
 # otherwise, use Model API wrapper for inference.
 USE_CUSTOM_INFERRER = True
 
@@ -44,7 +44,7 @@ def insert_xai(args):
     model_xai: ov.Model
     model_xai = ovxai.insert_xai(
         model,
-        model_type=ModelType.CLASSIFICATION,
+        task_type=TaskType.CLASSIFICATION,
     )
 
     logger.info(f"insert_xai: XAI branch inserted into IR.")
@@ -76,7 +76,7 @@ def insert_xai_w_params(args):
     model_xai: ov.Model
     model_xai = ovxai.insert_xai(
         model,
-        model_type=ModelType.CLASSIFICATION,
+        task_type=TaskType.CLASSIFICATION,
         insertion_parameters=insertion_parameters,
     )
 
@@ -146,6 +146,49 @@ def insert_xai_and_explain(args):
     # Save saliency maps
     if args.output is not None:
         output = Path(args.output) / "explain"
+        explanation.save(output, Path(args.image_path).stem)
+
+
+def insert_xai_into_vit_and_explain(args):
+    """
+    White-box scenario.
+    Insertion of the XAI branch into the IR, thus IR has additional 'saliency_map' output.
+    Definition of a callable model_inferrer.
+    Generate explanation.
+    Save saliency maps.
+    """
+    # Create ov.Model
+    model = ov.Core().read_model(args.model_path)
+
+    # Define insertion parameters
+    insertion_parameters = ClassificationInsertionParameters(
+        # target_layer="/layers.10/ffn/Add",  # OTX deit-tiny
+        # target_layer="/blocks/blocks.10/Add_1",  # timm vit_base_patch8_224.augreg_in21k_ft_in1k
+        explain_method_type=XAIMethodType.VITRECIPROCAM,
+    )
+
+    # insert XAI branch
+    model_xai: ov.Model
+    model_xai = ovxai.insert_xai(
+        model,
+        task_type=TaskType.CLASSIFICATION,
+        insertion_parameters=insertion_parameters,
+    )
+    model_inferrer = ovxai.explanation.model_inferrer.ClassificationModelInferrer(model_xai, sigmoid=False)
+    image = cv2.imread(args.image_path)
+    explanation = ovxai.explain(
+        model_inferrer,
+        image,
+    )
+
+    logger.info(
+        f"insert_xai_into_vit_and_explain: Generated {len(explanation.saliency_map)} classification "
+        f"saliency maps of layout {explanation.layout} with shape {explanation.sal_map_shape}."
+    )
+
+    # Save saliency maps
+    if args.output is not None:
+        output = Path(args.output) / "vit"
         explanation.save(output, Path(args.image_path).stem)
 
 
@@ -323,6 +366,7 @@ def main(argv):
     insert_xai_and_explain(args)
     insert_xai_and_explain_w_params(args)
     insert_xai_and_explain_multiple_images(args)
+    # insert_xai_into_vit_and_explain(args)
 
     # Get explanation in black-box mode
     explain_black_box(args)
