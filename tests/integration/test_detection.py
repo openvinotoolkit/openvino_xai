@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import addict
 import cv2
 import numpy as np
 import pytest
@@ -19,43 +20,44 @@ from openvino_xai.explanation.explanation_parameters import (
 )
 from openvino_xai.insertion.insertion_parameters import DetectionInsertionParameters
 
-MODELS = [
-    "det_mobilenetv2_atss_bccd",
-    "det_mobilenetv2_ssd_bccd",
-    "det_yolox_bccd",
-]
+MODEL_CONFIGS = addict.Addict(
+    {
+        "det_mobilenetv2_atss_bccd": 
+            {
+                "anchors": [1, 1, 1, 1, 1],
+                "num_classes": 3,
+                "node_names": [
+                    "/bbox_head/atss_cls_1/Conv/WithoutBiases",
+                    "/bbox_head/atss_cls_2/Conv/WithoutBiases",
+                    "/bbox_head/atss_cls_3/Conv/WithoutBiases",
+                    "/bbox_head/atss_cls_4/Conv/WithoutBiases",
+                ],
+            },
+        "det_mobilenetv2_ssd_bccd": 
+            {
+                "anchors": [4, 5],
+                "num_classes": 4,
+                "node_names": [
+                    "/bbox_head/cls_convs.0/cls_convs.0.3/Conv/WithoutBiases",
+                    "/bbox_head/cls_convs.1/cls_convs.1.3/Conv/WithoutBiases",
+                ],
+            },
+        "det_yolox_bccd": 
+            {
+                "anchors": [1, 1, 1, 1, 1],
+                "num_classes": 3,
+                "node_names": [
+                    "/bbox_head/multi_level_conv_cls.0/Conv/WithoutBiases",
+                    "/bbox_head/multi_level_conv_cls.1/Conv/WithoutBiases",
+                    "/bbox_head/multi_level_conv_cls.2/Conv/WithoutBiases",
+                ],
+            },     
+    }
+)
+
+MODELS = list(MODEL_CONFIGS.keys())
 
 DEFAULT_MODEL = "det_mobilenetv2_atss_bccd"
-
-MODELS_NODE_NAMES = {
-    "det_mobilenetv2_atss_bccd": [
-        "/bbox_head/atss_cls_1/Conv/WithoutBiases",
-        "/bbox_head/atss_cls_2/Conv/WithoutBiases",
-        "/bbox_head/atss_cls_3/Conv/WithoutBiases",
-        "/bbox_head/atss_cls_4/Conv/WithoutBiases",
-    ],
-    "det_mobilenetv2_ssd_bccd": [
-        "/bbox_head/cls_convs.0/cls_convs.0.3/Conv/WithoutBiases",
-        "/bbox_head/cls_convs.1/cls_convs.1.3/Conv/WithoutBiases",
-    ],
-    "det_yolox_bccd": [
-        "/bbox_head/multi_level_conv_cls.0/Conv/WithoutBiases",
-        "/bbox_head/multi_level_conv_cls.1/Conv/WithoutBiases",
-        "/bbox_head/multi_level_conv_cls.2/Conv/WithoutBiases",
-    ],
-}
-
-MODEL_ANCHORS = {
-    "det_mobilenetv2_atss_bccd": [1, 1, 1, 1, 1],
-    "det_mobilenetv2_ssd_bccd": [4, 5],
-    "det_yolox_bccd": [1, 1, 1, 1, 1],
-}
-
-MODELS_NUM_CLASSES = {
-    "det_mobilenetv2_atss_bccd": 3,
-    "det_mobilenetv2_ssd_bccd": 4,
-    "det_yolox_bccd": 3,
-}
 
 TARGETS_EXPLAIN_GROUPS = [
     TargetExplainGroup.ALL,
@@ -104,11 +106,11 @@ class TestDetWB:
     @pytest.mark.parametrize("target_explain_group", TARGETS_EXPLAIN_GROUPS)
     def test_detclassprobabilitymap(self, model_name, embed_normalization, target_explain_group):
         model_wrapper = get_mapi_model_wrapper(model_name)
-        cls_head_output_node_names = MODELS_NODE_NAMES[model_name]
+        cls_head_output_node_names = MODEL_CONFIGS[model_name].node_names
         insertion_parameters = DetectionInsertionParameters(
             embed_normalization=embed_normalization,
             target_layer=cls_head_output_node_names,
-            num_anchors=MODEL_ANCHORS[model_name],
+            num_anchors=MODEL_CONFIGS[model_name].anchors,
             saliency_map_size=self._sal_map_size,
             explain_method_type=XAIMethodType.DETCLASSPROBABILITYMAP,
         )
@@ -153,10 +155,10 @@ class TestDetWB:
     @pytest.mark.parametrize("target_explain_group", TARGETS_EXPLAIN_GROUPS)
     def test_classification_postprocessing(self, target_explain_group):
         model_wrapper = get_mapi_model_wrapper(DEFAULT_MODEL)
-        cls_head_output_node_names = MODELS_NODE_NAMES[DEFAULT_MODEL]
+        cls_head_output_node_names = MODEL_CONFIGS[DEFAULT_MODEL].node_names
         insertion_parameters = DetectionInsertionParameters(
             target_layer=cls_head_output_node_names,
-            num_anchors=MODEL_ANCHORS[DEFAULT_MODEL],
+            num_anchors=MODEL_CONFIGS[DEFAULT_MODEL].anchors,
             saliency_map_size=self._sal_map_size,
             explain_method_type=XAIMethodType.DETCLASSPROBABILITYMAP,
         )
@@ -176,7 +178,7 @@ class TestDetWB:
         assert explanations is not None
         assert explanations.sal_map_shape == (480, 640, 3)
         if target_explain_group == TargetExplainGroup.ALL:
-            assert len(explanations.saliency_map) == MODELS_NUM_CLASSES[DEFAULT_MODEL]
+            assert len(explanations.saliency_map) == MODEL_CONFIGS[DEFAULT_MODEL].num_classes
         if target_explain_group == TargetExplainGroup.PREDICTIONS:
             assert len(explanations.saliency_map) == len(explanations.prediction)
         if target_explain_group == TargetExplainGroup.CUSTOM:
@@ -186,10 +188,10 @@ class TestDetWB:
 
     def test_two_sequential_norms(self):
         model_wrapper = get_mapi_model_wrapper(DEFAULT_MODEL)
-        cls_head_output_node_names = MODELS_NODE_NAMES[DEFAULT_MODEL]
+        cls_head_output_node_names = MODEL_CONFIGS[DEFAULT_MODEL].node_names
         insertion_parameters = DetectionInsertionParameters(
             target_layer=cls_head_output_node_names,
-            num_anchors=MODEL_ANCHORS[DEFAULT_MODEL],
+            num_anchors=MODEL_CONFIGS[DEFAULT_MODEL].anchors,
             saliency_map_size=self._sal_map_size,
             explain_method_type=XAIMethodType.DETCLASSPROBABILITYMAP,
         )
@@ -217,10 +219,10 @@ class TestDetWB:
         model_wrapper = get_mapi_model_wrapper(DEFAULT_MODEL)
         model = model_wrapper.get_model()
 
-        cls_head_output_node_names = MODELS_NODE_NAMES[DEFAULT_MODEL]
+        cls_head_output_node_names = MODEL_CONFIGS[DEFAULT_MODEL].node_names
         insertion_parameters = DetectionInsertionParameters(
             target_layer=cls_head_output_node_names,
-            num_anchors=MODEL_ANCHORS[DEFAULT_MODEL],
+            num_anchors=MODEL_CONFIGS[DEFAULT_MODEL].anchors,
             saliency_map_size=self._sal_map_size,
             explain_method_type=XAIMethodType.DETCLASSPROBABILITYMAP,
         )
