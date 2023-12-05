@@ -268,10 +268,7 @@ class ViTReciproCAMXAIMethod(FeatureMapPerturbationBase):
             logit_node_clone_model: openvino.runtime.Node,
     ):
         _, num_classes = logit_node.get_output_partial_shape(0)
-
-        _, token_number, dim = target_node_ori.get_output_partial_shape(0)
-        token_number, dim = token_number.get_length(), dim.get_length()
-        h = w = int((token_number - 1) ** 0.5)
+        dim, h, w = self._get_internal_size(target_node_ori)
 
         if self._use_gaussian:
             if self._cls_token:
@@ -331,6 +328,17 @@ class ViTReciproCAMXAIMethod(FeatureMapPerturbationBase):
         tmp = opset.transpose(mosaic_prediction.output(0), (1, 0))
         saliency_maps = opset.reshape(tmp, (1, num_classes.get_length(), h, w), False)
         return saliency_maps
+
+    def _get_internal_size(self, target_node):
+        _, token_number, dim = target_node.get_output_partial_shape(0)
+        if token_number.is_dynamic or dim.is_dynamic:
+            first_conv_node = IRParserCls.get_first_conv_node(self._model_ori)
+            _, dim, h, w = first_conv_node.get_output_partial_shape(0)
+            dim, h, w = dim.get_length(), h.get_length(), w.get_length()
+        else:
+            token_number, dim = token_number.get_length(), dim.get_length()
+            h = w = int((token_number - 1) ** 0.5)
+        return dim, h, w
 
 
 class DetClassProbabilityMapXAIMethod(WhiteBoxXAIMethodBase):

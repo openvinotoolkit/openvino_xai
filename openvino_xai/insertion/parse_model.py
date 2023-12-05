@@ -171,3 +171,12 @@ class IRParserCls(IRParser):
                 return [last_pooling_node]
 
         raise RuntimeError("Cannot find first head node in auto mode, please explicitly provide input parameters.")
+
+    @classmethod
+    def get_first_conv_node(cls, model):
+        ops = model.get_ordered_ops()
+        first_conv_node = cls.get_node_by_condition(ops, cls._is_conv_node_w_spacial_size)
+        if first_conv_node is not None:
+            return first_conv_node
+
+        raise RuntimeError(f"Cannot find first convolution node in auto mode.")

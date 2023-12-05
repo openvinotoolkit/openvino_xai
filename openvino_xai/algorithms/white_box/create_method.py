@@ -29,16 +29,19 @@ def create_white_box_classification_explain_method(
         logger.info(f"Target insertion layer {insertion_parameters.target_layer} is provided.")
 
     if insertion_parameters is None:
+        logger.info("Using ReciproCAM method (for CNNs).")
         return ReciproCAMXAIMethod(model)
 
     explain_method_type = insertion_parameters.explain_method_type
     if explain_method_type == XAIMethodType.RECIPROCAM:
+        logger.info("Using ReciproCAM method (for CNNs).")
         return ReciproCAMXAIMethod(
             model,
             insertion_parameters.target_layer,
             insertion_parameters.embed_normalization,
         )
     if explain_method_type == XAIMethodType.VITRECIPROCAM:
+        logger.info("Using ViTReciproCAM method (for vision transformers).")
         return ViTReciproCAMXAIMethod(
             model,
             insertion_parameters.target_layer,
@@ -46,6 +49,7 @@ def create_white_box_classification_explain_method(
             **insertion_parameters.white_box_method_kwargs,
         )
     if explain_method_type == XAIMethodType.ACTIVATIONMAP:
+        logger.info("Using ActivationMap method (for CNNs).")
         return ActivationMapXAIMethod(
             model, insertion_parameters.target_layer, insertion_parameters.embed_normalization
         )

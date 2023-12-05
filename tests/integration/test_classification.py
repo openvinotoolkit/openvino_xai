@@ -7,7 +7,7 @@ import pytest
 import openvino.runtime as ov
 
 import openvino_xai as ovxai
-from openvino_xai.explanation.model_inferrer import ClassificationModelInferrer
+from openvino_xai.explanation.model_inferrer import ClassificationModelInferrer, ActivationType
 from openvino_xai.common.utils import retrieve_otx_model, has_xai
 from openvino_xai.explanation.explanation_parameters import PostProcessParameters, TargetExplainGroup, \
     ExplanationParameters, ExplainMode
@@ -97,7 +97,7 @@ class TestClsWB:
             task_type=TaskType.CLASSIFICATION,
             insertion_parameters=insertion_parameters,
         )
-        model_inferrer = ClassificationModelInferrer(model_xai)
+        model_inferrer = ClassificationModelInferrer(model_xai, activation=ActivationType.SIGMOID)
 
         if target_explain_group == TargetExplainGroup.ALL:
             explanation_parameters = ExplanationParameters(
@@ -162,7 +162,7 @@ class TestClsWB:
             task_type=TaskType.CLASSIFICATION,
             insertion_parameters=insertion_parameters,
         )
-        model_inferrer = ClassificationModelInferrer(model_xai, sigmoid=False)
+        model_inferrer = ClassificationModelInferrer(model_xai)
 
         if target_explain_group == TargetExplainGroup.ALL:
             explanation_parameters = ExplanationParameters(
@@ -218,7 +218,7 @@ class TestClsWB:
             task_type=TaskType.CLASSIFICATION,
             insertion_parameters=insertion_parameters,
         )
-        model_inferrer = ClassificationModelInferrer(model_xai)
+        model_inferrer = ClassificationModelInferrer(model_xai, activation=ActivationType.SIGMOID)
 
         explanation_parameters = ExplanationParameters(
             post_processing_parameters=PostProcessParameters(),
@@ -250,7 +250,7 @@ class TestClsWB:
             model,
             task_type=TaskType.CLASSIFICATION,
         )
-        model_inferrer = ClassificationModelInferrer(model_xai)
+        model_inferrer = ClassificationModelInferrer(model_xai, activation=ActivationType.SIGMOID)
 
         explain_targets = None
         if target_explain_group == TargetExplainGroup.CUSTOM:
@@ -287,7 +287,7 @@ class TestClsWB:
             model,
             task_type=TaskType.CLASSIFICATION,
         )
-        model_inferrer = ClassificationModelInferrer(model_xai)
+        model_inferrer = ClassificationModelInferrer(model_xai, activation=ActivationType.SIGMOID)
 
         explanation_parameters = ExplanationParameters(
             target_explain_group=TargetExplainGroup.ALL,
@@ -329,7 +329,7 @@ class TestClsBB:
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
         model = ov.Core().read_model(model_path)
-        model_inferrer = ClassificationModelInferrer(model)
+        model_inferrer = ClassificationModelInferrer(model, activation=ActivationType.SIGMOID)
 
         post_processing_parameters = PostProcessParameters(
             overlay=overlay,
@@ -389,7 +389,7 @@ class TestClsBB:
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
         model = ov.Core().read_model(model_path)
-        model_inferrer = ClassificationModelInferrer(model)
+        model_inferrer = ClassificationModelInferrer(model, activation=ActivationType.SIGMOID)
 
         explanation_parameters = ExplanationParameters(
             explain_mode=ExplainMode.BLACKBOX,
@@ -429,7 +429,7 @@ class TestClsBB:
             task_type=TaskType.CLASSIFICATION,
         )
         assert has_xai(model_xai), "Updated IR model should has XAI head."
-        model_inferrer = ClassificationModelInferrer(model_xai)
+        model_inferrer = ClassificationModelInferrer(model_xai, activation=ActivationType.SIGMOID)
 
         explanation_parameters = ExplanationParameters(
             explain_mode=ExplainMode.BLACKBOX,
