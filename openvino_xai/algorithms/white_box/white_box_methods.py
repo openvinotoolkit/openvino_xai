@@ -12,7 +12,7 @@ from openvino.runtime import opset10 as opset
 
 from openvino_xai.explanation.explanation_parameters import TargetExplainGroup
 from openvino_xai.insertion.insertion_parameters import ModelType
-from openvino_xai.insertion.parse_model import IRParserCls
+from openvino_xai.insertion.parse_model import IRParserCls, IRParser
 
 
 class WhiteBoxXAIMethodBase(ABC):
@@ -124,26 +124,13 @@ class FeatureMapPerturbationBase(WhiteBoxXAIMethodBase):
         self.default_target_explain_group = TargetExplainGroup.PREDICTIONS
         self._target_layer = target_layer
 
-    @abstractmethod
-    def _get_nodes(self, model_clone):
-        raise NotImplementedError
-
     def generate_xai_branch(self):
         """Generates XAI branch."""
-        _model_clone = self._model_ori.clone()
-        self._propagate_dynamic_batch_dimension(_model_clone)
-
-        target_node_ori, post_target_node_clone, logit_node, logit_node_clone_model = self._get_nodes(_model_clone)
-
-        if not logit_node_clone_model.output(0).partial_shape[0].is_dynamic:
-            raise ValueError("Batch shape of the output should be dynamic, but it is static. "
-                             "Make sure that the dynamic inputs can propagate through the model graph.")
+        model_clone = self._model_ori.clone()
+        self._propagate_dynamic_batch_dimension(model_clone)
 
         saliency_maps = self._get_saliency_map(
-            target_node_ori,
-            post_target_node_clone,
-            logit_node,
-            logit_node_clone_model,
+            model_clone
         )
 
         if self.embed_normalization:
@@ -151,13 +138,7 @@ class FeatureMapPerturbationBase(WhiteBoxXAIMethodBase):
         return saliency_maps
 
     @abstractmethod
-    def _get_saliency_map(
-            self,
-            target_node_ori: openvino.runtime.Node,
-            post_target_node_clone: openvino.runtime.Node,
-            logit_node: openvino.runtime.Node,
-            logit_node_clone_model: openvino.runtime.Node,
-    ):
+    def _get_saliency_map(self, model_clone: openvino.runtime.Model):
         raise NotImplementedError
 
 
@@ -173,22 +154,18 @@ class ReciproCAMXAIMethod(FeatureMapPerturbationBase):
         super().__init__(model, target_layer, embed_normalization)
         self.model_type = ModelType.CNN
 
-    def _get_nodes(self, model_clone):
+    def _get_saliency_map(self, model_clone: openvino.runtime.Model):
         target_node_ori = IRParserCls.get_target_node(self._model_ori, self.model_type, self._target_layer)
         target_node_name = self._target_layer or target_node_ori.get_friendly_name()
         post_target_node_clone = IRParserCls.get_post_target_node(model_clone, self.model_type, target_node_name)
 
         logit_node = IRParserCls.get_logit_node(self._model_ori, search_softmax=True)
         logit_node_clone_model = IRParserCls.get_logit_node(model_clone, search_softmax=True)
-        return target_node_ori, post_target_node_clone, logit_node, logit_node_clone_model
 
-    def _get_saliency_map(
-            self,
-            target_node_ori: openvino.runtime.Node,
-            post_target_node_clone: openvino.runtime.Node,
-            logit_node: openvino.runtime.Node,
-            logit_node_clone_model: openvino.runtime.Node,
-    ):
+        if not logit_node_clone_model.output(0).partial_shape[0].is_dynamic:
+            raise ValueError("Batch shape of the output should be dynamic, but it is static. "
+                             "Make sure that the dynamic inputs can propagate through the model graph.")
+
         _, c, h, w = target_node_ori.get_output_partial_shape(0)
         c, h, w = c.get_length(), h.get_length(), w.get_length()
         if not self._is_valid_layout(c, h, w):
@@ -229,7 +206,7 @@ class ViTReciproCAMXAIMethod(FeatureMapPerturbationBase):
     :type cls_token: bool
     :param final_norm: Whether the model has normalization after the last transformer block.
     :type final_norm: bool
-    :param k: Count of the transformer block (from head) before which XAI branch will be inserted.
+    :param k: Count of the transformer block (from head) before which XAI branch will be inserted, 1-indexed.
     :type k: int
     """
 
@@ -248,31 +225,109 @@ class ViTReciproCAMXAIMethod(FeatureMapPerturbationBase):
         self._use_gaussian = use_gaussian
         self._cls_token = cls_token
 
-        # Count of target "Add" node, from the output, 1-indexed
+        # Count of target "Add" node (between the blocks), from the output, 1-indexed
         self._k = k * 2 + int(final_norm)
 
-    def _get_nodes(self, model_clone):
+    def _get_saliency_map(self, model_clone: openvino.runtime.Model):
+        #      Add       -> add node before the target transformer blocks
+        #   ↓       ↓
+        #  skip   block  -> skip connection to the next block and target block itself
+        #   ↓       ↓
+        #      Add       -> add node after the target transformer blocks
+
+        # Get target Add node in-between the transformer blocks
         target_node_ori = IRParserCls.get_target_node(self._model_ori, self.model_type, self._target_layer, self._k)
         target_node_name = self._target_layer or target_node_ori.get_friendly_name()
+
+        # Get post-add nodes and check them
         post_target_node_clone = IRParserCls.get_post_target_node(model_clone, self.model_type, target_node_name)
+        self._post_add_node_check(post_target_node_clone)
 
+        # Get logit nodes. Check them and retrieve info
         logit_node = IRParserCls.get_logit_node(self._model_ori, search_softmax=False)
-        logit_node_clone_model = IRParserCls.get_logit_node(model_clone, search_softmax=False)
-        return target_node_ori, post_target_node_clone, logit_node, logit_node_clone_model
+        logit_node_clone = IRParserCls.get_logit_node(model_clone, search_softmax=False)
+        if not logit_node_clone.output(0).partial_shape[0].is_dynamic:
+            raise ValueError("Batch shape of the output should be dynamic, but it is static. "
+                             "Make sure that the dynamic inputs can propagate through the model graph.")
 
-    def _get_saliency_map(
-            self,
-            target_node_ori: openvino.runtime.Node,
-            post_target_node_clone: openvino.runtime.Node,
-            logit_node: openvino.runtime.Node,
-            logit_node_clone_model: openvino.runtime.Node,
-    ):
         _, num_classes = logit_node.get_output_partial_shape(0)
-        dim, h, w = self._get_internal_size(target_node_ori)
+        dim, h, w, num_aux_tokens = self._get_internal_size(target_node_ori)
 
+        # Depth first search till the end of the LayerNorm (traverse of the block branch)
+        post_target_node_ori = IRParserCls.get_post_target_node(self._model_ori, self.model_type, target_node_name)
+        norm_node_ori = self._get_non_add_node_from_two_nodes(post_target_node_ori)
+        while norm_node_ori.get_type_name() != "Add":
+            if len(norm_node_ori.outputs()) > 1:
+                raise ValueError
+            inputs = norm_node_ori.output(0).get_target_inputs()
+            if len(inputs) > 1:
+                raise ValueError
+            norm_node_ori = next(iter(inputs)).get_node()
+
+        # Mosaic feature map after the LayerNorm
+        post_target_node_clone_norm = IRParserCls.get_post_target_node(
+            model_clone, self.model_type, norm_node_ori.get_friendly_name()
+        )
+        mosaic_feature_map_norm = self._get_mosaic_feature_map(norm_node_ori, dim, h, w, num_aux_tokens)
+        for node in post_target_node_clone_norm:
+            node.input(0).replace_source_output(mosaic_feature_map_norm.output(0))
+
+        # Mosaic feature map after the Add node
+        mosaic_feature_map = self._get_mosaic_feature_map(target_node_ori, dim, h, w, num_aux_tokens)
+        add_node_clone = self._get_add_node_from_two_nodes(post_target_node_clone)
+        add_node_clone.input(0).replace_source_output(mosaic_feature_map.output(0))
+
+        # Transform mosaic predictions into the saliency map
+        mosaic_prediction = logit_node_clone
+        tmp = opset.transpose(mosaic_prediction.output(0), (1, 0))
+        saliency_maps = opset.reshape(tmp, (1, num_classes.get_length(), h, w), False)
+        return saliency_maps
+
+    def _get_internal_size(self, target_node):
+        _, token_number, dim = target_node.get_output_partial_shape(0)
+        if token_number.is_dynamic or dim.is_dynamic:
+            first_conv_node = IRParserCls.get_first_conv_node(self._model_ori)
+            _, dim, h, w = first_conv_node.get_output_partial_shape(0)
+            dim, h, w = dim.get_length(), h.get_length(), w.get_length()
+
+            first_concat_node = IRParserCls.get_first_concat_node(self._model_ori)
+            num_aux_tokens = len(first_concat_node.inputs()) - 1
+        else:
+            token_number, dim = token_number.get_length(), dim.get_length()
+            h = w = int((token_number - 1) ** 0.5)
+            num_aux_tokens = token_number - (h * w)
+        return dim, h, w, num_aux_tokens
+
+    def _get_add_node_from_two_nodes(self, node_list):
+        self._post_add_node_check(node_list)
+
+        node1, node2 = node_list
+        if node1.get_type_name() == "Add":
+            return node1
+        return node2
+
+    def _get_non_add_node_from_two_nodes(self, node_list):
+        self._post_add_node_check(node_list)
+
+        node1, node2 = node_list
+        if node1.get_type_name() != "Add":
+            return node1
+        return node2
+
+    @staticmethod
+    def _post_add_node_check(node_list):
+        if len(node_list) != 2:
+            raise ValueError(f"Only two outputs of the between block Add node supported, "
+                             f"but got {len(node_list)}.")
+        node1, node2 = node_list
+        if not (node1.get_type_name() == "Add") != (node2.get_type_name() == "Add"):
+            raise ValueError(f"Only one on the nodes has to be Add type."
+                             f"But got {node1.get_type_name()} and {node2.get_type_name()}.")
+
+    def _get_mosaic_feature_map(self, target_node_ori, dim, h, w, num_aux_tokens):
         if self._use_gaussian:
             if self._cls_token:
-                cls_token = opset.slice(target_node_ori, np.array([0]), np.array([1]), np.array([1]), np.array([1]))
+                cls_token = opset.slice(target_node_ori, np.array([0]), np.array([num_aux_tokens]), np.array([1]), np.array([1]))
             else:
                 cls_token = opset.constant(np.zeros((1, 1, dim)), dtype=np.float32)
             cls_token = opset.tile(cls_token.output(0), (h * w, 1, 1))
@@ -319,26 +374,7 @@ class ViTReciproCAMXAIMethod(FeatureMapPerturbationBase):
             mosaic_feature_map_mask = opset.tile(mosaic_feature_map_mask.output(0), (1, 1, dim))  # e.g. 784x785x768
             feature_map_repeated = opset.tile(target_node_ori.output(0), (h * w, 1, 1))  # e.g. 784x785x768
             mosaic_feature_map = opset.multiply(feature_map_repeated, mosaic_feature_map_mask)
-
-        for node in post_target_node_clone:
-            node.input(0).replace_source_output(mosaic_feature_map.output(0))
-
-        mosaic_prediction = logit_node_clone_model
-
-        tmp = opset.transpose(mosaic_prediction.output(0), (1, 0))
-        saliency_maps = opset.reshape(tmp, (1, num_classes.get_length(), h, w), False)
-        return saliency_maps
-
-    def _get_internal_size(self, target_node):
-        _, token_number, dim = target_node.get_output_partial_shape(0)
-        if token_number.is_dynamic or dim.is_dynamic:
-            first_conv_node = IRParserCls.get_first_conv_node(self._model_ori)
-            _, dim, h, w = first_conv_node.get_output_partial_shape(0)
-            dim, h, w = dim.get_length(), h.get_length(), w.get_length()
-        else:
-            token_number, dim = token_number.get_length(), dim.get_length()
-            h = w = int((token_number - 1) ** 0.5)
-        return dim, h, w
+        return mosaic_feature_map
 
 
 class DetClassProbabilityMapXAIMethod(WhiteBoxXAIMethodBase):
