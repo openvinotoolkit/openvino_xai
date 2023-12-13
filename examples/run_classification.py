@@ -12,7 +12,7 @@ import openvino_xai as ovxai
 from openvino_xai.common.parameters import TaskType, XAIMethodType
 from openvino_xai.explanation.explanation_parameters import ExplainMode, PostProcessParameters, TargetExplainGroup, \
     ExplanationParameters
-from openvino_xai.explanation.model_inferrer import ClassificationModelInferrer
+from openvino_xai.explanation.model_inferrer import ClassificationModelInferrer, ActivationType
 from openvino_xai.insertion.insertion_parameters import ClassificationInsertionParameters
 from openvino_xai.common.utils import logger
 
@@ -126,7 +126,9 @@ def insert_xai_and_explain(args):
     # ***** Start of user's code that creates a callable model_inferrer *****
     # inference_result = model_inferrer(image)  # inference_result: ovxai.explanation.utils.InferenceResult
     if USE_CUSTOM_INFERRER:
-        model_inferrer = ovxai.explanation.model_inferrer.ClassificationModelInferrer(model_xai)
+        model_inferrer = ovxai.explanation.model_inferrer.ClassificationModelInferrer(
+            model_xai, activation=ActivationType.SIGMOID
+        )
     else:
         model_inferrer = insert_xai_into_mapi_wrapper(args)
     # ***** End of user's code that creates a callable model_inferrer *****
@@ -174,7 +176,7 @@ def insert_xai_into_vit_and_explain(args):
         task_type=TaskType.CLASSIFICATION,
         insertion_parameters=insertion_parameters,
     )
-    model_inferrer = ovxai.explanation.model_inferrer.ClassificationModelInferrer(model_xai, sigmoid=False)
+    model_inferrer = ovxai.explanation.model_inferrer.ClassificationModelInferrer(model_xai)
     image = cv2.imread(args.image_path)
     explanation = ovxai.explain(
         model_inferrer,
@@ -207,7 +209,9 @@ def insert_xai_and_explain_w_params(args):
     # ***** Start of user's code that creates a callable model_inferrer *****
     # inference_result = model_inferrer(image)  # inference_result: ovxai.explanation.utils.InferenceResult
     if USE_CUSTOM_INFERRER:
-        model_inferrer = ovxai.explanation.model_inferrer.ClassificationModelInferrer(model_xai)
+        model_inferrer = ovxai.explanation.model_inferrer.ClassificationModelInferrer(
+            model_xai, activation=ActivationType.SIGMOID
+        )
     else:
         model_inferrer = insert_xai_into_mapi_wrapper(args)
     # ***** End of user's code that creates a callable model_inferrer *****
@@ -254,15 +258,7 @@ def insert_xai_and_explain_multiple_images(args):
     # TODO: wrap it into ovxai.explain()?
 
     # Create list of images
-    img_data_formats = (
-        ".jpg",
-        ".jpeg",
-        ".gif",
-        ".bmp",
-        ".tif",
-        ".tiff",
-        ".png",
-    )
+    img_data_formats = (".jpg", ".jpeg", ".gif", ".bmp", ".tif", ".tiff", ".png")
     if args.image_path.lower().endswith(img_data_formats):
         # args.image_path is a path to the image
         img_files = [args.image_path]
@@ -279,7 +275,9 @@ def insert_xai_and_explain_multiple_images(args):
     # ***** Start of user's code that creates a callable model_inferrer *****
     # inference_result = model_inferrer(image)  # inference_result: ovxai.explanation.utils.InferenceResult
     if USE_CUSTOM_INFERRER:
-        model_inferrer = ovxai.explanation.model_inferrer.ClassificationModelInferrer(model_xai)
+        model_inferrer = ovxai.explanation.model_inferrer.ClassificationModelInferrer(
+            model_xai, activation=ActivationType.SIGMOID
+        )
     else:
         model_inferrer = insert_xai_into_mapi_wrapper(args)
     # ***** End of user's code that creates a callable model_inferrer *****
@@ -322,7 +320,9 @@ def explain_black_box(args):
     # ***** Start of user's code that creates a callable model_inferrer *****
     # inference_result = model_inferrer(image)  # inference_result: ovxai.explanation.utils.InferenceResult
     if USE_CUSTOM_INFERRER:
-        model_inferrer = ovxai.explanation.model_inferrer.ClassificationModelInferrer(model)
+        model_inferrer = ovxai.explanation.model_inferrer.ClassificationModelInferrer(
+            model, activation=ActivationType.SIGMOID
+        )
     else:
         model_inferrer = openvino.model_api.models.ClassificationModel.create_model(
             args.model_path, model_type="Classification",  configuration={"output_raw_scores": True}
