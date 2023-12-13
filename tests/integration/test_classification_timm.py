@@ -142,8 +142,7 @@ def export_to_ir(model_path: str, save_path: str, model_name: str) -> None:
     runner.run()
 
 
-# TEST_MODELS = timm.list_models(pretrained=True)
-TEST_MODELS = timm.list_models("flexivit_*", pretrained=True)
+TEST_MODELS = timm.list_models(pretrained=True)
 
 
 CNN_MODELS = [
@@ -346,7 +345,7 @@ class TestImageClassificationTimm:
         11821: 1652,  # 1652 is a cheetah class_id in the ImageNet-12k dataset
     }
 
-    @pytest.mark.parametrize("model_id", TEST_MODELS)  # TEST_MODELS would work for 500+ models
+    @pytest.mark.parametrize("model_id", WB_TEST_MODELS)  # TEST_MODELS would work for 500+ models
     def test_cnn_classification_white_box(
             self, model_id, dump_maps=True
     ):
@@ -368,7 +367,7 @@ class TestImageClassificationTimm:
             input_size = [1] + list(timm_model.default_cfg["input_size"])
             dummy_tensor = torch.rand(input_size)
             onnx_path = output_model_dir / "model_fp32.onnx"
-            set_dynamic_batch = True# model_id in LIMITED_DIVERSE_SET_OF_VISION_TRANSFORMER_MODELS
+            set_dynamic_batch = model_id in LIMITED_DIVERSE_SET_OF_VISION_TRANSFORMER_MODELS
             export_to_onnx(timm_model, onnx_path, dummy_tensor, set_dynamic_batch)
             self.update_report("report_wb.csv", model_id, "True")
             export_to_ir(onnx_path, output_model_dir, model_name="model_fp32")
