@@ -39,6 +39,16 @@ class IRParser:
         return True
 
     @classmethod
+    def _is_concat_node_w_non_constant_inputs(cls, op):
+        if op.get_type_name() != "Concat":
+            return False
+        input_nodes = op.inputs()
+        for input_node in input_nodes:
+            if input_node.get_source_output().get_node().get_type_name() == "Constant":
+                return False
+        return True
+
+    @classmethod
     def _is_pooling_node_wo_spacial_size(cls, op: openvino.runtime.Node) -> bool:
         if "Pool" not in op.get_friendly_name():
             return False
@@ -85,6 +95,8 @@ class IRParser:
 
 class IRParserCls(IRParser):
     """ParserCls parse classification OV IR model."""
+    # TODO: use OV pattern matching functionality
+    # TODO: separate for CNNs and ViT
 
     @classmethod
     def get_logit_node(cls, model: openvino.runtime.Model, output_id=0, search_softmax=False) -> openvino.runtime.Node:
@@ -139,7 +151,6 @@ class IRParserCls(IRParser):
                 return target_node
 
         if model_type == ModelType.TRANSFORMER:
-            # TODO: Validate and improve (experimental)
             reversed_ops = model.get_ordered_ops()[::-1]
             target_node = cls.get_node_by_condition(
                 reversed_ops, cls._is_add_node_w_two_non_constant_inputs, k
@@ -178,5 +189,14 @@ class IRParserCls(IRParser):
         first_conv_node = cls.get_node_by_condition(ops, cls._is_conv_node_w_spacial_size)
         if first_conv_node is not None:
             return first_conv_node
+
+        raise RuntimeError(f"Cannot find first convolution node in auto mode.")
+
+    @classmethod
+    def get_first_concat_node(cls, model):
+        ops = model.get_ordered_ops()
+        first_concat_node = cls.get_node_by_condition(ops, cls._is_concat_node_w_non_constant_inputs)
+        if first_concat_node is not None:
+            return first_concat_node
 
         raise RuntimeError(f"Cannot find first convolution node in auto mode.")
