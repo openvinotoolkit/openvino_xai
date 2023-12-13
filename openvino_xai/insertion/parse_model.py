@@ -62,20 +62,24 @@ class IRParser:
             return False
         if len(op.outputs()) > 1:
             return False
-        node_output_shape = op.output(0).partial_shape
-        if node_output_shape.rank.get_length() != 4:
+        node_out_shape = op.output(0).partial_shape
+        if node_out_shape.rank.get_length() != 4:
             return False
-        c, h, w, = node_output_shape[1].get_length(), node_output_shape[2].get_length(), node_output_shape[3].get_length()
-        return 1 < h < c and 1 < w < c
+        if not (node_out_shape[0].is_dynamic or node_out_shape[0].get_length() == 1):
+            return False
+        c, h, w, = node_out_shape[1].get_length(), node_out_shape[2].get_length(), node_out_shape[3].get_length()
+        if not (1 < h < c and 1 < w < c):
+            return False
+        return True
 
     @staticmethod
     def _has_spacial_size(node: openvino.runtime.Node, output_id: int = 0) -> Optional[bool]:
-        node_output_shape = node.output(output_id).partial_shape
+        node_out_shape = node.output(output_id).partial_shape
 
         # NCHW
-        h, w, = node_output_shape[2].get_length(), node_output_shape[3].get_length()
+        h, w, = node_out_shape[2].get_length(), node_out_shape[3].get_length()
         # NHWC
-        h_, w_, = node_output_shape[1].get_length(), node_output_shape[2].get_length()
+        h_, w_, = node_out_shape[1].get_length(), node_out_shape[2].get_length()
         return (h != 1 and w != 1) or (h_ != 1 and w_ != 1)
 
     @staticmethod

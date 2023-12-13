@@ -321,7 +321,7 @@ class ViTReciproCAMXAIMethod(FeatureMapPerturbationBase):
                              f"but got {len(node_list)}.")
         node1, node2 = node_list
         if not (node1.get_type_name() == "Add") != (node2.get_type_name() == "Add"):
-            raise ValueError(f"Only one on the nodes has to be Add type."
+            raise ValueError(f"One (and only one) of the nodes has to be Add type. "
                              f"But got {node1.get_type_name()} and {node2.get_type_name()}.")
 
     def _get_mosaic_feature_map(self, target_node_ori, dim, h, w, num_aux_tokens):

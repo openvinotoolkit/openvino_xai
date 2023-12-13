@@ -37,11 +37,9 @@ def insert_xai(args):
     """
 
     # Create ov.Model
-    model: ov.Model
     model = ov.Core().read_model(args.model_path)
 
     # insert XAI branch
-    model_xai: ov.Model
     model_xai = ovxai.insert_xai(
         model,
         task_type=TaskType.CLASSIFICATION,
@@ -73,7 +71,6 @@ def insert_xai_w_params(args):
     )
 
     # insert XAI branch
-    model_xai: ov.Model
     model_xai = ovxai.insert_xai(
         model,
         task_type=TaskType.CLASSIFICATION,
@@ -170,7 +167,6 @@ def insert_xai_into_vit_and_explain(args):
     )
 
     # insert XAI branch
-    model_xai: ov.Model
     model_xai = ovxai.insert_xai(
         model,
         task_type=TaskType.CLASSIFICATION,

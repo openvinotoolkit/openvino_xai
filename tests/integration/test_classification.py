@@ -14,6 +14,7 @@ from openvino_xai.explanation.explanation_parameters import PostProcessParameter
 from openvino_xai.insertion.insertion_parameters import ClassificationInsertionParameters
 from openvino_xai.common.parameters import XAIMethodType, TaskType
 
+
 MODELS = [
     "mlc_mobilenetv3_large_voc",  # verified
     "mlc_efficient_b0_voc",  # verified
@@ -24,6 +25,7 @@ MODELS = [
     "mobilenet_v3_large_hc_cf",
     "classification_model_with_xai_head",  # verified
 ]
+
 
 MODEL_NUM_CLASSES = {
     "mlc_mobilenetv3_large_voc": 20,
@@ -37,6 +39,7 @@ MODEL_NUM_CLASSES = {
     "deit-tiny": 10,
 }
 
+
 MODELS_VOC = [
     "mlc_mobilenetv3_large_voc",  # verified
     "mlc_efficient_b0_voc",  # verified
@@ -44,18 +47,8 @@ MODELS_VOC = [
     "mobilenet_v3_large_hc_cf",
 ]
 
-DEFAULT_MODEL = "mlc_mobilenetv3_large_voc"
 
-MODELS_NUM_CLASSES = {
-    "mlc_mobilenetv3_large_voc": 20,  # verified
-    "mlc_efficient_b0_voc": 20,  # verified
-    "mlc_efficient_v2s_voc": 20,  # verified
-    "cls_mobilenetv3_large_cars": 196,
-    "cls_efficient_b0_cars": 196,
-    "cls_efficient_v2s_cars": 196,
-    "mobilenet_v3_large_hc_cf": 8,
-    "classification_model_with_xai_head": 4,  # verified
-}
+DEFAULT_MODEL = "mlc_mobilenetv3_large_voc"
 
 
 class TestClsWB:
@@ -266,7 +259,7 @@ class TestClsWB:
         explanations = ovxai.explain(model_inferrer, self.image, explanation_parameters=explanation_parameters)
         assert explanations is not None
         if target_explain_group == TargetExplainGroup.ALL:
-            assert len(explanations.saliency_map) == MODELS_NUM_CLASSES[DEFAULT_MODEL]
+            assert len(explanations.saliency_map) == MODEL_NUM_CLASSES[DEFAULT_MODEL]
         if target_explain_group == TargetExplainGroup.PREDICTIONS:
             assert len(explanations.saliency_map) == len(explanations.prediction)
         if target_explain_group == TargetExplainGroup.CUSTOM:
@@ -373,10 +366,10 @@ class TestClsBB:
 
             assert explanation is not None
             if overlay:
-                assert len(explanation.saliency_map) == MODELS_NUM_CLASSES[model_name]
+                assert len(explanation.saliency_map) == MODEL_NUM_CLASSES[model_name]
                 assert explanation.sal_map_shape == (354, 500, 3)
             else:
-                assert len(explanation.saliency_map) == MODELS_NUM_CLASSES[model_name]
+                assert len(explanation.saliency_map) == MODEL_NUM_CLASSES[model_name]
                 assert explanation.sal_map_shape == (224, 224)
                 if normalize:
                     for map_ in explanation.saliency_map.values():
