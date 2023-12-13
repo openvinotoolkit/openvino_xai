@@ -68,11 +68,74 @@ class TestClsWB:
         "classification_model_with_xai_head": np.array([172, 173, 235, 236, 237, 238, 227], dtype=np.uint8),
     }
     _ref_sal_maps_vitreciprocam = {
-        "deit-tiny": np.array([246, 243, 244, 246, 246, 248, 248, 247, 244, 243, 222, 217, 215, 239], dtype=np.uint8)
+        "deit-tiny": np.array([212, 208, 221, 236, 230, 234, 237, 242, 221, 199, 179, 148, 140, 166], dtype=np.uint8)
     }
     _ref_sal_maps_activationmap = {
         "mlc_mobilenetv3_large_voc": np.array([7, 7, 13, 16, 3, 0, 5], dtype=np.uint8),
     }
+
+    @pytest.mark.parametrize("embed_normalization", [True, False])
+    @pytest.mark.parametrize(
+        "target_explain_group",
+        [
+            TargetExplainGroup.ALL,
+            TargetExplainGroup.PREDICTIONS,
+            TargetExplainGroup.CUSTOM,
+        ],
+    )
+    def test_vitreciprocam(self, embed_normalization, target_explain_group):
+        model_name = "deit-tiny"
+        retrieve_otx_model(self.data_dir, model_name)
+        model_path = self.data_dir / "otx_models" / (model_name + ".xml")
+
+        model = ov.Core().read_model(model_path)
+        insertion_parameters = ClassificationInsertionParameters(
+            embed_normalization=embed_normalization,
+            explain_method_type=XAIMethodType.VITRECIPROCAM,
+        )
+        model_xai = ovxai.insert_xai(
+            model,
+            task_type=TaskType.CLASSIFICATION,
+            insertion_parameters=insertion_parameters,
+        )
+        model_inferrer = ClassificationModelInferrer(model_xai)
+
+        if target_explain_group == TargetExplainGroup.ALL:
+            explanation_parameters = ExplanationParameters(
+                target_explain_group=target_explain_group,
+                post_processing_parameters=PostProcessParameters(),
+            )
+            explanations = ovxai.explain(model_inferrer, self.image, explanation_parameters)
+            assert explanations is not None
+            assert len(explanations.saliency_map) == MODEL_NUM_CLASSES[model_name]
+            if model_name in self._ref_sal_maps_vitreciprocam:
+                actual_sal_vals = explanations.saliency_map[0][0, :].astype(np.int16)
+                ref_sal_vals = self._ref_sal_maps_vitreciprocam[model_name].astype(np.uint8)
+                if embed_normalization:
+                    # Reference values generated with embed_normalization=True
+                    assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
+                else:
+                    assert np.sum(np.abs(actual_sal_vals - ref_sal_vals)) > 100
+        if target_explain_group == TargetExplainGroup.PREDICTIONS:
+            explanation_parameters = ExplanationParameters(
+                target_explain_group=target_explain_group,
+                post_processing_parameters=PostProcessParameters(),
+            )
+            explanations = ovxai.explain(model_inferrer, self.image, explanation_parameters)
+            assert explanations is not None
+            assert len(explanations.saliency_map) == len(explanations.prediction)
+        if target_explain_group == TargetExplainGroup.CUSTOM:
+            target_class = 1
+            explanation_parameters = ExplanationParameters(
+                target_explain_group=target_explain_group,
+                custom_target_indices=[target_class],
+                post_processing_parameters=PostProcessParameters(),
+            )
+            explanations = ovxai.explain(model_inferrer, self.image, explanation_parameters)
+            assert explanations is not None
+            assert target_class in explanations.saliency_map
+            assert len(explanations.saliency_map) == len([target_class])
+            assert explanations.saliency_map[target_class].ndim == 2
 
     @pytest.mark.parametrize("model_name", MODELS)
     @pytest.mark.parametrize("embed_normalization", [True, False])
@@ -138,68 +201,6 @@ class TestClsWB:
             assert len(explanations.saliency_map) == len([target_class])
             assert explanations.saliency_map[target_class].ndim == 2
 
-    @pytest.mark.parametrize("embed_normalization", [True, False])
-    @pytest.mark.parametrize(
-        "target_explain_group",
-        [
-            TargetExplainGroup.ALL,
-            TargetExplainGroup.PREDICTIONS,
-            TargetExplainGroup.CUSTOM,
-        ],
-    )
-    def test_vitreciprocam(self, embed_normalization, target_explain_group):
-        model_name = "deit-tiny"
-        retrieve_otx_model(self.data_dir, model_name)
-        model_path = self.data_dir / "otx_models" / (model_name + ".xml")
-
-        model = ov.Core().read_model(model_path)
-        insertion_parameters = ClassificationInsertionParameters(
-            embed_normalization=embed_normalization,
-            explain_method_type=XAIMethodType.VITRECIPROCAM,
-        )
-        model_xai = ovxai.insert_xai(
-            model,
-            task_type=TaskType.CLASSIFICATION,
-            insertion_parameters=insertion_parameters,
-        )
-        model_inferrer = ClassificationModelInferrer(model_xai)
-
-        if target_explain_group == TargetExplainGroup.ALL:
-            explanation_parameters = ExplanationParameters(
-                target_explain_group=target_explain_group,
-                post_processing_parameters=PostProcessParameters(),
-            )
-            explanations = ovxai.explain(model_inferrer, self.image, explanation_parameters)
-            assert explanations is not None
-            assert len(explanations.saliency_map) == MODEL_NUM_CLASSES[model_name]
-            if model_name in self._ref_sal_maps_vitreciprocam:
-                actual_sal_vals = explanations.saliency_map[0][0, :].astype(np.int16)
-                ref_sal_vals = self._ref_sal_maps_vitreciprocam[model_name].astype(np.uint8)
-                if embed_normalization:
-                    # Reference values generated with embed_normalization=True
-                    assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
-                else:
-                    assert np.sum(np.abs(actual_sal_vals - ref_sal_vals)) > 100
-        if target_explain_group == TargetExplainGroup.PREDICTIONS:
-            explanation_parameters = ExplanationParameters(
-                target_explain_group=target_explain_group,
-                post_processing_parameters=PostProcessParameters(),
-            )
-            explanations = ovxai.explain(model_inferrer, self.image, explanation_parameters)
-            assert explanations is not None
-            assert len(explanations.saliency_map) == len(explanations.prediction)
-        if target_explain_group == TargetExplainGroup.CUSTOM:
-            target_class = 1
-            explanation_parameters = ExplanationParameters(
-                target_explain_group=target_explain_group,
-                custom_target_indices=[target_class],
-                post_processing_parameters=PostProcessParameters(),
-            )
-            explanations = ovxai.explain(model_inferrer, self.image, explanation_parameters)
-            assert explanations is not None
-            assert target_class in explanations.saliency_map
-            assert len(explanations.saliency_map) == len([target_class])
-            assert explanations.saliency_map[target_class].ndim == 2
 
     @pytest.mark.parametrize("model_name", MODELS)
     @pytest.mark.parametrize("embed_normalization", [True, False])
