@@ -91,7 +91,7 @@ class TestClsWB:
             task_type=TaskType.CLASSIFICATION,
             insertion_parameters=insertion_parameters,
         )
-        model_inferrer = ClassificationModelInferrer(model_xai)
+        model_inferrer = ClassificationModelInferrer(model_xai, activation=ActivationType.NONE)
 
         if target_explain_group == TargetExplainGroup.ALL:
             explanation_parameters = ExplanationParameters(

@@ -15,6 +15,7 @@ from openvino_xai.common.utils import has_xai, SALIENCY_MAP_OUTPUT_NAME
 class ActivationType(Enum):
     SIGMOID = "sigmoid"
     SOFTMAX = "softmax"
+    NONE = "none"
 
 
 def softmax(x):
@@ -43,7 +44,7 @@ class ClassificationModelInferrer:
             input_size: Tuple[int] = (224, 224),
             mean: Optional[Union[np.ndarray, List[float]]] = None,
             std: Optional[Union[np.ndarray, List[float]]] = None,
-            activation: Optional[ActivationType] = None,
+            activation: ActivationType = ActivationType.SOFTMAX,
             output_name: Optional[str] = None,
     ):
         self.compiled_model = ov.Core().compile_model(model, "CPU")
@@ -87,7 +88,7 @@ class ClassificationModelInferrer:
     def postprocess(self, x: ov.utils.data_helpers.wrappers.OVDict) -> InferenceResult:
         prediction = x[self.output_name]
         # Process model prediction
-        if self.activation:
+        if self.activation != ActivationType.NONE:
             if self.activation == ActivationType.SOFTMAX:
                 prediction = softmax(prediction)
             elif self.activation == ActivationType.SIGMOID:
