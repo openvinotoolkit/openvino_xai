@@ -142,82 +142,6 @@ def export_to_ir(model_path: str, save_path: str, model_name: str) -> None:
     runner.run()
 
 
-TEST_MODELS = timm.list_models(pretrained=True)
-
-
-CNN_MODELS = [
-    "bat_resnext",
-    "convnext",
-    "cs3darknet",
-    "cs3",
-    "darknet",
-    "densenet",
-    "dla",
-    "dpn",
-    "efficientnet",
-    "ese_vovnet",
-    "fbnet",
-    "gernet",
-    "ghostnet",
-    "hardcorenas",
-    "hrnet",
-    "inception",
-    "lcnet",
-    "legacy_",
-    "mixnet",
-    "mnasnet",
-    "mobilenet",
-    "nasnet",
-    "regnet",
-    "repvgg",
-    "res2net",
-    "res2next",
-    "resnest",
-    "resnext",
-    "rexnet",
-    "selecsls",
-    "semnasnet",
-    "senet",
-    "seresnext",
-    "spnasnet",
-    "tinynet",
-    "vgg",
-    "xception",
-    "resnet",
-]
-
-
-# TODO: include it into the report with corresponding error
-NON_CONVERTABLE_CNN_MODELS = [
-    "convnext_xxlarge",  # too big
-    "convnextv2_huge",  # too big
-    "gc_efficientnetv2_rw",  # failed to convert to OV
-    "gcresnext",  # failed to convert to OV
-    "haloregnetz",
-    "nasnetalarge",
-    "pnasnet5large",
-    "regnety_1280",
-    "regnety_2560",
-    "resnest14d",
-    "resnest26d",
-    "resnest50d",
-    "resnest101e",
-    "resnest200e",
-    "resnest269e",
-    "skresnext50_32x4d",
-    "tf_efficientnet_cc_b",
-    "gcresnet",
-    "lambda_resnet",
-    "nf_regnet",
-    "nf_resnet",
-    "resnetv2_50x",
-    "resnetv2_101x",
-    "resnetv2_152x",
-    "skresnet",
-    "tresnet_",
-]
-
-
 LIMITED_DIVERSE_SET_OF_CNN_MODELS = [
     "bat_resnext26ts.ch_in1k",
     "resnet18.a1_in1k",
@@ -347,15 +271,10 @@ class TestImageClassificationTimm:
         11821: 1652,  # 1652 is a cheetah class_id in the ImageNet-12k dataset
     }
 
-    @pytest.mark.parametrize("model_id", WB_TEST_MODELS)  # TEST_MODELS would work for 500+ models
-    def test_cnn_classification_white_box(
+    @pytest.mark.parametrize("model_id", WB_TEST_MODELS)
+    def test_classification_white_box(
             self, model_id, dump_maps=True
     ):
-        # if not any(cnn_model_key in model_id for cnn_model_key in CNN_MODELS):
-        #     pytest.skip(f"Model {model_id} is not CNN-based.")
-        # if any(cnn_model_key in model_id for cnn_model_key in NON_CONVERTABLE_CNN_MODELS):
-        #     pytest.skip(f"Model {model_id} is non-convertable ether to ONNX or to OV representation.")
-
         self.check_for_saved_map(model_id, "timm_models/maps_wb/")
 
         output_model_dir = self.data_dir / "timm_models" / "converted_models" / model_id
@@ -457,7 +376,7 @@ class TestImageClassificationTimm:
     # ulimit -Sn 10000
     # ulimit -a
     @pytest.mark.parametrize("model_id", BB_TEST_MODELS)
-    def test_cnn_classification_black_box(
+    def test_classification_black_box(
             self, model_id, dump_maps=True
     ):
         self.check_for_saved_map(model_id, "timm_models/maps_bb/")

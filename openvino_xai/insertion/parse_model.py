@@ -203,4 +203,4 @@ class IRParserCls(IRParser):
         if first_concat_node is not None:
             return first_concat_node
 
-        raise RuntimeError(f"Cannot find first convolution node in auto mode.")
+        raise RuntimeError(f"Cannot find first concat node in auto mode.")
