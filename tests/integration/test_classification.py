@@ -12,8 +12,12 @@ import openvino.runtime as ov
 import openvino_xai as ovxai
 from openvino_xai.explanation.model_inferrer import ClassificationModelInferrer, ActivationType
 from openvino_xai.common.utils import retrieve_otx_model, has_xai
-from openvino_xai.explanation.explanation_parameters import PostProcessParameters, TargetExplainGroup, \
-    ExplanationParameters, ExplainMode
+from openvino_xai.explanation.explanation_parameters import (
+    PostProcessParameters,
+    TargetExplainGroup,
+    ExplanationParameters,
+    ExplainMode,
+)
 from openvino_xai.insertion.insertion_parameters import ClassificationInsertionParameters
 from openvino_xai.common.parameters import XAIMethodType, TaskType
 
@@ -94,7 +98,9 @@ class TestClsWB:
             task_type=TaskType.CLASSIFICATION,
             insertion_parameters=insertion_parameters,
         )
-        model_inferrer = ClassificationModelInferrer(model_xai, change_channel_order=True, activation=ActivationType.NONE)
+        model_inferrer = ClassificationModelInferrer(
+            model_xai, change_channel_order=True, activation=ActivationType.NONE
+        )
 
         if target_explain_group == TargetExplainGroup.ALL:
             explanation_parameters = ExplanationParameters(
@@ -156,7 +162,9 @@ class TestClsWB:
             task_type=TaskType.CLASSIFICATION,
             insertion_parameters=insertion_parameters,
         )
-        model_inferrer = ClassificationModelInferrer(model_xai, change_channel_order=True, activation=ActivationType.SIGMOID)
+        model_inferrer = ClassificationModelInferrer(
+            model_xai, change_channel_order=True, activation=ActivationType.SIGMOID
+        )
 
         if target_explain_group == TargetExplainGroup.ALL:
             explanation_parameters = ExplanationParameters(
@@ -197,7 +205,6 @@ class TestClsWB:
             assert len(explanations.saliency_map) == len([target_class])
             assert explanations.saliency_map[target_class].ndim == 2
 
-
     @pytest.mark.parametrize("model_name", MODELS)
     @pytest.mark.parametrize("embed_normalization", [True, False])
     def test_activationmap(self, model_name, embed_normalization):
@@ -215,7 +222,9 @@ class TestClsWB:
             task_type=TaskType.CLASSIFICATION,
             insertion_parameters=insertion_parameters,
         )
-        model_inferrer = ClassificationModelInferrer(model_xai, change_channel_order=True, activation=ActivationType.SIGMOID)
+        model_inferrer = ClassificationModelInferrer(
+            model_xai, change_channel_order=True, activation=ActivationType.SIGMOID
+        )
 
         explanation_parameters = ExplanationParameters(
             post_processing_parameters=PostProcessParameters(),
@@ -247,7 +256,9 @@ class TestClsWB:
             model,
             task_type=TaskType.CLASSIFICATION,
         )
-        model_inferrer = ClassificationModelInferrer(model_xai, change_channel_order=True, activation=ActivationType.SIGMOID)
+        model_inferrer = ClassificationModelInferrer(
+            model_xai, change_channel_order=True, activation=ActivationType.SIGMOID
+        )
 
         explain_targets = None
         if target_explain_group == TargetExplainGroup.CUSTOM:
@@ -284,7 +295,9 @@ class TestClsWB:
             model,
             task_type=TaskType.CLASSIFICATION,
         )
-        model_inferrer = ClassificationModelInferrer(model_xai, change_channel_order=True, activation=ActivationType.SIGMOID)
+        model_inferrer = ClassificationModelInferrer(
+            model_xai, change_channel_order=True, activation=ActivationType.SIGMOID
+        )
 
         explanation_parameters = ExplanationParameters(
             target_explain_group=TargetExplainGroup.ALL,
@@ -326,7 +339,9 @@ class TestClsBB:
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
         model = ov.Core().read_model(model_path)
-        model_inferrer = ClassificationModelInferrer(model, change_channel_order=True, activation=ActivationType.SIGMOID)
+        model_inferrer = ClassificationModelInferrer(
+            model, change_channel_order=True, activation=ActivationType.SIGMOID
+        )
 
         post_processing_parameters = PostProcessParameters(
             overlay=overlay,
@@ -339,7 +354,7 @@ class TestClsBB:
                 post_processing_parameters=post_processing_parameters,
                 target_explain_group=target_explain_group,
                 custom_target_indices=[target_class],
-                black_box_method_kwargs={"num_masks": 5, "asynchronous_inference": False, "normalize": normalize}
+                black_box_method_kwargs={"num_masks": 5, "asynchronous_inference": False, "normalize": normalize},
             )
             explanation = ovxai.explain(
                 model_inferrer,
@@ -359,7 +374,7 @@ class TestClsBB:
                 explain_mode=ExplainMode.BLACKBOX,
                 post_processing_parameters=post_processing_parameters,
                 target_explain_group=target_explain_group,
-                black_box_method_kwargs={"num_masks": 5, "asynchronous_inference": False, "normalize": normalize}
+                black_box_method_kwargs={"num_masks": 5, "asynchronous_inference": False, "normalize": normalize},
             )
             explanation = ovxai.explain(
                 model_inferrer,
@@ -386,14 +401,14 @@ class TestClsBB:
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
         model = ov.Core().read_model(model_path)
-        model_inferrer = ClassificationModelInferrer(model, change_channel_order=True, activation=ActivationType.SIGMOID)
+        model_inferrer = ClassificationModelInferrer(
+            model, change_channel_order=True, activation=ActivationType.SIGMOID
+        )
 
         explanation_parameters = ExplanationParameters(
             explain_mode=ExplainMode.BLACKBOX,
             post_processing_parameters=PostProcessParameters(overlay=False),
-            black_box_method_kwargs={
-                "num_masks": 5, "asynchronous_inference": False, "throughput_inference": False
-            }
+            black_box_method_kwargs={"num_masks": 5, "asynchronous_inference": False, "throughput_inference": False},
         )
 
         explanation = ovxai.explain(
@@ -426,12 +441,14 @@ class TestClsBB:
             task_type=TaskType.CLASSIFICATION,
         )
         assert has_xai(model_xai), "Updated IR model should has XAI head."
-        model_inferrer = ClassificationModelInferrer(model_xai, change_channel_order=True, activation=ActivationType.SIGMOID)
+        model_inferrer = ClassificationModelInferrer(
+            model_xai, change_channel_order=True, activation=ActivationType.SIGMOID
+        )
 
         explanation_parameters = ExplanationParameters(
             explain_mode=ExplainMode.BLACKBOX,
             post_processing_parameters=PostProcessParameters(overlay=False),
-            black_box_method_kwargs={"num_masks": 5}
+            black_box_method_kwargs={"num_masks": 5},
         )
         explanation = ovxai.explain(
             model_inferrer,

@@ -34,14 +34,14 @@ class TestPostProcessor:
     @pytest.mark.parametrize("overlay", [True, False])
     @pytest.mark.parametrize("overlay_weight", [0.5, 0.3])
     def test_postprocessor(
-            self,
-            raw_predictions,
-            target_explain_group,
-            normalize,
-            resize,
-            colormap,
-            overlay,
-            overlay_weight,
+        self,
+        raw_predictions,
+        target_explain_group,
+        normalize,
+        resize,
+        colormap,
+        overlay,
+        overlay_weight,
     ):
         post_processing_parameters = PostProcessParameters(
             normalize=normalize,

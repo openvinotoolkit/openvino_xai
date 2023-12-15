@@ -12,9 +12,9 @@ from openvino_xai.explanation.utils import InferenceResult
 
 
 def explain(
-        model_inferrer: Union[Callable[[np.ndarray], InferenceResult], mapi.models.Model],
-        data: np.ndarray,
-        explanation_parameters: ExplanationParameters = ExplanationParameters(),
+    model_inferrer: Union[Callable[[np.ndarray], InferenceResult], mapi.models.Model],
+    data: np.ndarray,
+    explanation_parameters: ExplanationParameters = ExplanationParameters(),
 ) -> ExplanationResult:
     """
     Explains the model-data pair, i.e. generates explanation result.

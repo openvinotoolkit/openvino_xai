@@ -6,8 +6,14 @@ from typing import Tuple, List
 import cv2
 import numpy as np
 
-from openvino_xai.explanation.explanation_parameters import PostProcessParameters, SaliencyMapLayout, GRAY_LAYOUTS, \
-    COLOR_MAPPED_LAYOUTS, MULTIPLE_MAP_LAYOUTS, ONE_MAP_LAYOUTS
+from openvino_xai.explanation.explanation_parameters import (
+    PostProcessParameters,
+    SaliencyMapLayout,
+    GRAY_LAYOUTS,
+    COLOR_MAPPED_LAYOUTS,
+    MULTIPLE_MAP_LAYOUTS,
+    ONE_MAP_LAYOUTS,
+)
 from openvino_xai.explanation.explanation_result import ExplanationResult
 
 
@@ -75,12 +81,11 @@ class PostProcessor:
         """Normalize saliency maps to [0, 255] range."""
         layout = self._explanation.layout
         assert layout in GRAY_LAYOUTS, (
-            f"Saliency map to normalize has to be grayscale. Layout must be in {GRAY_LAYOUTS}, "
-            f"but got {layout}."
+            f"Saliency map to normalize has to be grayscale. Layout must be in {GRAY_LAYOUTS}, " f"but got {layout}."
         )
         saliency_map = self._explanation.saliency_map
         n, h, w = saliency_map.shape
-        saliency_map = saliency_map.reshape((n, h*w))
+        saliency_map = saliency_map.reshape((n, h * w))
         saliency_map = saliency_map.astype(np.float32)
 
         min_values, max_values = self._get_min_max(saliency_map)
@@ -102,8 +107,7 @@ class PostProcessor:
         # TODO: support resize to custom size.
         layout = self._explanation.layout
         assert layout in GRAY_LAYOUTS, (
-            f"Saliency map to normalize has to be grayscale. Layout must be in {GRAY_LAYOUTS}, "
-            f"but got {layout}."
+            f"Saliency map to normalize has to be grayscale. Layout must be in {GRAY_LAYOUTS}, " f"but got {layout}."
         )
         saliency_map = self._explanation.saliency_map
         x = saliency_map.transpose((1, 2, 0))
@@ -121,13 +125,11 @@ class PostProcessor:
         """Applies cv2.applyColorMap to the saliency map."""
         #  TODO: support different (custom?) colormaps.
         assert self._explanation.saliency_map.dtype == np.uint8, (
-            "Colormap requires saliency map to has uint8 dtype. "
-            "Enable 'normalize' flag for PostProcessor."
+            "Colormap requires saliency map to has uint8 dtype. " "Enable 'normalize' flag for PostProcessor."
         )
         layout = self._explanation.layout
         assert layout in GRAY_LAYOUTS, (
-            f"Saliency map to normalize has to be grayscale. Layout must be in {GRAY_LAYOUTS}, "
-            f"but got {layout}."
+            f"Saliency map to normalize has to be grayscale. Layout must be in {GRAY_LAYOUTS}, " f"but got {layout}."
         )
 
         color_mapped_saliency_map = []
@@ -143,9 +145,7 @@ class PostProcessor:
 
     def _apply_overlay(self) -> None:
         """Applies overlay of the saliency map with the original image."""
-        assert (
-                self._explanation.layout in COLOR_MAPPED_LAYOUTS
-        ), "Color mapped saliency map are expected for overlay."
+        assert self._explanation.layout in COLOR_MAPPED_LAYOUTS, "Color mapped saliency map are expected for overlay."
 
         x = self._explanation.saliency_map
         x = self._data * self._overlay_weight + x * (1 - self._overlay_weight)

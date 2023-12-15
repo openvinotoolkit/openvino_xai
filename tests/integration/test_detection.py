@@ -25,36 +25,33 @@ from openvino_xai.insertion.insertion_parameters import DetectionInsertionParame
 
 MODEL_CONFIGS = addict.Addict(
     {
-        "det_mobilenetv2_atss_bccd":
-            {
-                "anchors": [1, 1, 1, 1, 1],
-                "num_classes": 3,
-                "node_names": [
-                    "/bbox_head/atss_cls_1/Conv/WithoutBiases",
-                    "/bbox_head/atss_cls_2/Conv/WithoutBiases",
-                    "/bbox_head/atss_cls_3/Conv/WithoutBiases",
-                    "/bbox_head/atss_cls_4/Conv/WithoutBiases",
-                ],
-            },
-        "det_mobilenetv2_ssd_bccd":
-            {
-                "anchors": [4, 5],
-                "num_classes": 4,
-                "node_names": [
-                    "/bbox_head/cls_convs.0/cls_convs.0.3/Conv/WithoutBiases",
-                    "/bbox_head/cls_convs.1/cls_convs.1.3/Conv/WithoutBiases",
-                ],
-            },
-        "det_yolox_bccd":
-            {
-                "anchors": [1, 1, 1, 1, 1],
-                "num_classes": 3,
-                "node_names": [
-                    "/bbox_head/multi_level_conv_cls.0/Conv/WithoutBiases",
-                    "/bbox_head/multi_level_conv_cls.1/Conv/WithoutBiases",
-                    "/bbox_head/multi_level_conv_cls.2/Conv/WithoutBiases",
-                ],
-            },
+        "det_mobilenetv2_atss_bccd": {
+            "anchors": [1, 1, 1, 1, 1],
+            "num_classes": 3,
+            "node_names": [
+                "/bbox_head/atss_cls_1/Conv/WithoutBiases",
+                "/bbox_head/atss_cls_2/Conv/WithoutBiases",
+                "/bbox_head/atss_cls_3/Conv/WithoutBiases",
+                "/bbox_head/atss_cls_4/Conv/WithoutBiases",
+            ],
+        },
+        "det_mobilenetv2_ssd_bccd": {
+            "anchors": [4, 5],
+            "num_classes": 4,
+            "node_names": [
+                "/bbox_head/cls_convs.0/cls_convs.0.3/Conv/WithoutBiases",
+                "/bbox_head/cls_convs.1/cls_convs.1.3/Conv/WithoutBiases",
+            ],
+        },
+        "det_yolox_bccd": {
+            "anchors": [1, 1, 1, 1, 1],
+            "num_classes": 3,
+            "node_names": [
+                "/bbox_head/multi_level_conv_cls.0/Conv/WithoutBiases",
+                "/bbox_head/multi_level_conv_cls.1/Conv/WithoutBiases",
+                "/bbox_head/multi_level_conv_cls.2/Conv/WithoutBiases",
+            ],
+        },
     }
 )
 

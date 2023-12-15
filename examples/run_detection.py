@@ -7,7 +7,6 @@ from pathlib import Path
 
 import cv2
 import openvino.model_api as mapi
-from openvino.model_api.models import DetectionModel
 
 import openvino_xai as ovxai
 from openvino_xai.insertion.insertion_parameters import DetectionInsertionParameters

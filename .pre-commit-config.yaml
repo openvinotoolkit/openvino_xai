@@ -22,7 +22,8 @@ repos:
     hooks:
       - id: mypy
         files: '^(openvino_xai|tests)/.*\.py'
-        additional_dependencies: [
+        additional_dependencies:
+          [
             types-PyYAML,
             attrs==21.2.*,
             types-requests,

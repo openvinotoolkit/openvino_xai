@@ -22,8 +22,12 @@ from openvino_xai.explanation.model_inferrer import ClassificationModelInferrer,
 
 from openvino_xai.common.parameters import XAIMethodType, TaskType
 import openvino_xai as ovxai
-from openvino_xai.explanation.explanation_parameters import PostProcessParameters, TargetExplainGroup, \
-    ExplanationParameters, ExplainMode
+from openvino_xai.explanation.explanation_parameters import (
+    PostProcessParameters,
+    TargetExplainGroup,
+    ExplanationParameters,
+    ExplainMode,
+)
 from openvino_xai.insertion.insertion_parameters import ClassificationInsertionParameters
 from openvino_xai.explanation.post_process import PostProcessor
 
@@ -199,18 +203,15 @@ LIMITED_DIVERSE_SET_OF_CNN_MODELS = [
 LIMITED_DIVERSE_SET_OF_VISION_TRANSFORMER_MODELS = [
     "beit_base_patch16_224.in22k_ft_in22k_in1k",  # Downloads last month 41,778
     "beit_large_patch16_224.in22k_ft_in22k_in1k",
-
     "deit_tiny_patch16_224.fb_in1k",  # Downloads last month 3,371
     "deit_small_distilled_patch16_224.fb_in1k",
     "deit_base_patch16_224.fb_in1k",
-
     "vit_tiny_patch16_224.augreg_in21k",  # Downloads last month 15,345
     "vit_small_patch16_224.augreg_in1k",
     "vit_base_patch8_224.augreg2_in21k_ft_in1k",
     "vit_base_patch16_224.augreg2_in21k_ft_in1k",  # Downloads last month 161,508
     "vit_base_patch32_224.augreg_in1k",
     "vit_large_patch14_clip_224.laion2b_ft_in12k_in1k",
-
     "convit_tiny.fb_in1k",
     "flexivit_small.300ep_in1k",
 ]
@@ -223,7 +224,6 @@ NON_SUPPORTED_BY_WB_MODELS = [
     "pvt_v2_b0.in1k",
     "sequencer2d_l.in1k",
     "mobilevitv2_050.cvnets_in1k",
-
     # Transformer, various issues
     "convformer_b36.sail_in1k",
     "davit_tiny.msft_in1k",
@@ -242,22 +242,14 @@ NON_SUPPORTED_BY_WB_MODELS = [
     "mvitv2_base.fb_in1k",
     "poolformer_m36.sail_in1k",
     "xcit_nano_12_p8_224.fb_dist_in1k",
-    "convmixer_768_32.in1k"
+    "convmixer_768_32.in1k",
 ]
 
 
-WB_TEST_MODELS = (
-        LIMITED_DIVERSE_SET_OF_CNN_MODELS
-        +
-        LIMITED_DIVERSE_SET_OF_VISION_TRANSFORMER_MODELS
-)
+WB_TEST_MODELS = LIMITED_DIVERSE_SET_OF_CNN_MODELS + LIMITED_DIVERSE_SET_OF_VISION_TRANSFORMER_MODELS
 
 
-BB_TEST_MODELS = (
-        WB_TEST_MODELS
-        +
-        NON_SUPPORTED_BY_WB_MODELS
-)
+BB_TEST_MODELS = WB_TEST_MODELS + NON_SUPPORTED_BY_WB_MODELS
 
 
 class TestImageClassificationTimm:
@@ -275,9 +267,7 @@ class TestImageClassificationTimm:
     }
 
     @pytest.mark.parametrize("model_id", WB_TEST_MODELS)
-    def test_classification_white_box(
-            self, model_id, dump_maps=True
-    ):
+    def test_classification_white_box(self, model_id, dump_maps=True):
         self.check_for_saved_map(model_id, "timm_models/maps_wb/")
 
         output_model_dir = self.data_dir / "timm_models" / "converted_models" / model_id
@@ -313,9 +303,7 @@ class TestImageClassificationTimm:
             explain_method_type=explain_method_type,
         )
         model_xai = ovxai.insert_xai(
-            model,
-            task_type=TaskType.CLASSIFICATION,
-            insertion_parameters=insertion_parameters
+            model, task_type=TaskType.CLASSIFICATION, insertion_parameters=insertion_parameters
         )
         mean_values = [(item * 255) for item in model_cfg["mean"]]
         scale_values = [(item * 255) for item in model_cfg["std"]]
@@ -380,9 +368,7 @@ class TestImageClassificationTimm:
     # ulimit -Sn 10000
     # ulimit -a
     @pytest.mark.parametrize("model_id", BB_TEST_MODELS)
-    def test_classification_black_box(
-            self, model_id, dump_maps=True
-    ):
+    def test_classification_black_box(self, model_id, dump_maps=True):
         self.check_for_saved_map(model_id, "timm_models/maps_bb/")
 
         timm_model, model_cfg = self.get_timm_model(model_id)
@@ -456,9 +442,7 @@ class TestImageClassificationTimm:
                 pytest.skip(f"Model {model_id} is already explained.")
 
     def get_timm_model(self, model_id):
-        timm_model = timm.create_model(
-            model_id, in_chans=3, pretrained=True, checkpoint_path=""
-        )
+        timm_model = timm.create_model(model_id, in_chans=3, pretrained=True, checkpoint_path="")
         timm_model.eval()
         model_cfg = timm_model.default_cfg
         num_classes = model_cfg["num_classes"]
@@ -489,19 +473,26 @@ class TestImageClassificationTimm:
             color = (0, 0, 255)
         thickness = 2
         map_ = cv2.putText(
-            explanation.saliency_map[target_class], f"{target_confidence:.2f}", org, font, fontScale, color, thickness, cv2.LINE_AA
+            explanation.saliency_map[target_class],
+            f"{target_confidence:.2f}",
+            org,
+            font,
+            fontScale,
+            color,
+            thickness,
+            cv2.LINE_AA,
         )
         explanation.saliency_map[target_class] = map_
 
     def update_report(
-            self,
-            report_name,
-            model_id,
-            exported_to_onnx="False",
-            exported_to_ov_ir="False",
-            explained="False",
-            saliency_map_size="-",
-            map_saved="False",
+        self,
+        report_name,
+        model_id,
+        exported_to_onnx="False",
+        exported_to_ov_ir="False",
+        explained="False",
+        saliency_map_size="-",
+        map_saved="False",
     ):
         fields = [model_id, exported_to_onnx, exported_to_ov_ir, explained, saliency_map_size, map_saved]
         last_row = self.report[-1]
@@ -512,10 +503,7 @@ class TestImageClassificationTimm:
                 if last_row[i] != fields[i]:
                     last_row[i] = fields[i]
             bool_flags = np.array(
-                [
-                    [self.count(model[1]), self.count(model[2]), self.count(model[3])]
-                    for model in self.report[2:]
-                ]
+                [[self.count(model[1]), self.count(model[2]), self.count(model[3])] for model in self.report[2:]]
             )
             self.report[1][1] = str(bool_flags[:, 0].sum())
             self.report[1][2] = str(bool_flags[:, 1].sum())
