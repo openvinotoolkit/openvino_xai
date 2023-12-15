@@ -13,10 +13,11 @@ import time
 from pathlib import Path
 from typing import Dict
 
+import openvino
 from openvino.model_api.models import ClassificationModel
-import openvino.model_api as mapi
-from openvino_xai.common.parameters import XAIMethodType
+from openvino_xai.explanation.model_inferrer import ClassificationModelInferrer, ActivationType
 
+from openvino_xai.common.parameters import XAIMethodType, TaskType
 import openvino_xai as ovxai
 from openvino_xai.explanation.explanation_parameters import PostProcessParameters, TargetExplainGroup, \
     ExplanationParameters, ExplainMode
@@ -111,12 +112,21 @@ class Command:
         return self.exec_time
 
 
-def export_to_onnx(model: torch.nn.Module, save_path: str, data_sample: torch.Tensor) -> None:
+def export_to_onnx(model: torch.nn.Module, save_path: str, data_sample: torch.Tensor, set_dynamic_batch: bool) -> None:
     """
     Export Torch model to ONNX format.
     """
+    dynamic_axes = {"data": {0: "batch"}} if set_dynamic_batch else dict()
     torch.onnx.export(
-        model, data_sample, save_path, export_params=True, opset_version=14, do_constant_folding=False
+        model,
+        data_sample,
+        save_path,
+        export_params=True,
+        opset_version=14,
+        do_constant_folding=False,
+        input_names=["data"],
+        output_names=["logits"],
+        dynamic_axes=dynamic_axes,
     )
 
 
@@ -132,165 +142,119 @@ def export_to_ir(model_path: str, save_path: str, model_name: str) -> None:
     runner.run()
 
 
-TEST_MODELS = timm.list_models(pretrained=True)
-
-
-CNN_MODELS = [
-    "bat_resnext",
-    "convnext",
-    "cs3darknet",
-    "cs3",
-    "darknet",
-    "densenet",
-    "dla",
-    "dpn",
-    "efficientnet",
-    "ese_vovnet",
-    "fbnet",
-    "gernet",
-    "ghostnet",
-    "hardcorenas",
-    "hrnet",
-    "inception",
-    "lcnet",
-    "legacy_",
-    "mixnet",
-    "mnasnet",
-    "mobilenet",
-    "nasnet",
-    "regnet",
-    "repvgg",
-    "res2net",
-    "res2next",
-    "resnest",
-    "resnext",
-    "rexnet",
-    "selecsls",
-    "semnasnet",
-    "senet",
-    "seresnext",
-    "spnasnet",
-    "tinynet",
-    "vgg",
-    "xception",
-    "resnet",
-]
-
-
-# TODO: include it into the report with corresponding error
-NON_CONVERTABLE_CNN_MODELS = [
-    "convnext_xxlarge",  # too big
-    "convnextv2_huge",  # too big
-    "gc_efficientnetv2_rw",  # failed to convert to OV
-    "gcresnext",  # failed to convert to OV
-    "haloregnetz",
-    "nasnetalarge",
-    "pnasnet5large",
-    "regnety_1280",
-    "regnety_2560",
-    "resnest14d",
-    "resnest26d",
-    "resnest50d",
-    "resnest101e",
-    "resnest200e",
-    "resnest269e",
-    "skresnext50_32x4d",
-    "tf_efficientnet_cc_b",
-    "gcresnet",
-    "lambda_resnet",
-    "nf_regnet",
-    "nf_resnet",
-    "resnetv2_50x",
-    "resnetv2_101x",
-    "resnetv2_152x",
-    "skresnet",
-    "tresnet_",
-]
-
-
-LIMITED_DIVERSE_SET_OF_MODELS = [
+LIMITED_DIVERSE_SET_OF_CNN_MODELS = [
+    "bat_resnext26ts.ch_in1k",
     "resnet18.a1_in1k",
     "mobilenetv3_large_100.ra_in1k",
     "tf_efficientnet_b0.aa_in1k",
-    "bat_resnext26ts.ch_in1k",
-    "beit_base_patch16_224.in22k_ft_in22k",
     "botnet26t_256.c1_in1k",
-    "caformer_b36.sail_in1k",
-    "cait_m36_384.fb_dist_in1k",
-    "coat_lite_mini.in1k",
-    "coatnet_0_rw_224.sw_in1k",
-    "convformer_b36.sail_in1k",
-    "convit_tiny.fb_in1k",
-    "convmixer_768_32.in1k",
     "convnext_base.clip_laion2b_augreg_ft_in1k",
     "convnextv2_pico.fcmae_ft_in1k",
-    "crossvit_9_240.in1k",
     "cs3darknet_l.c2ns_in1k",
     "darknet53.c2ns_in1k",
-    "davit_tiny.msft_in1k",
-    "deit_tiny_patch16_224.fb_in1k",
     "densenet121.ra_in1k",
     "dla34.in1k",
     "dpn68.mx_in1k",
     "eca_botnext26ts_256.c1_in1k",
     "ecaresnet26t.ra2_in1k",
     "edgenext_base.in21k_ft_in1k",
-    "efficientformer_l1.snap_dist_in1k",
     "efficientnet_b0.ra_in1k",
     "ese_vovnet19b_dw.ra_in1k",
-    "eva02_base_patch14_224.mim_in22k",
     "fbnetv3_b.ra2_in1k",
-    "flexivit_small.300ep_in1k",
-    "focalnet_base_lrf.ms_in1k",
-    "gcresnet33ts.ra2_in1k",
-    "gcvit_tiny.in1k",
     "gernet_s.idstcv_in1k",
     "hardcorenas_a.miil_green_in1k",
     "hrnet_w18.ms_aug_in1k",
     "inception_v3.gluon_in1k",
-    "lambda_resnet26rpt_256.c1_in1k",
     "lcnet_050.ra2_in1k",
     "legacy_senet154.in1k",
-    "levit_128.fb_dist_in1k",
-    "levit_conv_128.fb_dist_in1k",
-    "maxvit_base_tf_224.in1k",
     "mixer_b16_224.goog_in21k",
     "mixnet_s.ft_in1k",
     "mobilenetv2_100.ra_in1k",
-    "mobilevitv2_050.cvnets_in1k",
-    "mvitv2_base.fb_in1k",
-    "nest_tiny_jx.goog_in1k",
-    "pit_s_224.in1k",
-    "poolformer_m36.sail_in1k",
-    "pvt_v2_b0.in1k",
     "regnety_002.pycls_in1k",
     "repvgg_a2.rvgg_in1k",
     "repvit_m1.dist_in1k",
     "res2net50_14w_8s.in1k",
     "resmlp_12_224.fb_dino",
-    "resnest14d.gluon_in1k",
     "resnetaa50.a1h_in1k",
     "resnetrs50.tf_in1k",
     "resnext26ts.ra2_in1k",
     "rexnet_100.nav_in1k",
-    "samvit_base_patch16.sa1b",
     "selecsls42b.in1k",
-    "sequencer2d_l.in1k",
     "seresnet50.a1_in1k",
     "seresnext26d_32x4d.bt_in1k",
-    "swin_tiny_patch4_window7_224.ms_in1k",
-    "swinv2_tiny_window8_256.ms_in1k",
     "tf_mixnet_l.in1k",
     "tf_mobilenetv3_large_075.in1k",
     "tinynet_a.in1k",
-    "tresnet_l.miil_in1k",
-    "twins_svt_small.in1k",
-    "vgg11.tv_in1k",
-    "vit_tiny_patch16_224.augreg_in21k",
     "wide_resnet50_2.racm_in1k",
     "xception41.tf_in1k",
-    "xcit_nano_12_p8_224.fb_dist_in1k",
+    "vgg11.tv_in1k",
+    "coatnet_0_rw_224.sw_in1k",
+    "focalnet_base_lrf.ms_in1k",
 ]
+
+
+LIMITED_DIVERSE_SET_OF_VISION_TRANSFORMER_MODELS = [
+    "beit_base_patch16_224.in22k_ft_in22k_in1k",  # Downloads last month 41,778
+    "beit_large_patch16_224.in22k_ft_in22k_in1k",
+
+    "deit_tiny_patch16_224.fb_in1k",  # Downloads last month 3,371
+    "deit_small_distilled_patch16_224.fb_in1k",
+    "deit_base_patch16_224.fb_in1k",
+
+    "vit_tiny_patch16_224.augreg_in21k",  # Downloads last month 15,345
+    "vit_small_patch16_224.augreg_in1k",
+    "vit_base_patch8_224.augreg2_in21k_ft_in1k",
+    "vit_base_patch16_224.augreg2_in21k_ft_in1k",  # Downloads last month 161,508
+    "vit_base_patch32_224.augreg_in1k",
+    "vit_large_patch14_clip_224.laion2b_ft_in12k_in1k",
+
+    "convit_tiny.fb_in1k",
+    "flexivit_small.300ep_in1k",
+]
+
+
+NON_SUPPORTED_BY_WB_MODELS = [
+    # CNN, dynamic batch issue
+    "nest_tiny_jx.goog_in1k",
+    "pit_s_224.in1k",
+    "pvt_v2_b0.in1k",
+    "sequencer2d_l.in1k",
+    "mobilevitv2_050.cvnets_in1k",
+
+    # Transformer, various issues
+    "convformer_b36.sail_in1k",
+    "davit_tiny.msft_in1k",
+    "poolformer_m36.sail_in1k",
+    "caformer_b36.sail_in1k",
+    "cait_m36_384.fb_dist_in1k",
+    "coat_lite_mini.in1k",
+    "crossvit_9_240.in1k",
+    "swin_tiny_patch4_window7_224.ms_in1k",
+    "swinv2_tiny_window8_256.ms_in1k",
+    "twins_svt_small.in1k",
+    "efficientformer_l1.snap_dist_in1k",
+    "gcvit_tiny.in1k",
+    "levit_128.fb_dist_in1k",
+    "maxvit_base_tf_224.in1k",
+    "mvitv2_base.fb_in1k",
+    "poolformer_m36.sail_in1k",
+    "xcit_nano_12_p8_224.fb_dist_in1k",
+    "convmixer_768_32.in1k"
+]
+
+
+WB_TEST_MODELS = (
+        LIMITED_DIVERSE_SET_OF_CNN_MODELS
+        +
+        LIMITED_DIVERSE_SET_OF_VISION_TRANSFORMER_MODELS
+)
+
+
+BB_TEST_MODELS = (
+        WB_TEST_MODELS
+        +
+        NON_SUPPORTED_BY_WB_MODELS
+)
 
 
 class TestImageClassificationTimm:
@@ -303,18 +267,14 @@ class TestImageClassificationTimm:
     supported_num_classes = {
         1000: 293,  # 293 is a cheetah class_id in the ImageNet-1k dataset
         21841: 2441,  # 2441 is a cheetah class_id in the ImageNet-21k dataset
+        21843: 2441,  # 2441 is a cheetah class_id in the ImageNet-21k dataset
         11821: 1652,  # 1652 is a cheetah class_id in the ImageNet-12k dataset
     }
 
-    @pytest.mark.parametrize("model_id", TEST_MODELS)
-    def test_cnn_classification_white_box(
+    @pytest.mark.parametrize("model_id", WB_TEST_MODELS)
+    def test_classification_white_box(
             self, model_id, dump_maps=True
     ):
-        if not any(cnn_model_key in model_id for cnn_model_key in CNN_MODELS):
-            pytest.skip(f"Model {model_id} is not CNN-based.")
-        if any(cnn_model_key in model_id for cnn_model_key in NON_CONVERTABLE_CNN_MODELS):
-            pytest.skip(f"Model {model_id} is non-convertable ether to ONNX or to OV representation.")
-
         self.check_for_saved_map(model_id, "timm_models/maps_wb/")
 
         output_model_dir = self.data_dir / "timm_models" / "converted_models" / model_id
@@ -328,22 +288,43 @@ class TestImageClassificationTimm:
             input_size = [1] + list(timm_model.default_cfg["input_size"])
             dummy_tensor = torch.rand(input_size)
             onnx_path = output_model_dir / "model_fp32.onnx"
-            export_to_onnx(timm_model, onnx_path, dummy_tensor)
+            set_dynamic_batch = model_id in LIMITED_DIVERSE_SET_OF_VISION_TRANSFORMER_MODELS
+            export_to_onnx(timm_model, onnx_path, dummy_tensor, set_dynamic_batch)
             self.update_report("report_wb.csv", model_id, "True")
             export_to_ir(onnx_path, output_model_dir, model_name="model_fp32")
             self.update_report("report_wb.csv", model_id, "True", "True")
         else:
             self.update_report("report_wb.csv", model_id, "True", "True")
 
-        mapi_params = self.get_mapi_params(model_cfg)
-        mapi_wrapper = mapi.models.ClassificationModel.create_model(
-            ir_path, "Classification", **mapi_params,
-        )
+        model = openvino.runtime.Core().read_model(ir_path)
+
+        if model_id in LIMITED_DIVERSE_SET_OF_CNN_MODELS:
+            explain_method_type = XAIMethodType.RECIPROCAM
+        elif model_id in LIMITED_DIVERSE_SET_OF_VISION_TRANSFORMER_MODELS:
+            explain_method_type = XAIMethodType.VITRECIPROCAM
+        else:
+            raise ValueError
+
         insertion_parameters = ClassificationInsertionParameters(
             embed_normalization=False,
-            explain_method_type=XAIMethodType.RECIPROCAM,
+            explain_method_type=explain_method_type,
         )
-        mapi_wrapper_xai = ovxai.insertion.insert_xai_into_mapi_wrapper(mapi_wrapper, insertion_parameters)
+        model_xai = ovxai.insert_xai(
+            model,
+            task_type=TaskType.CLASSIFICATION,
+            insertion_parameters=insertion_parameters
+        )
+        mean_values = [(item * 255) for item in model_cfg["mean"]]
+        scale_values = [(item * 255) for item in model_cfg["std"]]
+        model_inferrer = ClassificationModelInferrer(
+            model_xai,
+            change_channel_order=True,
+            input_size=model_cfg["input_size"][1:],
+            mean=mean_values,
+            std=scale_values,
+            activation=ActivationType.SOFTMAX,
+        )
+
         target_class = self.supported_num_classes[model_cfg["num_classes"]]
         explanation_parameters = ExplanationParameters(
             target_explain_group=TargetExplainGroup.CUSTOM,
@@ -351,7 +332,7 @@ class TestImageClassificationTimm:
             post_processing_parameters=PostProcessParameters(),
         )
         image = cv2.imread("tests/assets/cheetah_person.jpg")
-        explanation = ovxai.explain(mapi_wrapper_xai, image, explanation_parameters)
+        explanation = ovxai.explain(model_inferrer, image, explanation_parameters)
 
         assert explanation is not None
         assert explanation.sal_map_shape[-1] > 1 and explanation.sal_map_shape[-2] > 1
@@ -378,7 +359,7 @@ class TestImageClassificationTimm:
             )
             explanation = post_processor.postprocess()
 
-            target_confidence = mapi_wrapper(image).raw_scores[target_class]
+            target_confidence = model_inferrer(image).prediction[0, target_class]
             self.put_confidence_into_map_overlay(explanation, target_confidence, target_class)
 
             save_dir = self.data_dir / "timm_models" / "maps_wb"
@@ -395,8 +376,8 @@ class TestImageClassificationTimm:
     # ulimit -a
     # ulimit -Sn 10000
     # ulimit -a
-    @pytest.mark.parametrize("model_id", LIMITED_DIVERSE_SET_OF_MODELS)
-    def test_cnn_classification_black_box(
+    @pytest.mark.parametrize("model_id", BB_TEST_MODELS)
+    def test_classification_black_box(
             self, model_id, dump_maps=True
     ):
         self.check_for_saved_map(model_id, "timm_models/maps_bb/")
@@ -475,6 +456,7 @@ class TestImageClassificationTimm:
         timm_model = timm.create_model(
             model_id, in_chans=3, pretrained=True, checkpoint_path=""
         )
+        timm_model.eval()
         model_cfg = timm_model.default_cfg
         num_classes = model_cfg["num_classes"]
         if num_classes not in self.supported_num_classes:
