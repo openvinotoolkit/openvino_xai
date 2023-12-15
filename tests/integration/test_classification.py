@@ -91,7 +91,7 @@ class TestClsWB:
             task_type=TaskType.CLASSIFICATION,
             insertion_parameters=insertion_parameters,
         )
-        model_inferrer = ClassificationModelInferrer(model_xai, activation=ActivationType.NONE)
+        model_inferrer = ClassificationModelInferrer(model_xai, change_channel_order=True, activation=ActivationType.NONE)
 
         if target_explain_group == TargetExplainGroup.ALL:
             explanation_parameters = ExplanationParameters(
@@ -153,7 +153,7 @@ class TestClsWB:
             task_type=TaskType.CLASSIFICATION,
             insertion_parameters=insertion_parameters,
         )
-        model_inferrer = ClassificationModelInferrer(model_xai, activation=ActivationType.SIGMOID)
+        model_inferrer = ClassificationModelInferrer(model_xai, change_channel_order=True, activation=ActivationType.SIGMOID)
 
         if target_explain_group == TargetExplainGroup.ALL:
             explanation_parameters = ExplanationParameters(
@@ -212,7 +212,7 @@ class TestClsWB:
             task_type=TaskType.CLASSIFICATION,
             insertion_parameters=insertion_parameters,
         )
-        model_inferrer = ClassificationModelInferrer(model_xai, activation=ActivationType.SIGMOID)
+        model_inferrer = ClassificationModelInferrer(model_xai, change_channel_order=True, activation=ActivationType.SIGMOID)
 
         explanation_parameters = ExplanationParameters(
             post_processing_parameters=PostProcessParameters(),
@@ -244,7 +244,7 @@ class TestClsWB:
             model,
             task_type=TaskType.CLASSIFICATION,
         )
-        model_inferrer = ClassificationModelInferrer(model_xai, activation=ActivationType.SIGMOID)
+        model_inferrer = ClassificationModelInferrer(model_xai, change_channel_order=True, activation=ActivationType.SIGMOID)
 
         explain_targets = None
         if target_explain_group == TargetExplainGroup.CUSTOM:
@@ -281,7 +281,7 @@ class TestClsWB:
             model,
             task_type=TaskType.CLASSIFICATION,
         )
-        model_inferrer = ClassificationModelInferrer(model_xai, activation=ActivationType.SIGMOID)
+        model_inferrer = ClassificationModelInferrer(model_xai, change_channel_order=True, activation=ActivationType.SIGMOID)
 
         explanation_parameters = ExplanationParameters(
             target_explain_group=TargetExplainGroup.ALL,
@@ -323,7 +323,7 @@ class TestClsBB:
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
         model = ov.Core().read_model(model_path)
-        model_inferrer = ClassificationModelInferrer(model, activation=ActivationType.SIGMOID)
+        model_inferrer = ClassificationModelInferrer(model, change_channel_order=True, activation=ActivationType.SIGMOID)
 
         post_processing_parameters = PostProcessParameters(
             overlay=overlay,
@@ -383,7 +383,7 @@ class TestClsBB:
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
         model = ov.Core().read_model(model_path)
-        model_inferrer = ClassificationModelInferrer(model, activation=ActivationType.SIGMOID)
+        model_inferrer = ClassificationModelInferrer(model, change_channel_order=True, activation=ActivationType.SIGMOID)
 
         explanation_parameters = ExplanationParameters(
             explain_mode=ExplainMode.BLACKBOX,
@@ -423,7 +423,7 @@ class TestClsBB:
             task_type=TaskType.CLASSIFICATION,
         )
         assert has_xai(model_xai), "Updated IR model should has XAI head."
-        model_inferrer = ClassificationModelInferrer(model_xai, activation=ActivationType.SIGMOID)
+        model_inferrer = ClassificationModelInferrer(model_xai, change_channel_order=True, activation=ActivationType.SIGMOID)
 
         explanation_parameters = ExplanationParameters(
             explain_mode=ExplainMode.BLACKBOX,

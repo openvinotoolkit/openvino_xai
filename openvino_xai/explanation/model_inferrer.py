@@ -42,6 +42,7 @@ class ClassificationModelInferrer:
             self,
             model: ov.Model,
             input_size: Tuple[int] = (224, 224),
+            change_channel_order: bool = False,
             mean: Optional[Union[np.ndarray, List[float]]] = None,
             std: Optional[Union[np.ndarray, List[float]]] = None,
             activation: ActivationType = ActivationType.SOFTMAX,
@@ -50,6 +51,7 @@ class ClassificationModelInferrer:
         self.compiled_model = ov.Core().compile_model(model, "CPU")
         self.has_xai = has_xai(model)
         self.input_size = input_size
+        self.change_channel_order = change_channel_order
         self.mean = mean if mean is not None else np.array([0., 0., 0.])
         self.std = std if std is not None else np.array([1., 1., 1.])
         self.activation = activation
@@ -71,6 +73,9 @@ class ClassificationModelInferrer:
         return x
 
     def preprocess(self, x: np.ndarray) -> np.ndarray:
+        # Change color channel order
+        if self.change_channel_order:
+            x = x[:, :, ::-1]
         # Resize to imagenet image shape.
         x = cv2.resize(src=x, dsize=self.input_size)
         # Normalize

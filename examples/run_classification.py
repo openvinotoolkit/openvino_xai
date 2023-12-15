@@ -124,7 +124,7 @@ def insert_xai_and_explain(args):
     # inference_result = model_inferrer(image)  # inference_result: ovxai.explanation.utils.InferenceResult
     if USE_CUSTOM_INFERRER:
         model_inferrer = ovxai.explanation.model_inferrer.ClassificationModelInferrer(
-            model_xai, activation=ActivationType.SIGMOID
+            model_xai, change_channel_order=True, activation=ActivationType.SIGMOID
         )
     else:
         model_inferrer = insert_xai_into_mapi_wrapper(args)
@@ -173,7 +173,7 @@ def insert_xai_into_vit_and_explain(args):
         insertion_parameters=insertion_parameters,
     )
     model_inferrer = ovxai.explanation.model_inferrer.ClassificationModelInferrer(
-        model_xai, activation=ActivationType.NONE
+        model_xai, change_channel_order=True, activation=ActivationType.NONE
     )
     image = cv2.imread(args.image_path)
     explanation = ovxai.explain(
@@ -208,7 +208,7 @@ def insert_xai_and_explain_w_params(args):
     # inference_result = model_inferrer(image)  # inference_result: ovxai.explanation.utils.InferenceResult
     if USE_CUSTOM_INFERRER:
         model_inferrer = ovxai.explanation.model_inferrer.ClassificationModelInferrer(
-            model_xai, activation=ActivationType.SIGMOID
+            model_xai, change_channel_order=True, activation=ActivationType.SIGMOID
         )
     else:
         model_inferrer = insert_xai_into_mapi_wrapper(args)
@@ -274,7 +274,7 @@ def insert_xai_and_explain_multiple_images(args):
     # inference_result = model_inferrer(image)  # inference_result: ovxai.explanation.utils.InferenceResult
     if USE_CUSTOM_INFERRER:
         model_inferrer = ovxai.explanation.model_inferrer.ClassificationModelInferrer(
-            model_xai, activation=ActivationType.SIGMOID
+            model_xai, change_channel_order=True, activation=ActivationType.SIGMOID
         )
     else:
         model_inferrer = insert_xai_into_mapi_wrapper(args)
@@ -319,7 +319,7 @@ def explain_black_box(args):
     # inference_result = model_inferrer(image)  # inference_result: ovxai.explanation.utils.InferenceResult
     if USE_CUSTOM_INFERRER:
         model_inferrer = ovxai.explanation.model_inferrer.ClassificationModelInferrer(
-            model, activation=ActivationType.SIGMOID
+            model, change_channel_order=True, activation=ActivationType.SIGMOID
         )
     else:
         model_inferrer = openvino.model_api.models.ClassificationModel.create_model(

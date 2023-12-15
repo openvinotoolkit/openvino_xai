@@ -318,6 +318,7 @@ class TestImageClassificationTimm:
         scale_values = [(item * 255) for item in model_cfg["std"]]
         model_inferrer = ClassificationModelInferrer(
             model_xai,
+            change_channel_order=True,
             input_size=model_cfg["input_size"][1:],
             mean=mean_values,
             std=scale_values,
