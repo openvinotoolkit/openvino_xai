@@ -1,3 +1,6 @@
+# Copyright (C) 2023 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from pathlib import Path
 
 import addict
@@ -22,7 +25,7 @@ from openvino_xai.insertion.insertion_parameters import DetectionInsertionParame
 
 MODEL_CONFIGS = addict.Addict(
     {
-        "det_mobilenetv2_atss_bccd": 
+        "det_mobilenetv2_atss_bccd":
             {
                 "anchors": [1, 1, 1, 1, 1],
                 "num_classes": 3,
@@ -33,7 +36,7 @@ MODEL_CONFIGS = addict.Addict(
                     "/bbox_head/atss_cls_4/Conv/WithoutBiases",
                 ],
             },
-        "det_mobilenetv2_ssd_bccd": 
+        "det_mobilenetv2_ssd_bccd":
             {
                 "anchors": [4, 5],
                 "num_classes": 4,
@@ -42,7 +45,7 @@ MODEL_CONFIGS = addict.Addict(
                     "/bbox_head/cls_convs.1/cls_convs.1.3/Conv/WithoutBiases",
                 ],
             },
-        "det_yolox_bccd": 
+        "det_yolox_bccd":
             {
                 "anchors": [1, 1, 1, 1, 1],
                 "num_classes": 3,
@@ -51,7 +54,7 @@ MODEL_CONFIGS = addict.Addict(
                     "/bbox_head/multi_level_conv_cls.1/Conv/WithoutBiases",
                     "/bbox_head/multi_level_conv_cls.2/Conv/WithoutBiases",
                 ],
-            },     
+            },
     }
 )
 

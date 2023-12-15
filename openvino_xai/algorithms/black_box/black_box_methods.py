@@ -1,3 +1,6 @@
+# Copyright (C) 2023 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from abc import ABC
 from typing import Union, Callable, Optional, Tuple, List
 

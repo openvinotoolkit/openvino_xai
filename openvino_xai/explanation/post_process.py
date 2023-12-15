@@ -1,3 +1,6 @@
+# Copyright (C) 2023 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from typing import Tuple, List
 
 import cv2
@@ -118,7 +121,7 @@ class PostProcessor:
         """Applies cv2.applyColorMap to the saliency map."""
         #  TODO: support different (custom?) colormaps.
         assert self._explanation.saliency_map.dtype == np.uint8, (
-            "Colormap requires saliency map to has uint8 dtype. " 
+            "Colormap requires saliency map to has uint8 dtype. "
             "Enable 'normalize' flag for PostProcessor."
         )
         layout = self._explanation.layout
