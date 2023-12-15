@@ -284,14 +284,14 @@ class TestImageClassificationTimm:
         timm_model, model_cfg = self.get_timm_model(model_id)
 
         self.update_report("report_wb.csv", model_id)
-        if not (output_model_dir / "model_fp32.xml").is_file():
+        if not ir_path.is_file():
             input_size = [1] + list(timm_model.default_cfg["input_size"])
             dummy_tensor = torch.rand(input_size)
-            onnx_path = output_model_dir / "model_fp32.onnx"
-            set_dynamic_batch = model_id in LIMITED_DIVERSE_SET_OF_VISION_TRANSFORMER_MODELS
-            export_to_onnx(timm_model, onnx_path, dummy_tensor, set_dynamic_batch)
-            self.update_report("report_wb.csv", model_id, "True")
-            export_to_ir(onnx_path, output_model_dir, model_name="model_fp32")
+            input_shape = list(dummy_tensor.shape)
+            input_shape[0] = -1
+            ov_model = openvino.convert_model(timm_model, example_input=dummy_tensor,
+                                                     input=(openvino.runtime.PartialShape(input_shape),))
+            openvino.save_model(ov_model, ir_path)
             self.update_report("report_wb.csv", model_id, "True", "True")
         else:
             self.update_report("report_wb.csv", model_id, "True", "True")
@@ -332,6 +332,7 @@ class TestImageClassificationTimm:
             post_processing_parameters=PostProcessParameters(),
         )
         image = cv2.imread("tests/assets/cheetah_person.jpg")
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         explanation = ovxai.explain(model_inferrer, image, explanation_parameters)
 
         assert explanation is not None
