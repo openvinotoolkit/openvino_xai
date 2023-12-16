@@ -109,6 +109,7 @@ class ExplanationResult:
     @staticmethod
     def _format_sal_map_as_dict(raw_saliency_map: np.ndarray) -> Dict[Union[int, str], np.ndarray]:
         """Returns dict with saliency maps in format {target_id: class_saliency_map}."""
+        dict_sal_map: Dict[Union[int, str], np.ndarray]
         if raw_saliency_map.ndim == 3:
             # Per-image saliency map
             dict_sal_map = {"per_image_map": raw_saliency_map[0]}
@@ -124,7 +125,7 @@ class ExplanationResult:
         return dict_sal_map
 
     def _select_target_saliency_maps(
-        self, custom_target_indices: List[int] = None
+        self, custom_target_indices: Optional[List[int]] = None
     ) -> Dict[Union[int, str], np.ndarray]:
         assert self.layout == SaliencyMapLayout.MULTIPLE_MAPS_PER_IMAGE_GRAY
         explain_target_indexes = select_target_indices(

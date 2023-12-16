@@ -1,7 +1,7 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-from typing import Optional
 
+from typing import Optional
 from openvino import runtime as ov
 
 from openvino_xai.algorithms.white_box.white_box_methods import (

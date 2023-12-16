@@ -14,7 +14,7 @@ import sys
 import threading
 import time
 from pathlib import Path
-from typing import Dict
+from typing import Any, Dict, List
 
 import openvino
 from openvino.model_api.models import ClassificationModel
@@ -41,8 +41,8 @@ class Command:
         self.cmd = cmd
         self.process = None
         self.exec_time = -1
-        self.output = []  # store output here
-        self.kwargs = {}
+        self.output: List[Any] = []  # store output here
+        self.kwargs: Dict[Any, Any] = {}
         self.timeout = False
         self.cwd = cwd
         self.env = env if env is not None else os.environ.copy()
@@ -119,7 +119,7 @@ class Command:
         return self.exec_time
 
 
-def export_to_onnx(model: torch.nn.Module, save_path: str, data_sample: torch.Tensor, set_dynamic_batch: bool) -> None:
+def export_to_onnx(model: torch.nn.Module, save_path: str, data_sample: torch.Tensor, set_dynamic_batch: bool) -> None:  # type: ignore
     """
     Export Torch model to ONNX format.
     """

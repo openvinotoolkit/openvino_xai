@@ -149,7 +149,7 @@ class IRParserCls(IRParser):
 
             # Make an attempt to search for last backbone node via post_target_node
             post_target_node = cls.get_post_target_node(model)
-            target_node = post_target_node.input(0).get_source_output().get_node()
+            target_node = post_target_node.input(0).get_source_output().get_node()  # type: ignore
             if cls._has_spacial_size(target_node):
                 return target_node
 

@@ -63,9 +63,9 @@ def _insert_xai_branch_into_model(
     model: ov.Model, task_type: TaskType, insertion_parameters: Optional[InsertionParameters]
 ) -> ov.Model:
     if task_type == TaskType.CLASSIFICATION:
-        explain_method = create_white_box_classification_explain_method(model, insertion_parameters)
+        explain_method = create_white_box_classification_explain_method(model, insertion_parameters)  # type: ignore
     elif task_type == TaskType.DETECTION:
-        explain_method = create_white_box_detection_explain_method(model, insertion_parameters)
+        explain_method = create_white_box_detection_explain_method(model, insertion_parameters)  # type: ignore
     else:
         raise ValueError(f"Model type {task_type} is not supported")
 

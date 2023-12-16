@@ -1,3 +1,5 @@
+# mypy: disable-error-code="union-attr"
+
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
@@ -6,7 +8,7 @@ from typing import Union, Callable, Optional, Tuple, List
 
 import cv2
 import numpy as np
-from openvino import model_api as mapi
+from openvino.model_api import models as mapi_models
 from openvino.model_api.models import ClassificationModel
 from openvino.model_api.pipelines import AsyncPipeline
 from tqdm import tqdm
@@ -24,7 +26,7 @@ class RISE(BlackBoxXAIMethodBase):
     """RISEExplainer explains classification models in black-box mode using RISE (https://arxiv.org/abs/1806.07421).
 
     :param model_inferrer: Callable model inferrer object.
-    :type model_inferrer: Union[Callable[[np.ndarray], InferenceResult], mapi.models.Model]
+    :type model_inferrer: Union[Callable[[np.ndarray], InferenceResult], mapi_models.Model]
     :param num_masks: Number of generated masks to aggregate.
     :type num_masks: int
     :param num_cells: Number of cells for low-dimensional RISE
@@ -47,7 +49,7 @@ class RISE(BlackBoxXAIMethodBase):
 
     def __init__(
         self,
-        model_inferrer: Union[Callable[[np.ndarray], InferenceResult], mapi.models.Model],
+        model_inferrer: Union[Callable[[np.ndarray], InferenceResult], mapi_models.Model],
         num_masks: int = 5000,
         num_cells: int = 8,
         prob: float = 0.5,
@@ -101,7 +103,7 @@ class RISE(BlackBoxXAIMethodBase):
         if isinstance(model_output, InferenceResult):
             if model_output.saliency_map is not None:
                 logger.warning(self._xai_branch_warning)
-        elif isinstance(model_output, mapi.models.ClassificationResult):
+        elif isinstance(model_output, mapi_models.ClassificationResult):
             if model_output.saliency_map.size != 0:
                 logger.warning(self._xai_branch_warning)
         else:
@@ -120,7 +122,7 @@ class RISE(BlackBoxXAIMethodBase):
 
     def _get_prediction_and_target_classes(
         self,
-        model_output: Union[InferenceResult, mapi.models.ClassificationResult],
+        model_output: Union[InferenceResult, mapi_models.ClassificationResult],
         explanation_parameters: ExplanationParameters,
     ) -> Tuple:
         prediction, prediction_raw = get_prediction_from_model_output(
@@ -157,7 +159,7 @@ class RISE(BlackBoxXAIMethodBase):
         num_classes: int,
         target_explain_group: TargetExplainGroup,
         explain_targets: Union[List[int], np.ndarray],
-        prediction: Union[List[int], np.ndarray],
+        prediction: Union[List[Tuple[int]], np.ndarray],
     ):
         prediction_indices = [pred[0] for pred in prediction]
         explain_target_indexes = select_target_indices(

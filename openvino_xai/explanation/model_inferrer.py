@@ -40,7 +40,7 @@ class ClassificationModelInferrer:
     def __init__(
         self,
         model: ov.Model,
-        input_size: Tuple[int] = (224, 224),
+        input_size: Tuple[int, int] = (224, 224),
         change_channel_order: bool = False,
         mean: Optional[Union[np.ndarray, List[float]]] = None,
         std: Optional[Union[np.ndarray, List[float]]] = None,

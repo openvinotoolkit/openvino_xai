@@ -1,11 +1,11 @@
-# Installation
+## Installation
 
 ```bash
 pip install .
 pip install -r docs/api/requirements.txt
 ```
 
-# Build API docs
+## Build API docs
 
 ```bash
 sphinx-build -M html docs/api/source html_build

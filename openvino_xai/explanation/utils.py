@@ -41,7 +41,7 @@ def get_prediction_from_model_output(
         objects = inference_result.objects
         # Currently support only for DetClassProbabilityMapXAIMethod
         # TODO: generalize
-        prediction = set((detection.id, None) for detection in objects)
+        prediction = list(set((detection.id, None) for detection in objects))
         prediction_raw = None
     else:
         raise ValueError(f"inference result type {type(inference_result)} is not supported.")
@@ -103,3 +103,5 @@ def select_target_indices(
         if not all(0 <= target_index <= (total_num_targets - 1) for target_index in explain_target_indices):
             raise ValueError(f"All targets explanation indices have to be in range 0..{total_num_targets - 1}.")
         return explain_target_indices
+
+    raise ValueError(f"Unsupported target_explain_group: {target_explain_group}")
