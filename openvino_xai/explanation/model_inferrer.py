@@ -41,7 +41,7 @@ class ClassificationModelInferrer:
     def __init__(
             self,
             model: ov.Model,
-            input_size: Tuple[int] = (224, 224),
+            input_size: Optional[Tuple[int, int]] = None,
             change_channel_order: bool = False,
             mean: Optional[Union[np.ndarray, List[float]]] = None,
             std: Optional[Union[np.ndarray, List[float]]] = None,
@@ -56,12 +56,19 @@ class ClassificationModelInferrer:
         self.std = std if std is not None else np.array([1., 1., 1.])
         self.activation = activation
 
+        if self.input_size is None:
+            assert len(self.compiled_model.inputs) == 1, "Only models with one input are supported"
+            self.input_size = [x.get_length() for x in list(self.compiled_model.inputs[0].partial_shape)[-2:]]
+
         if output_name is not None:
             self.output_name = output_name
         else:
             for output in model.outputs:
                 names = output.get_names()
-                name = next(iter(names))
+                if not names:
+                    name = output.get_index()
+                else:
+                    name = next(iter(names))
                 if len(output.get_partial_shape()) == 2 and name != SALIENCY_MAP_OUTPUT_NAME:
                     self.output_name = name
                     break
