@@ -112,7 +112,7 @@ class Command:
         return self.exec_time
 
 
-def export_to_onnx(model: torch.nn.Module, save_path: str, data_sample: torch.Tensor, set_dynamic_batch: bool) -> None:
+def export_to_onnx(model: torch.nn.Module, save_path: str, data_sample: torch.Tensor, set_dynamic_batch: bool = True) -> None:
     """
     Export Torch model to ONNX format.
     """
@@ -140,6 +140,14 @@ def export_to_ir(model_path: str, save_path: str, model_name: str) -> None:
     """
     runner = Command(f"mo -m {model_path} -o {save_path} -n {model_name}")
     runner.run()
+
+
+def convert_torch_model(model: torch.nn.Module, input_size: list[int]):
+    dummy_tensor = torch.rand(input_size)
+    input_shape = list(dummy_tensor.shape)
+    input_shape[0] = -1
+    return openvino.convert_model(model, example_input=dummy_tensor,
+                                 input=("x", openvino.runtime.PartialShape(input_shape),))
 
 
 LIMITED_DIVERSE_SET_OF_CNN_MODELS = [
@@ -286,11 +294,7 @@ class TestImageClassificationTimm:
         self.update_report("report_wb.csv", model_id)
         if not ir_path.is_file():
             input_size = [1] + list(timm_model.default_cfg["input_size"])
-            dummy_tensor = torch.rand(input_size)
-            input_shape = list(dummy_tensor.shape)
-            input_shape[0] = -1
-            ov_model = openvino.convert_model(timm_model, example_input=dummy_tensor,
-                                                     input=(openvino.runtime.PartialShape(input_shape),))
+            ov_model = convert_torch_model(timm_model, input_size)
             openvino.save_model(ov_model, ir_path)
             self.update_report("report_wb.csv", model_id, "True", "True")
         else:
@@ -332,7 +336,6 @@ class TestImageClassificationTimm:
             post_processing_parameters=PostProcessParameters(),
         )
         image = cv2.imread("tests/assets/cheetah_person.jpg")
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         explanation = ovxai.explain(model_inferrer, image, explanation_parameters)
 
         assert explanation is not None
