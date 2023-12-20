@@ -147,7 +147,7 @@ def convert_torch_model(model: torch.nn.Module, input_size: list[int]):
     input_shape = list(dummy_tensor.shape)
     input_shape[0] = -1
     return openvino.convert_model(model, example_input=dummy_tensor,
-                                 input=("x", openvino.runtime.PartialShape(input_shape),))
+                                  input=(openvino.runtime.PartialShape(input_shape),))
 
 
 LIMITED_DIVERSE_SET_OF_CNN_MODELS = [
@@ -388,24 +388,23 @@ class TestImageClassificationTimm:
 
         timm_model, model_cfg = self.get_timm_model(model_id)
 
-        self.update_report("report_bb.csv", model_id)
+        #self.update_report("report_bb.csv", model_id)
 
         output_model_dir = self.data_dir / "timm_models" / "converted_models" / model_id
         output_model_dir.mkdir(parents=True, exist_ok=True)
-        onnx_path = output_model_dir / "model_fp32.onnx"
+        ir_path = output_model_dir / "model_fp32.xml"
 
-        if not (output_model_dir / "model_fp32.onnx").is_file():
+        if not ir_path.is_file():
             input_size = [1] + list(timm_model.default_cfg["input_size"])
-            dummy_tensor = torch.rand(input_size)
-            onnx_path = output_model_dir / "model_fp32.onnx"
-            export_to_onnx(timm_model, onnx_path, dummy_tensor)
+            ov_model = convert_torch_model(timm_model, input_size)
+            openvino.save_model(ov_model, ir_path)
             self.update_report("report_bb.csv", model_id, "True", "True")
         else:
             self.update_report("report_bb.csv", model_id, "True", "True")
 
         mapi_params = self.get_mapi_params(model_cfg)
         model = ClassificationModel.create_model(
-            onnx_path,
+            ir_path,
             model_type="Classification",
             **mapi_params,
         )
