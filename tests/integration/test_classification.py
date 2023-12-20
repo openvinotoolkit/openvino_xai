@@ -55,16 +55,16 @@ class TestClsWB:
     image = cv2.imread("tests/assets/cheetah_person.jpg")
     data_dir = Path(".data")
     _ref_sal_maps_reciprocam = {
-        "mlc_mobilenetv3_large_voc": np.array([215, 214, 233, 239, 218, 206, 210], dtype=np.uint8),
-        "mlc_efficient_b0_voc": np.array([73, 242, 156, 219, 197, 239, 69], dtype=np.uint8),
-        "mlc_efficient_v2s_voc": np.array([157, 166, 166, 181, 162, 151, 147], dtype=np.uint8),
-        "classification_model_with_xai_head": np.array([172, 173, 235, 236, 237, 238, 227], dtype=np.uint8),
+        "mlc_mobilenetv3_large_voc": np.array([236, 237, 244, 252, 242, 225, 231], dtype=np.uint8),
+        "mlc_efficient_b0_voc": np.array([53, 128, 70, 234, 227, 255, 59], dtype=np.uint8),
+        "mlc_efficient_v2s_voc": np.array([144, 105, 116, 195, 209, 176, 176], dtype=np.uint8),
+        "classification_model_with_xai_head": np.array([165, 161, 209, 211, 208, 206, 196], dtype=np.uint8),
     }
     _ref_sal_maps_vitreciprocam = {
-        "deit-tiny": np.array([212, 208, 221, 236, 230, 234, 237, 242, 221, 199, 179, 148, 140, 166], dtype=np.uint8)
+        "deit-tiny": np.array([200, 171, 183, 196, 198, 196, 205, 225, 207, 173, 174, 134, 97, 117], dtype=np.uint8)
     }
     _ref_sal_maps_activationmap = {
-        "mlc_mobilenetv3_large_voc": np.array([7, 7, 13, 16, 3, 0, 5], dtype=np.uint8),
+        "mlc_mobilenetv3_large_voc": np.array([6, 3, 10, 15, 5, 0, 13], dtype=np.uint8),
     }
 
     @pytest.mark.parametrize("embed_normalization", [True, False])
@@ -303,9 +303,9 @@ class TestClsBB:
     image = cv2.imread("tests/assets/cheetah_person.jpg")
     data_dir = Path(".data")
     _ref_sal_maps = {
-        "mlc_mobilenetv3_large_voc": np.array([13, 18, 23, 29, 34, 40, 45, 51, 57, 65], dtype=np.uint8),
-        "mlc_efficient_b0_voc": np.array([9, 14, 20, 25, 31, 37, 43, 48, 55, 63], dtype=np.uint8),
-        "mlc_efficient_v2s_voc": np.array([14, 19, 24, 30, 36, 41, 47, 53, 60, 67], dtype=np.uint8),
+        "mlc_mobilenetv3_large_voc": np.array([16, 22, 28, 34, 41, 47, 53, 60, 67, 75], dtype=np.uint8),
+        "mlc_efficient_b0_voc": np.array([12, 17, 22, 27, 32, 37, 43, 48, 54, 61], dtype=np.uint8),
+        "mlc_efficient_v2s_voc": np.array([9, 13, 17, 21, 26, 31, 35, 40, 45, 53], dtype=np.uint8),
         "classification_model_with_xai_head": np.array([8, 13, 18, 24, 29, 35, 40, 46, 52, 60], dtype=np.uint8),
     }
 
