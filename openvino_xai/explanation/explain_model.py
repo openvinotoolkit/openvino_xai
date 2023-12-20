@@ -6,15 +6,15 @@ import numpy as np
 import openvino.model_api as mapi
 
 from openvino_xai.explanation.explanation_result import ExplanationResult
-from openvino_xai.explanation.explainers import WhiteBoxExplainer, BlackBoxExplainer
+from openvino_xai.explanation.explainers import Explainer, WhiteBoxExplainer, BlackBoxExplainer
 from openvino_xai.explanation.explanation_parameters import ExplainMode, ExplanationParameters
 from openvino_xai.explanation.utils import InferenceResult
 
 
 def explain(
-        model_inferrer: Union[Callable[[np.ndarray], InferenceResult], mapi.models.Model],
-        data: np.ndarray,
-        explanation_parameters: ExplanationParameters = ExplanationParameters(),
+    model_inferrer: Union[Callable[[np.ndarray], InferenceResult], mapi.models.Model],
+    data: np.ndarray,
+    explanation_parameters: ExplanationParameters = ExplanationParameters(),
 ) -> ExplanationResult:
     """
     Explains the model-data pair, i.e. generates explanation result.
@@ -28,6 +28,7 @@ def explain(
     :return: Explanation result object, that contain saliency map and other useful info.
     """
 
+    explainer: Explainer
     if explanation_parameters.explain_mode == ExplainMode.WHITEBOX:
         explainer = WhiteBoxExplainer(model_inferrer)
     elif explanation_parameters.explain_mode == ExplainMode.BLACKBOX:

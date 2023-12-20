@@ -1,9 +1,14 @@
+# mypy: disable-error-code="union-attr"
+
+# Copyright (C) 2023 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from abc import ABC
 from typing import Union, Callable, Optional, Tuple, List
 
 import cv2
 import numpy as np
-from openvino import model_api as mapi
+from openvino.model_api import models as mapi_models
 from openvino.model_api.models import ClassificationModel
 from openvino.model_api.pipelines import AsyncPipeline
 from tqdm import tqdm
@@ -21,7 +26,7 @@ class RISE(BlackBoxXAIMethodBase):
     """RISEExplainer explains classification models in black-box mode using RISE (https://arxiv.org/abs/1806.07421).
 
     :param model_inferrer: Callable model inferrer object.
-    :type model_inferrer: Union[Callable[[np.ndarray], InferenceResult], mapi.models.Model]
+    :type model_inferrer: Union[Callable[[np.ndarray], InferenceResult], mapi_models.Model]
     :param num_masks: Number of generated masks to aggregate.
     :type num_masks: int
     :param num_cells: Number of cells for low-dimensional RISE
@@ -42,21 +47,25 @@ class RISE(BlackBoxXAIMethodBase):
     :type normalize: bool
     """
 
-    def __init__(self,
-                 model_inferrer: Union[Callable[[np.ndarray], InferenceResult], mapi.models.Model],
-                 num_masks: int = 5000,
-                 num_cells: int = 8,
-                 prob: float = 0.5,
-                 seed: int = 0,
-                 input_size: Optional[Tuple[int]] = None,
-                 asynchronous_inference: bool = True,
-                 throughput_inference: bool = True,
-                 normalize: bool = True):
+    def __init__(
+        self,
+        model_inferrer: Union[Callable[[np.ndarray], InferenceResult], mapi_models.Model],
+        num_masks: int = 5000,
+        num_cells: int = 8,
+        prob: float = 0.5,
+        seed: int = 0,
+        input_size: Optional[Tuple[int]] = None,
+        asynchronous_inference: bool = True,
+        throughput_inference: bool = True,
+        normalize: bool = True,
+    ):
         self._model_mapi_wrapper = isinstance(model_inferrer, ClassificationModel)
-        self._xai_branch_warning = ("Input model has XAI branch inserted, which might lead to additional "
-                                    "computational overhead, due to computation in XAI head. "
-                                    "Consider providing pure model w/o xai inserted "
-                                    "to black-box explainer for better performance.")
+        self._xai_branch_warning = (
+            "Input model has XAI branch inserted, which might lead to additional "
+            "computational overhead, due to computation in XAI head. "
+            "Consider providing pure model w/o xai inserted "
+            "to black-box explainer for better performance."
+        )
         if self._model_mapi_wrapper:
             if has_xai(model_inferrer.inference_adapter.model):
                 logger.warning(self._xai_branch_warning)
@@ -78,8 +87,10 @@ class RISE(BlackBoxXAIMethodBase):
             if input_size:
                 self.input_size = input_size
             else:
-                logger.warning(f"Input size is not provided, setting to (224, 224), which might be incorrect. "
-                               f"Provide input_size for reliable results.")
+                logger.warning(
+                    "Input size is not provided, setting to (224, 224), which might be incorrect. "
+                    "Provide input_size for reliable results."
+                )
                 self.input_size = (224, 224)
 
         # TODO: optimize for custom pipelines
@@ -92,13 +103,15 @@ class RISE(BlackBoxXAIMethodBase):
         if isinstance(model_output, InferenceResult):
             if model_output.saliency_map is not None:
                 logger.warning(self._xai_branch_warning)
-        elif isinstance(model_output, mapi.models.ClassificationResult):
+        elif isinstance(model_output, mapi_models.ClassificationResult):
             if model_output.saliency_map.size != 0:
                 logger.warning(self._xai_branch_warning)
         else:
-            raise ValueError(f"Model output has to be ether "
-                             f"openvino_xai.explanation.utils.InferenceResult or "
-                             f"openvino.model_api.models.ClassificationResult, but got{type(model_output)}.")
+            raise ValueError(
+                f"Model output has to be ether "
+                f"openvino_xai.explanation.utils.InferenceResult or "
+                f"openvino.model_api.models.ClassificationResult, but got{type(model_output)}."
+            )
 
         prediction_raw, target_classes = self._get_prediction_and_target_classes(model_output, explanation_parameters)
         num_classes = len(prediction_raw)
@@ -108,9 +121,9 @@ class RISE(BlackBoxXAIMethodBase):
         return inference_result
 
     def _get_prediction_and_target_classes(
-            self,
-            model_output: Union[InferenceResult, mapi.models.ClassificationResult],
-            explanation_parameters: ExplanationParameters,
+        self,
+        model_output: Union[InferenceResult, mapi_models.ClassificationResult],
+        explanation_parameters: ExplanationParameters,
     ) -> Tuple:
         prediction, prediction_raw = get_prediction_from_model_output(
             model_output, explanation_parameters.confidence_threshold
@@ -143,10 +156,10 @@ class RISE(BlackBoxXAIMethodBase):
 
     @staticmethod
     def _get_target_classes(
-            num_classes: int,
-            target_explain_group: TargetExplainGroup,
-            explain_targets: Union[List[int], np.ndarray],
-            prediction: Union[List[int], np.ndarray],
+        num_classes: int,
+        target_explain_group: TargetExplainGroup,
+        explain_targets: Union[List[int], np.ndarray],
+        prediction: Union[List[Tuple[int]], np.ndarray],
     ):
         prediction_indices = [pred[0] for pred in prediction]
         explain_target_indexes = select_target_indices(
@@ -158,7 +171,7 @@ class RISE(BlackBoxXAIMethodBase):
         return explain_target_indexes
 
     def _generate_saliency_map(
-            self, data: np.ndarray, num_classes: int, target_classes: Optional[List[int]]
+        self, data: np.ndarray, num_classes: int, target_classes: Optional[List[int]]
     ) -> np.ndarray:
         """Generates RISE saliency map.
 
@@ -178,10 +191,11 @@ class RISE(BlackBoxXAIMethodBase):
         return saliency_maps
 
     def _run_asynchronous_explanation(
-            self, resized_data: np.ndarray, num_classes: int, target_classes: Optional[List[int]]
+        self, resized_data: np.ndarray, num_classes: int, target_classes: Optional[List[int]]
     ) -> np.ndarray:
-        logger.info(f"RISE explains the model in asynchronous mode "
-                    f"with {self.num_masks} masks (inference calls)...")
+        logger.info(
+            f"RISE explains the model in asynchronous mode " f"with {self.num_masks} masks (inference calls)..."
+        )
         masks = []
         async_pipeline = AsyncPipeline(self._model_inferrer)
         for i in range(self.num_masks):
@@ -209,7 +223,7 @@ class RISE(BlackBoxXAIMethodBase):
         return sal_maps
 
     def _run_synchronous_explanation(
-            self, resized_data: np.ndarray, num_classes: int, target_classes: Optional[List[int]]
+        self, resized_data: np.ndarray, num_classes: int, target_classes: Optional[List[int]]
     ) -> np.ndarray:
         if target_classes is None:
             num_targets = num_classes
@@ -240,7 +254,7 @@ class RISE(BlackBoxXAIMethodBase):
             return raw_scores.reshape(-1, 1, 1) * mask
 
     def _reconstruct_sparce_saliency_map(
-            self, sal_maps: np.ndarray, num_classes: int, target_classes: Optional[List[int]]
+        self, sal_maps: np.ndarray, num_classes: int, target_classes: Optional[List[int]]
     ) -> np.ndarray:
         # TODO: see if np.put() or other alternatives works faster (requires flatten array)
         sal_maps_tmp = sal_maps
@@ -281,8 +295,6 @@ class RISE(BlackBoxXAIMethodBase):
         saliency_map = saliency_map.reshape((n, h * w))
         min_values = np.min(saliency_map, axis=-1)
         max_values = np.max(saliency_map, axis=-1)
-        saliency_map = (
-                255 * (saliency_map - min_values[:, None]) / (max_values - min_values + 1e-12)[:, None]
-        )
+        saliency_map = 255 * (saliency_map - min_values[:, None]) / (max_values - min_values + 1e-12)[:, None]
         saliency_map = saliency_map.reshape((n, h, w)).astype(np.uint8)
         return saliency_map

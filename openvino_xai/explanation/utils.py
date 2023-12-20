@@ -25,8 +25,7 @@ class InferenceResult:
 
 
 def get_prediction_from_model_output(
-        inference_result: Union[InferenceResult, ClassificationResult, DetectionResult],
-        confidence_threshold: float
+    inference_result: Union[InferenceResult, ClassificationResult, DetectionResult], confidence_threshold: float
 ) -> Tuple:
     """Generate prediction and prediction_raw."""
     # TODO: align between classification and detection
@@ -35,16 +34,14 @@ def get_prediction_from_model_output(
         prediction_raw = inference_result.prediction
         prediction_raw = prediction_raw.squeeze()
         # TODO: add label to align with mapi
-        prediction = [
-            (index, score) for index, score in enumerate(prediction_raw) if score > confidence_threshold
-        ]
+        prediction = [(index, score) for index, score in enumerate(prediction_raw) if score > confidence_threshold]
     elif isinstance(inference_result, ClassificationResult):
         prediction, prediction_raw = inference_result.top_labels, inference_result.raw_scores
     elif isinstance(inference_result, DetectionResult):
         objects = inference_result.objects
         # Currently support only for DetClassProbabilityMapXAIMethod
         # TODO: generalize
-        prediction = set((detection.id, None) for detection in objects)
+        prediction = list(set((detection.id, None) for detection in objects))
         prediction_raw = None
     else:
         raise ValueError(f"inference result type {type(inference_result)} is not supported.")
@@ -60,14 +57,14 @@ def check_prediction_from_model_output(prediction: np.ndarray) -> None:
     if prediction.shape[0] > 1:
         raise RuntimeError("Batch size for raw prediction should be 1.")
     if not 0 <= prediction.min() <= prediction.max() <= 1:
-        raise ValueError(f"Prediction has to be activated.")
+        raise ValueError("Prediction has to be activated.")
 
 
 def select_target_indices(
-        target_explain_group: TargetExplainGroup,
-        prediction_indices: Optional[Union[List[int], np.ndarray]] = None,
-        explain_target_indices: Optional[Union[List[int], np.ndarray]] = None,
-        total_num_targets: Optional[int] = None,
+    target_explain_group: TargetExplainGroup,
+    prediction_indices: Optional[Union[List[int], np.ndarray]] = None,
+    explain_target_indices: Optional[Union[List[int], np.ndarray]] = None,
+    total_num_targets: Optional[int] = None,
 ) -> Union[List[int], np.ndarray]:
     """
     Selects target indices.
@@ -102,9 +99,9 @@ def select_target_indices(
         if explain_target_indices is None:
             raise ValueError(f"Explain targets has to be provided for {target_explain_group}.")
         if not total_num_targets:
-            raise ValueError(f"total_num_targets has to be provided.")
+            raise ValueError("total_num_targets has to be provided.")
         if not all(0 <= target_index <= (total_num_targets - 1) for target_index in explain_target_indices):
-            raise ValueError(
-                f"All targets explanation indices have to be in range 0..{total_num_targets - 1}."
-            )
+            raise ValueError(f"All targets explanation indices have to be in range 0..{total_num_targets - 1}.")
         return explain_target_indices
+
+    raise ValueError(f"Unsupported target_explain_group: {target_explain_group}")

@@ -3,11 +3,11 @@
 OpenVINO-XAI provides a suite of eXplainable AI (XAI) algorithms for explanation of
 [OpenVINO™](https://github.com/openvinotoolkit/openvino) Intermediate Representation (IR).
 
-# Documentation
+## Documentation
 
 OpenVINO-XAI API documentation can be found [here](https://curly-couscous-ovjvm29.pages.github.io/).
 
-# Installation
+## Installation
 
 - Set up an isolated python environment:
 
@@ -39,9 +39,9 @@ pytest -v -s ./tests/
 pre-commit run -a
 ```
 
-# Usage in white-box mode
+## Usage in white-box mode
 
-## Insertion: insert XAI branch into the model
+### Insertion: insert XAI branch into the model
 
 ```python
 import openvino.runtime as ov
@@ -59,8 +59,9 @@ model_xai = ovxai.insert_xai(model, task_type=TaskType.CLASSIFICATION)
 # ***** Downstream task: user's code that infers model_xai and picks 'saliency_map' output *****
 ```
 
-## Explanation: generate explanation via inference
-### Get raw saliency maps: use original model inference pipeline
+### Explanation: generate explanation via inference
+
+#### Get raw saliency maps: use original model inference pipeline
 
 ```python
 # Compile model with XAI branch
@@ -80,7 +81,7 @@ logits, raw_saliency_map = model_inferrer(cv2.imread("path/to/image.jpg"))
 raw_saliency_map: np.ndarray  # e.g. 20x7x7 uint8 array
 ```
 
-### Get processed saliency maps: 1. modify output format of the original model inference pipeline and 2. call .explain()
+#### Get processed saliency maps: 1. modify output format of the original model inference pipeline and 2. call .explain()
 
 ```python
 from openvino_xai.explanation.utils import InferenceResult
@@ -98,7 +99,7 @@ def model_inferrer(image: np.ndarray) -> InferenceResult:
     result = compiled_model([image_processed])
     logits = postprocess(result["logits"])
     raw_saliency_map = result["saliency_map"]  # "saliency_map" is an additional output added during insertion
-    
+
     # Create InferenceResult object
     inference_result = InferenceResult(prediction=logits, saliency_map=raw_saliency_map)
     return inference_result
@@ -111,7 +112,7 @@ explanation_parameters = ExplanationParameters(
 )
 # Generate processed saliency map via .explain(model_inferrer, image) call
 explanation = ovxai.explain(
-    model_inferrer=model_inferrer, 
+    model_inferrer=model_inferrer,
     data=cv2.imread("path/to/image.jpg"),
     explanation_parameters=explanation_parameters,
 )
@@ -119,8 +120,10 @@ explanation: ExplanationResult
 explanation.saliency_map: Dict[int: np.ndarray]  # key - class id, value - processed saliency map e.g. 3x354x500
 ```
 
-# Usage in black-box mode
-## Explanation: generate explanation
+## Usage in black-box mode
+
+### Explanation: generate explanation
+
 ```python
 # Create original model
 model: ov.Model
@@ -135,8 +138,8 @@ def model_inferrer(image: np.ndarray) -> InferenceResult:
     image_processed = preprocess(image)
     result = compiled_model([image_processed])
     logits = postprocess(result["logits"])
-    
-    # Create InferenceResult object, w/o saliency map. 
+
+    # Create InferenceResult object, w/o saliency map.
     # Saliency map can be available in InferenceResult, but will be ignored when explain_mode=ExplainMode.BLACKBOX
     inference_result = InferenceResult(prediction=logits, saliency_map=None)
     return inference_result
@@ -154,9 +157,9 @@ explanation: ExplanationResult
 explanation.saliency_map: Dict[int: np.ndarray]  # key - class id, value - processed saliency map e.g. 354x500x3
 ```
 
-See more usage scenarios in [examples](./examples). 
+See more usage scenarios in [examples](./examples).
 
-### Running example scripts
+#### Running example scripts
 
 ```python
 # Retrieve OTX models by running tests
@@ -169,12 +172,15 @@ python examples/run_classification.py .data/otx_models/mlc_mobilenetv3_large_voc
 tests/assets/cheetah_person.jpg --output output
 ```
 
-# Scope of explained models
-Models from [Pytorch Image Models (timm)](https://github.com/huggingface/pytorch-image-models) are used 
+## Scope of explained models
+
+Models from [Pytorch Image Models (timm)](https://github.com/huggingface/pytorch-image-models) are used
 for classification benchmark.
 
-## White-box (fast, model-dependent)
-### Classification
+### White-box (fast, model-dependent)
+
+#### Classification
+
 We benchmarked white-box explanation (using ReciproCAM explain method) using 528 models.
 Currently, we support only CNN-based architectures in white-box mode,
 transformers will be supported in the upcoming weeks.
@@ -182,9 +188,11 @@ transformers will be supported in the upcoming weeks.
 For more details (statistic, model list, samples of generated saliency maps) see
 [#11](https://github.com/intel-sandbox/openvino_xai/pull/11).
 
-## Black-box (slow, model-agnostic)
-### Classification
-We benchmarked black-box explanation (using RISE explain method) using 528 CNN models and 115 transformer-based models. 
+### Black-box (slow, model-agnostic)
+
+#### Classification
+
+We benchmarked black-box explanation (using RISE explain method) using 528 CNN models and 115 transformer-based models.
 Black-box explainer support all types of models that output logits (e.g. CNNs, transformers, etc.).
 
 For more details (statistic, model list, samples of generated saliency maps) see

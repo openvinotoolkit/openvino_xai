@@ -1,3 +1,6 @@
+# Copyright (C) 2023 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 import os
 import sys
 import argparse
@@ -5,14 +8,13 @@ from pathlib import Path
 
 import cv2
 import openvino
-from openvino.model_api.models import ClassificationModel
 import openvino.runtime as ov
 
 import openvino_xai as ovxai
 from openvino_xai.common.parameters import TaskType, XAIMethodType
 from openvino_xai.explanation.explanation_parameters import ExplainMode, PostProcessParameters, TargetExplainGroup, \
     ExplanationParameters
-from openvino_xai.explanation.model_inferrer import ClassificationModelInferrer, ActivationType
+from openvino_xai.explanation.model_inferrer import ActivationType
 from openvino_xai.insertion.insertion_parameters import ClassificationInsertionParameters
 from openvino_xai.common.utils import logger
 
@@ -45,7 +47,7 @@ def insert_xai(args):
         task_type=TaskType.CLASSIFICATION,
     )
 
-    logger.info(f"insert_xai: XAI branch inserted into IR.")
+    logger.info("insert_xai: XAI branch inserted into IR.")
 
     # ***** Downstream task: user's code that infers model_xai and picks 'saliency_map' output *****
 
@@ -77,7 +79,7 @@ def insert_xai_w_params(args):
         insertion_parameters=insertion_parameters,
     )
 
-    logger.info(f"insert_xai_w_params: XAI branch inserted into IR with parameters.")
+    logger.info("insert_xai_w_params: XAI branch inserted into IR with parameters.")
 
     # ***** Downstream task: user's code that infers model_xai and picks 'saliency_map' output *****
 
@@ -101,7 +103,7 @@ def insert_xai_into_mapi_wrapper(args):
     mapi_wrapper_xai: openvino.model_api.models.Model
     mapi_wrapper_xai = ovxai.insertion.insert_xai_into_mapi_wrapper(mapi_wrapper)
 
-    logger.info(f"insert_xai_into_mapi_wrapper: XAI branch inserted into Model API wrapper.")
+    logger.info("insert_xai_into_mapi_wrapper: XAI branch inserted into Model API wrapper.")
 
     # ***** Downstream task: user's code that infers model_xai and picks 'saliency_map' output *****
 

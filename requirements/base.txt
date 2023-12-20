@@ -1,3 +1,4 @@
-openvino-model-api==0.1.5
+openvino-model-api==0.1.8
+openvino-dev>=2023.2
 opencv-python
 numpy

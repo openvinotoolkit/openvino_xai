@@ -9,17 +9,19 @@ from openvino.runtime import Type
 from openvino.preprocess import PrePostProcessor
 import openvino.model_api as mapi
 
-from openvino_xai.algorithms.white_box.create_method import create_white_box_classification_explain_method, \
-    create_white_box_detection_explain_method
+from openvino_xai.algorithms.white_box.create_method import (
+    create_white_box_classification_explain_method,
+    create_white_box_detection_explain_method,
+)
 from openvino_xai.common.parameters import TaskType
 from openvino_xai.insertion.insertion_parameters import InsertionParameters
 from openvino_xai.common.utils import logger, has_xai, SALIENCY_MAP_OUTPUT_NAME
 
 
 def insert_xai(
-        model: Union[ov.Model, str],
-        task_type: TaskType,
-        insertion_parameters: Optional[InsertionParameters] = None,
+    model: Union[ov.Model, str],
+    task_type: TaskType,
+    insertion_parameters: Optional[InsertionParameters] = None,
 ) -> ov.Model:
     """
     Inserts XAI into IR.
@@ -37,9 +39,11 @@ def insert_xai(
     if isinstance(model, str):
         model_suffix = Path(model).suffix
         if not model_suffix == ".xml":
-            raise ValueError(f"XAI can be inserted only into OV IR, "
-                             f"but provided model has {model_suffix} extension. "
-                             f"Please provide path to OV IR for white-box explanation methods.")
+            raise ValueError(
+                f"XAI can be inserted only into OV IR, "
+                f"but provided model has {model_suffix} extension. "
+                f"Please provide path to OV IR for white-box explanation methods."
+            )
         model = openvino.runtime.Core().read_model(model)
 
     if has_xai(model):
@@ -56,14 +60,12 @@ def insert_xai(
 
 
 def _insert_xai_branch_into_model(
-        model: ov.Model,
-        task_type: TaskType,
-        insertion_parameters: Optional[InsertionParameters]
+    model: ov.Model, task_type: TaskType, insertion_parameters: Optional[InsertionParameters]
 ) -> ov.Model:
     if task_type == TaskType.CLASSIFICATION:
-        explain_method = create_white_box_classification_explain_method(model, insertion_parameters)
+        explain_method = create_white_box_classification_explain_method(model, insertion_parameters)  # type: ignore
     elif task_type == TaskType.DETECTION:
-        explain_method = create_white_box_detection_explain_method(model, insertion_parameters)
+        explain_method = create_white_box_detection_explain_method(model, insertion_parameters)  # type: ignore
     else:
         raise ValueError(f"Model type {task_type} is not supported")
 
@@ -79,9 +81,9 @@ def _insert_xai_branch_into_model(
 
 
 def _set_xai_output_name_and_precision(
-        model_xai: ov.Model,
-        xai_output_index: int,
-        set_uint8: bool,
+    model_xai: ov.Model,
+    xai_output_index: int,
+    set_uint8: bool,
 ) -> ov.Model:
     model_xai.outputs[xai_output_index].tensor.set_names({SALIENCY_MAP_OUTPUT_NAME})
     if set_uint8:
@@ -92,8 +94,8 @@ def _set_xai_output_name_and_precision(
 
 
 def insert_xai_into_mapi_wrapper(
-        mapi_wrapper: mapi.models.Model,
-        insertion_parameters: Optional[InsertionParameters] = None,
+    mapi_wrapper: mapi.models.Model,
+    insertion_parameters: Optional[InsertionParameters] = None,
 ) -> mapi.models.Model:
     """
     Insert XAI into IR stored in Model API wrapper.
