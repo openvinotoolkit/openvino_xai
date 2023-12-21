@@ -43,70 +43,19 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">OpenVINO-XAI Python API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#model">Model</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#openvino_xai.model.XAIClassificationModel"><code class="docutils literal notranslate"><span class="pre">XAIClassificationModel</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#openvino_xai.model.XAIClassificationModel.generate_explain_method"><code class="docutils literal notranslate"><span class="pre">XAIClassificationModel.generate_explain_method()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#insertion">Insertion</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#openvino_xai.insertion.ClassificationInsertionParameters"><code class="docutils literal notranslate"><span class="pre">ClassificationInsertionParameters</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#openvino_xai.insertion.DetectionInsertionParameters"><code class="docutils literal notranslate"><span class="pre">DetectionInsertionParameters</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#openvino_xai.insertion.InsertionParameters"><code class="docutils literal notranslate"><span class="pre">InsertionParameters</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#openvino_xai.insertion.insert_xai"><code class="docutils literal notranslate"><span class="pre">insert_xai()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#openvino_xai.model.XAIDetectionModel"><code class="docutils literal notranslate"><span class="pre">XAIDetectionModel</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#openvino_xai.model.XAIDetectionModel.generate_explain_method"><code class="docutils literal notranslate"><span class="pre">XAIDetectionModel.generate_explain_method()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#openvino_xai.model.XAIModel"><code class="docutils literal notranslate"><span class="pre">XAIModel</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#openvino_xai.model.XAIModel.create_model"><code class="docutils literal notranslate"><span class="pre">XAIModel.create_model()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#openvino_xai.model.XAIModel.generate_explain_method"><code class="docutils literal notranslate"><span class="pre">XAIModel.generate_explain_method()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#openvino_xai.model.XAIModel.has_xai"><code class="docutils literal notranslate"><span class="pre">XAIModel.has_xai()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#openvino_xai.model.XAIModel.insert_xai"><code class="docutils literal notranslate"><span class="pre">XAIModel.insert_xai()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#openvino_xai.model.XAIModel.insert_xai_into_native_ir"><code class="docutils literal notranslate"><span class="pre">XAIModel.insert_xai_into_native_ir()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#explain">Explain</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#openvino_xai.explain.AutoExplainer"><code class="docutils literal notranslate"><span class="pre">AutoExplainer</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#openvino_xai.explain.BlackBoxExplainer"><code class="docutils literal notranslate"><span class="pre">BlackBoxExplainer</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#openvino_xai.explain.ClassificationAutoExplainer"><code class="docutils literal notranslate"><span class="pre">ClassificationAutoExplainer</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#openvino_xai.explain.ClassificationAutoExplainer.explain"><code class="docutils literal notranslate"><span class="pre">ClassificationAutoExplainer.explain()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#openvino_xai.explain.Explainer"><code class="docutils literal notranslate"><span class="pre">Explainer</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#openvino_xai.explain.Explainer.explain"><code class="docutils literal notranslate"><span class="pre">Explainer.explain()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#openvino_xai.explain.RISEExplainer"><code class="docutils literal notranslate"><span class="pre">RISEExplainer</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#openvino_xai.explain.RISEExplainer.explain"><code class="docutils literal notranslate"><span class="pre">RISEExplainer.explain()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#openvino_xai.explain.WhiteBoxExplainer"><code class="docutils literal notranslate"><span class="pre">WhiteBoxExplainer</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#openvino_xai.explain.WhiteBoxExplainer.explain"><code class="docutils literal notranslate"><span class="pre">WhiteBoxExplainer.explain()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#saliency-map">Saliency map</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#openvino_xai.saliency_map.ExplainResult"><code class="docutils literal notranslate"><span class="pre">ExplainResult</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#openvino_xai.saliency_map.ExplainResult.get_layout"><code class="docutils literal notranslate"><span class="pre">ExplainResult.get_layout()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#openvino_xai.saliency_map.ExplainResult.save"><code class="docutils literal notranslate"><span class="pre">ExplainResult.save()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#openvino_xai.saliency_map.PostProcessor"><code class="docutils literal notranslate"><span class="pre">PostProcessor</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#openvino_xai.saliency_map.PostProcessor.apply_colormap"><code class="docutils literal notranslate"><span class="pre">PostProcessor.apply_colormap()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#openvino_xai.saliency_map.PostProcessor.apply_normalization"><code class="docutils literal notranslate"><span class="pre">PostProcessor.apply_normalization()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#openvino_xai.saliency_map.PostProcessor.apply_overlay"><code class="docutils literal notranslate"><span class="pre">PostProcessor.apply_overlay()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#openvino_xai.saliency_map.PostProcessor.apply_resize"><code class="docutils literal notranslate"><span class="pre">PostProcessor.apply_resize()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#openvino_xai.saliency_map.PostProcessor.postprocess"><code class="docutils literal notranslate"><span class="pre">PostProcessor.postprocess()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#openvino_xai.saliency_map.SaliencyMapLayout"><code class="docutils literal notranslate"><span class="pre">SaliencyMapLayout</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#openvino_xai.saliency_map.TargetExplainGroup"><code class="docutils literal notranslate"><span class="pre">TargetExplainGroup</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#parameters">Parameters</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#openvino_xai.parameters.ClassificationExplainParametersWB"><code class="docutils literal notranslate"><span class="pre">ClassificationExplainParametersWB</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#openvino_xai.parameters.DetectionExplainParametersWB"><code class="docutils literal notranslate"><span class="pre">DetectionExplainParametersWB</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#openvino_xai.parameters.ExplainParameters"><code class="docutils literal notranslate"><span class="pre">ExplainParameters</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#openvino_xai.parameters.PostProcessParameters"><code class="docutils literal notranslate"><span class="pre">PostProcessParameters</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#openvino_xai.parameters.XAIMethodType"><code class="docutils literal notranslate"><span class="pre">XAIMethodType</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#explanation">Explanation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#openvino_xai.explanation.ExplainMode"><code class="docutils literal notranslate"><span class="pre">ExplainMode</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#openvino_xai.explanation.ExplanationParameters"><code class="docutils literal notranslate"><span class="pre">ExplanationParameters</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#openvino_xai.explanation.PostProcessParameters"><code class="docutils literal notranslate"><span class="pre">PostProcessParameters</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#openvino_xai.explanation.TargetExplainGroup"><code class="docutils literal notranslate"><span class="pre">TargetExplainGroup</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#openvino_xai.explanation.explain"><code class="docutils literal notranslate"><span class="pre">explain()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -139,392 +88,31 @@
              
   <section id="openvino-xai-python-api">
 <h1>OpenVINO-XAI Python API<a class="headerlink" href="#openvino-xai-python-api" title="Permalink to this heading"></a></h1>
-<section id="model">
-<h2>Model<a class="headerlink" href="#model" title="Permalink to this heading"></a></h2>
-<p>To create XAIModel, which is OpenVINO™ ModelAPI model wrapper with XAI head inserted into the model graph, use openvino_xai.model</p>
-<p>openvino_xai.model</p>
-<span class="target" id="module-openvino_xai.model"></span><dl class="py class">
-<dt class="sig sig-object py" id="openvino_xai.model.XAIClassificationModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openvino_xai.model.</span></span><span class="sig-name descname"><span class="pre">XAIClassificationModel</span></span><a class="headerlink" href="#openvino_xai.model.XAIClassificationModel" title="Permalink to this definition"></a></dt>
-<dd><p>Creates classification Model API model wrapper.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="openvino_xai.model.XAIClassificationModel.generate_explain_method">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">generate_explain_method</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">explain_parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#openvino_xai.parameters.ClassificationExplainParametersWB" title="openvino_xai.parameters.ClassificationExplainParametersWB"><span class="pre">ClassificationExplainParametersWB</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">XAIMethodBase</span></span></span><a class="headerlink" href="#openvino_xai.model.XAIClassificationModel.generate_explain_method" title="Permalink to this definition"></a></dt>
-<dd><p>Generates instance of the classification explain method class.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<em>openvino.runtime.Model</em>) – OV IR model.</p></li>
-<li><p><strong>explain_parameters</strong> (<a class="reference internal" href="#openvino_xai.parameters.ExplainParameters" title="openvino_xai.parameters.ExplainParameters"><em>ExplainParameters</em></a>) – Explain parameters that parametrize explain method,
-that will be inserted into the model graph.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
+<section id="insertion">
+<h2>Insertion<a class="headerlink" href="#insertion" title="Permalink to this heading"></a></h2>
+<p>To insert XAI branch into the model, use openvino_xai.insertion</p>
+<p>openvino_xai.insertion</p>
+<span class="target" id="module-openvino_xai.insertion"></span><p>Interface for inserting eXplainable AI (XAI) branch into OV IR.</p>
 <dl class="py class">
-<dt class="sig sig-object py" id="openvino_xai.model.XAIDetectionModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openvino_xai.model.</span></span><span class="sig-name descname"><span class="pre">XAIDetectionModel</span></span><a class="headerlink" href="#openvino_xai.model.XAIDetectionModel" title="Permalink to this definition"></a></dt>
-<dd><p>Creates detection Model API model wrapper.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="openvino_xai.model.XAIDetectionModel.generate_explain_method">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">generate_explain_method</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">explain_parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#openvino_xai.parameters.DetectionExplainParametersWB" title="openvino_xai.parameters.DetectionExplainParametersWB"><span class="pre">DetectionExplainParametersWB</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">XAIMethodBase</span></span></span><a class="headerlink" href="#openvino_xai.model.XAIDetectionModel.generate_explain_method" title="Permalink to this definition"></a></dt>
-<dd><p>Generates instance of the detection explain method class.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<em>openvino.runtime.Model</em>) – OV IR model.</p></li>
-<li><p><strong>explain_parameters</strong> (<a class="reference internal" href="#openvino_xai.parameters.ExplainParameters" title="openvino_xai.parameters.ExplainParameters"><em>ExplainParameters</em></a>) – Explain parameters that parametrize explain method,
-that will be inserted into the model graph.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="openvino_xai.model.XAIModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openvino_xai.model.</span></span><span class="sig-name descname"><span class="pre">XAIModel</span></span><a class="headerlink" href="#openvino_xai.model.XAIModel" title="Permalink to this definition"></a></dt>
-<dd><p>Factory for creating Model API model wrapper and updating it with XAI functionality.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="openvino_xai.model.XAIModel.create_model">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Model</span></span></span><a class="headerlink" href="#openvino_xai.model.XAIModel.create_model" title="Permalink to this definition"></a></dt>
-<dd><p>Creates Model API model wrapper with XAI branch.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="openvino_xai.model.XAIModel.generate_explain_method">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">generate_explain_method</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_ir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">explain_parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#openvino_xai.parameters.ExplainParameters" title="openvino_xai.parameters.ExplainParameters"><span class="pre">ExplainParameters</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">XAIMethodBase</span></span></span><a class="headerlink" href="#openvino_xai.model.XAIModel.generate_explain_method" title="Permalink to this definition"></a></dt>
-<dd><p>Generates instance of the explain method class.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<em>openvino.runtime.Model</em>) – OV IR model.</p></li>
-<li><p><strong>explain_parameters</strong> (<a class="reference internal" href="#openvino_xai.parameters.ExplainParameters" title="openvino_xai.parameters.ExplainParameters"><em>ExplainParameters</em></a>) – Explain parameters that parametrize explain method,
-that will be inserted into the model graph.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="openvino_xai.model.XAIModel.has_xai">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_xai</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Model</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#openvino_xai.model.XAIModel.has_xai" title="Permalink to this definition"></a></dt>
-<dd><p>Check if the model contain XAI.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model</strong> (<em>openvino.runtime.Model</em>) – OV IR model.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>True is the model has XAI head, False otherwise.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="openvino_xai.model.XAIModel.insert_xai">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">insert_xai</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_api_wrapper</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">explain_parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#openvino_xai.parameters.ExplainParameters" title="openvino_xai.parameters.ExplainParameters"><span class="pre">ExplainParameters</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Model</span></span></span><a class="headerlink" href="#openvino_xai.model.XAIModel.insert_xai" title="Permalink to this definition"></a></dt>
-<dd><p>Insert XAI into IR model stored in Model API wrapper.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model_api_wrapper</strong> (<em>openvino.model_api.models.Model</em>) – Original ModelAPI wrapper.</p></li>
-<li><p><strong>explain_parameters</strong> (<a class="reference internal" href="#openvino_xai.parameters.ExplainParameters" title="openvino_xai.parameters.ExplainParameters"><em>ExplainParameters</em></a>) – Explain parameters that parametrize explain method,
-that will be inserted into the model graph.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Modified ModelAPI wrapper with XAI head.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="openvino_xai.model.XAIModel.insert_xai_into_native_ir">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">insert_xai_into_native_ir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">explain_parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#openvino_xai.parameters.ExplainParameters" title="openvino_xai.parameters.ExplainParameters"><span class="pre">ExplainParameters</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Model</span></span></span><a class="headerlink" href="#openvino_xai.model.XAIModel.insert_xai_into_native_ir" title="Permalink to this definition"></a></dt>
-<dd><p>Insert XAI directly into IR model.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model_path</strong> (<em>str</em>) – Path to OV IR model.</p></li>
-<li><p><strong>output</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Output path where to save updated OV IR model.</p></li>
-<li><p><strong>explain_parameters</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#openvino_xai.parameters.ExplainParameters" title="openvino_xai.parameters.ExplainParameters"><em>ExplainParameters</em></a><em>]</em>) – Explain parameters that parametrize explain method,
-that will be inserted into the model graph.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Modified OV IR model with XAI head.</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-</section>
-<section id="explain">
-<h2>Explain<a class="headerlink" href="#explain" title="Permalink to this heading"></a></h2>
-<p>To generate explanations, use openvino_xai.explain</p>
-<p>openvino_xai.explain</p>
-<span class="target" id="module-openvino_xai.explain"></span><p>Interface to Explainable AI (XAI) algorithms.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="openvino_xai.explain.AutoExplainer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openvino_xai.explain.</span></span><span class="sig-name descname"><span class="pre">AutoExplainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">explain_parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#openvino_xai.parameters.ExplainParameters" title="openvino_xai.parameters.ExplainParameters"><span class="pre">ExplainParameters</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openvino_xai.explain.AutoExplainer" title="Permalink to this definition"></a></dt>
-<dd><p>Base class for auto-explainers, using white box or black box approach.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<em>openvino.model_api.models.Model</em>) – ModelAPI wrapper.</p></li>
-<li><p><strong>explain_parameters</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#openvino_xai.parameters.ExplainParameters" title="openvino_xai.parameters.ExplainParameters"><em>ExplainParameters</em></a><em>]</em>) – Explain parameters.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="openvino_xai.explain.BlackBoxExplainer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openvino_xai.explain.</span></span><span class="sig-name descname"><span class="pre">BlackBoxExplainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openvino_xai.explain.BlackBoxExplainer" title="Permalink to this definition"></a></dt>
-<dd><p>Base class for explainers that consider model as a black-box.</p>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="openvino_xai.explain.ClassificationAutoExplainer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openvino_xai.explain.</span></span><span class="sig-name descname"><span class="pre">ClassificationAutoExplainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">explain_parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#openvino_xai.parameters.ExplainParameters" title="openvino_xai.parameters.ExplainParameters"><span class="pre">ExplainParameters</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openvino_xai.explain.ClassificationAutoExplainer" title="Permalink to this definition"></a></dt>
-<dd><p>Explain classification models in auto mode, using white box or black box approach.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="openvino_xai.explain.ClassificationAutoExplainer.explain">
-<span class="sig-name descname"><span class="pre">explain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_explain_group</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#openvino_xai.saliency_map.TargetExplainGroup" title="openvino_xai.saliency_map.TargetExplainGroup"><span class="pre">TargetExplainGroup</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#openvino_xai.saliency_map.ExplainResult" title="openvino_xai.saliency_map.ExplainResult"><span class="pre">ExplainResult</span></a></span></span><a class="headerlink" href="#openvino_xai.explain.ClassificationAutoExplainer.explain" title="Permalink to this definition"></a></dt>
-<dd><dl class="simple">
-<dt>Implements three explain scenarios, for different IR models:</dt><dd><ol class="arabic simple">
-<li><p>IR model contain xai branch -&gt; infer Model API wrapper.</p></li>
-<li><p>If not (1), IR model can be augmented with XAI branch -&gt; augment and infer.</p></li>
-<li><p>If not (1) and (2), IR model can NOT be augmented with XAI branch -&gt; use XAI BB method.</p></li>
-</ol>
-</dd>
-</dl>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>np.ndarray</em>) – Data to explain.</p></li>
-<li><p><strong>target_explain_group</strong> (<a class="reference internal" href="#openvino_xai.saliency_map.TargetExplainGroup" title="openvino_xai.saliency_map.TargetExplainGroup"><em>TargetExplainGroup</em></a>) – Target explain group.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="openvino_xai.explain.Explainer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openvino_xai.explain.</span></span><span class="sig-name descname"><span class="pre">Explainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openvino_xai.explain.Explainer" title="Permalink to this definition"></a></dt>
-<dd><p>A base interface for explainer.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model</strong> (<em>openvino.model_api.models.Model</em>) – ModelAPI wrapper.</p>
-</dd>
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="openvino_xai.explain.Explainer.explain">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">explain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#openvino_xai.saliency_map.ExplainResult" title="openvino_xai.saliency_map.ExplainResult"><span class="pre">ExplainResult</span></a></span></span><a class="headerlink" href="#openvino_xai.explain.Explainer.explain" title="Permalink to this definition"></a></dt>
-<dd><p>Explain the input.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="openvino_xai.explain.RISEExplainer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openvino_xai.explain.</span></span><span class="sig-name descname"><span class="pre">RISEExplainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ClassificationModel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_masks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_cells</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prob</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asynchronous_inference</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">throughput_inference</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openvino_xai.explain.RISEExplainer" title="Permalink to this definition"></a></dt>
-<dd><p>RISEExplainer explains classification models in black-box mode using RISE (<a class="reference external" href="https://arxiv.org/abs/1806.07421">https://arxiv.org/abs/1806.07421</a>).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<em>openvino.model_api.models.ClassificationModel</em>) – ModelAPI wrapper.</p></li>
-<li><p><strong>num_masks</strong> (<em>int</em>) – Number of generated masks to aggregate.</p></li>
-<li><p><strong>num_cells</strong> (<em>int</em>) – Number of cells for low-dimensional RISE
-random mask that later will be up-scaled to the model input size.</p></li>
-<li><p><strong>prob</strong> (<em>float</em>) – With prob p, a low-res cell is set to 1;
-otherwise, it’s 0. Default: <code class="docutils literal notranslate"><span class="pre">0.5</span></code>.</p></li>
-<li><p><strong>seed</strong> (<em>int</em>) – Seed for random mask generation.</p></li>
-<li><p><strong>input_size</strong> (<em>Tuple</em><em>[</em><em>int</em><em>]</em>) – Model input size.</p></li>
-<li><p><strong>asynchronous_inference</strong> (<em>bool</em>) – Whether to run inference in asynchronous mode or not.</p></li>
-<li><p><strong>throughput_inference</strong> (<em>bool</em>) – Whether to run asynchronous inference in throughput mode or not.</p></li>
-<li><p><strong>normalize</strong> (<em>bool</em>) – Whether to normalize output or not.</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="openvino_xai.explain.RISEExplainer.explain">
-<span class="sig-name descname"><span class="pre">explain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_explain_group</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#openvino_xai.saliency_map.TargetExplainGroup" title="openvino_xai.saliency_map.TargetExplainGroup"><span class="pre">TargetExplainGroup</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">explain_targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_processing_parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#openvino_xai.parameters.PostProcessParameters" title="openvino_xai.parameters.PostProcessParameters"><span class="pre">PostProcessParameters</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">PostProcessParameters(normalize=False,</span> <span class="pre">resize=False,</span> <span class="pre">colormap=False,</span> <span class="pre">overlay=False,</span> <span class="pre">overlay_weight=0.5)</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#openvino_xai.saliency_map.ExplainResult" title="openvino_xai.saliency_map.ExplainResult"><span class="pre">ExplainResult</span></a></span></span><a class="headerlink" href="#openvino_xai.explain.RISEExplainer.explain" title="Permalink to this definition"></a></dt>
-<dd><p>Explain the input in black box mode.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>np.ndarray</em>) – Data to explain.</p></li>
-<li><p><strong>target_explain_group</strong> (<a class="reference internal" href="#openvino_xai.saliency_map.TargetExplainGroup" title="openvino_xai.saliency_map.TargetExplainGroup"><em>TargetExplainGroup</em></a>) – Defines targets to explain: all classes, only predicted classes, etc.</p></li>
-<li><p><strong>explain_targets</strong> (<em>Optional</em><em>[</em><em>List</em><em>[</em><em>int</em><em>]</em><em>]</em>) – Provides list of custom targets, optional.</p></li>
-<li><p><strong>post_processing_parameters</strong> (<a class="reference internal" href="#openvino_xai.parameters.PostProcessParameters" title="openvino_xai.parameters.PostProcessParameters"><em>PostProcessParameters</em></a>) – Parameters that define post-processing.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="openvino_xai.explain.WhiteBoxExplainer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openvino_xai.explain.</span></span><span class="sig-name descname"><span class="pre">WhiteBoxExplainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openvino_xai.explain.WhiteBoxExplainer" title="Permalink to this definition"></a></dt>
-<dd><p>Explainer explains models with XAI branch injected.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="openvino_xai.explain.WhiteBoxExplainer.explain">
-<span class="sig-name descname"><span class="pre">explain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_explain_group</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#openvino_xai.saliency_map.TargetExplainGroup" title="openvino_xai.saliency_map.TargetExplainGroup"><span class="pre">TargetExplainGroup</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">explain_targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_processing_parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#openvino_xai.parameters.PostProcessParameters" title="openvino_xai.parameters.PostProcessParameters"><span class="pre">PostProcessParameters</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">PostProcessParameters(normalize=False,</span> <span class="pre">resize=False,</span> <span class="pre">colormap=False,</span> <span class="pre">overlay=False,</span> <span class="pre">overlay_weight=0.5)</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#openvino_xai.saliency_map.ExplainResult" title="openvino_xai.saliency_map.ExplainResult"><span class="pre">ExplainResult</span></a></span></span><a class="headerlink" href="#openvino_xai.explain.WhiteBoxExplainer.explain" title="Permalink to this definition"></a></dt>
-<dd><p>Explain the input in white box mode.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>np.ndarray</em>) – Data to explain.</p></li>
-<li><p><strong>target_explain_group</strong> (<a class="reference internal" href="#openvino_xai.saliency_map.TargetExplainGroup" title="openvino_xai.saliency_map.TargetExplainGroup"><em>TargetExplainGroup</em></a>) – Defines targets to explain: all classes, only predicted classes, etc.</p></li>
-<li><p><strong>explain_targets</strong> (<em>Optional</em><em>[</em><em>List</em><em>[</em><em>int</em><em>]</em><em>]</em>) – Provides list of custom targets, optional.</p></li>
-<li><p><strong>post_processing_parameters</strong> (<a class="reference internal" href="#openvino_xai.parameters.PostProcessParameters" title="openvino_xai.parameters.PostProcessParameters"><em>PostProcessParameters</em></a>) – Parameters that define post-processing.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-</section>
-<section id="saliency-map">
-<h2>Saliency map<a class="headerlink" href="#saliency-map" title="Permalink to this heading"></a></h2>
-<p>To handle explain results, use openvino_xai.saliency_map</p>
-<p>openvino_xai.saliency_map</p>
-<span class="target" id="module-openvino_xai.saliency_map"></span><dl class="py class">
-<dt class="sig sig-object py" id="openvino_xai.saliency_map.ExplainResult">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openvino_xai.saliency_map.</span></span><span class="sig-name descname"><span class="pre">ExplainResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ClassificationResult</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_explain_group</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#openvino_xai.saliency_map.TargetExplainGroup" title="openvino_xai.saliency_map.TargetExplainGroup"><span class="pre">TargetExplainGroup</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">explain_targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openvino_xai.saliency_map.ExplainResult" title="Permalink to this definition"></a></dt>
-<dd><p>ExplainResult selects target saliency maps, holds it and its layout.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>raw_result</strong> (<em>ClassificationResult</em>) – Raw prediction of ModelAPI wrapper.</p></li>
-<li><p><strong>target_explain_group</strong> (<a class="reference internal" href="#openvino_xai.saliency_map.TargetExplainGroup" title="openvino_xai.saliency_map.TargetExplainGroup"><em>TargetExplainGroup</em></a>) – Defines targets to explain: all classes, only predicted classes, custom classes, etc.</p></li>
-<li><p><strong>explain_targets</strong> (<em>Optional</em><em>[</em><em>List</em><em>[</em><em>int</em><em>]</em><em>]</em>) – Provides list of custom targets, optional.</p></li>
-<li><p><strong>labels</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – List of all labels.</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="openvino_xai.saliency_map.ExplainResult.get_layout">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">saliency_map</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#openvino_xai.saliency_map.SaliencyMapLayout" title="openvino_xai.saliency_map.SaliencyMapLayout"><span class="pre">SaliencyMapLayout</span></a></span></span><a class="headerlink" href="#openvino_xai.saliency_map.ExplainResult.get_layout" title="Permalink to this definition"></a></dt>
-<dd><p>Estimate and return SaliencyMapLayout. Requires raw saliency map.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="openvino_xai.saliency_map.ExplainResult.save">
-<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dir_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#openvino_xai.saliency_map.ExplainResult.save" title="Permalink to this definition"></a></dt>
-<dd><p>Dumps saliency map.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="openvino_xai.saliency_map.PostProcessor">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openvino_xai.saliency_map.</span></span><span class="sig-name descname"><span class="pre">PostProcessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">saliency_map</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#openvino_xai.saliency_map.ExplainResult" title="openvino_xai.saliency_map.ExplainResult"><span class="pre">ExplainResult</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_processing_parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#openvino_xai.parameters.PostProcessParameters" title="openvino_xai.parameters.PostProcessParameters"><span class="pre">PostProcessParameters</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">PostProcessParameters(normalize=False,</span> <span class="pre">resize=False,</span> <span class="pre">colormap=False,</span> <span class="pre">overlay=False,</span> <span class="pre">overlay_weight=0.5)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openvino_xai.saliency_map.PostProcessor" title="Permalink to this definition"></a></dt>
-<dd><p>PostProcessor implements post-processing for the saliency map.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>saliency_map</strong> (<a class="reference internal" href="#openvino_xai.saliency_map.ExplainResult" title="openvino_xai.saliency_map.ExplainResult"><em>ExplainResult</em></a>) – Input raw saliency map(s).</p></li>
-<li><p><strong>data</strong> (<a class="reference internal" href="#openvino_xai.saliency_map.ExplainResult" title="openvino_xai.saliency_map.ExplainResult"><em>ExplainResult</em></a>) – Input data.</p></li>
-<li><p><strong>post_processing_parameters</strong> (<a class="reference internal" href="#openvino_xai.parameters.PostProcessParameters" title="openvino_xai.parameters.PostProcessParameters"><em>PostProcessParameters</em></a>) – Parameters that define post-processing.</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="openvino_xai.saliency_map.PostProcessor.apply_colormap">
-<span class="sig-name descname"><span class="pre">apply_colormap</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#openvino_xai.saliency_map.PostProcessor.apply_colormap" title="Permalink to this definition"></a></dt>
-<dd><p>Applies cv2.applyColorMap to the saliency map.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="openvino_xai.saliency_map.PostProcessor.apply_normalization">
-<span class="sig-name descname"><span class="pre">apply_normalization</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#openvino_xai.saliency_map.PostProcessor.apply_normalization" title="Permalink to this definition"></a></dt>
-<dd><p>Normalize saliency maps to [0, 255] range.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="openvino_xai.saliency_map.PostProcessor.apply_overlay">
-<span class="sig-name descname"><span class="pre">apply_overlay</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#openvino_xai.saliency_map.PostProcessor.apply_overlay" title="Permalink to this definition"></a></dt>
-<dd><p>Applies overlay of the saliency map with the original image.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="openvino_xai.saliency_map.PostProcessor.apply_resize">
-<span class="sig-name descname"><span class="pre">apply_resize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#openvino_xai.saliency_map.PostProcessor.apply_resize" title="Permalink to this definition"></a></dt>
-<dd><p>Resizes saliency map to the original size of input data.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="openvino_xai.saliency_map.PostProcessor.postprocess">
-<span class="sig-name descname"><span class="pre">postprocess</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#openvino_xai.saliency_map.ExplainResult" title="openvino_xai.saliency_map.ExplainResult"><span class="pre">ExplainResult</span></a></span></span><a class="headerlink" href="#openvino_xai.saliency_map.PostProcessor.postprocess" title="Permalink to this definition"></a></dt>
-<dd><p>Saliency map postprocess method.
-Returns ExplainResult object with processed saliency map, that can have one of SaliencyMapLayout layouts.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="openvino_xai.saliency_map.SaliencyMapLayout">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openvino_xai.saliency_map.</span></span><span class="sig-name descname"><span class="pre">SaliencyMapLayout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openvino_xai.saliency_map.SaliencyMapLayout" title="Permalink to this definition"></a></dt>
-<dd><p>Enum describes different saliency map layouts.</p>
-<dl class="simple">
-<dt>Saliency map can have the following layout:</dt><dd><p>ONE_MAP_PER_IMAGE_GRAY - BHW - one map per image
-ONE_MAP_PER_IMAGE_COLOR - BHWC - one map per image, colormapped
-MULTIPLE_MAPS_PER_IMAGE_GRAY - BNHW - multiple maps per image
-MULTIPLE_MAPS_PER_IMAGE_COLOR - BNHWC - multiple maps per image, colormapped</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="openvino_xai.saliency_map.TargetExplainGroup">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openvino_xai.saliency_map.</span></span><span class="sig-name descname"><span class="pre">TargetExplainGroup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openvino_xai.saliency_map.TargetExplainGroup" title="Permalink to this definition"></a></dt>
-<dd><p>Enum describes different target explain groups.</p>
-<dl class="simple">
-<dt>Contains the following values:</dt><dd><p>IMAGE - Global (single) saliency map per image.
-ALL_CLASSES - Saliency map per each class.
-PREDICTED_CLASSES - Saliency map per each predicted class.
-CUSTOM_CLASSES - Saliency map per each specified class.
-PREDICTED_BBOXES - Saliency map per each predicted bbox.
-CUSTOM_BBOXES - Saliency map per each custom bbox.</p>
-</dd>
-</dl>
-</dd></dl>
-
-</section>
-<section id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h2>
-<p>To parametrize the explain methods and postprocessing use openvino_xai.parameters</p>
-<p>openvino_xai.parameters</p>
-<span class="target" id="module-openvino_xai.parameters"></span><dl class="py class">
-<dt class="sig sig-object py" id="openvino_xai.parameters.ClassificationExplainParametersWB">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openvino_xai.parameters.</span></span><span class="sig-name descname"><span class="pre">ClassificationExplainParametersWB</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_layer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embed_normalization</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">explain_method_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#openvino_xai.parameters.XAIMethodType" title="openvino_xai.parameters.XAIMethodType"><span class="pre">XAIMethodType</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">XAIMethodType.RECIPROCAM</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openvino_xai.parameters.ClassificationExplainParametersWB" title="Permalink to this definition"></a></dt>
-<dd><p>Explain parameters for classification.</p>
+<dt class="sig sig-object py" id="openvino_xai.insertion.ClassificationInsertionParameters">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openvino_xai.insertion.</span></span><span class="sig-name descname"><span class="pre">ClassificationInsertionParameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_layer:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embed_normalization:</span> <span class="pre">bool</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">explain_method_type:</span> <span class="pre">~openvino_xai.common.parameters.XAIMethodType</span> <span class="pre">=</span> <span class="pre">XAIMethodType.RECIPROCAM</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">white_box_method_kwargs:</span> <span class="pre">~typing.Dict</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openvino_xai.insertion.ClassificationInsertionParameters" title="Permalink to this definition"></a></dt>
+<dd><p>Insertion parameters for classification models.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>target_layer</strong> (<em>str</em>) – Target layer (node) name after which the XAI branch will be inserted.</p></li>
 <li><p><strong>embed_normalization</strong> (<em>bool</em>) – If set to True, saliency map normalization is embedded in the model.</p></li>
-<li><p><strong>explain_method_type</strong> (<a class="reference internal" href="#openvino_xai.parameters.XAIMethodType" title="openvino_xai.parameters.XAIMethodType"><em>XAIMethodType</em></a>) – Explain method to use for model explanation.</p></li>
+<li><p><strong>explain_method_type</strong> (<em>openvino_xai.common.parameters.XAIMethodType</em>) – Explain method to use for model explanation.</p></li>
+<li><p><strong>white_box_method_kwargs</strong> (<em>dict</em>) – Defines white-box method kwargs.</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="openvino_xai.parameters.DetectionExplainParametersWB">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openvino_xai.parameters.</span></span><span class="sig-name descname"><span class="pre">DetectionExplainParametersWB</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_layer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_anchors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">saliency_map_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(13,</span> <span class="pre">13)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embed_normalization</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">explain_method_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#openvino_xai.parameters.XAIMethodType" title="openvino_xai.parameters.XAIMethodType"><span class="pre">XAIMethodType</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">XAIMethodType.DETCLASSPROBABILITYMAP</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openvino_xai.parameters.DetectionExplainParametersWB" title="Permalink to this definition"></a></dt>
-<dd><p>Explain parameters for detection.</p>
+<dt class="sig sig-object py" id="openvino_xai.insertion.DetectionInsertionParameters">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openvino_xai.insertion.</span></span><span class="sig-name descname"><span class="pre">DetectionInsertionParameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_layer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_anchors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">saliency_map_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(23,</span> <span class="pre">23)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embed_normalization</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">explain_method_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">XAIMethodType</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">XAIMethodType.DETCLASSPROBABILITYMAP</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openvino_xai.insertion.DetectionInsertionParameters" title="Permalink to this definition"></a></dt>
+<dd><p>Insertion parameters for detection models.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -532,22 +120,77 @@ CUSTOM_BBOXES - Saliency map per each custom bbox.</p>
 <li><p><strong>num_anchors</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – Number of anchors per scale.</p></li>
 <li><p><strong>saliency_map_size</strong> (<em>Union</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em><em>, </em><em>List</em><em>[</em><em>int</em><em>]</em><em>]</em>) – Size of the output saliency map.</p></li>
 <li><p><strong>embed_normalization</strong> (<em>bool</em>) – If set to True, saliency map normalization is embedded in the model.</p></li>
-<li><p><strong>explain_method_type</strong> (<a class="reference internal" href="#openvino_xai.parameters.XAIMethodType" title="openvino_xai.parameters.XAIMethodType"><em>XAIMethodType</em></a>) – Explain method to use for model explanation.</p></li>
+<li><p><strong>explain_method_type</strong> (<em>XAIMethodType</em>) – Explain method to use for model explanation.</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="openvino_xai.parameters.ExplainParameters">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openvino_xai.parameters.</span></span><span class="sig-name descname"><span class="pre">ExplainParameters</span></span><a class="headerlink" href="#openvino_xai.parameters.ExplainParameters" title="Permalink to this definition"></a></dt>
-<dd><p>ExplainParameters parametrize explain method that will be inserted into the model graph
+<dt class="sig sig-object py" id="openvino_xai.insertion.InsertionParameters">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openvino_xai.insertion.</span></span><span class="sig-name descname"><span class="pre">InsertionParameters</span></span><a class="headerlink" href="#openvino_xai.insertion.InsertionParameters" title="Permalink to this definition"></a></dt>
+<dd><p>Parametrize explanation method that will be inserted into the model graph
 Applicable for white-box methods.</p>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="openvino_xai.insertion.insert_xai">
+<span class="sig-prename descclassname"><span class="pre">openvino_xai.insertion.</span></span><span class="sig-name descname"><span class="pre">insert_xai</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Model</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TaskType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">insertion_parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#openvino_xai.insertion.InsertionParameters" title="openvino_xai.insertion.insertion_parameters.InsertionParameters"><span class="pre">InsertionParameters</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Model</span></span></span><a class="headerlink" href="#openvino_xai.insertion.insert_xai" title="Permalink to this definition"></a></dt>
+<dd><p>Inserts XAI into IR.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>Union</em><em>[</em><em>ov.Model</em><em>, </em><em>str</em><em>]</em>) – Original IR or path to .xml.</p></li>
+<li><p><strong>task_type</strong> (<em>TaskType</em>) – Type of the model.</p></li>
+<li><p><strong>insertion_parameters</strong> (<a class="reference internal" href="#openvino_xai.insertion.InsertionParameters" title="openvino_xai.insertion.InsertionParameters"><em>InsertionParameters</em></a>) – Insertion parameters that parametrize white-box method,
+that will be inserted into the model graph.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>IR with XAI head.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="explanation">
+<h2>Explanation<a class="headerlink" href="#explanation" title="Permalink to this heading"></a></h2>
+<p>To explain the model (get saliency maps), use openvino_xai.explanation</p>
+<p>openvino_xai.explanation</p>
+<span class="target" id="module-openvino_xai.explanation"></span><p>Interface for getting explanation.</p>
 <dl class="py class">
-<dt class="sig sig-object py" id="openvino_xai.parameters.PostProcessParameters">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openvino_xai.parameters.</span></span><span class="sig-name descname"><span class="pre">PostProcessParameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colormap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overlay</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overlay_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openvino_xai.parameters.PostProcessParameters" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="openvino_xai.explanation.ExplainMode">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openvino_xai.explanation.</span></span><span class="sig-name descname"><span class="pre">ExplainMode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openvino_xai.explanation.ExplainMode" title="Permalink to this definition"></a></dt>
+<dd><p>Enum describes different explain modes.</p>
+<dl class="simple">
+<dt>Contains the following values:</dt><dd><p>WHITEBOX - The model is explained in white box mode, i.e. XAI branch is getting inserted into the model graph.
+BLACKBOX - The model is explained in black box model.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="openvino_xai.explanation.ExplanationParameters">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openvino_xai.explanation.</span></span><span class="sig-name descname"><span class="pre">ExplanationParameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">explain_mode:</span> <span class="pre">~openvino_xai.explanation.explanation_parameters.ExplainMode</span> <span class="pre">=</span> <span class="pre">ExplainMode.WHITEBOX</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_explain_group:</span> <span class="pre">~openvino_xai.explanation.explanation_parameters.TargetExplainGroup</span> <span class="pre">=</span> <span class="pre">TargetExplainGroup.PREDICTIONS</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">explain_target_names:</span> <span class="pre">~typing.List[str]</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_target_indices:</span> <span class="pre">~typing.List[int]</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_processing_parameters:</span> <span class="pre">~openvino_xai.explanation.explanation_parameters.PostProcessParameters</span> <span class="pre">=</span> <span class="pre">PostProcessParameters(normalize=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resize=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colormap=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overlay=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overlay_weight=0.5)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confidence_threshold:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">black_box_method:</span> <span class="pre">~openvino_xai.common.parameters.XAIMethodType</span> <span class="pre">=</span> <span class="pre">XAIMethodType.RISE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">black_box_method_kwargs:</span> <span class="pre">~typing.Dict</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openvino_xai.explanation.ExplanationParameters" title="Permalink to this definition"></a></dt>
+<dd><p>Parametrize model explanation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>explain_mode</strong> (<a class="reference internal" href="#openvino_xai.explanation.ExplainMode" title="openvino_xai.explanation.ExplainMode"><em>ExplainMode</em></a>) – Explanation mode.</p></li>
+<li><p><strong>target_explain_group</strong> (<a class="reference internal" href="#openvino_xai.explanation.TargetExplainGroup" title="openvino_xai.explanation.TargetExplainGroup"><em>TargetExplainGroup</em></a>) – Target explain group.</p></li>
+<li><p><strong>custom_target_indices</strong> (<em>Optional</em><em>[</em><em>List</em><em>[</em><em>int</em><em>]</em><em>]</em>) – List of indices of custom targets, optional.</p></li>
+<li><p><strong>post_processing_parameters</strong> (<a class="reference internal" href="#openvino_xai.explanation.PostProcessParameters" title="openvino_xai.explanation.PostProcessParameters"><em>PostProcessParameters</em></a>) – Post-process parameters.</p></li>
+<li><p><strong>confidence_threshold</strong> (<em>float</em>) – Prediction confidence threshold.</p></li>
+<li><p><strong>black_box_method</strong> (<em>XAIMethodType</em>) – Defines black-box method type.</p></li>
+<li><p><strong>black_box_method_kwargs</strong> (<em>dict</em>) – Defines black-box method kwargs.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="openvino_xai.explanation.PostProcessParameters">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openvino_xai.explanation.</span></span><span class="sig-name descname"><span class="pre">PostProcessParameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colormap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overlay</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overlay_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openvino_xai.explanation.PostProcessParameters" title="Permalink to this definition"></a></dt>
 <dd><p>PostProcessParameters parametrize postprocessing of saliency maps.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -558,16 +201,41 @@ Therefore, normalize=False here by default.</p></li>
 <li><p><strong>resize</strong> (<em>bool</em>) – If True, resize saliency map to the input image size.</p></li>
 <li><p><strong>colormap</strong> (<em>bool</em>) – If True, apply colormap to the grayscale saliency map.</p></li>
 <li><p><strong>overlay</strong> (<em>bool</em>) – If True, generate overlay of the saliency map over the input image.</p></li>
-<li><p><strong>overlay_weight</strong> (<em>bool</em>) – Weight of the saliency map when overlaying the input data with the saliency map.</p></li>
+<li><p><strong>overlay_weight</strong> (<em>float</em>) – Weight of the saliency map when overlaying the input data with the saliency map.</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="openvino_xai.parameters.XAIMethodType">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openvino_xai.parameters.</span></span><span class="sig-name descname"><span class="pre">XAIMethodType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openvino_xai.parameters.XAIMethodType" title="Permalink to this definition"></a></dt>
-<dd><p>Enum representing the different XAI methods.</p>
+<dt class="sig sig-object py" id="openvino_xai.explanation.TargetExplainGroup">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openvino_xai.explanation.</span></span><span class="sig-name descname"><span class="pre">TargetExplainGroup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openvino_xai.explanation.TargetExplainGroup" title="Permalink to this definition"></a></dt>
+<dd><p>Enum describes different target explanation groups.</p>
+<dl class="simple">
+<dt>Contains the following values:</dt><dd><p>IMAGE - Global (single) saliency map per image.
+ALL - Saliency map per each possible target.
+PREDICTIONS - Saliency map per each prediction (prediction = target).
+CUSTOM - Saliency map per each specified target.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openvino_xai.explanation.explain">
+<span class="sig-prename descclassname"><span class="pre">openvino_xai.explanation.</span></span><span class="sig-name descname"><span class="pre">explain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">model_inferrer:</span> <span class="pre">~typing.Callable[[~numpy.ndarray],</span> <span class="pre">~openvino_xai.explanation.utils.InferenceResult]</span> <span class="pre">|</span> <span class="pre">~openvino.model_api.models.model.Model,</span> <span class="pre">data:</span> <span class="pre">~numpy.ndarray,</span> <span class="pre">explanation_parameters:</span> <span class="pre">~openvino_xai.explanation.explanation_parameters.ExplanationParameters</span> <span class="pre">=</span> <span class="pre">ExplanationParameters(explain_mode=&lt;ExplainMode.WHITEBOX:</span> <span class="pre">'whitebox'&gt;,</span> <span class="pre">target_explain_group=&lt;TargetExplainGroup.PREDICTIONS:</span> <span class="pre">'predictions'&gt;,</span> <span class="pre">explain_target_names=None,</span> <span class="pre">custom_target_indices=None,</span> <span class="pre">post_processing_parameters=PostProcessParameters(normalize=False,</span> <span class="pre">resize=False,</span> <span class="pre">colormap=False,</span> <span class="pre">overlay=True,</span> <span class="pre">overlay_weight=0.5),</span> <span class="pre">confidence_threshold=0.5,</span> <span class="pre">black_box_method=&lt;XAIMethodType.RISE:</span> <span class="pre">'RISE'&gt;,</span> <span class="pre">black_box_method_kwargs={})</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ExplanationResult</span></span></span><a class="headerlink" href="#openvino_xai.explanation.explain" title="Permalink to this definition"></a></dt>
+<dd><p>Explains the model-data pair, i.e. generates explanation result.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_inferrer</strong> (<em>Union</em><em>[</em><em>Callable</em><em>[</em><em>[</em><em>np.ndarray</em><em>]</em><em>, </em><em>InferenceResult</em><em>]</em><em>, </em><em>mapi.models.Model</em><em>]</em>) – Callable model inferrer object.</p></li>
+<li><p><strong>data</strong> (<em>np.ndarray</em>) – Data to explain.</p></li>
+<li><p><strong>explanation_parameters</strong> (<a class="reference internal" href="#openvino_xai.explanation.ExplanationParameters" title="openvino_xai.explanation.ExplanationParameters"><em>ExplanationParameters</em></a>) – Explanation parameters.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Explanation result object, that contains saliency map and other useful info.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
