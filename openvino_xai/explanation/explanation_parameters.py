@@ -72,7 +72,7 @@ class PostProcessParameters:
 @dataclass
 class ExplanationParameters:
     """
-    ExplanationParameters parametrize explanation process.
+    Parametrize model explanation.
 
     :parameter explain_mode: Explanation mode.
     :type explain_mode: ExplainMode

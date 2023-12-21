@@ -10,14 +10,14 @@ from openvino_xai.common.parameters import XAIMethodType
 
 @dataclass
 class InsertionParameters:
-    """ExplainParameters parametrize explanation method that will be inserted into the model graph
+    """Parametrize explanation method that will be inserted into the model graph
     Applicable for white-box methods."""
 
 
 @dataclass
 class ClassificationInsertionParameters(InsertionParameters):
     """
-    Explain parameters for classification.
+    Insertion parameters for classification models.
 
     :parameter target_layer: Target layer (node) name after which the XAI branch will be inserted.
     :type target_layer: str
@@ -39,7 +39,7 @@ class ClassificationInsertionParameters(InsertionParameters):
 @dataclass
 class DetectionInsertionParameters(InsertionParameters):
     """
-    Explain parameters for detection.
+    Insertion parameters for detection models.
 
     :parameter target_layer: Target layer (node) name after which the XAI branch will be inserted.
     :type target_layer: str

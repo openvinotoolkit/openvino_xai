@@ -25,7 +25,7 @@ def explain(
     :type data: np.ndarray
     :param explanation_parameters: Explanation parameters.
     :type explanation_parameters: ExplanationParameters
-    :return: Explanation result object, that contain saliency map and other useful info.
+    :return: Explanation result object, that contains saliency map and other useful info.
     """
 
     explainer: Explainer

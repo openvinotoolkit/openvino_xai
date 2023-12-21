@@ -1,42 +1,22 @@
 OpenVINO-XAI Python API
 =======================
 
-Model
-------
+Insertion
+---------
 
-To create XAIModel, which is OpenVINO™ ModelAPI model wrapper with XAI head inserted into the model graph, use openvino_xai.model
+To insert XAI branch into the model, use openvino_xai.insertion
 
-openvino_xai.model
+openvino_xai.insertion
 
-.. automodule:: openvino_xai.model
+.. automodule:: openvino_xai.insertion
     :members:
 
-Explain
--------
+Explanation
+-----------
 
-To generate explanations, use openvino_xai.explain
+To explain the model (get saliency maps), use openvino_xai.explanation
 
-openvino_xai.explain
+openvino_xai.explanation
 
-.. automodule:: openvino_xai.explain
-    :members:
-
-Saliency map
-------------
-
-To handle explain results, use openvino_xai.saliency_map
-
-openvino_xai.saliency_map
-
-.. automodule:: openvino_xai.saliency_map
-    :members:
-
-Parameters
-----------
-
-To parametrize the explain methods and postprocessing use openvino_xai.parameters
-
-openvino_xai.parameters
-
-.. automodule:: openvino_xai.parameters
+.. automodule:: openvino_xai.explanation
     :members:
