@@ -81,7 +81,8 @@ class PostProcessor:
         """Normalize saliency maps to [0, 255] range."""
         layout = self._explanation.layout
         assert layout in GRAY_LAYOUTS, (
-            f"Saliency map to normalize has to be grayscale. Layout must be in {GRAY_LAYOUTS}, " f"but got {layout}."
+            f"Saliency map to normalize has to be grayscale. The layout must be in {GRAY_LAYOUTS}, "
+            f"but got {layout}."
         )
         saliency_map = self._explanation.saliency_map
         n, h, w = saliency_map.shape
@@ -107,7 +108,8 @@ class PostProcessor:
         # TODO: support resize to custom size.
         layout = self._explanation.layout
         assert layout in GRAY_LAYOUTS, (
-            f"Saliency map to normalize has to be grayscale. Layout must be in {GRAY_LAYOUTS}, " f"but got {layout}."
+            f"Saliency map to normalize has to be grayscale. The layout must be in {GRAY_LAYOUTS}, "
+            f"but got {layout}."
         )
         saliency_map = self._explanation.saliency_map
         x = saliency_map.transpose((1, 2, 0))
@@ -124,12 +126,13 @@ class PostProcessor:
     def _apply_colormap(self) -> None:
         """Applies cv2.applyColorMap to the saliency map."""
         #  TODO: support different (custom?) colormaps.
-        assert self._explanation.saliency_map.dtype == np.uint8, (
-            "Colormap requires saliency map to has uint8 dtype. " "Enable 'normalize' flag for PostProcessor."
-        )
+        assert (
+            self._explanation.saliency_map.dtype == np.uint8
+        ), "Colormap requires saliency map to has uint8 dtype. Enable 'normalize' flag for PostProcessor."
         layout = self._explanation.layout
         assert layout in GRAY_LAYOUTS, (
-            f"Saliency map to normalize has to be grayscale. Layout must be in {GRAY_LAYOUTS}, " f"but got {layout}."
+            f"Saliency map to normalize has to be grayscale. The layout must be in {GRAY_LAYOUTS}, "
+            f"but got {layout}."
         )
 
         color_mapped_saliency_map = []
