@@ -8,13 +8,7 @@ import cv2
 import numpy as np
 import pytest
 
-import os
-import subprocess
-import sys
-import threading
-import time
 from pathlib import Path
-from typing import Any, Dict, List
 
 import openvino
 from openvino.model_api.models import ClassificationModel
@@ -36,89 +30,6 @@ torch = pytest.importorskip("torch")
 pytest.importorskip("onnx")
 
 
-class Command:
-    def __init__(self, cmd: str, cwd: Path = None, env: Dict = None):
-        self.cmd = cmd
-        self.process = None
-        self.exec_time = -1
-        self.output: List[Any] = []  # store output here
-        self.kwargs: Dict[Any, Any] = {}
-        self.timeout = False
-        self.cwd = cwd
-        self.env = env if env is not None else os.environ.copy()
-        self.thread_exc = None
-
-        self.kwargs.update(start_new_session=True)
-
-    def kill_process_tree(self, pid):
-        try:
-            subprocess.call(["taskkill", "/F", "/T", "/PID", str(pid)])
-        except OSError as err:
-            print(err)
-
-    def run(self, timeout=3600, assert_returncode_zero=True):
-        print(f"Running command: {self.cmd}")
-
-        def target():
-            try:
-                start_time = time.time()
-                with subprocess.Popen(
-                    self.cmd,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT,
-                    shell=True,
-                    bufsize=1,
-                    cwd=self.cwd,
-                    env=self.env,
-                    **self.kwargs,
-                ) as p:
-                    self.process = p
-                    self.timeout = False
-
-                    self.output = []
-                    for line in self.process.stdout:
-                        line = line.decode("utf-8")
-                        self.output.append(line)
-                        sys.stdout.write(line)
-
-                    sys.stdout.flush()
-                    self.process.stdout.close()
-
-                    self.process.wait()
-                    self.exec_time = time.time() - start_time
-            except Exception as e:  # pylint:disable=broad-except
-                self.thread_exc = e
-
-        thread = threading.Thread(target=target)
-        thread.start()
-
-        thread.join(timeout)
-
-        if self.thread_exc is not None:
-            raise self.thread_exc
-
-        if thread.is_alive():
-            try:
-                print("Error: process taking too long to complete--terminating" + ", [ " + self.cmd + " ]")
-                self.kill_process_tree(self.process.pid)
-                self.exec_time = timeout
-                self.timeout = True
-                thread.join()
-            except OSError as e:
-                print(self.process.pid, "Exception when try to kill task by PID, " + e.strerror)
-                raise
-        returncode = self.process.wait()
-        print("Process returncode = " + str(returncode))
-        if assert_returncode_zero:
-            assert returncode == 0, "Process exited with a non-zero exit code {}; output:{}".format(
-                returncode, "".join(self.output)
-            )
-        return returncode
-
-    def get_execution_time(self):
-        return self.exec_time
-
-
 def export_to_onnx(model: torch.nn.Module, save_path: str, data_sample: torch.Tensor, set_dynamic_batch: bool) -> None:  # type: ignore
     """
     Export Torch model to ONNX format.
@@ -137,16 +48,15 @@ def export_to_onnx(model: torch.nn.Module, save_path: str, data_sample: torch.Te
     )
 
 
-def export_to_ir(model_path: str, save_path: str, model_name: str) -> None:
+def export_to_ir(model_path: str, save_path: str) -> None:
     """
     Export ONNX model to OpenVINO format.
 
     :param model_path: Path to ONNX model.
-    :param save_path: Path directory to save OpenVINO IR model.
-    :param model_name: Model name.
+    :param save_path: Filepath to save OpenVINO IR model.
     """
-    runner = Command(f"mo -m {model_path} -o {save_path} -n {model_name}")
-    runner.run()
+    ov_model = openvino.convert_model(model_path)
+    openvino.save_model(ov_model, save_path)
 
 
 LIMITED_DIVERSE_SET_OF_CNN_MODELS = [
@@ -284,7 +194,7 @@ class TestImageClassificationTimm:
             set_dynamic_batch = model_id in LIMITED_DIVERSE_SET_OF_VISION_TRANSFORMER_MODELS
             export_to_onnx(timm_model, onnx_path, dummy_tensor, set_dynamic_batch)
             self.update_report("report_wb.csv", model_id, "True")
-            export_to_ir(onnx_path, output_model_dir, model_name="model_fp32")
+            export_to_ir(onnx_path, output_model_dir / "model_fp32.xml")
             self.update_report("report_wb.csv", model_id, "True", "True")
         else:
             self.update_report("report_wb.csv", model_id, "True", "True")
@@ -383,7 +293,7 @@ class TestImageClassificationTimm:
             input_size = [1] + list(timm_model.default_cfg["input_size"])
             dummy_tensor = torch.rand(input_size)
             onnx_path = output_model_dir / "model_fp32.onnx"
-            export_to_onnx(timm_model, onnx_path, dummy_tensor)
+            export_to_onnx(timm_model, onnx_path, dummy_tensor, False)
             self.update_report("report_bb.csv", model_id, "True", "True")
         else:
             self.update_report("report_bb.csv", model_id, "True", "True")
