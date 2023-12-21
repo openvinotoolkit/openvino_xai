@@ -7,7 +7,6 @@ import argparse
 from pathlib import Path
 
 import cv2
-import openvino
 import openvino.runtime as ov
 
 import openvino_xai as ovxai
@@ -17,11 +16,6 @@ from openvino_xai.explanation.explanation_parameters import ExplainMode, PostPro
 from openvino_xai.explanation.model_inferrer import ActivationType
 from openvino_xai.insertion.insertion_parameters import ClassificationInsertionParameters
 from openvino_xai.common.utils import logger
-
-
-# USE_CUSTOM_INFERRER - if True, use provided custom model inference pipeline,
-# otherwise, use Model API wrapper for inference.
-USE_CUSTOM_INFERRER = True
 
 
 def get_argument_parser():
@@ -86,30 +80,6 @@ def insert_xai_w_params(args):
     return model_xai
 
 
-def insert_xai_into_mapi_wrapper(args):
-    """
-    White-box scenario.
-    Insertion of the XAI branch into the Model API wrapper, thus Model API wrapper has additional 'saliency_map' output.
-    """
-
-    # Create openvino.model_api.models.Model
-    mapi_wrapper: openvino.model_api.models.Model
-    mapi_wrapper = openvino.model_api.models.ClassificationModel.create_model(
-        args.model_path,
-        model_type="Classification",
-    )
-
-    # insert XAI branch into Model API wrapper
-    mapi_wrapper_xai: openvino.model_api.models.Model
-    mapi_wrapper_xai = ovxai.insertion.insert_xai_into_mapi_wrapper(mapi_wrapper)
-
-    logger.info("insert_xai_into_mapi_wrapper: XAI branch inserted into Model API wrapper.")
-
-    # ***** Downstream task: user's code that infers model_xai and picks 'saliency_map' output *****
-
-    return mapi_wrapper_xai
-
-
 def insert_xai_and_explain(args):
     """
     White-box scenario.
@@ -124,12 +94,9 @@ def insert_xai_and_explain(args):
 
     # ***** Start of user's code that creates a callable model_inferrer *****
     # inference_result = model_inferrer(image)  # inference_result: ovxai.explanation.utils.InferenceResult
-    if USE_CUSTOM_INFERRER:
-        model_inferrer = ovxai.explanation.model_inferrer.ClassificationModelInferrer(
-            model_xai, change_channel_order=True, activation=ActivationType.SIGMOID
-        )
-    else:
-        model_inferrer = insert_xai_into_mapi_wrapper(args)
+    model_inferrer = ovxai.explanation.model_inferrer.ClassificationModelInferrer(
+        model_xai, change_channel_order=True, activation=ActivationType.SIGMOID
+    )
     # ***** End of user's code that creates a callable model_inferrer *****
 
     # Generate explanation
@@ -208,12 +175,9 @@ def insert_xai_and_explain_w_params(args):
 
     # ***** Start of user's code that creates a callable model_inferrer *****
     # inference_result = model_inferrer(image)  # inference_result: ovxai.explanation.utils.InferenceResult
-    if USE_CUSTOM_INFERRER:
-        model_inferrer = ovxai.explanation.model_inferrer.ClassificationModelInferrer(
-            model_xai, change_channel_order=True, activation=ActivationType.SIGMOID
-        )
-    else:
-        model_inferrer = insert_xai_into_mapi_wrapper(args)
+    model_inferrer = ovxai.explanation.model_inferrer.ClassificationModelInferrer(
+        model_xai, change_channel_order=True, activation=ActivationType.SIGMOID
+    )
     # ***** End of user's code that creates a callable model_inferrer *****
 
     # Create explanation_parameters (optional)
@@ -274,12 +238,9 @@ def insert_xai_and_explain_multiple_images(args):
 
     # ***** Start of user's code that creates a callable model_inferrer *****
     # inference_result = model_inferrer(image)  # inference_result: ovxai.explanation.utils.InferenceResult
-    if USE_CUSTOM_INFERRER:
-        model_inferrer = ovxai.explanation.model_inferrer.ClassificationModelInferrer(
-            model_xai, change_channel_order=True, activation=ActivationType.SIGMOID
-        )
-    else:
-        model_inferrer = insert_xai_into_mapi_wrapper(args)
+    model_inferrer = ovxai.explanation.model_inferrer.ClassificationModelInferrer(
+        model_xai, change_channel_order=True, activation=ActivationType.SIGMOID
+    )
     # ***** End of user's code that creates a callable model_inferrer *****
 
     # Create explanation_parameters (optional)
@@ -319,19 +280,15 @@ def explain_black_box(args):
 
     # ***** Start of user's code that creates a callable model_inferrer *****
     # inference_result = model_inferrer(image)  # inference_result: ovxai.explanation.utils.InferenceResult
-    if USE_CUSTOM_INFERRER:
-        model_inferrer = ovxai.explanation.model_inferrer.ClassificationModelInferrer(
-            model, change_channel_order=True, activation=ActivationType.SIGMOID
-        )
-    else:
-        model_inferrer = openvino.model_api.models.ClassificationModel.create_model(
-            args.model_path, model_type="Classification",  configuration={"output_raw_scores": True}
-        )
+    model_inferrer = ovxai.explanation.model_inferrer.ClassificationModelInferrer(
+        model, change_channel_order=True, activation=ActivationType.SIGMOID
+    )
     # ***** End of user's code that creates a callable model_inferrer *****
 
     # Create explanation_parameters
     explanation_parameters = ExplanationParameters(
         explain_mode=ExplainMode.BLACKBOX,
+        black_box_method_kwargs={"num_masks": 1000}
     )
 
     # Generate explanation
@@ -360,7 +317,6 @@ def main(argv):
     # Insert XAI branch
     insert_xai(args)
     insert_xai_w_params(args)
-    insert_xai_into_mapi_wrapper(args)
 
     # Insert XAI branch + get explanation in white-box mode
     insert_xai_and_explain(args)
