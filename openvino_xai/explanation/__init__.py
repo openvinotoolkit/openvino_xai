@@ -3,8 +3,12 @@
 """
 Interface for getting explanation.
 """
-from openvino_xai.explanation.explanation_parameters import ExplanationParameters, ExplainMode, TargetExplainGroup, \
-    PostProcessParameters
+from openvino_xai.explanation.explanation_parameters import (
+    ExplanationParameters,
+    ExplainMode,
+    TargetExplainGroup,
+    PostProcessParameters,
+)
 
 from openvino_xai.explanation.explain_model import explain
 
