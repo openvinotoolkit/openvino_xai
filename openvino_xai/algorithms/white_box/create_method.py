@@ -1,18 +1,23 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-from typing import Optional
 
+from typing import Optional
 from openvino import runtime as ov
 
-from openvino_xai.algorithms.white_box.white_box_methods import WhiteBoxXAIMethodBase, ReciproCAMXAIMethod, \
-    ActivationMapXAIMethod, DetClassProbabilityMapXAIMethod, ViTReciproCAMXAIMethod
+from openvino_xai.algorithms.white_box.white_box_methods import (
+    WhiteBoxXAIMethodBase,
+    ReciproCAMXAIMethod,
+    ActivationMapXAIMethod,
+    DetClassProbabilityMapXAIMethod,
+    ViTReciproCAMXAIMethod,
+)
 from openvino_xai.insertion.insertion_parameters import ClassificationInsertionParameters, DetectionInsertionParameters
 from openvino_xai.common.parameters import XAIMethodType
 from openvino_xai.common.utils import logger
 
 
 def create_white_box_classification_explain_method(
-        model: ov.Model, insertion_parameters: Optional[ClassificationInsertionParameters] = None
+    model: ov.Model, insertion_parameters: Optional[ClassificationInsertionParameters] = None
 ) -> WhiteBoxXAIMethodBase:
     """Generates instance of the classification explanation method class.
 
@@ -57,7 +62,7 @@ def create_white_box_classification_explain_method(
 
 
 def create_white_box_detection_explain_method(
-        model: ov.Model, insertion_parameters: DetectionInsertionParameters
+    model: ov.Model, insertion_parameters: DetectionInsertionParameters
 ) -> WhiteBoxXAIMethodBase:
     """Generates instance of the detection explanation method class.
 

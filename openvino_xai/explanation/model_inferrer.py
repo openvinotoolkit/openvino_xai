@@ -1,6 +1,5 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import math
 from enum import Enum
 from typing import Optional, Tuple, List, Union
 
@@ -39,21 +38,21 @@ class ClassificationModelInferrer:
     """
 
     def __init__(
-            self,
-            model: ov.Model,
-            input_size: Optional[Tuple[int, int]] = None,
-            change_channel_order: bool = False,
-            mean: Optional[Union[np.ndarray, List[float]]] = None,
-            std: Optional[Union[np.ndarray, List[float]]] = None,
-            activation: ActivationType = ActivationType.SOFTMAX,
-            output_name: Optional[str] = None,
+        self,
+        model: ov.Model,
+        input_size: Tuple[int, int] = (224, 224),
+        change_channel_order: bool = False,
+        mean: Optional[Union[np.ndarray, List[float]]] = None,
+        std: Optional[Union[np.ndarray, List[float]]] = None,
+        activation: ActivationType = ActivationType.SOFTMAX,
+        output_name: Optional[str] = None,
     ):
         self.compiled_model = ov.Core().compile_model(model, "CPU")
         self.has_xai = has_xai(model)
         self.input_size = input_size
         self.change_channel_order = change_channel_order
-        self.mean = mean if mean is not None else np.array([0., 0., 0.])
-        self.std = std if std is not None else np.array([1., 1., 1.])
+        self.mean = mean if mean is not None else np.array([0.0, 0.0, 0.0])
+        self.std = std if std is not None else np.array([1.0, 1.0, 1.0])
         self.activation = activation
 
         if self.input_size is None:

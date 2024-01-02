@@ -1,10 +1,12 @@
+# Copyright (C) 2023 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 import sys
 import argparse
 from pathlib import Path
 
 import cv2
 import openvino.model_api as mapi
-from openvino.model_api.models import DetectionModel
 
 import openvino_xai as ovxai
 from openvino_xai.insertion.insertion_parameters import DetectionInsertionParameters

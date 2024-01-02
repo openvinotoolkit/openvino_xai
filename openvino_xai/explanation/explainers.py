@@ -1,3 +1,6 @@
+# Copyright (C) 2023 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from abc import ABC, abstractmethod
 from typing import Union, Callable
 
@@ -23,9 +26,9 @@ class Explainer(ABC):
         self._model_inferrer = model_inferrer
 
     def explain(
-            self,
-            data: np.ndarray,
-            explanation_parameters: ExplanationParameters = ExplanationParameters(),
+        self,
+        data: np.ndarray,
+        explanation_parameters: ExplanationParameters = ExplanationParameters(),
     ) -> ExplanationResult:
         """
         Explains the data, i.e. generates explanation result.
@@ -77,7 +80,7 @@ class BlackBoxExplainer(Explainer):
     """Black Box explainer explains the model as a black-box."""
 
     def get_inference_result(
-            self, data: np.ndarray, explanation_parameters: ExplanationParameters
+        self, data: np.ndarray, explanation_parameters: ExplanationParameters
     ) -> Union[InferenceResult, mapi.models.ClassificationResult]:
         """Generates inference result in black box mode.
 

@@ -13,12 +13,7 @@ class IRParser:
 
     @staticmethod
     def get_logit_node(model: openvino.runtime.Model, output_id: int = 0) -> openvino.runtime.Node:
-        logit_node = (
-            model.get_output_op(output_id)
-            .input(0)
-            .get_source_output()
-            .get_node()
-        )
+        logit_node = model.get_output_op(output_id).input(0).get_source_output().get_node()
         return logit_node
 
     @staticmethod
@@ -67,7 +62,11 @@ class IRParser:
             return False
         if not (node_out_shape[0].is_dynamic or node_out_shape[0].get_length() == 1):
             return False
-        c, h, w, = node_out_shape[1].get_length(), node_out_shape[2].get_length(), node_out_shape[3].get_length()
+        c, h, w, = (
+            node_out_shape[1].get_length(),
+            node_out_shape[2].get_length(),
+            node_out_shape[3].get_length(),
+        )
         if not (1 < h < c and 1 < w < c):
             return False
         return True
@@ -77,9 +76,15 @@ class IRParser:
         node_out_shape = node.output(output_id).partial_shape
 
         # NCHW
-        h, w, = node_out_shape[2].get_length(), node_out_shape[3].get_length()
+        h, w, = (
+            node_out_shape[2].get_length(),
+            node_out_shape[3].get_length(),
+        )
         # NHWC
-        h_, w_, = node_out_shape[1].get_length(), node_out_shape[2].get_length()
+        h_, w_, = (
+            node_out_shape[1].get_length(),
+            node_out_shape[2].get_length(),
+        )
         return (h != 1 and w != 1) or (h_ != 1 and w_ != 1)
 
     @staticmethod
@@ -99,6 +104,7 @@ class IRParser:
 
 class IRParserCls(IRParser):
     """ParserCls parse classification OV IR model."""
+
     # TODO: use OV pattern matching functionality
     # TODO: separate for CNNs and ViT
 
@@ -111,21 +117,16 @@ class IRParserCls(IRParser):
                 logit_node = softmax_node.input(0).get_source_output().get_node()
                 return logit_node
 
-        logit_node = (
-            model.get_output_op(output_id)
-            .input(0)
-            .get_source_output()
-            .get_node()
-        )
+        logit_node = model.get_output_op(output_id).input(0).get_source_output().get_node()
         return logit_node
 
     @classmethod
     def get_target_node(
-            cls,
-            model: openvino.runtime.Model,
-            model_type: Optional[ModelType] = None,
-            target_node_name: Optional[str] = None,
-            k: int = 1,
+        cls,
+        model: openvino.runtime.Model,
+        model_type: Optional[ModelType] = None,
+        target_node_name: Optional[str] = None,
+        k: int = 1,
     ) -> openvino.runtime.Node:
         """
         Returns target node.
@@ -134,9 +135,7 @@ class IRParserCls(IRParser):
         """
         if target_node_name:
             reversed_ops = model.get_ordered_ops()[::-1]
-            target_node = cls.get_node_by_condition(
-                reversed_ops, lambda x: x.get_friendly_name() == target_node_name
-            )
+            target_node = cls.get_node_by_condition(reversed_ops, lambda x: x.get_friendly_name() == target_node_name)
             if target_node is not None:
                 return target_node
             raise ValueError(f"Cannot find {target_node_name} node.")
@@ -150,27 +149,25 @@ class IRParserCls(IRParser):
 
             # Make an attempt to search for last backbone node via post_target_node
             post_target_node = cls.get_post_target_node(model)
-            target_node = post_target_node.input(0).get_source_output().get_node()
+            target_node = post_target_node.input(0).get_source_output().get_node()  # type: ignore
             if cls._has_spacial_size(target_node):
                 return target_node
 
         if model_type == ModelType.TRANSFORMER:
             reversed_ops = model.get_ordered_ops()[::-1]
-            target_node = cls.get_node_by_condition(
-                reversed_ops, cls._is_add_node_w_two_non_constant_inputs, k
-            )
+            target_node = cls.get_node_by_condition(reversed_ops, cls._is_add_node_w_two_non_constant_inputs, k)
             if target_node is not None:
                 return target_node
 
-        raise RuntimeError(f"Cannot find output backbone_node in auto mode, please provide target_layer.")
+        raise RuntimeError("Cannot find output backbone_node in auto mode, please provide target_layer.")
 
     @classmethod
     def get_post_target_node(
-            cls,
-            model,
-            model_type: Optional[ModelType] = None,
-            target_node_name: Optional[str] = None,
-            target_node_output_id: int = 0
+        cls,
+        model,
+        model_type: Optional[ModelType] = None,
+        target_node_name: Optional[str] = None,
+        target_node_output_id: int = 0,
     ) -> List[openvino.runtime.Node]:
         if target_node_name:
             target_node = cls.get_target_node(model, model_type, target_node_name)
@@ -194,7 +191,7 @@ class IRParserCls(IRParser):
         if first_conv_node is not None:
             return first_conv_node
 
-        raise RuntimeError(f"Cannot find first convolution node in auto mode.")
+        raise RuntimeError("Cannot find first convolution node in auto mode.")
 
     @classmethod
     def get_first_concat_node(cls, model):
@@ -203,4 +200,4 @@ class IRParserCls(IRParser):
         if first_concat_node is not None:
             return first_concat_node
 
-        raise RuntimeError(f"Cannot find first concat node in auto mode.")
+        raise RuntimeError("Cannot find first concat node in auto mode.")

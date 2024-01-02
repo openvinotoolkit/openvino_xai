@@ -39,25 +39,31 @@ class ExplanationResult:
         custom_target_indices: Optional[List[int]] = None,
         confidence_threshold: float = 0.5,
     ):
-        if not isinstance(inference_result, (
-                InferenceResult, mapi.models.ClassificationResult, mapi.models.DetectionResult
-        )):
-            raise ValueError(f"Input result has to be ether "
-                             f"openvino_xai.explanation.utils.InferenceResult or "
-                             f"openvino.model_api.models.ClassificationResult, but got {type(inference_result)}.")
+        if not isinstance(
+            inference_result, (InferenceResult, mapi.models.ClassificationResult, mapi.models.DetectionResult)
+        ):
+            raise ValueError(
+                f"Input result has to be ether "
+                f"openvino_xai.explanation.utils.InferenceResult or "
+                f"openvino.model_api.models.ClassificationResult, but got {type(inference_result)}."
+            )
 
         self.saliency_map = self._get_saliency_map_from_model_output(inference_result)
 
         if "per_image_map" in self.saliency_map:
             self.layout = SaliencyMapLayout.ONE_MAP_PER_IMAGE_GRAY
             if target_explain_group != TargetExplainGroup.IMAGE:
-                logger.warning(f"Setting target_explain_group to TargetExplainGroup.IMAGE, {target_explain_group} "
-                               f"is not supported when only single (global) saliency map per image is available.")
+                logger.warning(
+                    f"Setting target_explain_group to TargetExplainGroup.IMAGE, {target_explain_group} "
+                    f"is not supported when only single (global) saliency map per image is available."
+                )
             self.target_explain_group = TargetExplainGroup.IMAGE
         else:
             if target_explain_group == TargetExplainGroup.IMAGE:
-                raise ValueError(f"TargetExplainGroup.IMAGE supports only single (global) saliency map per image. "
-                                 f"But multiple saliency maps are available.")
+                raise ValueError(
+                    "TargetExplainGroup.IMAGE supports only single (global) saliency map per image. "
+                    "But multiple saliency maps are available."
+                )
             self.layout = SaliencyMapLayout.MULTIPLE_MAPS_PER_IMAGE_GRAY
             self.target_explain_group = target_explain_group
 
@@ -103,6 +109,7 @@ class ExplanationResult:
     @staticmethod
     def _format_sal_map_as_dict(raw_saliency_map: np.ndarray) -> Dict[Union[int, str], np.ndarray]:
         """Returns dict with saliency maps in format {target_id: class_saliency_map}."""
+        dict_sal_map: Dict[Union[int, str], np.ndarray]
         if raw_saliency_map.ndim == 3:
             # Per-image saliency map
             dict_sal_map = {"per_image_map": raw_saliency_map[0]}
@@ -113,12 +120,13 @@ class ExplanationResult:
                 dict_sal_map[index] = sal_map
         else:
             raise ValueError(
-                f"Raw saliency map has to be tree or four dimensional tensor, "
-                f"but got {raw_saliency_map.ndim}."
+                f"Raw saliency map has to be tree or four dimensional tensor, " f"but got {raw_saliency_map.ndim}."
             )
         return dict_sal_map
 
-    def _select_target_saliency_maps(self, custom_target_indices: List[int] = None) -> Dict[Union[int, str], np.ndarray]:
+    def _select_target_saliency_maps(
+        self, custom_target_indices: Optional[List[int]] = None
+    ) -> Dict[Union[int, str], np.ndarray]:
         assert self.layout == SaliencyMapLayout.MULTIPLE_MAPS_PER_IMAGE_GRAY
         explain_target_indexes = select_target_indices(
             self.target_explain_group,

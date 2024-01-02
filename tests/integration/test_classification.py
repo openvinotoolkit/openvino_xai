@@ -1,3 +1,6 @@
+# Copyright (C) 2023 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from pathlib import Path
 
 import cv2
@@ -9,8 +12,12 @@ import openvino.runtime as ov
 import openvino_xai as ovxai
 from openvino_xai.explanation.model_inferrer import ClassificationModelInferrer, ActivationType
 from openvino_xai.common.utils import retrieve_otx_model, has_xai
-from openvino_xai.explanation.explanation_parameters import PostProcessParameters, TargetExplainGroup, \
-    ExplanationParameters, ExplainMode
+from openvino_xai.explanation.explanation_parameters import (
+    PostProcessParameters,
+    TargetExplainGroup,
+    ExplanationParameters,
+    ExplainMode,
+)
 from openvino_xai.insertion.insertion_parameters import ClassificationInsertionParameters
 from openvino_xai.common.parameters import XAIMethodType, TaskType
 
@@ -55,16 +62,16 @@ class TestClsWB:
     image = cv2.imread("tests/assets/cheetah_person.jpg")
     data_dir = Path(".data")
     _ref_sal_maps_reciprocam = {
-        "mlc_mobilenetv3_large_voc": np.array([215, 214, 233, 239, 218, 206, 210], dtype=np.uint8),
-        "mlc_efficient_b0_voc": np.array([73, 242, 156, 219, 197, 239, 69], dtype=np.uint8),
-        "mlc_efficient_v2s_voc": np.array([157, 166, 166, 181, 162, 151, 147], dtype=np.uint8),
-        "classification_model_with_xai_head": np.array([172, 173, 235, 236, 237, 238, 227], dtype=np.uint8),
+        "mlc_mobilenetv3_large_voc": np.array([236, 237, 244, 252, 242, 225, 231], dtype=np.uint8),
+        "mlc_efficient_b0_voc": np.array([53, 128, 70, 234, 227, 255, 59], dtype=np.uint8),
+        "mlc_efficient_v2s_voc": np.array([144, 105, 116, 195, 209, 176, 176], dtype=np.uint8),
+        "classification_model_with_xai_head": np.array([165, 161, 209, 211, 208, 206, 196], dtype=np.uint8),
     }
     _ref_sal_maps_vitreciprocam = {
-        "deit-tiny": np.array([212, 208, 221, 236, 230, 234, 237, 242, 221, 199, 179, 148, 140, 166], dtype=np.uint8)
+        "deit-tiny": np.array([200, 171, 183, 196, 198, 196, 205, 225, 207, 173, 174, 134, 97, 117], dtype=np.uint8)
     }
     _ref_sal_maps_activationmap = {
-        "mlc_mobilenetv3_large_voc": np.array([7, 7, 13, 16, 3, 0, 5], dtype=np.uint8),
+        "mlc_mobilenetv3_large_voc": np.array([6, 3, 10, 15, 5, 0, 13], dtype=np.uint8),
     }
 
     @pytest.mark.parametrize("embed_normalization", [True, False])
@@ -91,7 +98,9 @@ class TestClsWB:
             task_type=TaskType.CLASSIFICATION,
             insertion_parameters=insertion_parameters,
         )
-        model_inferrer = ClassificationModelInferrer(model_xai, change_channel_order=True, activation=ActivationType.NONE)
+        model_inferrer = ClassificationModelInferrer(
+            model_xai, change_channel_order=True, activation=ActivationType.NONE
+        )
 
         if target_explain_group == TargetExplainGroup.ALL:
             explanation_parameters = ExplanationParameters(
@@ -153,7 +162,9 @@ class TestClsWB:
             task_type=TaskType.CLASSIFICATION,
             insertion_parameters=insertion_parameters,
         )
-        model_inferrer = ClassificationModelInferrer(model_xai, change_channel_order=True, activation=ActivationType.SIGMOID)
+        model_inferrer = ClassificationModelInferrer(
+            model_xai, change_channel_order=True, activation=ActivationType.SIGMOID
+        )
 
         if target_explain_group == TargetExplainGroup.ALL:
             explanation_parameters = ExplanationParameters(
@@ -194,7 +205,6 @@ class TestClsWB:
             assert len(explanations.saliency_map) == len([target_class])
             assert explanations.saliency_map[target_class].ndim == 2
 
-
     @pytest.mark.parametrize("model_name", MODELS)
     @pytest.mark.parametrize("embed_normalization", [True, False])
     def test_activationmap(self, model_name, embed_normalization):
@@ -212,7 +222,9 @@ class TestClsWB:
             task_type=TaskType.CLASSIFICATION,
             insertion_parameters=insertion_parameters,
         )
-        model_inferrer = ClassificationModelInferrer(model_xai, change_channel_order=True, activation=ActivationType.SIGMOID)
+        model_inferrer = ClassificationModelInferrer(
+            model_xai, change_channel_order=True, activation=ActivationType.SIGMOID
+        )
 
         explanation_parameters = ExplanationParameters(
             post_processing_parameters=PostProcessParameters(),
@@ -244,7 +256,9 @@ class TestClsWB:
             model,
             task_type=TaskType.CLASSIFICATION,
         )
-        model_inferrer = ClassificationModelInferrer(model_xai, change_channel_order=True, activation=ActivationType.SIGMOID)
+        model_inferrer = ClassificationModelInferrer(
+            model_xai, change_channel_order=True, activation=ActivationType.SIGMOID
+        )
 
         explain_targets = None
         if target_explain_group == TargetExplainGroup.CUSTOM:
@@ -281,7 +295,9 @@ class TestClsWB:
             model,
             task_type=TaskType.CLASSIFICATION,
         )
-        model_inferrer = ClassificationModelInferrer(model_xai, change_channel_order=True, activation=ActivationType.SIGMOID)
+        model_inferrer = ClassificationModelInferrer(
+            model_xai, change_channel_order=True, activation=ActivationType.SIGMOID
+        )
 
         explanation_parameters = ExplanationParameters(
             target_explain_group=TargetExplainGroup.ALL,
@@ -303,9 +319,9 @@ class TestClsBB:
     image = cv2.imread("tests/assets/cheetah_person.jpg")
     data_dir = Path(".data")
     _ref_sal_maps = {
-        "mlc_mobilenetv3_large_voc": np.array([13, 18, 23, 29, 34, 40, 45, 51, 57, 65], dtype=np.uint8),
-        "mlc_efficient_b0_voc": np.array([9, 14, 20, 25, 31, 37, 43, 48, 55, 63], dtype=np.uint8),
-        "mlc_efficient_v2s_voc": np.array([14, 19, 24, 30, 36, 41, 47, 53, 60, 67], dtype=np.uint8),
+        "mlc_mobilenetv3_large_voc": np.array([16, 22, 28, 34, 41, 47, 53, 60, 67, 75], dtype=np.uint8),
+        "mlc_efficient_b0_voc": np.array([12, 17, 22, 27, 32, 37, 43, 48, 54, 61], dtype=np.uint8),
+        "mlc_efficient_v2s_voc": np.array([9, 13, 17, 21, 26, 31, 35, 40, 45, 53], dtype=np.uint8),
         "classification_model_with_xai_head": np.array([8, 13, 18, 24, 29, 35, 40, 46, 52, 60], dtype=np.uint8),
     }
 
@@ -323,7 +339,9 @@ class TestClsBB:
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
         model = ov.Core().read_model(model_path)
-        model_inferrer = ClassificationModelInferrer(model, change_channel_order=True, activation=ActivationType.SIGMOID)
+        model_inferrer = ClassificationModelInferrer(
+            model, change_channel_order=True, activation=ActivationType.SIGMOID
+        )
 
         post_processing_parameters = PostProcessParameters(
             overlay=overlay,
@@ -336,7 +354,7 @@ class TestClsBB:
                 post_processing_parameters=post_processing_parameters,
                 target_explain_group=target_explain_group,
                 custom_target_indices=[target_class],
-                black_box_method_kwargs={"num_masks": 5, "asynchronous_inference": False, "normalize": normalize}
+                black_box_method_kwargs={"num_masks": 5, "asynchronous_inference": False, "normalize": normalize},
             )
             explanation = ovxai.explain(
                 model_inferrer,
@@ -356,7 +374,7 @@ class TestClsBB:
                 explain_mode=ExplainMode.BLACKBOX,
                 post_processing_parameters=post_processing_parameters,
                 target_explain_group=target_explain_group,
-                black_box_method_kwargs={"num_masks": 5, "asynchronous_inference": False, "normalize": normalize}
+                black_box_method_kwargs={"num_masks": 5, "asynchronous_inference": False, "normalize": normalize},
             )
             explanation = ovxai.explain(
                 model_inferrer,
@@ -383,14 +401,14 @@ class TestClsBB:
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
         model = ov.Core().read_model(model_path)
-        model_inferrer = ClassificationModelInferrer(model, change_channel_order=True, activation=ActivationType.SIGMOID)
+        model_inferrer = ClassificationModelInferrer(
+            model, change_channel_order=True, activation=ActivationType.SIGMOID
+        )
 
         explanation_parameters = ExplanationParameters(
             explain_mode=ExplainMode.BLACKBOX,
             post_processing_parameters=PostProcessParameters(overlay=False),
-            black_box_method_kwargs={
-                "num_masks": 5, "asynchronous_inference": False, "throughput_inference": False
-            }
+            black_box_method_kwargs={"num_masks": 5, "asynchronous_inference": False, "throughput_inference": False},
         )
 
         explanation = ovxai.explain(
@@ -423,12 +441,14 @@ class TestClsBB:
             task_type=TaskType.CLASSIFICATION,
         )
         assert has_xai(model_xai), "Updated IR model should has XAI head."
-        model_inferrer = ClassificationModelInferrer(model_xai, change_channel_order=True, activation=ActivationType.SIGMOID)
+        model_inferrer = ClassificationModelInferrer(
+            model_xai, change_channel_order=True, activation=ActivationType.SIGMOID
+        )
 
         explanation_parameters = ExplanationParameters(
             explain_mode=ExplainMode.BLACKBOX,
             post_processing_parameters=PostProcessParameters(overlay=False),
-            black_box_method_kwargs={"num_masks": 5}
+            black_box_method_kwargs={"num_masks": 5},
         )
         explanation = ovxai.explain(
             model_inferrer,
