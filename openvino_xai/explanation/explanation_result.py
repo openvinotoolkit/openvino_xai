@@ -137,17 +137,25 @@ class ExplanationResult:
         saliency_maps_selected = {i: self.saliency_map[i] for i in explain_target_indexes}
         return saliency_maps_selected
 
-    def save(self, dir_path: Union[Path, str], name: Optional[str] = None) -> None:
+    def save(self, dir_path: Union[Path, str], name: Optional[str] = None, dump_score: bool = False) -> None:
         """Dumps saliency map."""
         # TODO: add unit test
         os.makedirs(dir_path, exist_ok=True)
         save_name = f"{name}_" if name else ""
-        for idx, map_to_save in self.saliency_map.items():
-            if idx == "per_image_map":
+        conf = ""
+        for i, (cls_idx, map_to_save) in enumerate(self.saliency_map.items()):
+            if cls_idx == "per_image_map":
                 target_name = "per_image_map"
             else:
                 if self.explain_target_names:
-                    target_name = self.explain_target_names[idx]
+                    target_name = self.explain_target_names[cls_idx]
                 else:
-                    target_name = idx
-            cv2.imwrite(os.path.join(dir_path, f"{save_name}target_{target_name}.jpg"), img=map_to_save)
+                    target_name = cls_idx
+            if dump_score:
+                conf = self.get_pred_confidence(i)
+            cv2.imwrite(os.path.join(dir_path, f"{save_name}target_{target_name}{conf}.jpg"), img=map_to_save)
+ 
+    def get_pred_confidence(self, pred_ind: int) -> str:
+        """Return prediction confidence if predictions are available. """
+        conf = self.prediction[pred_ind][1]
+        return f"_{conf:.2f}"
