@@ -19,6 +19,7 @@ class TestDetProbMapXAI:
     # TODO: Support check xai_branch == xai_branch_reference
     # TODO: Create small model to use it as mocker model
     # TODO: Add check that model with XAI branch is equal to reference graph (DFS)
+    # TODO: Add insertion node check (target node is found correctly in auto mode)
     _ref_sal_maps = {
         "det_mobilenetv2_atss_bccd": np.array([234, 203, 190, 196, 208, 206, 201, 199, 192, 186], dtype=np.uint8)
     }

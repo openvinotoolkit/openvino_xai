@@ -249,22 +249,27 @@ def insert_xai_and_explain_multiple_images(args):
         post_processing_parameters=post_processing_parameters,
     )
 
+    output = Path(args.output) / "multiple_images"
     for image_path in img_files:
         image = cv2.imread(image_path)
-        explanation = ovxai.explain(
-            model_inferrer,
-            image,
+        try:
+            explanation = ovxai.explain(
+            model_inferrer=model_inferrer, 
+            data=image,
             explanation_parameters=explanation_parameters,
-        )
+            )
 
-        logger.info(
-            f"insert_xai_and_explain_multiple_images: generated {len(explanation.saliency_map)} classification "
-            f"saliency maps of layout {explanation.layout} with shape {explanation.sal_map_shape}."
-        )
+            logger.info(
+                f"insert_xai_and_explain_multiple_images: generated {len(explanation.saliency_map)} classification "
+                f"saliency maps of layout {explanation.layout} with shape {explanation.sal_map_shape}."
+            )
 
-        if args.output is not None:
-            output = Path(args.output) / "multiple_images"
-            explanation.save(output, Path(image_path).stem)
+            if args.output is not None:
+                explanation.save(output, Path(image_path).stem)
+
+        except ValueError as err:
+            print(f"Explanation for {image_path} hasn't been generated:")
+            print(err)
 
 
 def explain_black_box(args):
