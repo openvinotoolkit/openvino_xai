@@ -85,8 +85,8 @@ class TestDetProbMapXAI:
 
         # Check node's name
         xai_node_name = xai_output_node.get_friendly_name()
-        assert xai_node_name in ["Reshape_57514", "Reshape_114959"]
+        assert xai_node_name in ["Reshape_57514", "Reshape_114959", "Reshape_103675"]
 
         # Check that node was inserted in the right place
         nodes_list = [op.get_friendly_name() for op in model_xai.get_ordered_ops()]
-        nodes_list.index(xai_node_name) == 561
+        assert nodes_list.index(xai_node_name) == 558

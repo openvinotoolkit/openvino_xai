@@ -14,6 +14,7 @@ import openvino.model_api as mapi
 import openvino_xai as ovxai
 from openvino_xai.algorithms.white_box.create_method import create_white_box_detection_explain_method
 from openvino_xai.algorithms.white_box.white_box_methods import DetClassProbabilityMapXAIMethod
+from openvino_xai.insertion.insert_xai_into_model import insert_xai_into_mapi_wrapper
 from openvino_xai.common.utils import retrieve_otx_model
 from openvino_xai.common.parameters import XAIMethodType
 from openvino_xai.explanation.explanation_parameters import (
@@ -92,7 +93,7 @@ class TestDetWB:
     Tests detection models in WB mode.
     """
 
-    image = cv2.imread("tests/assets/blood_image.jpg")
+    image = cv2.imread("tests/assets/blood.jpg")
     data_dir = Path(".data")
     _ref_sal_maps_reciprocam = {
         "det_mobilenetv2_atss_bccd": np.array([226, 247, 235, 231, 222, 217, 236, 246, 251, 255], dtype=np.uint8),
@@ -114,7 +115,7 @@ class TestDetWB:
             saliency_map_size=self._sal_map_size,
             explain_method_type=XAIMethodType.DETCLASSPROBABILITYMAP,
         )
-        mapi_wrapper_xai = ovxai.insertion.insert_xai_into_mapi_wrapper(
+        mapi_wrapper_xai = insert_xai_into_mapi_wrapper(
             model_wrapper, insertion_parameters=insertion_parameters
         )
         target_class_list = [1] if target_explain_group == TargetExplainGroup.CUSTOM else None
@@ -162,7 +163,7 @@ class TestDetWB:
             saliency_map_size=self._sal_map_size,
             explain_method_type=XAIMethodType.DETCLASSPROBABILITYMAP,
         )
-        mapi_wrapper_xai = ovxai.insertion.insert_xai_into_mapi_wrapper(
+        mapi_wrapper_xai = insert_xai_into_mapi_wrapper(
             model_wrapper, insertion_parameters=insertion_parameters
         )
 
@@ -195,7 +196,7 @@ class TestDetWB:
             saliency_map_size=self._sal_map_size,
             explain_method_type=XAIMethodType.DETCLASSPROBABILITYMAP,
         )
-        mapi_wrapper_xai = ovxai.insertion.insert_xai_into_mapi_wrapper(
+        mapi_wrapper_xai = insert_xai_into_mapi_wrapper(
             model_wrapper, insertion_parameters=insertion_parameters
         )
 
