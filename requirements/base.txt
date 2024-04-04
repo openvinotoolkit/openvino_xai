@@ -1,5 +1,0 @@
-openvino-model-api==0.1.9
-openvino-dev>=2023.2
-opencv-python
-numpy
-tqdm
