@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openvino_xai"
+version = "0.0.1"
+dependencies = [
+  "openvino-model-api==0.1.9",
+  "openvino-dev>=2023.2",
+  "opencv-python",
+  "numpy",
+  "tqdm",
+]
+requires-python = ">=3.9"
+authors = [
+  {name = "Intel(R) Corporation"},
+]
+maintainers = [
+  {name = "Intel(R) Corporation"},
+]
+description = "OV XAI: a toolbox for explaining models in OpenVINO format"
+readme = "README.md"
+keywords = ["pytorch", "cnn", "transformer", "xai", "black-box"]
+classifiers = [
+  "License :: OSI Approved :: MIT Apache Software License",
+  "Programming Language :: Python :: 3.9"
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "pre-commit==2.20.0",
+  "addict",
+]
+dev_timm = [
+  "timm==0.9.5",
+  "onnx==1.14.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/intel-sandbox/openvino_xai"
+Documentation = "https://curly-couscous-ovjvm29.pages.github.io/"
+Repository = "https://github.com/intel-sandbox/openvino_xai.git"
+
+[tool.setuptools.packages.find]
+include = ["openvino_xai"]
+
+[tool.black]
+line-length = 120
