@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 [build-system]
 requires = ["setuptools >= 61.0"]
 build-backend = "setuptools.build_meta"
@@ -44,7 +47,7 @@ Documentation = "https://curly-couscous-ovjvm29.pages.github.io/"
 Repository = "https://github.com/intel-sandbox/openvino_xai.git"
 
 [tool.setuptools.packages.find]
-include = ["openvino_xai"]
+include = ["openvino_xai*"]
 
 [tool.black]
 line-length = 120
