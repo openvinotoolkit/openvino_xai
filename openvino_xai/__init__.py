@@ -6,9 +6,7 @@ OpenVINO-XAI library for explaining OpenVINO™ IR models.
 
 
 from .insertion import insert_xai
-from .explanation import explain
 
 __all__ = [
     "insert_xai",
-    "explain",
 ]

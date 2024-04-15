@@ -53,7 +53,7 @@ class TestDetProbMapXAI:
         assert isinstance(detection_xai_method.model_ori, ov.Model)
         assert detection_xai_method.embed_normalization
         assert detection_xai_method.per_class
-        assert len(detection_xai_method.supported_target_explain_groups) == 3
+        assert len(detection_xai_method.supported_target_explain_groups) == 2
         assert detection_xai_method._target_layer == self.target_layer
         assert detection_xai_method._num_anchors == self.num_anchors
         assert detection_xai_method._saliency_map_size == (23, 23)
@@ -85,7 +85,7 @@ class TestDetProbMapXAI:
 
         # Check node's name
         xai_node_name = xai_output_node.get_friendly_name()
-        assert xai_node_name in ["Reshape_57514", "Reshape_114959", "Reshape_103675"]
+        assert "Reshape_" in xai_node_name
 
         # Check that node was inserted in the right place
         nodes_list = [op.get_friendly_name() for op in model_xai.get_ordered_ops()]

@@ -4,21 +4,18 @@
 import numpy as np
 import pytest
 
-from openvino_xai.explanation.utils import InferenceResult
 from openvino_xai.explanation.explanation_parameters import PostProcessParameters, TargetExplainGroup
 from openvino_xai.explanation.explanation_result import ExplanationResult
 from openvino_xai.explanation.post_process import PostProcessor
 
 
-RAW_PREDICTIONS = [
-    InferenceResult(prediction=np.ones((1, 2)), saliency_map=(np.random.rand(1, 5, 5) * 255).astype(np.uint8)),
-    InferenceResult(prediction=np.ones((1, 2)), saliency_map=(np.random.rand(1, 2, 5, 5) * 255).astype(np.uint8)),
+SALIENCY_MAPS = [
+    (np.random.rand(1, 5, 5) * 255).astype(np.uint8),
+    (np.random.rand(1, 2, 5, 5) * 255).astype(np.uint8),
 ]
-
 
 TARGET_EXPLAIN_GROUPS = [
     TargetExplainGroup.ALL,
-    TargetExplainGroup.PREDICTIONS,
     TargetExplainGroup.CUSTOM,
 ]
 
@@ -26,7 +23,7 @@ TARGET_EXPLAIN_GROUPS = [
 class TestPostProcessor:
     # TODO: Create a unit test for each postprocess method
 
-    @pytest.mark.parametrize("raw_predictions", RAW_PREDICTIONS)
+    @pytest.mark.parametrize("saliency_maps", SALIENCY_MAPS)
     @pytest.mark.parametrize("target_explain_group", TARGET_EXPLAIN_GROUPS)
     @pytest.mark.parametrize("normalize", [True, False])
     @pytest.mark.parametrize("resize", [True, False])
@@ -35,7 +32,7 @@ class TestPostProcessor:
     @pytest.mark.parametrize("overlay_weight", [0.5, 0.3])
     def test_postprocessor(
         self,
-        raw_predictions,
+        saliency_maps,
         target_explain_group,
         normalize,
         resize,
@@ -56,11 +53,11 @@ class TestPostProcessor:
         else:
             explain_targets = None
 
-        if raw_predictions.saliency_map.ndim == 3:
+        if saliency_maps.ndim == 3:
             target_explain_group = TargetExplainGroup.IMAGE
             explain_targets = None
         saliency_map_obj = ExplanationResult(
-            raw_predictions, target_explain_group=target_explain_group, custom_target_indices=explain_targets
+            saliency_maps, target_explain_group=target_explain_group, target_explain_indices=explain_targets
         )
 
         raw_sal_map_dims = len(saliency_map_obj.sal_map_shape)

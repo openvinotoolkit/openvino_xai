@@ -11,17 +11,16 @@ import pytest
 from pathlib import Path
 
 import openvino
-from openvino.model_api.models import ClassificationModel
-from openvino_xai.explanation.model_inferrer import ClassificationModelInferrer, ActivationType
 
 from openvino_xai.common.parameters import XAIMethodType, TaskType
-import openvino_xai as ovxai
+from openvino_xai.explanation.explainers import Explainer
 from openvino_xai.explanation.explanation_parameters import (
     PostProcessParameters,
     TargetExplainGroup,
     ExplanationParameters,
     ExplainMode,
 )
+from openvino_xai.explanation.utils import get_preprocess_fn, get_score, ActivationType, get_postprocess_fn
 from openvino_xai.insertion.insertion_parameters import ClassificationInsertionParameters
 from openvino_xai.explanation.post_process import PostProcessor
 from openvino_xai.utils.timm_models_export import export_to_onnx, export_to_ir
@@ -184,28 +183,33 @@ class TestImageClassificationTimm:
             embed_normalization=False,
             explain_method_type=explain_method_type,
         )
-        model_xai = ovxai.insert_xai(
-            model, task_type=TaskType.CLASSIFICATION, insertion_parameters=insertion_parameters
-        )
+
         mean_values = [(item * 255) for item in model_cfg["mean"]]
         scale_values = [(item * 255) for item in model_cfg["std"]]
-        model_inferrer = ClassificationModelInferrer(
-            model_xai,
+        preprocess_fn = get_preprocess_fn(
             change_channel_order=True,
             input_size=model_cfg["input_size"][1:],
             mean=mean_values,
             std=scale_values,
-            activation=ActivationType.SOFTMAX,
+            hwc_to_chw=True,
+        )
+
+        explainer = Explainer(
+            model=model,
+            task_type=TaskType.CLASSIFICATION,
+            preprocess_fn=preprocess_fn,
+            explain_mode=ExplainMode.WHITEBOX,  # defaults to AUTO
+            insertion_parameters=insertion_parameters,
         )
 
         target_class = self.supported_num_classes[model_cfg["num_classes"]]
         explanation_parameters = ExplanationParameters(
             target_explain_group=TargetExplainGroup.CUSTOM,
-            custom_target_indices=[target_class],
+            target_explain_indices=[target_class],
             post_processing_parameters=PostProcessParameters(),
         )
         image = cv2.imread("tests/assets/cheetah_person.jpg")
-        explanation = ovxai.explain(model_inferrer, image, explanation_parameters)
+        explanation = explainer(image, explanation_parameters)
 
         assert explanation is not None
         assert explanation.sal_map_shape[-1] > 1 and explanation.sal_map_shape[-2] > 1
@@ -232,7 +236,8 @@ class TestImageClassificationTimm:
             )
             explanation = post_processor.postprocess()
 
-            target_confidence = model_inferrer(image).prediction[0, target_class]
+            model_output = explainer.model_forward(image)
+            target_confidence = get_score(model_output["logits"], target_class, activation=ActivationType.SOFTMAX)
             self.put_confidence_into_map_overlay(explanation, target_confidence, target_class)
 
             save_dir = self.data_dir / "timm_models" / "maps_wb"
@@ -270,25 +275,38 @@ class TestImageClassificationTimm:
         else:
             self.update_report("report_bb.csv", model_id, "True", "True")
 
-        mapi_params = self.get_mapi_params(model_cfg)
-        model = ClassificationModel.create_model(
-            onnx_path,
-            model_type="Classification",
-            **mapi_params,
+        model = openvino.runtime.Core().read_model(onnx_path)
+
+        mean_values = [(item * 255) for item in model_cfg["mean"]]
+        scale_values = [(item * 255) for item in model_cfg["std"]]
+        preprocess_fn = get_preprocess_fn(
+            change_channel_order=True,
+            input_size=model_cfg["input_size"][1:],
+            mean=mean_values,
+            std=scale_values,
+            hwc_to_chw=True,
+        )
+
+        postprocess_fn = get_postprocess_fn()
+
+        explainer = Explainer(
+            model=model,
+            task_type=TaskType.CLASSIFICATION,
+            preprocess_fn=preprocess_fn,
+            postprocess_fn=postprocess_fn,
+            explain_mode=ExplainMode.BLACKBOX,  # defaults to AUTO
         )
 
         image = cv2.imread("tests/assets/cheetah_person.jpg")
         target_class = self.supported_num_classes[model_cfg["num_classes"]]
         explanation_parameters = ExplanationParameters(
-            explain_mode=ExplainMode.BLACKBOX,
             target_explain_group=TargetExplainGroup.CUSTOM,
-            custom_target_indices=[target_class],
-            black_box_method=XAIMethodType.RISE,
+            target_explain_indices=[target_class],
         )
-        explanation = ovxai.explain(
-            model,
+        explanation = explainer(
             image,
             explanation_parameters=explanation_parameters,
+            num_masks=2000,  # kwargs of the RISE algo
         )
 
         assert explanation is not None
@@ -300,7 +318,8 @@ class TestImageClassificationTimm:
         self.update_report("report_bb.csv", model_id, "True", "True", "True", shape_str)
 
         if dump_maps:
-            target_confidence = model(image).raw_scores[target_class]
+            model_output = explainer.model_forward(image)
+            target_confidence = get_score(model_output["logits"], target_class, activation=ActivationType.SOFTMAX)
             self.put_confidence_into_map_overlay(explanation, target_confidence, target_class)
 
             save_dir = self.data_dir / "timm_models" / "maps_bb"

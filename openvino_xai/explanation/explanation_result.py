@@ -8,47 +8,33 @@ from typing import Dict, List, Optional, Union
 import cv2
 import numpy as np
 
-import openvino.model_api as mapi
-
 from openvino_xai.common.utils import logger
-from openvino_xai.explanation.explanation_parameters import TargetExplainGroup, SELECTED_TARGETS, SaliencyMapLayout
-from openvino_xai.explanation.utils import InferenceResult, get_prediction_from_model_output, select_target_indices
+from openvino_xai.explanation.explanation_parameters import TargetExplainGroup, SaliencyMapLayout
+from openvino_xai.explanation.utils import select_target_indices
 
 
 class ExplanationResult:
     """
     ExplanationResult selects target saliency maps, holds it and its layout.
 
-    :param inference_result: Raw inference result, that includes model predictions and saliency maps.
-    :type inference_result: InferenceResult
+    :param saliency_map: Raw saliency map.
     :param target_explain_group: Defines targets to explain: all, only predictions, custom list, per-image.
     :type target_explain_group: TargetExplainGroup
-    :param custom_target_indices: List of custom targets, optional.
-    :type custom_target_indices: Optional[List[int]]
-    :param confidence_threshold: Prediction confidence threshold.
-    :type confidence_threshold:  float
-    :param explain_target_names: List of all explain_target_names.
-    :type explain_target_names: List[str]
+    :param target_explain_indices: List of custom targets, optional.
+    :type target_explain_indices: Optional[List[int]]
+    :param target_explain_names: List of all target_explain_names.
+    :type target_explain_names: List[str]
     """
 
     def __init__(
         self,
-        inference_result: Union[InferenceResult, mapi.models.ClassificationResult, mapi.models.DetectionResult],
-        target_explain_group: TargetExplainGroup = TargetExplainGroup.PREDICTIONS,
-        explain_target_names: Optional[List[str]] = None,
-        custom_target_indices: Optional[List[int]] = None,
-        confidence_threshold: float = 0.5,
+        saliency_map: np.ndarray,
+        target_explain_group: TargetExplainGroup,
+        target_explain_indices: Optional[List[int]] = None,
+        target_explain_names: Optional[List[str]] = None,
     ):
-        if not isinstance(
-            inference_result, (InferenceResult, mapi.models.ClassificationResult, mapi.models.DetectionResult)
-        ):
-            raise ValueError(
-                f"Input result has to be ether "
-                f"openvino_xai.explanation.utils.InferenceResult or "
-                f"openvino.model_api.models.ClassificationResult, but got {type(inference_result)}."
-            )
-
-        self.saliency_map = self._get_saliency_map_from_model_output(inference_result)
+        self._check_saliency_map(saliency_map)
+        self.saliency_map = self._format_sal_map_as_dict(saliency_map)
 
         if "per_image_map" in self.saliency_map:
             self.layout = SaliencyMapLayout.ONE_MAP_PER_IMAGE_GRAY
@@ -67,23 +53,10 @@ class ExplanationResult:
             self.layout = SaliencyMapLayout.MULTIPLE_MAPS_PER_IMAGE_GRAY
             self.target_explain_group = target_explain_group
 
-        self.confidence_threshold = confidence_threshold
-        if self.target_explain_group in SELECTED_TARGETS:
-            self.prediction, self.prediction_raw = get_prediction_from_model_output(
-                inference_result, self.confidence_threshold
-            )
-            self.prediction_indices = [prediction[0] for prediction in self.prediction]
-            if self.target_explain_group == TargetExplainGroup.PREDICTIONS:
-                if not self.prediction:
-                    raise ValueError(
-                        "TargetExplainGroup.PREDICTIONS requires predictions "
-                        "to be available, but currently model has no predictions. "
-                        "Try to: (1) adjust preprocessing, (2) use different input, "
-                        "(3) decrease confidence threshold, (4) retrain/re-export the model, etc."
-                    )
-            self.saliency_map = self._select_target_saliency_maps(custom_target_indices)
+        if self.target_explain_group == TargetExplainGroup.CUSTOM:
+            self.saliency_map = self._select_target_saliency_maps(target_explain_indices)
 
-        self.explain_target_names = explain_target_names
+        self.target_explain_names = target_explain_names
 
     @property
     def sal_map_shape(self):
@@ -91,20 +64,16 @@ class ExplanationResult:
         sal_map_shape = self.saliency_map[idx].shape
         return sal_map_shape
 
-    @classmethod
-    def _get_saliency_map_from_model_output(cls, inference_result: InferenceResult):
-        raw_saliency_map = inference_result.saliency_map
-        if raw_saliency_map is None:
-            raise RuntimeError("Inference result does not contain saliency_map.")
-        if not isinstance(raw_saliency_map, np.ndarray):
-            raise ValueError(f"Raw saliency_map has to be np.ndarray, but got {type(raw_saliency_map)}.")
-        if raw_saliency_map.size == 0:
-            raise RuntimeError("Inference result does not contain valid saliency_map.")
-        if raw_saliency_map.shape[0] > 1:
-            raise RuntimeError("Batch size for returned saliency maps should be 1.")
-
-        saliency_map = cls._format_sal_map_as_dict(raw_saliency_map)
-        return saliency_map
+    @staticmethod
+    def _check_saliency_map(saliency_map: np.ndarray):
+        if saliency_map is None:
+            raise RuntimeError("Saliency map is None.")
+        if not isinstance(saliency_map, np.ndarray):
+            raise ValueError(f"Raw saliency_map has to be np.ndarray, but got {type(saliency_map)}.")
+        if saliency_map.size == 0:
+            raise RuntimeError("Saliency map is zero size array.")
+        if saliency_map.shape[0] > 1:
+            raise RuntimeError("Batch size for saliency maps should be 1.")
 
     @staticmethod
     def _format_sal_map_as_dict(raw_saliency_map: np.ndarray) -> Dict[Union[int, str], np.ndarray]:
@@ -125,37 +94,28 @@ class ExplanationResult:
         return dict_sal_map
 
     def _select_target_saliency_maps(
-        self, custom_target_indices: Optional[List[int]] = None
+        self, target_explain_indices: Optional[List[int]] = None
     ) -> Dict[Union[int, str], np.ndarray]:
         assert self.layout == SaliencyMapLayout.MULTIPLE_MAPS_PER_IMAGE_GRAY
         explain_target_indexes = select_target_indices(
             self.target_explain_group,
-            self.prediction_indices,
-            custom_target_indices,
+            target_explain_indices,
             len(self.saliency_map),
         )
         saliency_maps_selected = {i: self.saliency_map[i] for i in explain_target_indexes}
         return saliency_maps_selected
 
-    def save(self, dir_path: Union[Path, str], name: Optional[str] = None, dump_score: bool = False) -> None:
+    def save(self, dir_path: Union[Path, str], name: Optional[str] = None) -> None:
         """Dumps saliency map."""
         # TODO: add unit test
         os.makedirs(dir_path, exist_ok=True)
         save_name = f"{name}_" if name else ""
-        conf = ""
         for i, (cls_idx, map_to_save) in enumerate(self.saliency_map.items()):
             if cls_idx == "per_image_map":
                 target_name = "per_image_map"
             else:
-                if self.explain_target_names:
-                    target_name = self.explain_target_names[cls_idx]
+                if self.target_explain_names:
+                    target_name = self.target_explain_names[cls_idx]
                 else:
                     target_name = cls_idx
-            if dump_score:
-                conf = self.get_pred_confidence(i)
-            cv2.imwrite(os.path.join(dir_path, f"{save_name}target_{target_name}{conf}.jpg"), img=map_to_save)
- 
-    def get_pred_confidence(self, pred_ind: int) -> str:
-        """Return prediction confidence if predictions are available. """
-        conf = self.prediction[pred_ind][1]
-        return f"_{conf:.2f}"
+            cv2.imwrite(os.path.join(dir_path, f"{save_name}target_{target_name}.jpg"), img=map_to_save)

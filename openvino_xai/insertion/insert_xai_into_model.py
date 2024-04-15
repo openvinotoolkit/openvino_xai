@@ -7,7 +7,6 @@ import openvino
 import openvino.runtime as ov
 from openvino.runtime import Type
 from openvino.preprocess import PrePostProcessor
-import openvino.model_api as mapi
 
 from openvino_xai.algorithms.white_box.create_method import (
     create_white_box_classification_explain_method,
@@ -91,38 +90,3 @@ def _set_xai_output_name_and_precision(
         ppp.output(SALIENCY_MAP_OUTPUT_NAME).tensor().set_element_type(Type.u8)
         model_xai = ppp.build()
     return model_xai
-
-
-def insert_xai_into_mapi_wrapper(
-    mapi_wrapper: mapi.models.Model,
-    insertion_parameters: Optional[InsertionParameters] = None,
-) -> mapi.models.Model:
-    """
-    Insert XAI into IR stored in Model API wrapper.
-
-    :param mapi_wrapper: Original ModelAPI wrapper.
-    :type mapi_wrapper: openvino.model_api.models.Model
-    :param insertion_parameters: Insertion parameters that parametrize white-box method,
-        that will be inserted into the model graph.
-    :type insertion_parameters: InsertionParameters
-    :return: Modified ModelAPI wrapper with XAI head.
-    """
-
-    model = mapi_wrapper.get_model()
-
-    if isinstance(mapi_wrapper, openvino.model_api.models.ClassificationModel):
-        task_type = TaskType.CLASSIFICATION
-    elif isinstance(mapi_wrapper, openvino.model_api.models.DetectionModel):
-        task_type = TaskType.DETECTION
-    else:
-        raise ValueError(f"Model type {type(mapi_wrapper)} is not supported.")
-
-    model_xai = insert_xai(model, task_type=task_type, insertion_parameters=insertion_parameters)
-
-    # Update Model API wrapper
-    mapi_wrapper.inference_adapter.model = model_xai
-    if hasattr(mapi_wrapper, "out_layer_names"):
-        mapi_wrapper.out_layer_names.append(SALIENCY_MAP_OUTPUT_NAME)
-    if mapi_wrapper.model_loaded:
-        mapi_wrapper.load(force=True)
-    return mapi_wrapper

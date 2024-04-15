@@ -54,7 +54,7 @@ class DetectionInsertionParameters(InsertionParameters):
     """
 
     target_layer: List[str]
-    num_anchors: List[int]
+    num_anchors: Optional[List[int]] = None
     saliency_map_size: Union[Tuple[int, int], List[int]] = (23, 23)
     embed_normalization: bool = True
 

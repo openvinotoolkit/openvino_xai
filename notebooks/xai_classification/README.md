@@ -17,8 +17,8 @@ The tutorial consists of the following steps:
 
 - Update IR model with XAI branch to use it in own pipelines
 - Create CustomInferrer to infer model and receive outputs 
-- Explain model with White Box Explainer (updating original IR)
-- Explain model with the Black Box explainer 
+- Explain model with White-Box Explainer (updating original IR)
+- Explain model with the Black-Box explainer 
 
 ## Installation Instructions
 

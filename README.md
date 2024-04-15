@@ -39,125 +39,69 @@ pytest -v -s ./tests/
 pre-commit run -a
 ```
 
-## Usage in white-box mode
 
-### Insertion: insert XAI branch into the model
+## Usage
+
+To explain [OpenVINO™](https://github.com/openvinotoolkit/openvino) Intermediate Representation (IR) you only need 
+preprocessing function (and sometimes postprocessing).
 
 ```python
+explainer = Explainer(
+    model,
+    task_type=TaskType.CLASSIFICATION,
+    preprocess_fn=preprocess_fn,
+)
+explanation = explainer(data, explanation_parameters)
+```
+
+By default the model will be explained using `auto mode`.
+Under the hood of the `auto mode`: will try to run `white-box mode`, if fails => will run `black-box mode`.
+
+Generating saliency maps involves model inference. Explainer will perform model inference.
+To infer, `preprocess_fn` and `postprocess_fn` are requested from the user. 
+`preprocess_fn` is always required, `postprocess_fn` is required only for black-box.
+
+```python
+import cv2
+import numpy as np
 import openvino.runtime as ov
-import openvino_xai as ovxai
+
 from openvino_xai.common.parameters import TaskType
-
-# Creating original model
-model: ov.Model
-model = ov.Core().read_model("path/to/model.xml")
-
-# Inserting XAI branch into the model graph
-model_xai: ov.Model
-model_xai = ovxai.insert_xai(model, task_type=TaskType.CLASSIFICATION)
-
-# ***** Downstream task: user's code that infers model_xai and picks 'saliency_map' output *****
-```
-
-### Explanation: generate explanation via inference
-
-#### Get raw saliency maps: use original model inference pipeline
-
-```python
-# Compile model with XAI branch
-compiled_model = ov.Core().compile_model(model_xai, "CPU")
-
-# User's code that creates a callable model_inferrer
-def model_inferrer(image: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-    # Custom inference pipeline
-    image_processed = preprocess(image)
-    result = compiled_model([image_processed])
-    logits = postprocess(result["logits"])
-    raw_saliency_map = result["saliency_map"]  # "saliency_map" is an additional model output added during insertion
-    return logits, raw_saliency_map
-
-# Get raw saliency map via model_inferrer call
-logits, raw_saliency_map = model_inferrer(cv2.imread("path/to/image.jpg"))
-raw_saliency_map: np.ndarray  # e.g. 20x7x7 uint8 array
-```
-
-#### Get processed saliency maps: 1. modify output format of the original model inference pipeline and 2. call .explain()
-
-```python
-from openvino_xai.explanation.utils import InferenceResult
+from openvino_xai.explanation.explainers import Explainer
 from openvino_xai.explanation.explanation_parameters import ExplanationParameters
-from openvino_xai.explanation.explanation_parameters import PostProcessParameters
 
 
-# Compile model with XAI branch
-compiled_model = ov.Core().compile_model(model_xai, "CPU")
+def preprocess_fn(x: np.ndarray) -> np.ndarray:
+    # Implementing own pre-process function based on model's implementation
+    x = cv2.resize(src=x, dsize=(224, 224))
+    x = np.expand_dims(x, 0)
+    return x
 
-# User's code that creates a callable model_inferrer with InferenceResult output
-def model_inferrer(image: np.ndarray) -> InferenceResult:
-    # Custom inference pipeline
-    image_processed = preprocess(image)
-    result = compiled_model([image_processed])
-    logits = postprocess(result["logits"])
-    raw_saliency_map = result["saliency_map"]  # "saliency_map" is an additional output added during insertion
+# Creating model
+model = ov.Core().read_model("path/to/model.xml")  # type: ov.Model
 
-    # Create InferenceResult object
-    inference_result = InferenceResult(prediction=logits, saliency_map=raw_saliency_map)
-    return inference_result
+# Explainer object will prepare and load the model once in the beginning
+explainer = Explainer(
+    model,
+    task_type=TaskType.CLASSIFICATION,
+    preprocess_fn=preprocess_fn,
+)
 
-# Create explanation parameters, default parameter values are highlighted below
+# Generate and process saliency maps (as many as required, sequentially)
+image = cv2.imread("path/to/image.jpg")
 explanation_parameters = ExplanationParameters(
-    explain_mode=ExplainMode.WHITEBOX,  # by default, run white-box XAI
-    target_explain_group=TargetExplainGroup.PREDICTIONS,  # by default, explains only predicted classes
-    post_processing_parameters=PostProcessParameters(overlay=True),  # by default, saliency map overlays over image
+    target_explain_indices=[11, 14],  # indices of classes to explain
 )
-# Generate processed saliency map via .explain(model_inferrer, image) call
-explanation = ovxai.explain(
-    model_inferrer=model_inferrer,
-    data=cv2.imread("path/to/image.jpg"),
-    explanation_parameters=explanation_parameters,
-)
-explanation: ExplanationResult
-explanation.saliency_map: Dict[int: np.ndarray]  # key - class id, value - processed saliency map e.g. 3x354x500
-```
+explanation = explainer(image, explanation_parameters)
 
-## Usage in black-box mode
-
-### Explanation: generate explanation
-
-```python
-# Create original model
-model: ov.Model
-model = ov.Core().read_model("path/to/model.xml")
-
-# Compile original model (no XAI branch inserted)
-compiled_model = ov.Core().compile_model(model, "CPU")
-
-# User's code that creates a callable model_inferrer
-def model_inferrer(image: np.ndarray) -> InferenceResult:
-    # Custom inference pipeline
-    image_processed = preprocess(image)
-    result = compiled_model([image_processed])
-    logits = postprocess(result["logits"])
-
-    # Create InferenceResult object, w/o saliency map.
-    # Saliency map can be available in InferenceResult, but will be ignored when explain_mode=ExplainMode.BLACKBOX
-    inference_result = InferenceResult(prediction=logits, saliency_map=None)
-    return inference_result
-
-# Generate explanation
-explanation_parameters = ExplanationParameters(
-    explain_mode=ExplainMode.BLACKBOX,  # Black-box XAI method will be used under .explain() call
-)
-explanation = ovxai.explain(
-    model_inferrer=model_inferrer,
-    data=cv2.imread("path/to/image.jpg"),
-    explanation_parameters=explanation_parameters,
-)
 explanation: ExplanationResult
 explanation.saliency_map: Dict[int: np.ndarray]  # key - class id, value - processed saliency map e.g. 354x500x3
+
+# Saving saliency maps
+explanation.save("output_path", "name")
 ```
 
-See more usage scenarios in [examples](./examples).
+See more usage scenarios in [Usage.md](.docs/Usage.md) and [examples](./examples).
 
 #### Running example scripts
 

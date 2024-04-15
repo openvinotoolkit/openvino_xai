@@ -10,10 +10,7 @@ from openvino_xai.explanation.explanation_parameters import (
     PostProcessParameters,
 )
 
-from openvino_xai.explanation.explain_model import explain
-
 __all__ = [
-    "explain",
     "ExplanationParameters",
     "ExplainMode",
     "TargetExplainGroup",
