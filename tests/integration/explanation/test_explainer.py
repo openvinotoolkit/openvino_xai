@@ -58,8 +58,8 @@ class TestExplainer:
                   'dog', 'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor']
         explanation_parameters = ExplanationParameters(
             target_explain_group=target_explain_group,
-            target_explain_indices=[11, 14],
-            target_explain_names=voc_labels,  # optional
+            target_explain_labels=[11, 14],
+            label_names=voc_labels,  # optional
         )
         explanation = explainer(self.image, explanation_parameters, num_masks=10)
 

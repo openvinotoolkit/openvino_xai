@@ -64,7 +64,7 @@ explainer = Explainer(
 # Generate and process saliency maps (as many as required, sequentially)
 image = cv2.imread("path/to/image.jpg")
 explanation_parameters = ExplanationParameters(
-    target_explain_indices=[11, 14],  # indices of classes to explain
+    target_explain_labels=[11, 14],  # indices of classes to explain
 )
 explanation = explainer(image, explanation_parameters)
 
@@ -121,8 +121,8 @@ voc_labels = ['aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car', 'c
           'dog', 'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor']
 explanation_parameters = ExplanationParameters(
     target_explain_group=TargetExplainGroup.CUSTOM,
-    target_explain_indices=[11, 14],  # indices of classes to explain
-    target_explain_names=voc_labels,
+    target_explain_labels=[11, 14],  # target classes to explain, also ['dog', 'person'] possible
+    label_names=voc_labels,
     post_processing_parameters=PostProcessParameters(overlay=True),  # by default, saliency map overlay over image
 )
 explanation = explainer(image, explanation_parameters)
@@ -177,7 +177,7 @@ explainer = Explainer(
 # Generate and process saliency maps (as many as required, sequentially)
 image = cv2.imread("path/to/image.jpg")
 explanation_parameters = ExplanationParameters(
-    target_explain_indices=[11, 14],  # indices of classes to explain
+    target_explain_labels=[11, 14],  # indices of classes to explain
 )
 explanation = explainer(
     image, 

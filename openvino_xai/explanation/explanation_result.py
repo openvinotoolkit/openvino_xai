@@ -10,7 +10,7 @@ import numpy as np
 
 from openvino_xai.common.utils import logger
 from openvino_xai.explanation.explanation_parameters import TargetExplainGroup, SaliencyMapLayout
-from openvino_xai.explanation.utils import select_target_indices
+from openvino_xai.explanation.utils import get_explain_target_indices
 
 
 class ExplanationResult:
@@ -20,18 +20,19 @@ class ExplanationResult:
     :param saliency_map: Raw saliency map.
     :param target_explain_group: Defines targets to explain: all, only predictions, custom list, per-image.
     :type target_explain_group: TargetExplainGroup
-    :param target_explain_indices: List of custom targets, optional.
-    :type target_explain_indices: Optional[List[int]]
-    :param target_explain_names: List of all target_explain_names.
-    :type target_explain_names: List[str]
+    :param target_explain_labels: List of custom labels to explain, optional. Can be list of integer indices (int),
+        or list of names (str) from label_names.
+    :type target_explain_labels: Optional[List[Union[int, str]]]
+    :param label_names: List of all label names.
+    :type label_names: List[str]
     """
 
     def __init__(
         self,
         saliency_map: np.ndarray,
         target_explain_group: TargetExplainGroup,
-        target_explain_indices: Optional[List[int]] = None,
-        target_explain_names: Optional[List[str]] = None,
+        target_explain_labels: Optional[List[Union[int, str]]] = None,
+        label_names: Optional[List[str]] = None,
     ):
         self._check_saliency_map(saliency_map)
         self.saliency_map = self._format_sal_map_as_dict(saliency_map)
@@ -54,9 +55,9 @@ class ExplanationResult:
             self.target_explain_group = target_explain_group
 
         if self.target_explain_group == TargetExplainGroup.CUSTOM:
-            self.saliency_map = self._select_target_saliency_maps(target_explain_indices)
+            self.saliency_map = self._select_target_saliency_maps(target_explain_labels, label_names)
 
-        self.target_explain_names = target_explain_names
+        self.label_names = label_names
 
     @property
     def sal_map_shape(self):
@@ -94,16 +95,37 @@ class ExplanationResult:
         return dict_sal_map
 
     def _select_target_saliency_maps(
-        self, target_explain_indices: Optional[List[int]] = None
+            self,
+            target_explain_labels: Optional[List[Union[int, str]]] = None,
+            label_names: Optional[List[str]] = None,
     ) -> Dict[Union[int, str], np.ndarray]:
         assert self.layout == SaliencyMapLayout.MULTIPLE_MAPS_PER_IMAGE_GRAY
-        explain_target_indexes = select_target_indices(
+        explain_target_indices = self._select_target_indices(
             self.target_explain_group,
-            target_explain_indices,
+            target_explain_labels,
+            label_names,
             len(self.saliency_map),
         )
-        saliency_maps_selected = {i: self.saliency_map[i] for i in explain_target_indexes}
+        saliency_maps_selected = {i: self.saliency_map[i] for i in explain_target_indices}
         return saliency_maps_selected
+
+    @staticmethod
+    def _select_target_indices(
+            target_explain_group: TargetExplainGroup,
+            target_explain_labels: Optional[List[Union[int, str]]] = None,
+            label_names: Optional[List[str]] = None,
+            total_num_targets: Optional[int] = None,
+    ) -> Union[List[int], np.ndarray]:
+        explain_target_indices = get_explain_target_indices(target_explain_labels, label_names)
+
+        if target_explain_labels is None:
+            raise ValueError(f"Explain labels has to be provided for {target_explain_group}.")
+        if not total_num_targets:
+            raise ValueError("total_num_targets has to be provided.")
+        if not all(0 <= target_index <= (total_num_targets - 1) for target_index in explain_target_indices):
+            raise ValueError(f"All targets explanation indices have to be in range 0..{total_num_targets - 1}.")
+        return explain_target_indices
+
 
     def save(self, dir_path: Union[Path, str], name: Optional[str] = None) -> None:
         """Dumps saliency map."""
@@ -114,8 +136,8 @@ class ExplanationResult:
             if cls_idx == "per_image_map":
                 target_name = "per_image_map"
             else:
-                if self.target_explain_names:
-                    target_name = self.target_explain_names[cls_idx]
+                if self.label_names:
+                    target_name = self.label_names[cls_idx]
                 else:
                     target_name = cls_idx
             cv2.imwrite(os.path.join(dir_path, f"{save_name}target_{target_name}.jpg"), img=map_to_save)

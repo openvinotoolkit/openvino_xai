@@ -57,7 +57,7 @@ class TestPostProcessor:
             target_explain_group = TargetExplainGroup.IMAGE
             explain_targets = None
         saliency_map_obj = ExplanationResult(
-            saliency_maps, target_explain_group=target_explain_group, target_explain_indices=explain_targets
+            saliency_maps, target_explain_group=target_explain_group, target_explain_labels=explain_targets
         )
 
         raw_sal_map_dims = len(saliency_map_obj.sal_map_shape)

@@ -79,7 +79,7 @@ def main(argv):
     image = cv2.imread(args.image_path)
     explanation_parameters = ExplanationParameters(
         target_explain_group=TargetExplainGroup.CUSTOM,  # CUSTOM list of classes to explain, also ALL possible
-        target_explain_indices=[0, 1, 2, 3, 4],  # target classes to explain
+        target_explain_labels=[0, 1, 2, 3, 4],  # target classes to explain
     )
 
     # Generate explanation

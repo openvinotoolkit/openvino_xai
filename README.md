@@ -90,7 +90,7 @@ explainer = Explainer(
 # Generate and process saliency maps (as many as required, sequentially)
 image = cv2.imread("path/to/image.jpg")
 explanation_parameters = ExplanationParameters(
-    target_explain_indices=[11, 14],  # indices of classes to explain
+    target_explain_labels=[11, 14],  # indices of classes to explain
 )
 explanation = explainer(image, explanation_parameters)
 

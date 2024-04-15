@@ -60,7 +60,7 @@ def explain_auto(args):
     image = cv2.imread(args.image_path)
     explanation_parameters = ExplanationParameters(
         target_explain_group=TargetExplainGroup.CUSTOM,  # CUSTOM list of classes to explain, also ALL possible
-        target_explain_indices=[11, 14],  # target classes to explain
+        target_explain_labels=[11, 14],  # target classes to explain
     )
 
     # Generate explanation
@@ -111,8 +111,8 @@ def explain_white_box(args):
               'dog', 'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor']
     explanation_parameters = ExplanationParameters(
         target_explain_group=TargetExplainGroup.CUSTOM,  # CUSTOM list of classes to explain, also ALL possible
-        target_explain_indices=[11, 14],  # target classes to explain
-        target_explain_names=voc_labels,  # optional names
+        target_explain_labels=[11, 14],  # target classes to explain, also ['dog', 'person'] possible
+        label_names=voc_labels,  # optional names
     )
 
     # Generate explanation
@@ -154,8 +154,8 @@ def explain_black_box(args):
               'dog', 'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor']
     explanation_parameters = ExplanationParameters(
         target_explain_group=TargetExplainGroup.CUSTOM,  # CUSTOM list of classes to explain, also ALL possible
-        target_explain_indices=[11, 14],  # target classes to explain
-        target_explain_names=voc_labels,  # optional names
+        target_explain_labels=['dog', 'person'],  # target classes to explain, also [11, 14] possible
+        label_names=voc_labels,  # optional names
     )
 
     # Generate explanation
@@ -194,7 +194,7 @@ def explain_white_box_multiple_images(args):
 
     explanation_parameters = ExplanationParameters(
         target_explain_group=TargetExplainGroup.CUSTOM,  # CUSTOM list of classes to explain, also ALL possible
-        target_explain_indices=[14],  # target classes to explain
+        target_explain_labels=[14],  # target classes to explain
     )
 
     # Create list of images
@@ -251,7 +251,7 @@ def explain_white_box_vit(args):
     image = cv2.imread(args.image_path)
     explanation_parameters = ExplanationParameters(
         target_explain_group=TargetExplainGroup.CUSTOM,  # CUSTOM list of classes to explain, also ALL possible
-        target_explain_indices=[0, 1, 2, 3, 4],  # target classes to explain
+        target_explain_labels=[0, 1, 2, 3, 4],  # target classes to explain
     )
 
     # Generate explanation

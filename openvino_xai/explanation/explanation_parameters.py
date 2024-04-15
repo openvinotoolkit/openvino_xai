@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional, List
+from typing import Optional, List, Union
 
 from openvino_xai.common.parameters import XAIMethodType
 
@@ -70,8 +70,11 @@ class ExplanationParameters:
 
     :parameter target_explain_group: Target explain group.
     :type target_explain_group: TargetExplainGroup
-    :param target_explain_indices: List of indices of custom targets, optional.
-    :type target_explain_indices: Optional[List[int]]
+    :param target_explain_labels: List of custom labels to explain, optional. Can be list of integer indices (int),
+        or list of names (str) from label_names.
+    :type target_explain_labels: Optional[List[Union[int, str]]]
+    :param label_names: List of all label names.
+    :type label_names: Optional[List[str]]
     :parameter post_processing_parameters: Post-process parameters.
     :type post_processing_parameters: PostProcessParameters
     :param black_box_method: Defines black-box method type.
@@ -79,8 +82,8 @@ class ExplanationParameters:
     """
 
     target_explain_group: TargetExplainGroup = TargetExplainGroup.CUSTOM
-    target_explain_indices: Optional[List[int]] = None
-    target_explain_names: Optional[List[str]] = None
+    target_explain_labels: Optional[List[Union[int, str]]] = None
+    label_names: Optional[List[str]] = None
     post_processing_parameters: PostProcessParameters = PostProcessParameters(overlay=True)
     black_box_method: XAIMethodType = XAIMethodType.RISE
 

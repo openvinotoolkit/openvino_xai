@@ -205,7 +205,7 @@ class TestImageClassificationTimm:
         target_class = self.supported_num_classes[model_cfg["num_classes"]]
         explanation_parameters = ExplanationParameters(
             target_explain_group=TargetExplainGroup.CUSTOM,
-            target_explain_indices=[target_class],
+            target_explain_labels=[target_class],
             post_processing_parameters=PostProcessParameters(),
         )
         image = cv2.imread("tests/assets/cheetah_person.jpg")
@@ -301,7 +301,7 @@ class TestImageClassificationTimm:
         target_class = self.supported_num_classes[model_cfg["num_classes"]]
         explanation_parameters = ExplanationParameters(
             target_explain_group=TargetExplainGroup.CUSTOM,
-            target_explain_indices=[target_class],
+            target_explain_labels=[target_class],
         )
         explanation = explainer(
             image,

@@ -114,7 +114,7 @@ class TestDetWB:
         target_class_list = [1] if target_explain_group == TargetExplainGroup.CUSTOM else None
         explanation_parameters = ExplanationParameters(
             target_explain_group=target_explain_group,
-            target_explain_indices=target_class_list,
+            target_explain_labels=target_class_list,
             # w/o postrocessing
             post_processing_parameters=PostProcessParameters(),
         )
@@ -161,7 +161,7 @@ class TestDetWB:
 
         explanation_parameters = ExplanationParameters(
             target_explain_group=target_explain_group,
-            target_explain_indices=target_class_list,
+            target_explain_labels=target_class_list,
             post_processing_parameters=post_processing_parameters,
         )
         explanation = explainer(self.image, explanation_parameters)

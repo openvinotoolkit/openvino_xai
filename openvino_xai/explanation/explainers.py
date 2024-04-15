@@ -117,8 +117,8 @@ class Explainer:
         explanation_result = ExplanationResult(
             saliency_map,
             explanation_parameters.target_explain_group,
-            explanation_parameters.target_explain_indices,
-            explanation_parameters.target_explain_names,
+            explanation_parameters.target_explain_labels,
+            explanation_parameters.label_names,
         )
         explanation_result = PostProcessor(
             explanation_result,
