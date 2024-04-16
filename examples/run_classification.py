@@ -111,7 +111,7 @@ def explain_white_box(args):
               'dog', 'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor']
     explanation_parameters = ExplanationParameters(
         target_explain_group=TargetExplainGroup.CUSTOM,  # CUSTOM list of classes to explain, also ALL possible
-        target_explain_labels=[11, 14],  # target classes to explain, also ['dog', 'person'] possible
+        target_explain_labels=[11, 14],  # target classes to explain, also ['dog', 'person'] is a valid input
         label_names=voc_labels,  # optional names
     )
 
