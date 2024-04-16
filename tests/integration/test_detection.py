@@ -14,7 +14,7 @@ import openvino.runtime as ov
 from openvino_xai.algorithms.white_box.create_method import create_white_box_detection_explain_method
 from openvino_xai.algorithms.white_box.white_box_methods import DetClassProbabilityMapXAIMethod
 from openvino_xai.common.parameters import XAIMethodType, TaskType
-from openvino_xai.explanation.explainers import Explainer
+from openvino_xai.explanation.explainer import Explainer
 from openvino_xai.explanation.explanation_parameters import (
     PostProcessParameters,
     TargetExplainGroup,
@@ -114,7 +114,7 @@ class TestDetWB:
         target_class_list = [1] if target_explain_group == TargetExplainGroup.CUSTOM else None
         explanation_parameters = ExplanationParameters(
             target_explain_group=target_explain_group,
-            target_explain_indices=target_class_list,
+            target_explain_labels=target_class_list,
             # w/o postrocessing
             post_processing_parameters=PostProcessParameters(),
         )
@@ -161,7 +161,7 @@ class TestDetWB:
 
         explanation_parameters = ExplanationParameters(
             target_explain_group=target_explain_group,
-            target_explain_indices=target_class_list,
+            target_explain_labels=target_class_list,
             post_processing_parameters=post_processing_parameters,
         )
         explanation = explainer(self.image, explanation_parameters)

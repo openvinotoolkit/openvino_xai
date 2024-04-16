@@ -41,7 +41,7 @@ import numpy as np
 import openvino.runtime as ov
 
 from openvino_xai.common.parameters import TaskType
-from openvino_xai.explanation.explainers import Explainer
+from openvino_xai.explanation.explainer import Explainer
 from openvino_xai.explanation.explanation_parameters import ExplanationParameters
 
 
@@ -50,6 +50,7 @@ def preprocess_fn(x: np.ndarray) -> np.ndarray:
     x = cv2.resize(src=x, dsize=(224, 224))
     x = np.expand_dims(x, 0)
     return x
+
 
 # Creating model
 model = ov.Core().read_model("path/to/model.xml")  # type: ov.Model
@@ -64,7 +65,7 @@ explainer = Explainer(
 # Generate and process saliency maps (as many as required, sequentially)
 image = cv2.imread("path/to/image.jpg")
 explanation_parameters = ExplanationParameters(
-    target_explain_indices=[11, 14],  # indices of classes to explain
+    target_explain_labels=[11, 14],  # indices or string labels to explain
 )
 explanation = explainer(image, explanation_parameters)
 
@@ -79,14 +80,16 @@ White-box mode is a two-step process that includes OV model update and further i
 Updated model has additional XAI branch inserted. XAI branch generates saliency maps during model inference. Saliency maps extend the list of model outputs, i.e. saliency maps are generated along with the original model outputs. Depending on the white-box algorithm, computational overhead of inserted XAI branch may vary, but it is usually relatively modest.
 
 `preprocess_fn` is required to be provided by the user for the white-box mode.
+
 ```python
 import cv2
 import numpy as np
 import openvino.runtime as ov
 
 from openvino_xai.common.parameters import TaskType, XAIMethodType
-from openvino_xai.explanation.explainers import Explainer
-from openvino_xai.explanation.explanation_parameters import ExplainMode, ExplanationParameters, TargetExplainGroup, PostProcessParameters
+from openvino_xai.explanation.explainer import Explainer
+from openvino_xai.explanation.explanation_parameters import ExplainMode, ExplanationParameters, TargetExplainGroup,
+    PostProcessParameters
 from openvino_xai.insertion.insertion_parameters import ClassificationInsertionParameters
 
 
@@ -95,6 +98,7 @@ def preprocess_fn(x: np.ndarray) -> np.ndarray:
     x = cv2.resize(src=x, dsize=(224, 224))
     x = np.expand_dims(x, 0)
     return x
+
 
 # Creating model
 model = ov.Core().read_model("path/to/model.xml")  # type: ov.Model
@@ -118,11 +122,11 @@ explainer = Explainer(
 # Generate and process saliency maps (as many as required, sequentially)
 image = cv2.imread("path/to/image.jpg")
 voc_labels = ['aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car', 'cat', 'chair', 'cow', 'diningtable',
-          'dog', 'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor']
+              'dog', 'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor']
 explanation_parameters = ExplanationParameters(
     target_explain_group=TargetExplainGroup.CUSTOM,
-    target_explain_indices=[11, 14],  # indices of classes to explain
-    target_explain_names=voc_labels,
+    target_explain_labels=[11, 14],  # target classes to explain, also ['dog', 'person'] is a valid input
+    label_names=voc_labels,
     post_processing_parameters=PostProcessParameters(overlay=True),  # by default, saliency map overlay over image
 )
 explanation = explainer(image, explanation_parameters)
@@ -147,7 +151,7 @@ import numpy as np
 import openvino.runtime as ov
 
 from openvino_xai.common.parameters import TaskType
-from openvino_xai.explanation.explainers import Explainer
+from openvino_xai.explanation.explainer import Explainer
 from openvino_xai.explanation.explanation_parameters import ExplainMode, ExplanationParameters
 
 
@@ -157,10 +161,12 @@ def preprocess_fn(x: np.ndarray) -> np.ndarray:
     x = np.expand_dims(x, 0)
     return x
 
+
 def postprocess_fn(x: ov.utils.data_helpers.wrappers.OVDict):
     # Implementing own post-process function based on model's implementation
     # Output logits
     return x["logits"]
+
 
 # Creating model
 model = ov.Core().read_model("path/to/model.xml")  # type: ov.Model
@@ -177,10 +183,10 @@ explainer = Explainer(
 # Generate and process saliency maps (as many as required, sequentially)
 image = cv2.imread("path/to/image.jpg")
 explanation_parameters = ExplanationParameters(
-    target_explain_indices=[11, 14],  # indices of classes to explain
+    target_explain_labels=[11, 14],  # indices or string labels to explain
 )
 explanation = explainer(
-    image, 
+    image,
     explanation_parameters,
     num_masks=1000,  # kwargs of the RISE algo
 )

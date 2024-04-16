@@ -67,7 +67,7 @@ import numpy as np
 import openvino.runtime as ov
 
 from openvino_xai.common.parameters import TaskType
-from openvino_xai.explanation.explainers import Explainer
+from openvino_xai.explanation.explainer import Explainer
 from openvino_xai.explanation.explanation_parameters import ExplanationParameters
 
 
@@ -76,6 +76,7 @@ def preprocess_fn(x: np.ndarray) -> np.ndarray:
     x = cv2.resize(src=x, dsize=(224, 224))
     x = np.expand_dims(x, 0)
     return x
+
 
 # Creating model
 model = ov.Core().read_model("path/to/model.xml")  # type: ov.Model
@@ -90,7 +91,7 @@ explainer = Explainer(
 # Generate and process saliency maps (as many as required, sequentially)
 image = cv2.imread("path/to/image.jpg")
 explanation_parameters = ExplanationParameters(
-    target_explain_indices=[11, 14],  # indices of classes to explain
+    target_explain_labels=[11, 14],  # indices or string labels to explain
 )
 explanation = explainer(image, explanation_parameters)
 

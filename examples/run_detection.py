@@ -11,7 +11,7 @@ import openvino.runtime as ov
 
 from openvino_xai.common.parameters import TaskType, XAIMethodType
 from openvino_xai.explanation.explanation_parameters import ExplainMode, TargetExplainGroup, ExplanationParameters
-from openvino_xai.explanation.explainers import Explainer
+from openvino_xai.explanation.explainer import Explainer
 from openvino_xai.insertion.insertion_parameters import DetectionInsertionParameters
 from openvino_xai.common.utils import logger
 
@@ -79,7 +79,7 @@ def main(argv):
     image = cv2.imread(args.image_path)
     explanation_parameters = ExplanationParameters(
         target_explain_group=TargetExplainGroup.CUSTOM,  # CUSTOM list of classes to explain, also ALL possible
-        target_explain_indices=[0, 1, 2, 3, 4],  # target classes to explain
+        target_explain_labels=[0, 1, 2, 3, 4],  # target classes to explain
     )
 
     # Generate explanation

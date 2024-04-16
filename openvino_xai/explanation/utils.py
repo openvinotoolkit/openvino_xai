@@ -8,35 +8,39 @@ import cv2
 import numpy as np
 import openvino.runtime as ov
 
-from openvino_xai.explanation.explanation_parameters import TargetExplainGroup
 
-
-def select_target_indices(
-    target_explain_group: TargetExplainGroup,
-    explain_target_indices: Optional[Union[List[int], np.ndarray]] = None,
-    total_num_targets: Optional[int] = None,
-) -> Union[List[int], np.ndarray]:
+def get_explain_target_indices(
+        target_explain_labels: Optional[List[Union[int, str]]],
+        label_names: Optional[List[str]] = None,
+) -> List[int]:
     """
-    Selects target indices.
+    Returns indices to be explained.
 
-    :param target_explain_group: Target explain group.
-    :type target_explain_group: TargetExplainGroup
-    :param explain_target_indices: Target explain indices.
-    :type explain_target_indices: Optional[Union[list, np.ndarray]]
-    :param total_num_targets: Total number of targets.
-    :type total_num_targets: Optional[int]
+    :param target_explain_labels: List of custom labels to explain, optional. Can be list of integer indices (int),
+        or list of names (str) from label_names.
+    :type target_explain_labels: Optional[List[Union[int, str]]]
+    :param label_names: List of all label names.
+    :type label_names: Optional[List[str]]
     """
+    if isinstance(target_explain_labels[0], int):
+        return target_explain_labels
 
-    if target_explain_group == TargetExplainGroup.CUSTOM:
-        if explain_target_indices is None:
-            raise ValueError(f"Explain targets has to be provided for {target_explain_group}.")
-        if not total_num_targets:
-            raise ValueError("total_num_targets has to be provided.")
-        if not all(0 <= target_index <= (total_num_targets - 1) for target_index in explain_target_indices):
-            raise ValueError(f"All targets explanation indices have to be in range 0..{total_num_targets - 1}.")
-        return explain_target_indices
+    if not isinstance(target_explain_labels[0], str):
+        raise ValueError(f"Explain labels expected to be int or str, but got {type(target_explain_labels[0])}")
 
-    raise ValueError(f"Unsupported target_explain_group: {target_explain_group}")
+    if not label_names:
+        raise ValueError(f"Label names should be provided when target_explain_labels contain string names.")
+
+    # Assuming len(target_explain_labels) << len(label_names)
+    target_explain_indices = []
+    for label_index, label in enumerate(label_names):
+        if label in target_explain_labels:
+            target_explain_indices.append(label_index)
+
+    if len(target_explain_labels) != len(target_explain_indices):
+        raise ValueError("No all label names found in label_names. Check spelling.")
+
+    return target_explain_indices
 
 
 def preprocess_fn(

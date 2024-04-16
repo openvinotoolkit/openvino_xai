@@ -11,7 +11,7 @@ import openvino.runtime as ov
 
 import openvino_xai as ovxai
 from openvino_xai.common.utils import retrieve_otx_model, has_xai
-from openvino_xai.explanation.explainers import Explainer
+from openvino_xai.explanation.explainer import Explainer
 from openvino_xai.explanation.explanation_parameters import (
     PostProcessParameters,
     TargetExplainGroup,
@@ -128,7 +128,7 @@ class TestClsWB:
             target_class = 1
             explanation_parameters = ExplanationParameters(
                 target_explain_group=target_explain_group,
-                target_explain_indices=[target_class],
+                target_explain_labels=[target_class],
                 post_processing_parameters=PostProcessParameters(),
             )
             explanation = explainer(self.image, explanation_parameters)
@@ -186,7 +186,7 @@ class TestClsWB:
             target_class = 1
             explanation_parameters = ExplanationParameters(
                 target_explain_group=target_explain_group,
-                target_explain_indices=[target_class],
+                target_explain_labels=[target_class],
                 post_processing_parameters=PostProcessParameters(),
             )
             explanation = explainer(self.image, explanation_parameters)
@@ -256,7 +256,7 @@ class TestClsWB:
 
         explanation_parameters = ExplanationParameters(
             target_explain_group=target_explain_group,
-            target_explain_indices=explain_targets,
+            target_explain_labels=explain_targets,
             post_processing_parameters=post_processing_parameters,
         )
         explanation = explainer(self.image, explanation_parameters)
@@ -346,7 +346,7 @@ class TestClsBB:
             explanation_parameters = ExplanationParameters(
                 post_processing_parameters=post_processing_parameters,
                 target_explain_group=target_explain_group,
-                target_explain_indices=[target_class],
+                target_explain_labels=[target_class],
             )
 
             explanation = explainer(
@@ -411,7 +411,7 @@ class TestClsBB:
         )
         explanation_parameters = ExplanationParameters(
             post_processing_parameters=PostProcessParameters(overlay=False),
-            target_explain_indices=[0],
+            target_explain_labels=[0],
         )
         explanation = explainer(
             self.image,

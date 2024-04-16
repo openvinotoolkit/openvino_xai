@@ -10,7 +10,7 @@ import cv2
 from openvino_xai.common.parameters import TaskType
 from openvino_xai.common.utils import retrieve_otx_model
 from openvino_xai.explanation import ExplanationParameters, TargetExplainGroup, ExplainMode
-from openvino_xai.explanation.explainers import Explainer
+from openvino_xai.explanation.explainer import Explainer
 from openvino_xai.explanation.utils import get_preprocess_fn, get_postprocess_fn
 from openvino_xai.insertion import ClassificationInsertionParameters
 
@@ -58,8 +58,8 @@ class TestExplainer:
                   'dog', 'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor']
         explanation_parameters = ExplanationParameters(
             target_explain_group=target_explain_group,
-            target_explain_indices=[11, 14],
-            target_explain_names=voc_labels,  # optional
+            target_explain_labels=[11, 14],
+            label_names=voc_labels,  # optional
         )
         explanation = explainer(self.image, explanation_parameters, num_masks=10)
 
