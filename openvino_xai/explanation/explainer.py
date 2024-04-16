@@ -1,21 +1,22 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
 from typing import Callable, Optional
 
 import numpy as np
+
+import openvino.runtime as ov
 
 import openvino_xai
 from openvino_xai.algorithms.black_box.black_box_methods import RISE
 from openvino_xai.common.parameters import TaskType
 from openvino_xai.common.utils import has_xai
 from openvino_xai.common.utils import logger, SALIENCY_MAP_OUTPUT_NAME
-from openvino_xai.explanation.explanation_parameters import ExplanationParameters
+from openvino_xai.explanation.explanation_parameters import ExplanationParameters, TargetExplainGroup
 from openvino_xai.explanation.explanation_result import ExplanationResult
 from openvino_xai.explanation.post_process import PostProcessor
 from openvino_xai.explanation.explanation_parameters import ExplainMode
-
-import openvino.runtime as ov
-
+from openvino_xai.explanation.utils import get_explain_target_indices
 from openvino_xai.insertion import InsertionParameters
 
 
@@ -142,13 +143,19 @@ class Explainer:
             explanation_parameters: ExplanationParameters,
             **kwargs,
     ) -> np.ndarray:
+        explain_target_indices = None
+        if explanation_parameters.target_explain_group == TargetExplainGroup.CUSTOM:
+            explain_target_indices = get_explain_target_indices(
+                explanation_parameters.target_explain_labels,
+                explanation_parameters.label_names,
+            )
         if self.task_type == TaskType.CLASSIFICATION:
             saliency_map = RISE.run(
                 self.compiled_model,
                 self.preprocess_fn,
                 self.postprocess_fn,
                 data,
-                explanation_parameters,
+                explain_target_indices,
                 **kwargs,
             )
             return saliency_map

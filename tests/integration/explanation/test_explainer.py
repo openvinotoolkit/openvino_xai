@@ -10,7 +10,7 @@ import cv2
 from openvino_xai.common.parameters import TaskType
 from openvino_xai.common.utils import retrieve_otx_model
 from openvino_xai.explanation import ExplanationParameters, TargetExplainGroup, ExplainMode
-from openvino_xai.explanation.explainers import Explainer
+from openvino_xai.explanation.explainer import Explainer
 from openvino_xai.explanation.utils import get_preprocess_fn, get_postprocess_fn
 from openvino_xai.insertion import ClassificationInsertionParameters
 

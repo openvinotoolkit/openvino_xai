@@ -67,7 +67,7 @@ import numpy as np
 import openvino.runtime as ov
 
 from openvino_xai.common.parameters import TaskType
-from openvino_xai.explanation.explainers import Explainer
+from openvino_xai.explanation.explainer import Explainer
 from openvino_xai.explanation.explanation_parameters import ExplanationParameters
 
 
@@ -76,6 +76,7 @@ def preprocess_fn(x: np.ndarray) -> np.ndarray:
     x = cv2.resize(src=x, dsize=(224, 224))
     x = np.expand_dims(x, 0)
     return x
+
 
 # Creating model
 model = ov.Core().read_model("path/to/model.xml")  # type: ov.Model

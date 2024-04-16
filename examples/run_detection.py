@@ -11,7 +11,7 @@ import openvino.runtime as ov
 
 from openvino_xai.common.parameters import TaskType, XAIMethodType
 from openvino_xai.explanation.explanation_parameters import ExplainMode, TargetExplainGroup, ExplanationParameters
-from openvino_xai.explanation.explainers import Explainer
+from openvino_xai.explanation.explainer import Explainer
 from openvino_xai.insertion.insertion_parameters import DetectionInsertionParameters
 from openvino_xai.common.utils import logger
 

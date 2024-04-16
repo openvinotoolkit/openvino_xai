@@ -10,9 +10,6 @@ import cv2
 import numpy as np
 from tqdm import tqdm
 
-from openvino_xai.explanation.explanation_parameters import ExplanationParameters, TargetExplainGroup
-from openvino_xai.explanation.utils import get_explain_target_indices
-
 
 class BlackBoxXAIMethodBase(ABC):
     """Base class for methods that explain model in Black-Box mode."""
@@ -50,7 +47,7 @@ class RISE(BlackBoxXAIMethodBase):
             preprocess_fn,
             postprocess_fn,
             data: np.ndarray,
-            explanation_parameters: ExplanationParameters = ExplanationParameters(),
+            explain_target_indices: Optional[List[int]] = None,
             num_masks: int = 5000,
             num_cells: int = 8,
             prob: float = 0.5,
@@ -60,12 +57,6 @@ class RISE(BlackBoxXAIMethodBase):
         """Generates inference result of RISE algorithm."""
         data_preprocessed = preprocess_fn(data)
 
-        explain_target_indices = None
-        if explanation_parameters.target_explain_group == TargetExplainGroup.CUSTOM:
-            explain_target_indices = get_explain_target_indices(
-                explanation_parameters.target_explain_labels,
-                explanation_parameters.label_names,
-            )
         saliency_maps = cls._run_synchronous_explanation(
             data_preprocessed,
             explain_target_indices,

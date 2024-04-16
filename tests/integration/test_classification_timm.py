@@ -13,7 +13,7 @@ from pathlib import Path
 import openvino
 
 from openvino_xai.common.parameters import XAIMethodType, TaskType
-from openvino_xai.explanation.explainers import Explainer
+from openvino_xai.explanation.explainer import Explainer
 from openvino_xai.explanation.explanation_parameters import (
     PostProcessParameters,
     TargetExplainGroup,

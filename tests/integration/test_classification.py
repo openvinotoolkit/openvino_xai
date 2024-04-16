@@ -11,7 +11,7 @@ import openvino.runtime as ov
 
 import openvino_xai as ovxai
 from openvino_xai.common.utils import retrieve_otx_model, has_xai
-from openvino_xai.explanation.explainers import Explainer
+from openvino_xai.explanation.explainer import Explainer
 from openvino_xai.explanation.explanation_parameters import (
     PostProcessParameters,
     TargetExplainGroup,

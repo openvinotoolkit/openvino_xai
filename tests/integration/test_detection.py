@@ -14,7 +14,7 @@ import openvino.runtime as ov
 from openvino_xai.algorithms.white_box.create_method import create_white_box_detection_explain_method
 from openvino_xai.algorithms.white_box.white_box_methods import DetClassProbabilityMapXAIMethod
 from openvino_xai.common.parameters import XAIMethodType, TaskType
-from openvino_xai.explanation.explainers import Explainer
+from openvino_xai.explanation.explainer import Explainer
 from openvino_xai.explanation.explanation_parameters import (
     PostProcessParameters,
     TargetExplainGroup,
