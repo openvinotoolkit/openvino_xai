@@ -14,6 +14,7 @@ import openvino.runtime as ov
 from openvino_xai.algorithms.white_box.create_method import create_white_box_detection_explain_method
 from openvino_xai.algorithms.white_box.white_box_methods import DetClassProbabilityMapXAIMethod
 from openvino_xai.common.parameters import XAIMethodType, TaskType
+from openvino_xai.common.utils import retrieve_otx_model
 from openvino_xai.explanation.explainer import Explainer
 from openvino_xai.explanation.explanation_parameters import (
     PostProcessParameters,
@@ -87,6 +88,7 @@ class TestDetWB:
     @pytest.mark.parametrize("embed_normalization", [True, False])
     @pytest.mark.parametrize("target_explain_group", TARGET_EXPLAIN_GROUPS)
     def test_detclassprobabilitymap(self, model_name, embed_normalization, target_explain_group):
+        retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
         model = ov.Core().read_model(model_path)
 
@@ -213,6 +215,7 @@ class TestDetWB:
         assert isinstance(det_xai_method.model_ori, openvino.runtime.Model)
 
     def get_default_model_and_insertion_parameters(self):
+        retrieve_otx_model(self.data_dir, DEFAULT_MODEL)
         model_path = self.data_dir / "otx_models" / (DEFAULT_MODEL + ".xml")
         model = ov.Core().read_model(model_path)
 

@@ -34,7 +34,6 @@ dev = [
   "pytest",
   "pre-commit==2.20.0",
   "addict",
-  "openvino-model-api==0.1.9.1",
 ]
 dev_timm = [
   "timm==0.9.5",
