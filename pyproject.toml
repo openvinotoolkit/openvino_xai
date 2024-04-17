@@ -9,7 +9,6 @@ build-backend = "setuptools.build_meta"
 name = "openvino_xai"
 version = "0.0.1"
 dependencies = [
-  "openvino-model-api==0.1.9",
   "openvino-dev>=2023.2",
   "opencv-python",
   "numpy",
@@ -35,6 +34,7 @@ dev = [
   "pytest",
   "pre-commit==2.20.0",
   "addict",
+  "openvino-model-api==0.1.9.1",
 ]
 dev_timm = [
   "timm==0.9.5",

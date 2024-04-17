@@ -353,17 +353,6 @@ class TestImageClassificationTimm:
         return timm_model, model_cfg
 
     @staticmethod
-    def get_mapi_params(model_cfg):
-        mapi_params = {
-            "configuration": {
-                "mean_values": [(item * 255) for item in model_cfg["mean"]],
-                "scale_values": [(item * 255) for item in model_cfg["std"]],
-                "output_raw_scores": True,
-            }
-        }
-        return mapi_params
-
-    @staticmethod
     def put_confidence_into_map_overlay(explanation, target_confidence, target_class):
         font = cv2.FONT_HERSHEY_SIMPLEX
         org = (50, 50)
