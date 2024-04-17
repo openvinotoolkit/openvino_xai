@@ -27,7 +27,7 @@ def insert_xai(
 
     :param model: Original IR or path to .xml.
     :type model: Union[ov.Model, str]
-    :param task_type: Type of the model.
+    :param task_type: Type of the task.
     :type task_type: TaskType
     :param insertion_parameters: Insertion parameters that parametrize white-box method,
         that will be inserted into the model graph.

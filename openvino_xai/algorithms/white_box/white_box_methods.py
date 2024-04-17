@@ -92,6 +92,7 @@ class ActivationMapXAIMethod(WhiteBoxXAIMethodBase):
         self._target_layer = target_layer
 
     def generate_xai_branch(self) -> openvino.runtime.Node:
+        """Implements ActivationMap XAI algorithm."""
         target_node_ori = IRParserCls.get_target_node(self._model_ori, self.model_type, self._target_layer)
         saliency_maps = opset.reduce_mean(target_node_ori.output(0), 1)
         if self.embed_normalization:
@@ -126,7 +127,7 @@ class FeatureMapPerturbationBase(WhiteBoxXAIMethodBase):
         self._target_layer = target_layer
 
     def generate_xai_branch(self):
-        """Generates XAI branch."""
+        """Implements FeatureMapPerturbation-based XAI algorithm."""
         model_clone = self._model_ori.clone()
         self._propagate_dynamic_batch_dimension(model_clone)
 
@@ -408,6 +409,7 @@ class DetClassProbabilityMapXAIMethod(WhiteBoxXAIMethodBase):
         self._saliency_map_size = saliency_map_size  # Not always can be obtained from model -> defined externally
 
     def generate_xai_branch(self) -> openvino.runtime.Node:
+        """Implements DetClassProbabilityMap XAI algorithm."""
         cls_head_output_nodes = []
         for op in self._model_ori.get_ordered_ops():
             if op.get_friendly_name() in self._target_layer:
