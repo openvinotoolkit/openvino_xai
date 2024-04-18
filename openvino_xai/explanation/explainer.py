@@ -106,13 +106,10 @@ class Explainer:
     def __call__(
             self,
             data: np.ndarray,
-            explanation_parameters: Optional[ExplanationParameters] = None,
+            explanation_parameters: ExplanationParameters,
             **kwargs,
     ) -> ExplanationResult:
         """Explainer call that generates processed explanation result."""
-        if explanation_parameters is None:
-            explanation_parameters = ExplanationParameters()
-
         if self.explain_mode == ExplainMode.WHITEBOX:
             saliency_map = self._generate_saliency_map_white_box(data)
         else:
