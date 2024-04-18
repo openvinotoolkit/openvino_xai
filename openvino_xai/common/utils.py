@@ -25,11 +25,12 @@ SALIENCY_MAP_OUTPUT_NAME = "saliency_map"
 
 
 def has_xai(model: ov.Model) -> bool:
-    """Check if the model contains XAI branch.
+    """
+    Function checks if the model contains XAI branch.
 
     :param model: OV IR model.
     :type model: openvino.runtime.Model
-    :return: True is the model has XAI head, False otherwise.
+    :return: True is the model has XAI branch and saliency_map output, False otherwise.
     """
     if not isinstance(model, ov.Model):
         raise ValueError(f"Input model has to be openvino.runtime.Model instance, but got{type(model)}.")

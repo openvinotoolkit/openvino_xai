@@ -5,14 +5,29 @@ from enum import Enum
 
 
 class TaskType(Enum):
-    """Enum representing the different task types."""
+    """
+    Enum representing the different task types:
+
+    Contains the following values:
+        CLASSIFICATION - Classification task.
+        DETECTION - Detection task.
+    """
 
     CLASSIFICATION = "Classification"
     DETECTION = "Detection"
 
 
 class XAIMethodType(Enum):
-    """Enum representing the different XAI methods."""
+    """
+    Enum representing the different XAI methods:
+
+    Contains the following values:
+        ACTIVATIONMAP - ActivationMap method.
+        RECIPROCAM - ReciproCAM method.
+        VITRECIPROCAM - VITReciproCAM method.
+        DETCLASSPROBABILITYMAP - DetClassProbabilityMap method.
+        RISE - RISE method.
+    """
 
     ACTIVATIONMAP = "activationmap"
     RECIPROCAM = "reciprocam"

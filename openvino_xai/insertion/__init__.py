@@ -1,7 +1,7 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """
-Interface for inserting eXplainable AI (XAI) branch into OV IR.
+Interface for inserting XAI branch into OV IR.
 """
 from openvino_xai.insertion.insertion_parameters import (
     ClassificationInsertionParameters,
