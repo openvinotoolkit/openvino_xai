@@ -6,7 +6,6 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-import openvino.model_api as mapi
 import openvino.runtime as ov
 
 from openvino_xai.algorithms.white_box.white_box_methods import DetClassProbabilityMapXAIMethod
@@ -31,11 +30,7 @@ class TestDetProbMapXAI:
         self.model_name = "det_mobilenetv2_atss_bccd"
         retrieve_otx_model(data_dir, self.model_name)
         model_path = data_dir / "otx_models" / (self.model_name + ".xml")
-        self.model_wrapper = mapi.models.DetectionModel.create_model(
-            model_path,
-            model_type="ssd",
-        )
-        self.model = self.model_wrapper.get_model()
+        self.model = ov.Core().read_model(model_path)
         self.target_layer = [
             "/bbox_head/atss_cls_1/Conv/WithoutBiases",
             "/bbox_head/atss_cls_2/Conv/WithoutBiases",
@@ -74,7 +69,7 @@ class TestDetProbMapXAI:
         model_xai = ov.Model([*model_ori_outputs, xai_output_node.output(0)], model_ori_params)
 
         compiled_model = ov.Core().compile_model(model_xai, "CPU")
-        result = compiled_model(np.zeros((1, 64, 64, 3), dtype=np.float32))
+        result = compiled_model(np.zeros((1, 3, 736, 992), dtype=np.float32))
         raw_saliency_map = result[-1]
         assert raw_saliency_map.shape == (1, 3, 23, 23)
 
@@ -89,4 +84,4 @@ class TestDetProbMapXAI:
 
         # Check that node was inserted in the right place
         nodes_list = [op.get_friendly_name() for op in model_xai.get_ordered_ops()]
-        assert nodes_list.index(xai_node_name) == 558
+        assert nodes_list.index(xai_node_name) == 551

@@ -1,9 +1,6 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-# TODO: rm this import. AttributeError: module 'openvino.model_api' has no attribute 'models'
-from openvino.model_api.models import ClassificationModel
-
 from openvino_xai.common.parameters import XAIMethodType
 from openvino_xai.insertion.insertion_parameters import ClassificationInsertionParameters
 from openvino_xai.insertion.insertion_parameters import DetectionInsertionParameters

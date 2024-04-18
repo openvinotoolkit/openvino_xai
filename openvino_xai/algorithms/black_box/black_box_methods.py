@@ -4,11 +4,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from abc import ABC
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Callable
 
 import cv2
 import numpy as np
 from tqdm import tqdm
+import openvino.runtime as ov
 
 
 class BlackBoxXAIMethodBase(ABC):
@@ -16,36 +17,14 @@ class BlackBoxXAIMethodBase(ABC):
 
 
 class RISE(BlackBoxXAIMethodBase):
-    """RISEExplainer explains classification models in black-box mode using RISE (https://arxiv.org/abs/1806.07421).
-
-    :param model_inferrer: Callable model inferrer object.
-    :type model_inferrer: Union[Callable[[np.ndarray], InferenceResult], mapi_models.Model]
-    :param num_masks: Number of generated masks to aggregate.
-    :type num_masks: int
-    :param num_cells: Number of cells for low-dimensional RISE
-        random mask that later will be up-scaled to the model input size.
-    :type num_cells: int
-    :param prob: With prob p, a low-res cell is set to 1;
-        otherwise, it's 0. Default: ``0.5``.
-    :type prob: float
-    :param seed: Seed for random mask generation.
-    :type seed: int
-    :param input_size: Model input size.
-    :type input_size: Tuple[int]
-    :param asynchronous_inference: Whether to run inference in asynchronous mode or not.
-    :type asynchronous_inference: bool
-    :param throughput_inference: Whether to run asynchronous inference in throughput mode or not.
-    :type throughput_inference: bool
-    :param normalize: Whether to normalize output or not.
-    :type normalize: bool
-    """
+    """RISEExplainer explains classification models in black-box mode using RISE (https://arxiv.org/abs/1806.07421)."""
 
     @classmethod
     def run(
             cls,
-            compiled_model,
-            preprocess_fn,
-            postprocess_fn,
+            compiled_model: ov.Model,
+            preprocess_fn: Callable[[np.ndarray], np.ndarray],
+            postprocess_fn: Callable[[ov.utils.data_helpers.wrappers.OVDict], np.ndarray],
             data: np.ndarray,
             explain_target_indices: Optional[List[int]] = None,
             num_masks: int = 5000,
@@ -54,7 +33,32 @@ class RISE(BlackBoxXAIMethodBase):
             seed: int = 0,
             normalize: bool = True,
     ):
-        """Generates inference result of RISE algorithm."""
+        """
+        Generates inference result of the RISE algorithm.
+
+        :param compiled_model: Compiled model.
+        :type compiled_model: ov.Model
+        :param preprocess_fn: Preprocessing function.
+        :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
+        :param postprocess_fn: Postprocessing functions, required for black-box.
+        :type postprocess_fn: Callable[[ov.utils.data_helpers.wrappers.OVDict], np.ndarray]
+        :param data: Input image.
+        :type data: np.ndarray
+        :param explain_target_indices: List of target indices to explain.
+        :type explain_target_indices: List[int]
+        :param num_masks: Number of generated masks to aggregate.
+        :type num_masks: int
+        :param num_cells: Number of cells for low-dimensional RISE
+            random mask that later will be up-scaled to the model input size.
+        :type num_cells: int
+        :param prob: With prob p, a low-res cell is set to 1;
+            otherwise, it's 0. Default: ``0.5``.
+        :type prob: float
+        :param seed: Seed for random mask generation.
+        :type seed: int
+        :param normalize: Whether to normalize output or not.
+        :type normalize: bool
+        """
         data_preprocessed = preprocess_fn(data)
 
         saliency_maps = cls._run_synchronous_explanation(

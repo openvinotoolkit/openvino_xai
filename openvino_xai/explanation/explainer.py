@@ -26,7 +26,7 @@ class Explainer:
 
     :param model: Original model.
     :type model: ov.Model
-    :param task_type: Task type.
+    :param task_type: Type of the task.
     :type task_type: TaskType
     :param preprocess_fn: Preprocessing function.
     :type preprocess_fn: Callable[[np.ndarray], np.ndarray]

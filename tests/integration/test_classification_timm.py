@@ -149,7 +149,7 @@ class TestImageClassificationTimm:
 
     @pytest.mark.parametrize("model_id", WB_TEST_MODELS)
     def test_classification_white_box(self, model_id, dump_maps=True):
-        self.check_for_saved_map(model_id, "timm_models/maps_wb/")
+        # self.check_for_saved_map(model_id, "timm_models/maps_wb/")
 
         output_model_dir = self.data_dir / "timm_models" / "converted_models" / model_id
         output_model_dir.mkdir(parents=True, exist_ok=True)
@@ -256,7 +256,7 @@ class TestImageClassificationTimm:
     # ulimit -a
     @pytest.mark.parametrize("model_id", BB_TEST_MODELS)
     def test_classification_black_box(self, model_id, dump_maps=True):
-        self.check_for_saved_map(model_id, "timm_models/maps_bb/")
+        # self.check_for_saved_map(model_id, "timm_models/maps_bb/")
 
         timm_model, model_cfg = self.get_timm_model(model_id)
 
