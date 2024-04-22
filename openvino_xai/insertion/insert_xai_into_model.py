@@ -23,16 +23,19 @@ def insert_xai(
     insertion_parameters: Optional[InsertionParameters] = None,
 ) -> ov.Model:
     """
-    Inserts XAI into IR.
+    Function that inserts XAI branch into IR.
+
+    Usage:
+        model_xai = openvino_xai.insert_xai(model, task_type=TaskType.CLASSIFICATION)
 
     :param model: Original IR or path to .xml.
     :type model: Union[ov.Model, str]
     :param task_type: Type of the task.
     :type task_type: TaskType
     :param insertion_parameters: Insertion parameters that parametrize white-box method,
-        that will be inserted into the model graph.
+        that will be inserted into the model graph (optional).
     :type insertion_parameters: InsertionParameters
-    :return: IR with XAI head.
+    :return: IR with XAI branch.
     """
 
     if isinstance(model, str):

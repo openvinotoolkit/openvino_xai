@@ -23,7 +23,7 @@ def create_white_box_classification_explain_method(
 
     :param model: OV IR model.
     :type model: openvino.runtime.Model
-    :param insertion_parameters: Explain parameters that parametrize explanation method,
+    :param insertion_parameters: Insertion parameters that parametrize explanation method,
         that will be inserted into the model graph.
     :type insertion_parameters: InsertionParameters
     """
@@ -68,7 +68,7 @@ def create_white_box_detection_explain_method(
 
     :param model: OV IR model.
     :type model: openvino.runtime.Model
-    :param insertion_parameters: Explain parameters that parametrize explanation method,
+    :param insertion_parameters: Insertion parameters that parametrize explanation method,
         that will be inserted into the model graph.
     :type insertion_parameters: InsertionParameters
     """

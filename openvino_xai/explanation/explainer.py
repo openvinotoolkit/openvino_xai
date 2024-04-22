@@ -22,7 +22,10 @@ from openvino_xai.insertion import InsertionParameters
 
 class Explainer:
     """
-    Explainer sets explain mode, prepare the model, and generates explanations.
+    Explainer sets explain mode, prepares the model, and generates explanations.
+
+    Usage:
+        explanation = explainer_object(data, explanation_parameters)
 
     :param model: Original model.
     :type model: ov.Model
@@ -103,13 +106,10 @@ class Explainer:
     def __call__(
             self,
             data: np.ndarray,
-            explanation_parameters: Optional[ExplanationParameters] = None,
+            explanation_parameters: ExplanationParameters,
             **kwargs,
     ) -> ExplanationResult:
         """Explainer call that generates processed explanation result."""
-        if explanation_parameters is None:
-            explanation_parameters = ExplanationParameters()
-
         if self.explain_mode == ExplainMode.WHITEBOX:
             saliency_map = self._generate_saliency_map_white_box(data)
         else:
@@ -129,7 +129,7 @@ class Explainer:
         return explanation_result
 
     def model_forward(self, x: np.ndarray) -> ov.utils.data_helpers.wrappers.OVDict:
-        """Forward pass of the compiled model"""
+        """Forward pass of the compiled model. Will apply preprocess_fn, but not post-processing."""
         x = self.preprocess_fn(x)
         return self.compiled_model(x)
 
