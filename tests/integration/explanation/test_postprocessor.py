@@ -63,22 +63,36 @@ class TestPostProcessor:
         raw_sal_map_dims = len(explanation_result.sal_map_shape)
         data = np.ones((20, 20, 3))
         post_processor = PostProcessor(
-            explanation_result,
-            data,
-            post_processing_parameters,
+            explanation=explanation_result,
+            data=data,
+            post_processing_parameters=post_processing_parameters,
         )
-        saliency_map_processed = post_processor.postprocess()
+        explanation = post_processor.run()
 
-        assert saliency_map_processed is not None
+        assert explanation is not None
         expected_dims = raw_sal_map_dims
         if colormap or overlay:
             expected_dims += 1
-        assert len(saliency_map_processed.sal_map_shape) == expected_dims
+        assert len(explanation.sal_map_shape) == expected_dims
 
         if normalize and not colormap and not overlay:
-            for map_ in saliency_map_processed.saliency_map.values():
+            for map_ in explanation.saliency_map.values():
                 assert map_.min() == 0, f"{map_.min()}"
                 assert map_.max() in {254, 255}, f"{map_.max()}"
         if resize or overlay:
-            for map_ in saliency_map_processed.saliency_map.values():
+            for map_ in explanation.saliency_map.values():
                 assert map_.shape[:2] == data.shape[:2]
+
+        if target_explain_group == TargetExplainGroup.IMAGE and not overlay:
+            explanation_result = ExplanationResult(
+                saliency_maps, target_explain_group=target_explain_group, target_explain_labels=explain_targets
+            )
+            post_processor = PostProcessor(
+                explanation=explanation_result,
+                output_size=(20, 20),
+                post_processing_parameters=post_processing_parameters,
+            )
+            saliency_map_processed_output_size = post_processor.run()
+            maps_data = explanation.saliency_map
+            maps_size = saliency_map_processed_output_size.saliency_map
+            assert np.all(maps_data["per_image_map"] == maps_size["per_image_map"])

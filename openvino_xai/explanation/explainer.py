@@ -122,10 +122,10 @@ class Explainer:
             explanation_parameters.label_names,
         )
         explanation_result = PostProcessor(
-            explanation_result,
-            data,
-            explanation_parameters.post_processing_parameters,
-        ).postprocess()
+            explanation=explanation_result,
+            data=data,
+            post_processing_parameters=explanation_parameters.post_processing_parameters,
+        ).run()
         return explanation_result
 
     def model_forward(self, x: np.ndarray) -> ov.utils.data_helpers.wrappers.OVDict:

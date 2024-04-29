@@ -230,11 +230,11 @@ class TestImageClassificationTimm:
             explanation.saliency_map[target_class] = raw_sal_map
             post_processing_parameters = PostProcessParameters(normalize=True, overlay=True)
             post_processor = PostProcessor(
-                explanation,
-                image,
-                post_processing_parameters,
+                explanation=explanation,
+                data=image,
+                post_processing_parameters=post_processing_parameters,
             )
-            explanation = post_processor.postprocess()
+            explanation = post_processor.run()
 
             model_output = explainer.model_forward(image)
             target_confidence = get_score(model_output["logits"], target_class, activation=ActivationType.SOFTMAX)
