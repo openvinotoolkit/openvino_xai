@@ -35,9 +35,9 @@ class ExplanationResult:
         label_names: Optional[List[str]] = None,
     ):
         self._check_saliency_map(saliency_map)
-        self.saliency_map = self._format_sal_map_as_dict(saliency_map)
+        self._saliency_map = self._format_sal_map_as_dict(saliency_map)
 
-        if "per_image_map" in self.saliency_map:
+        if "per_image_map" in self._saliency_map:
             self.layout = SaliencyMapLayout.ONE_MAP_PER_IMAGE_GRAY
             if target_explain_group != TargetExplainGroup.IMAGE:
                 logger.warning(
@@ -55,14 +55,23 @@ class ExplanationResult:
             self.target_explain_group = target_explain_group
 
         if self.target_explain_group == TargetExplainGroup.CUSTOM:
-            self.saliency_map = self._select_target_saliency_maps(target_explain_labels, label_names)
+            self._saliency_map = self._select_target_saliency_maps(target_explain_labels, label_names)
 
         self.label_names = label_names
 
     @property
+    def saliency_map(self) -> Dict[Union[int, str], np.ndarray]:
+        """Saliency map as a dict {map_id: np.ndarray}."""
+        return self._saliency_map
+
+    @saliency_map.setter
+    def saliency_map(self, saliency_map: Dict[Union[int, str], np.ndarray]):
+        self._saliency_map = saliency_map
+
+    @property
     def sal_map_shape(self):
-        idx = next(iter(self.saliency_map))
-        sal_map_shape = self.saliency_map[idx].shape
+        idx = next(iter(self._saliency_map))
+        sal_map_shape = self._saliency_map[idx].shape
         return sal_map_shape
 
     @staticmethod
@@ -104,9 +113,9 @@ class ExplanationResult:
             self.target_explain_group,
             target_explain_labels,
             label_names,
-            len(self.saliency_map),
+            len(self._saliency_map),
         )
-        saliency_maps_selected = {i: self.saliency_map[i] for i in explain_target_indices}
+        saliency_maps_selected = {i: self._saliency_map[i] for i in explain_target_indices}
         return saliency_maps_selected
 
     @staticmethod
@@ -132,7 +141,7 @@ class ExplanationResult:
         # TODO: add unit test
         os.makedirs(dir_path, exist_ok=True)
         save_name = f"{name}_" if name else ""
-        for i, (cls_idx, map_to_save) in enumerate(self.saliency_map.items()):
+        for i, (cls_idx, map_to_save) in enumerate(self._saliency_map.items()):
             if cls_idx == "per_image_map":
                 target_name = "per_image_map"
             else:

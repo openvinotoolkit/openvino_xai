@@ -6,9 +6,17 @@ import numpy as np
 from openvino_xai.explanation import normalize, get_min_max, resize, colormap, overlay
 
 
-def test_normalize():
-    # Test normalization on a simple multi-channel input
+def test_normalize_3d():
+    # Test normalization on a multi-channel input
     input_saliency_map = (np.random.rand(3, 5, 5) - 0.5) * 1000
+    assert (input_saliency_map < 0).any() and (input_saliency_map > 255).any()
+    normalized_map = normalize(input_saliency_map)
+    assert (normalized_map >= 0).all() and (normalized_map <= 255).all()
+
+
+def test_normalize_2d():
+    # Test normalization on a simple 2D input
+    input_saliency_map = (np.random.rand(5, 5) - 0.5) * 1000
     assert (input_saliency_map < 0).any() and (input_saliency_map > 255).any()
     normalized_map = normalize(input_saliency_map)
     assert (normalized_map >= 0).all() and (normalized_map <= 255).all()
@@ -19,6 +27,10 @@ def test_normalize_cast_to_int8():
     input_saliency_map = (np.random.rand(3, 5, 5) - 0.5) * 1000
     normalized_map = normalize(input_saliency_map)
     assert normalized_map.dtype == np.uint8
+
+    input_saliency_map = (np.random.rand(3, 5, 5) - 0.5) * 1000
+    normalized_map = normalize(input_saliency_map, cast_to_uint8=False)
+    assert normalized_map.dtype == np.float32
 
 
 def test_get_min_max():

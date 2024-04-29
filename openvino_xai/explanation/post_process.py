@@ -19,16 +19,22 @@ from openvino_xai.explanation.explanation_result import ExplanationResult
 
 def normalize(saliency_map: np.ndarray, cast_to_uint8: bool = True) -> np.ndarray:
     """Normalize saliency maps to [0, 255] range."""
-    # TODO: generalize to support single channel map
-    if len(saliency_map.shape) != 3:
-        raise ValueError("Normalize supports only three-dimensional saliency map as input.")
+    original_num_dims = saliency_map.shape
+    if len(original_num_dims) == 2:
+        # If input map is 2D array, add dim so that below code would work
+        saliency_map = saliency_map[np.newaxis, ...]
+
+    saliency_map = saliency_map.astype(np.float32)
     num_maps, h, w = saliency_map.shape
     saliency_map = saliency_map.reshape((num_maps, h * w))
-    saliency_map = saliency_map.astype(np.float32)
 
     min_values, max_values = get_min_max(saliency_map)
     saliency_map = 255 * (saliency_map - min_values[:, None]) / (max_values - min_values + 1e-12)[:, None]
     saliency_map = saliency_map.reshape(num_maps, h, w)
+
+    if original_num_dims == 2:
+        saliency_map = np.squeeze(saliency_map)
+
     if cast_to_uint8:
         return saliency_map.astype(np.uint8)
     return saliency_map
@@ -88,6 +94,7 @@ class PostProcessor:
         post_processing_parameters: PostProcessParameters = PostProcessParameters(),
     ):
         self._explanation = explanation
+        self._saliency_map_np = None
         self._data = data
         self._output_size = output_size
 
@@ -96,14 +103,6 @@ class PostProcessor:
         self._colormap = post_processing_parameters.colormap
         self._overlay = post_processing_parameters.overlay
         self._overlay_weight = post_processing_parameters.overlay_weight
-
-    @property
-    def saliency_map(self) -> np.ndarray:
-        return self._explanation.saliency_map
-
-    @saliency_map.setter
-    def saliency_map(self, saliency_map: np.ndarray):
-        self._explanation.saliency_map = saliency_map
 
     @property
     def layout(self) -> SaliencyMapLayout:
@@ -123,7 +122,7 @@ class PostProcessor:
         class_idx_to_return = list(saliency_map_dict.keys())
 
         # Convert to numpy array to use vectorized normalization and speed up lots of classes scenario
-        self.saliency_map = np.array(list(saliency_map_dict.values()))
+        self._saliency_map_np = np.array(list(saliency_map_dict.values()))
 
         if self._normalize and not self._resize and not self._overlay:
             self._apply_normalization()
@@ -153,7 +152,7 @@ class PostProcessor:
             f"Saliency map to normalize has to be grayscale. The layout must be in {GRAY_LAYOUTS}, "
             f"but got {self.layout}."
         )
-        self.saliency_map = normalize(self.saliency_map)
+        self._saliency_map_np = normalize(self._saliency_map_np)
 
     def _apply_resize(self) -> None:
         # TODO: support resize of colormapped images.
@@ -162,21 +161,21 @@ class PostProcessor:
             f"but got {self.layout}."
         )
         output_size = self._output_size if self._output_size else self._data.shape[:2]
-        self.saliency_map = resize(self.saliency_map, output_size)
+        self._saliency_map_np = resize(self._saliency_map_np, output_size)
 
         # Normalization has to be applied after resize to keep map in range 0..255
         self._apply_normalization()
 
     def _apply_colormap(self) -> None:
         assert (
-            self.saliency_map.dtype == np.uint8
+            self._saliency_map_np.dtype == np.uint8
         ), "Colormap requires saliency map to has uint8 dtype. Enable 'normalize' flag for PostProcessor."
         assert self.layout in GRAY_LAYOUTS, (
             f"Saliency map to normalize has to be grayscale. The layout must be in {GRAY_LAYOUTS}, "
             f"but got {self.layout}."
         )
 
-        self.saliency_map = colormap(self.saliency_map)
+        self._saliency_map_np = colormap(self._saliency_map_np)
         if self.layout == SaliencyMapLayout.ONE_MAP_PER_IMAGE_GRAY:
             self.layout = SaliencyMapLayout.ONE_MAP_PER_IMAGE_COLOR
         if self.layout == SaliencyMapLayout.MULTIPLE_MAPS_PER_IMAGE_GRAY:
@@ -184,16 +183,16 @@ class PostProcessor:
 
     def _apply_overlay(self) -> None:
         assert self.layout in COLOR_MAPPED_LAYOUTS, "Color mapped saliency map are expected for overlay."
-        self.saliency_map = overlay(self.saliency_map, self._data, self._overlay_weight)
+        self._saliency_map_np = overlay(self._saliency_map_np, self._data, self._overlay_weight)
 
     def _convert_sal_map_to_dict(self, class_idx: List) -> None:
         if self.layout in ONE_MAP_LAYOUTS:
-            dict_sal_map = {"per_image_map": self.saliency_map[0]}
-            self.saliency_map = dict_sal_map
+            dict_sal_map = {"per_image_map": self._saliency_map_np[0]}
+            self._saliency_map_np = dict_sal_map
         elif self.layout in MULTIPLE_MAP_LAYOUTS:
             dict_sal_map = {}
-            for idx, class_sal in zip(class_idx, self.saliency_map):
+            for idx, class_sal in zip(class_idx, self._saliency_map_np):
                 dict_sal_map[idx] = class_sal
         else:
             raise ValueError
-        self.saliency_map = dict_sal_map
+        self._explanation.saliency_map = dict_sal_map
