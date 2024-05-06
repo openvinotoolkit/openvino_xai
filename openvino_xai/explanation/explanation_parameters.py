@@ -1,7 +1,7 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional, List, Union
 
@@ -85,7 +85,7 @@ class ExplanationParameters:
     target_explain_group: TargetExplainGroup = TargetExplainGroup.CUSTOM
     target_explain_labels: Optional[List[Union[int, str]]] = None
     label_names: Optional[List[str]] = None
-    post_processing_parameters: PostProcessParameters = PostProcessParameters(overlay=True)
+    post_processing_parameters: PostProcessParameters = field(default_factory=lambda: PostProcessParameters(overlay=True))
     black_box_method: XAIMethodType = XAIMethodType.RISE
 
 

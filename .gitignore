@@ -4,6 +4,7 @@
 # Default venv
 .ovxai
 venv*
+.venv*
 
 *.pyc
 __pycache__
@@ -31,6 +32,7 @@ otx_models/
 .pytest_cache
 .mypy_cache
 .ruff_cache
+.coverage
 
 *.jpg
 *.jpeg
