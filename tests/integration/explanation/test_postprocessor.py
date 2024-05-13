@@ -4,10 +4,12 @@
 import numpy as np
 import pytest
 
-from openvino_xai.explanation.explanation_parameters import PostProcessParameters, TargetExplainGroup
+from openvino_xai.explanation.explanation_parameters import (
+    PostProcessParameters,
+    TargetExplainGroup,
+)
 from openvino_xai.explanation.explanation_result import ExplanationResult
 from openvino_xai.explanation.post_process import PostProcessor
-
 
 SALIENCY_MAPS = [
     (np.random.rand(1, 5, 5) * 255).astype(np.uint8),

@@ -5,32 +5,31 @@ import pytest
 
 from openvino_xai.explanation.utils import get_explain_target_indices
 
-
 VOC_NAMES = [
-    'aeroplane',
-    'bicycle',
-    'bird',
-    'boat',
-    'bottle',
-    'bus',
-    'car',
-    'cat',
-    'chair',
-    'cow',
-    'diningtable',
-    'dog',
-    'horse',
-    'motorbike',
-    'person',
-    'pottedplant',
-    'sheep',
-    'sofa',
-    'train',
-    'tvmonitor',
+    "aeroplane",
+    "bicycle",
+    "bird",
+    "boat",
+    "bottle",
+    "bus",
+    "car",
+    "cat",
+    "chair",
+    "cow",
+    "diningtable",
+    "dog",
+    "horse",
+    "motorbike",
+    "person",
+    "pottedplant",
+    "sheep",
+    "sofa",
+    "train",
+    "tvmonitor",
 ]
 
 LABELS_INT = [1, 4]
-LABELS_STR = ['bicycle', 'bottle']
+LABELS_STR = ["bicycle", "bottle"]
 
 
 def test_get_explain_target_indices_int():
@@ -49,7 +48,7 @@ def test_get_explain_target_indices_str():
 
 
 def test_get_explain_target_indices_str_spelling():
-    LABELS_STR[0] = 'bicycle_'
+    LABELS_STR[0] = "bicycle_"
     with pytest.raises(Exception) as exc_info:
         _ = get_explain_target_indices(LABELS_STR, VOC_NAMES)
     assert str(exc_info.value) == "No all label names found in label_names. Check spelling."

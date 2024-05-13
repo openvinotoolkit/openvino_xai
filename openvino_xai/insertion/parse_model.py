@@ -1,7 +1,7 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Optional, List, Callable
+from typing import Callable, List, Optional
 
 import openvino
 
@@ -62,11 +62,9 @@ class IRParser:
             return False
         if not (node_out_shape[0].is_dynamic or node_out_shape[0].get_length() == 1):
             return False
-        c, h, w, = (
-            node_out_shape[1].get_length(),
-            node_out_shape[2].get_length(),
-            node_out_shape[3].get_length(),
-        )
+        c = node_out_shape[1].get_length()
+        h = node_out_shape[2].get_length()
+        w = node_out_shape[3].get_length()
         if not (1 < h < c and 1 < w < c):
             return False
         return True
@@ -76,15 +74,11 @@ class IRParser:
         node_out_shape = node.output(output_id).partial_shape
 
         # NCHW
-        h, w, = (
-            node_out_shape[2].get_length(),
-            node_out_shape[3].get_length(),
-        )
+        h = node_out_shape[2].get_length()
+        w = node_out_shape[3].get_length()
         # NHWC
-        h_, w_, = (
-            node_out_shape[1].get_length(),
-            node_out_shape[2].get_length(),
-        )
+        h_ = node_out_shape[1].get_length()
+        w_ = node_out_shape[2].get_length()
         return (h != 1 and w != 1) or (h_ != 1 and w_ != 1)
 
     @staticmethod

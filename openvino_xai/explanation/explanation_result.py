@@ -9,7 +9,10 @@ import cv2
 import numpy as np
 
 from openvino_xai.common.utils import logger
-from openvino_xai.explanation.explanation_parameters import TargetExplainGroup, SaliencyMapLayout
+from openvino_xai.explanation.explanation_parameters import (
+    SaliencyMapLayout,
+    TargetExplainGroup,
+)
 from openvino_xai.explanation.utils import get_explain_target_indices
 
 
@@ -104,9 +107,9 @@ class ExplanationResult:
         return dict_sal_map
 
     def _select_target_saliency_maps(
-            self,
-            target_explain_labels: Optional[List[Union[int, str]]] = None,
-            label_names: Optional[List[str]] = None,
+        self,
+        target_explain_labels: Optional[List[Union[int, str]]] = None,
+        label_names: Optional[List[str]] = None,
     ) -> Dict[Union[int, str], np.ndarray]:
         assert self.layout == SaliencyMapLayout.MULTIPLE_MAPS_PER_IMAGE_GRAY
         explain_target_indices = self._select_target_indices(
@@ -120,10 +123,10 @@ class ExplanationResult:
 
     @staticmethod
     def _select_target_indices(
-            target_explain_group: TargetExplainGroup,
-            target_explain_labels: Optional[List[Union[int, str]]] = None,
-            label_names: Optional[List[str]] = None,
-            total_num_targets: Optional[int] = None,
+        target_explain_group: TargetExplainGroup,
+        target_explain_labels: Optional[List[Union[int, str]]] = None,
+        label_names: Optional[List[str]] = None,
+        total_num_targets: Optional[int] = None,
     ) -> Union[List[int], np.ndarray]:
         explain_target_indices = get_explain_target_indices(target_explain_labels, label_names)
 
@@ -135,18 +138,17 @@ class ExplanationResult:
             raise ValueError(f"All targets explanation indices have to be in range 0..{total_num_targets - 1}.")
         return explain_target_indices
 
-
     def save(self, dir_path: Union[Path, str], name: Optional[str] = None) -> None:
         """Dumps saliency map."""
         # TODO: add unit test
         os.makedirs(dir_path, exist_ok=True)
         save_name = f"{name}_" if name else ""
         for i, (cls_idx, map_to_save) in enumerate(self._saliency_map.items()):
-            if cls_idx == "per_image_map":
-                target_name = "per_image_map"
+            if isinstance(cls_idx, str):
+                target_name = cls_idx
             else:
                 if self.label_names:
                     target_name = self.label_names[cls_idx]
                 else:
-                    target_name = cls_idx
+                    target_name = str(cls_idx)
             cv2.imwrite(os.path.join(dir_path, f"{save_name}target_{target_name}.jpg"), img=map_to_save)

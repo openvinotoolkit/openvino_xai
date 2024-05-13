@@ -4,14 +4,12 @@
 Common functionality.
 """
 
+import logging
 import os
 from pathlib import Path
-
-import logging
 from urllib.request import urlretrieve
 
 import openvino.runtime as ov
-
 
 logger = logging.getLogger("openvino_xai")
 handler = logging.StreamHandler()

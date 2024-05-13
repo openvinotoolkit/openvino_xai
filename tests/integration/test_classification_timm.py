@@ -3,27 +3,32 @@
 
 import csv
 import shutil
+from pathlib import Path
 
 import cv2
 import numpy as np
+import openvino
 import pytest
 
-from pathlib import Path
-
-import openvino
-
-from openvino_xai.common.parameters import XAIMethodType, TaskType
+from openvino_xai.common.parameters import TaskType, XAIMethodType
 from openvino_xai.explanation.explainer import Explainer
 from openvino_xai.explanation.explanation_parameters import (
+    ExplainMode,
+    ExplanationParameters,
     PostProcessParameters,
     TargetExplainGroup,
-    ExplanationParameters,
-    ExplainMode,
 )
-from openvino_xai.explanation.utils import get_preprocess_fn, get_score, ActivationType, get_postprocess_fn
-from openvino_xai.insertion.insertion_parameters import ClassificationInsertionParameters
 from openvino_xai.explanation.post_process import PostProcessor
-from openvino_xai.utils.timm_models_export import export_to_onnx, export_to_ir
+from openvino_xai.explanation.utils import (
+    ActivationType,
+    get_postprocess_fn,
+    get_preprocess_fn,
+    get_score,
+)
+from openvino_xai.insertion.insertion_parameters import (
+    ClassificationInsertionParameters,
+)
+from openvino_xai.utils.timm_models_export import export_to_ir, export_to_onnx
 
 timm = pytest.importorskip("timm")
 torch = pytest.importorskip("torch")

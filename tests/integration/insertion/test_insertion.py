@@ -8,7 +8,7 @@ from openvino import runtime as ov
 
 from openvino_xai import insert_xai
 from openvino_xai.common.parameters import TaskType
-from openvino_xai.common.utils import retrieve_otx_model, has_xai
+from openvino_xai.common.utils import has_xai, retrieve_otx_model
 from tests.integration.test_classification import MODELS
 
 

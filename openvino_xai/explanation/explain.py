@@ -4,20 +4,18 @@
 from typing import Callable, Optional
 
 import numpy as np
-
 import openvino.runtime as ov
 
 import openvino_xai
 from openvino_xai.algorithms.black_box.black_box_methods import RISE
 from openvino_xai.common.parameters import TaskType
-from openvino_xai.common.utils import has_xai
-from openvino_xai.common.utils import logger, SALIENCY_MAP_OUTPUT_NAME
-from openvino_xai.explanation.explanation_parameters import ExplanationParameters, TargetExplainGroup
+from openvino_xai.common.utils import SALIENCY_MAP_OUTPUT_NAME, has_xai, logger
+from openvino_xai.explanation.explanation_parameters import (
+    ExplainMode, ExplanationParameters, TargetExplainGroup)
 from openvino_xai.explanation.explanation_result import ExplanationResult
 from openvino_xai.explanation.post_process import PostProcessor
-from openvino_xai.explanation.explanation_parameters import ExplainMode
 from openvino_xai.explanation.utils import get_explain_target_indices
-from openvino_xai.insertion import InsertionParameters
+from openvino_xai.insertion.insertion_parameters import InsertionParameters
 
 
 class Explainer:
@@ -42,16 +40,16 @@ class Explainer:
     """
 
     def __init__(
-            self,
-            model: ov.Model,
-            task_type: TaskType,
-            preprocess_fn: Callable[[np.ndarray], np.ndarray],
-            postprocess_fn: Callable[[ov.utils.data_helpers.wrappers.OVDict], np.ndarray] = None,
-            explain_mode: ExplainMode = ExplainMode.AUTO,
-            insertion_parameters: Optional[InsertionParameters] = None,
+        self,
+        model: ov.Model,
+        task_type: TaskType,
+        preprocess_fn: Callable[[np.ndarray], np.ndarray],
+        postprocess_fn: Callable[[ov.utils.data_helpers.wrappers.OVDict], np.ndarray] = None,
+        explain_mode: ExplainMode = ExplainMode.AUTO,
+        insertion_parameters: Optional[InsertionParameters] = None,
     ) -> None:
         self.model = model
-        self.compiled_model = None
+        self.compiled_model: ov.ie_api.CompiledModel | None = None
         self.task_type = task_type
 
         self.preprocess_fn = preprocess_fn
@@ -104,10 +102,10 @@ class Explainer:
         self.compiled_model = ov.Core().compile_model(self.model, "CPU")
 
     def __call__(
-            self,
-            data: np.ndarray,
-            explanation_parameters: ExplanationParameters,
-            **kwargs,
+        self,
+        data: np.ndarray,
+        explanation_parameters: ExplanationParameters,
+        **kwargs,
     ) -> ExplanationResult:
         """Explainer call that generates processed explanation result."""
         if self.explain_mode == ExplainMode.WHITEBOX:
@@ -138,10 +136,10 @@ class Explainer:
         return model_output[SALIENCY_MAP_OUTPUT_NAME]
 
     def _generate_saliency_map_black_box(
-            self,
-            data: np.ndarray,
-            explanation_parameters: ExplanationParameters,
-            **kwargs,
+        self,
+        data: np.ndarray,
+        explanation_parameters: ExplanationParameters,
+        **kwargs,
     ) -> np.ndarray:
         explain_target_indices = None
         if explanation_parameters.target_explain_group == TargetExplainGroup.CUSTOM:

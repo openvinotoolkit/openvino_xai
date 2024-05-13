@@ -4,12 +4,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from abc import ABC
-from typing import Optional, Tuple, List, Callable
+from typing import Callable, List, Optional, Tuple
 
 import cv2
 import numpy as np
-from tqdm import tqdm
 import openvino.runtime as ov
+from tqdm import tqdm
 
 
 class BlackBoxXAIMethodBase(ABC):
@@ -21,17 +21,17 @@ class RISE(BlackBoxXAIMethodBase):
 
     @classmethod
     def run(
-            cls,
-            compiled_model: ov.Model,
-            preprocess_fn: Callable[[np.ndarray], np.ndarray],
-            postprocess_fn: Callable[[ov.utils.data_helpers.wrappers.OVDict], np.ndarray],
-            data: np.ndarray,
-            explain_target_indices: Optional[List[int]] = None,
-            num_masks: int = 5000,
-            num_cells: int = 8,
-            prob: float = 0.5,
-            seed: int = 0,
-            normalize: bool = True,
+        cls,
+        compiled_model: ov.Model,
+        preprocess_fn: Callable[[np.ndarray], np.ndarray],
+        postprocess_fn: Callable[[ov.utils.data_helpers.wrappers.OVDict], np.ndarray],
+        data: np.ndarray,
+        explain_target_indices: Optional[List[int]] = None,
+        num_masks: int = 5000,
+        num_cells: int = 8,
+        prob: float = 0.5,
+        seed: int = 0,
+        normalize: bool = True,
     ):
         """
         Generates inference result of the RISE algorithm.
@@ -79,15 +79,15 @@ class RISE(BlackBoxXAIMethodBase):
 
     @classmethod
     def _run_synchronous_explanation(
-            cls,
-            data_preprocessed: np.ndarray,
-            target_classes: Optional[List[int]],
-            compiled_model,
-            postprocess_fn,
-            num_masks,
-            num_cells,
-            prob,
-            seed,
+        cls,
+        data_preprocessed: np.ndarray,
+        target_classes: Optional[List[int]],
+        compiled_model,
+        postprocess_fn,
+        num_masks,
+        num_cells,
+        prob,
+        seed,
     ) -> np.ndarray:
         _, _, height, width = data_preprocessed.shape
         input_size = height, width

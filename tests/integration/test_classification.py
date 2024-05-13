@@ -5,23 +5,23 @@ from pathlib import Path
 
 import cv2
 import numpy as np
+import openvino.runtime as ov
 import pytest
 
-import openvino.runtime as ov
-
 import openvino_xai as ovxai
-from openvino_xai.common.utils import retrieve_otx_model, has_xai
-from openvino_xai.explanation.explainer import Explainer
+from openvino_xai.common.parameters import TaskType, XAIMethodType
+from openvino_xai.common.utils import has_xai, retrieve_otx_model
+from openvino_xai.explanation.explain import Explainer
 from openvino_xai.explanation.explanation_parameters import (
+    ExplainMode,
+    ExplanationParameters,
     PostProcessParameters,
     TargetExplainGroup,
-    ExplanationParameters,
-    ExplainMode,
 )
-from openvino_xai.explanation.utils import get_preprocess_fn, get_postprocess_fn
-from openvino_xai.insertion.insertion_parameters import ClassificationInsertionParameters
-from openvino_xai.common.parameters import XAIMethodType, TaskType
-
+from openvino_xai.explanation.utils import get_postprocess_fn, get_preprocess_fn
+from openvino_xai.insertion.insertion_parameters import (
+    ClassificationInsertionParameters,
+)
 
 MODELS = [
     "mlc_mobilenetv3_large_voc",  # verified

@@ -1,9 +1,9 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import argparse
 import os
 import sys
-import argparse
 from pathlib import Path
 
 import cv2
@@ -12,10 +12,16 @@ import openvino.runtime as ov
 
 import openvino_xai as ovxai
 from openvino_xai.common.parameters import TaskType, XAIMethodType
-from openvino_xai.explanation.explanation_parameters import ExplainMode, TargetExplainGroup, ExplanationParameters
-from openvino_xai.explanation.explainer import Explainer
-from openvino_xai.insertion.insertion_parameters import ClassificationInsertionParameters
 from openvino_xai.common.utils import logger
+from openvino_xai.explanation.explain import Explainer
+from openvino_xai.explanation.explanation_parameters import (
+    ExplainMode,
+    ExplanationParameters,
+    TargetExplainGroup,
+)
+from openvino_xai.insertion.insertion_parameters import (
+    ClassificationInsertionParameters,
+)
 
 
 def get_argument_parser():

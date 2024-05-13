@@ -36,13 +36,13 @@ pip install -e .[dev]
 pytest -v -s ./tests/
 
 # Run code quality checks
-pre-commit run -a
+pre-commit run --all-files
 ```
 
 
 ## Usage
 
-To explain [OpenVINO™](https://github.com/openvinotoolkit/openvino) Intermediate Representation (IR) you only need 
+To explain [OpenVINO™](https://github.com/openvinotoolkit/openvino) Intermediate Representation (IR) you only need
 preprocessing function (and sometimes postprocessing).
 
 ```python
@@ -58,7 +58,7 @@ By default the model will be explained using `auto mode`.
 Under the hood of the `auto mode`: will try to run `white-box mode`, if fails => will run `black-box mode`.
 
 Generating saliency maps involves model inference. Explainer will perform model inference.
-To infer, `preprocess_fn` and `postprocess_fn` are requested from the user. 
+To infer, `preprocess_fn` and `postprocess_fn` are requested from the user.
 `preprocess_fn` is always required, `postprocess_fn` is required only for black-box.
 
 ```python
@@ -104,7 +104,7 @@ explanation.save("output_path", "name")
 
 See more usage scenarios in [Usage.md](.docs/Usage.md) and [examples](./examples).
 
-#### Running example scripts
+### Running example scripts
 
 ```python
 # Retrieve OTX models by running tests

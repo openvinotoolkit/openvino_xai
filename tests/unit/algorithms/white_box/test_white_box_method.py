@@ -4,11 +4,12 @@
 from pathlib import Path
 
 import numpy as np
+import openvino.runtime as ov
 import pytest
 
-import openvino.runtime as ov
-
-from openvino_xai.algorithms.white_box.white_box_methods import DetClassProbabilityMapXAIMethod
+from openvino_xai.algorithms.white_box.white_box_methods import (
+    DetClassProbabilityMapXAIMethod,
+)
 from openvino_xai.common.utils import retrieve_otx_model
 
 

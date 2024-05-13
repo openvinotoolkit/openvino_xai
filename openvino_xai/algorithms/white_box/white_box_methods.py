@@ -1,12 +1,10 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from abc import ABC
-from abc import abstractmethod
-from typing import Optional, Tuple, Union, List
+from abc import ABC, abstractmethod
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
-
 import openvino
 from openvino.runtime import opset10 as opset
 

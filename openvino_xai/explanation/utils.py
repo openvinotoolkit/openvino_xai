@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from enum import Enum
 from functools import partial
-from typing import Optional, Union, List, Tuple, Callable
+from typing import Callable, List, Optional, Tuple
 
 import cv2
 import numpy as np
@@ -10,26 +10,26 @@ import openvino.runtime as ov
 
 
 def get_explain_target_indices(
-        target_explain_labels: Optional[List[Union[int, str]]],
-        label_names: Optional[List[str]] = None,
+    target_explain_labels: List[int | str],
+    label_names: List[str] | None = None,
 ) -> List[int]:
     """
     Returns indices to be explained.
 
     :param target_explain_labels: List of custom labels to explain, optional. Can be list of integer indices (int),
         or list of names (str) from label_names.
-    :type target_explain_labels: Optional[List[Union[int, str]]]
+    :type target_explain_labels: List[int | str]
     :param label_names: List of all label names.
-    :type label_names: Optional[List[str]]
+    :type label_names: List[str] | None
     """
     if isinstance(target_explain_labels[0], int):
-        return target_explain_labels
+        return target_explain_labels  # type: ignore
 
     if not isinstance(target_explain_labels[0], str):
         raise ValueError(f"Explain labels expected to be int or str, but got {type(target_explain_labels[0])}")
 
     if not label_names:
-        raise ValueError(f"Label names should be provided when target_explain_labels contain string names.")
+        raise ValueError("Label names should be provided when target_explain_labels contain string names.")
 
     # Assuming len(target_explain_labels) << len(label_names)
     target_explain_indices = []
@@ -44,13 +44,13 @@ def get_explain_target_indices(
 
 
 def preprocess_fn(
-        x: np.ndarray,
-        change_channel_order: bool = False,
-        input_size: Optional[Tuple[int, int]] = None,
-        mean: np.ndarray = np.array([0.0, 0.0, 0.0]),
-        std: np.ndarray = np.array([1.0, 1.0, 1.0]),
-        hwc_to_chw: bool = False,
-        expand_zero_dim: bool = True,
+    x: np.ndarray,
+    change_channel_order: bool = False,
+    input_size: Optional[Tuple[int, int]] = None,
+    mean: np.ndarray = np.array([0.0, 0.0, 0.0]),
+    std: np.ndarray = np.array([1.0, 1.0, 1.0]),
+    hwc_to_chw: bool = False,
+    expand_zero_dim: bool = True,
 ) -> np.ndarray:
     """Preprocess function."""
     # Change color channel order
@@ -76,12 +76,12 @@ def preprocess_fn(
 
 
 def get_preprocess_fn(
-        change_channel_order=False,
-        input_size=None,
-        mean=np.array([0.0, 0.0, 0.0]),
-        std=np.array([1.0, 1.0, 1.0]),
-        hwc_to_chw=False,
-        expand_zero_dim=True,
+    change_channel_order=False,
+    input_size=None,
+    mean=np.array([0.0, 0.0, 0.0]),
+    std=np.array([1.0, 1.0, 1.0]),
+    hwc_to_chw=False,
+    expand_zero_dim=True,
 ) -> Callable[[ov.utils.data_helpers.wrappers.OVDict], np.ndarray]:
     """Returns partially initialized preprocess_fn."""
     return partial(

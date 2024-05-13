@@ -6,29 +6,32 @@ from pathlib import Path
 import addict
 import cv2
 import numpy as np
-import pytest
-
 import openvino
 import openvino.runtime as ov
+import pytest
 
-from openvino_xai.algorithms.white_box.create_method import create_white_box_detection_explain_method
-from openvino_xai.algorithms.white_box.white_box_methods import DetClassProbabilityMapXAIMethod
-from openvino_xai.common.parameters import XAIMethodType, TaskType
+from openvino_xai.algorithms.white_box.create_method import (
+    create_white_box_detection_explain_method,
+)
+from openvino_xai.algorithms.white_box.white_box_methods import (
+    DetClassProbabilityMapXAIMethod,
+)
+from openvino_xai.common.parameters import TaskType, XAIMethodType
 from openvino_xai.common.utils import retrieve_otx_model
-from openvino_xai.explanation.explainer import Explainer
+from openvino_xai.explanation.explain import Explainer
 from openvino_xai.explanation.explanation_parameters import (
+    ExplainMode,
+    ExplanationParameters,
     PostProcessParameters,
     TargetExplainGroup,
-    ExplanationParameters, ExplainMode,
 )
 from openvino_xai.explanation.utils import get_preprocess_fn
 from openvino_xai.insertion.insertion_parameters import DetectionInsertionParameters
 
-
 MODEL_CONFIGS = addict.Addict(
     {
         "det_mobilenetv2_atss_bccd": {
-            "anchors": None, #[1, 1, 1, 1, 1],
+            "anchors": None,  # [1, 1, 1, 1, 1],
             "num_classes": 3,
             "node_names": [
                 "/bbox_head/atss_cls_1/Conv/WithoutBiases",
@@ -48,7 +51,7 @@ MODEL_CONFIGS = addict.Addict(
             "input_size": (864, 864),
         },
         "det_yolox_bccd": {
-            "anchors": None, #[1, 1, 1, 1, 1],
+            "anchors": None,  # [1, 1, 1, 1, 1],
             "num_classes": 3,
             "node_names": [
                 "/bbox_head/multi_level_conv_cls.0/Conv/WithoutBiases",
@@ -79,8 +82,8 @@ class TestDetWB:
     data_dir = Path(".data")
     _ref_sal_maps_reciprocam = {
         "det_mobilenetv2_atss_bccd": np.array([222, 243, 232, 229, 221, 217, 237, 246, 252, 255], dtype=np.uint8),
-        "det_mobilenetv2_ssd_bccd": np.array([83,  93,  61,  48, 110, 109,  78, 128, 158, 111], dtype=np.uint8),
-        "det_yolox_bccd": np.array([17, 13, 15, 60, 94, 52, 61, 47,  8, 40], dtype=np.uint8),
+        "det_mobilenetv2_ssd_bccd": np.array([83, 93, 61, 48, 110, 109, 78, 128, 158, 111], dtype=np.uint8),
+        "det_yolox_bccd": np.array([17, 13, 15, 60, 94, 52, 61, 47, 8, 40], dtype=np.uint8),
     }
     _sal_map_size = (23, 23)
 

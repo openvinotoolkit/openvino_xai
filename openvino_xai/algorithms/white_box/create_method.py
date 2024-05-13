@@ -2,18 +2,22 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from typing import Optional
+
 from openvino import runtime as ov
 
 from openvino_xai.algorithms.white_box.white_box_methods import (
-    WhiteBoxXAIMethodBase,
-    ReciproCAMXAIMethod,
     ActivationMapXAIMethod,
     DetClassProbabilityMapXAIMethod,
+    ReciproCAMXAIMethod,
     ViTReciproCAMXAIMethod,
+    WhiteBoxXAIMethodBase,
 )
-from openvino_xai.insertion.insertion_parameters import ClassificationInsertionParameters, DetectionInsertionParameters
 from openvino_xai.common.parameters import XAIMethodType
 from openvino_xai.common.utils import logger
+from openvino_xai.insertion.insertion_parameters import (
+    ClassificationInsertionParameters,
+    DetectionInsertionParameters,
+)
 
 
 def create_white_box_classification_explain_method(

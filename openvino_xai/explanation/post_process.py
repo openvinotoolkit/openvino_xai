@@ -1,18 +1,18 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Tuple, List
+from typing import Dict, List, Tuple
 
 import cv2
 import numpy as np
 
 from openvino_xai.explanation.explanation_parameters import (
-    PostProcessParameters,
-    SaliencyMapLayout,
-    GRAY_LAYOUTS,
     COLOR_MAPPED_LAYOUTS,
+    GRAY_LAYOUTS,
     MULTIPLE_MAP_LAYOUTS,
     ONE_MAP_LAYOUTS,
+    PostProcessParameters,
+    SaliencyMapLayout,
 )
 from openvino_xai.explanation.explanation_result import ExplanationResult
 
@@ -94,7 +94,7 @@ class PostProcessor:
         post_processing_parameters: PostProcessParameters = PostProcessParameters(),
     ):
         self._explanation = explanation
-        self._saliency_map_np = None
+        self._saliency_map_np: np.ndarray | None = None
         self._data = data
         self._output_size = output_size
 
@@ -148,18 +148,20 @@ class PostProcessor:
         return self._explanation
 
     def _apply_normalization(self) -> None:
-        assert self.layout in GRAY_LAYOUTS, (
-            f"Saliency map to normalize has to be grayscale. The layout must be in {GRAY_LAYOUTS}, "
-            f"but got {self.layout}."
-        )
+        if self.layout not in GRAY_LAYOUTS:
+            raise ValueError(
+                f"Saliency map to normalize has to be grayscale. The layout must be in {GRAY_LAYOUTS}, "
+                f"but got {self.layout}."
+            )
         self._saliency_map_np = normalize(self._saliency_map_np)
 
     def _apply_resize(self) -> None:
         # TODO: support resize of colormapped images.
-        assert self.layout in GRAY_LAYOUTS, (
-            f"Saliency map to normalize has to be grayscale. The layout must be in {GRAY_LAYOUTS}, "
-            f"but got {self.layout}."
-        )
+        if self.layout not in GRAY_LAYOUTS:
+            raise ValueError(
+                f"Saliency map to resize has to be grayscale. The layout must be in {GRAY_LAYOUTS}, "
+                f"but got {self.layout}."
+            )
         output_size = self._output_size if self._output_size else self._data.shape[:2]
         self._saliency_map_np = resize(self._saliency_map_np, output_size)
 
@@ -167,14 +169,15 @@ class PostProcessor:
         self._apply_normalization()
 
     def _apply_colormap(self) -> None:
-        assert (
-            self._saliency_map_np.dtype == np.uint8
-        ), "Colormap requires saliency map to has uint8 dtype. Enable 'normalize' flag for PostProcessor."
-        assert self.layout in GRAY_LAYOUTS, (
-            f"Saliency map to normalize has to be grayscale. The layout must be in {GRAY_LAYOUTS}, "
-            f"but got {self.layout}."
-        )
-
+        if self._saliency_map_np.dtype != np.uint8:
+            raise ValueError(
+                "Colormap requires saliency map to has uint8 dtype. Enable 'normalize' flag for PostProcessor."
+            )
+        if self.layout not in GRAY_LAYOUTS:
+            raise ValueError(
+                f"Saliency map to colormap has to be grayscale. The layout must be in {GRAY_LAYOUTS}, "
+                f"but got {self.layout}."
+            )
         self._saliency_map_np = colormap(self._saliency_map_np)
         if self.layout == SaliencyMapLayout.ONE_MAP_PER_IMAGE_GRAY:
             self.layout = SaliencyMapLayout.ONE_MAP_PER_IMAGE_COLOR
@@ -186,11 +189,11 @@ class PostProcessor:
         self._saliency_map_np = overlay(self._saliency_map_np, self._data, self._overlay_weight)
 
     def _convert_sal_map_to_dict(self, class_idx: List) -> None:
+        dict_sal_map: Dict[int | str, np.ndarray] = {}
         if self.layout in ONE_MAP_LAYOUTS:
-            dict_sal_map = {"per_image_map": self._saliency_map_np[0]}
+            dict_sal_map["per_image_map"] = self._saliency_map_np[0]
             self._saliency_map_np = dict_sal_map
         elif self.layout in MULTIPLE_MAP_LAYOUTS:
-            dict_sal_map = {}
             for idx, class_sal in zip(class_idx, self._saliency_map_np):
                 dict_sal_map[idx] = class_sal
         else:

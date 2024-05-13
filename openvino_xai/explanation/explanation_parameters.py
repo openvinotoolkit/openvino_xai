@@ -3,7 +3,7 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional, List, Union
+from typing import List, Optional, Union
 
 from openvino_xai.common.parameters import XAIMethodType
 
@@ -85,7 +85,9 @@ class ExplanationParameters:
     target_explain_group: TargetExplainGroup = TargetExplainGroup.CUSTOM
     target_explain_labels: Optional[List[Union[int, str]]] = None
     label_names: Optional[List[str]] = None
-    post_processing_parameters: PostProcessParameters = field(default_factory=lambda: PostProcessParameters(overlay=True))
+    post_processing_parameters: PostProcessParameters = field(
+        default_factory=lambda: PostProcessParameters(overlay=True)
+    )
     black_box_method: XAIMethodType = XAIMethodType.RISE
 
 

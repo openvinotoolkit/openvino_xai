@@ -3,7 +3,7 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Optional, Tuple, Union, Dict
+from typing import Dict, List, Optional, Tuple, Union
 
 from openvino_xai.common.parameters import XAIMethodType
 

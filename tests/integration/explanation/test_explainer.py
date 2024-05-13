@@ -2,16 +2,20 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
-import pytest
 
-import openvino.runtime as ov
 import cv2
+import openvino.runtime as ov
+import pytest
 
 from openvino_xai.common.parameters import TaskType
 from openvino_xai.common.utils import retrieve_otx_model
-from openvino_xai.explanation import ExplanationParameters, TargetExplainGroup, ExplainMode
-from openvino_xai.explanation.explainer import Explainer
-from openvino_xai.explanation.utils import get_preprocess_fn, get_postprocess_fn
+from openvino_xai.explanation import (
+    ExplainMode,
+    ExplanationParameters,
+    TargetExplainGroup,
+)
+from openvino_xai.explanation.explain import Explainer
+from openvino_xai.explanation.utils import get_postprocess_fn, get_preprocess_fn
 from openvino_xai.insertion import ClassificationInsertionParameters
 
 MODEL_NAME = "mlc_mobilenetv3_large_voc"
@@ -54,8 +58,28 @@ class TestExplainer:
             explain_mode=explain_mode,
         )
 
-        voc_labels = ['aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car', 'cat', 'chair', 'cow', 'diningtable',
-                  'dog', 'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor']
+        voc_labels = [
+            "aeroplane",
+            "bicycle",
+            "bird",
+            "boat",
+            "bottle",
+            "bus",
+            "car",
+            "cat",
+            "chair",
+            "cow",
+            "diningtable",
+            "dog",
+            "horse",
+            "motorbike",
+            "person",
+            "pottedplant",
+            "sheep",
+            "sofa",
+            "train",
+            "tvmonitor",
+        ]
         explanation_parameters = ExplanationParameters(
             target_explain_group=target_explain_group,
             target_explain_labels=[11, 14],

@@ -3,16 +3,23 @@
 """
 Interface for getting explanation.
 """
-from openvino_xai.explanation.explainer import Explainer
+from openvino_xai.explanation.explain import Explainer
 from openvino_xai.explanation.explanation_parameters import (
-    ExplanationParameters,
     ExplainMode,
-    TargetExplainGroup,
+    ExplanationParameters,
     PostProcessParameters,
     SaliencyMapLayout,
+    TargetExplainGroup,
 )
 from openvino_xai.explanation.explanation_result import ExplanationResult
-from openvino_xai.explanation.post_process import PostProcessor, normalize, get_min_max, resize, colormap, overlay
+from openvino_xai.explanation.post_process import (
+    PostProcessor,
+    colormap,
+    get_min_max,
+    normalize,
+    overlay,
+    resize,
+)
 
 __all__ = [
     "Explainer",

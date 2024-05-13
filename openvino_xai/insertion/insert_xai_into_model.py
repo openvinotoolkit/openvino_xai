@@ -1,20 +1,20 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from pathlib import Path
-from typing import Union, Optional
+from typing import Optional, Union
 
 import openvino
 import openvino.runtime as ov
-from openvino.runtime import Type
 from openvino.preprocess import PrePostProcessor
+from openvino.runtime import Type
 
 from openvino_xai.algorithms.white_box.create_method import (
     create_white_box_classification_explain_method,
     create_white_box_detection_explain_method,
 )
 from openvino_xai.common.parameters import TaskType
+from openvino_xai.common.utils import SALIENCY_MAP_OUTPUT_NAME, has_xai, logger
 from openvino_xai.insertion.insertion_parameters import InsertionParameters
-from openvino_xai.common.utils import logger, has_xai, SALIENCY_MAP_OUTPUT_NAME
 
 
 def insert_xai(

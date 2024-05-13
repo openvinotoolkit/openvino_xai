@@ -2,8 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from openvino_xai.common.parameters import XAIMethodType
-from openvino_xai.insertion.insertion_parameters import ClassificationInsertionParameters
-from openvino_xai.insertion.insertion_parameters import DetectionInsertionParameters
+from openvino_xai.insertion.insertion_parameters import (
+    ClassificationInsertionParameters,
+    DetectionInsertionParameters,
+)
 
 
 def test_classification_insertion_parameters():

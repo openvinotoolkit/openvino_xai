@@ -1,7 +1,7 @@
 # OpenVINO-XAI (OVXAI) usage
 
 OpenVINO-XAI provides a suite of eXplainable AI (XAI) algorithms for explanation of OpenVINO™ Intermediate Representation (IR).
-Model explanation helps to identify the parts of the input that are responsible for the model's prediction, 
+Model explanation helps to identify the parts of the input that are responsible for the model's prediction,
 which is useful for analyzing model's performance.
 
 Current tutorial is primarily for classification CNNs.
@@ -9,6 +9,7 @@ Current tutorial is primarily for classification CNNs.
 OpenVINO-XAI API documentation can be found [here](https://curly-couscous-ovjvm29.pages.github.io/).
 
 Content:
+
 - Explainer
 - Basic usage: Auto mode
 - White-Box mode
@@ -18,6 +19,7 @@ Content:
 
 
 ## Explainer - interface to XAI algorithms
+
 ```python
 explainer = Explainer(
     model,
@@ -29,6 +31,7 @@ explanation = explainer(data, explanation_parameters)
 
 
 ## Basic usage: Auto mode
+
 Under the hood of the auto mode: will try to run white-box mode, if fails => will run black-box mode.
 See more details about white_box and black-box modes below.
 
@@ -75,6 +78,7 @@ explanation.save("output_path", "name")
 
 
 ## White-Box mode
+
 White-box mode is a two-step process that includes OV model update and further inference of the updated model.
 
 Updated model has additional XAI branch inserted. XAI branch generates saliency maps during model inference. Saliency maps extend the list of model outputs, i.e. saliency maps are generated along with the original model outputs. Depending on the white-box algorithm, computational overhead of inserted XAI branch may vary, but it is usually relatively modest.
@@ -137,10 +141,10 @@ explanation.save("output_path", "name")
 
 
 ## Black-Box mode
-Black-box mode does not update the model (treating model as a black-box).
 
-Black-box approaches are based on the perturbation of the input data and measurement of the model's output change. 
-The process is repeated many times, which requires hundreds or thousands of forward passes 
+Black-box mode does not update the model (treating model as a black-box).
+Black-box approaches are based on the perturbation of the input data and measurement of the model's output change.
+The process is repeated many times, which requires hundreds or thousands of forward passes
 and introduces significant computational overhead.
 
 `preprocess_fn` and `postprocess_fn` are required to be provided by the user for the black-box mode.
@@ -197,8 +201,8 @@ explanation.save("output_path", "name")
 
 
 ## XAI insertion (white-box usage)
-As mentioned above, saliency map generation requires model inference. 
 
+As mentioned above, saliency map generation requires model inference.
 In the above use cases, OVXAI performs model inference using provided processing functions.
 Alternative approach is to use OVXAI just to insert XAI branch into the model and infer it in the original pipeline.
 
@@ -235,6 +239,7 @@ model_xai = ovxai.insert_xai(
 
 
 ## Example scripts
+
 More usage scenarios are available in [examples](./../examples).
 
 ```python

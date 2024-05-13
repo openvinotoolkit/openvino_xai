@@ -1,3 +1,6 @@
+<!-- markdownlint-disable -->
+TODO (Galina): enable
+
 # OpenVINO-XAI: Classification explanation
 
 This notebook shows an example how to use OpenVINO-XAI.

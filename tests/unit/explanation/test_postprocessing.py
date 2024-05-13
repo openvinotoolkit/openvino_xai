@@ -3,7 +3,7 @@
 
 import numpy as np
 
-from openvino_xai.explanation import normalize, get_min_max, resize, colormap, overlay
+from openvino_xai.explanation import colormap, get_min_max, normalize, overlay, resize
 
 
 def test_normalize_3d():

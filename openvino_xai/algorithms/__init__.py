@@ -5,14 +5,13 @@ XAI algorithms.
 """
 from openvino_xai.algorithms.black_box.black_box_methods import RISE
 from openvino_xai.algorithms.white_box.white_box_methods import (
-    WhiteBoxXAIMethodBase,
     ActivationMapXAIMethod,
+    DetClassProbabilityMapXAIMethod,
     FeatureMapPerturbationBase,
     ReciproCAMXAIMethod,
     ViTReciproCAMXAIMethod,
-    DetClassProbabilityMapXAIMethod,
+    WhiteBoxXAIMethodBase,
 )
-
 
 __all__ = [
     "WhiteBoxXAIMethodBase",
