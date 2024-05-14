@@ -1,12 +1,9 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from pathlib import Path
-from typing import Optional, Union
 
-import openvino
 import openvino.runtime as ov
 from openvino.preprocess import PrePostProcessor
-from openvino.runtime import Type
 
 from openvino_xai.algorithms.white_box.create_method import (
     create_white_box_classification_explain_method,
@@ -18,9 +15,9 @@ from openvino_xai.insertion.insertion_parameters import InsertionParameters
 
 
 def insert_xai(
-    model: Union[ov.Model, str],
+    model: ov.Model | str,
     task_type: TaskType,
-    insertion_parameters: Optional[InsertionParameters] = None,
+    insertion_parameters: InsertionParameters | None = None,
 ) -> ov.Model:
     """
     Function that inserts XAI branch into IR.
@@ -29,7 +26,7 @@ def insert_xai(
         model_xai = openvino_xai.insert_xai(model, task_type=TaskType.CLASSIFICATION)
 
     :param model: Original IR or path to .xml.
-    :type model: Union[ov.Model, str]
+    :type model: ov.Model | str
     :param task_type: Type of the task.
     :type task_type: TaskType
     :param insertion_parameters: Insertion parameters that parametrize white-box method,
@@ -46,7 +43,7 @@ def insert_xai(
                 f"but provided model has {model_suffix} extension. "
                 f"Please provide path to OV IR for white-box explanation methods."
             )
-        model = openvino.runtime.Core().read_model(model)
+        model = ov.Core().read_model(model)
 
     if has_xai(model):
         logger.info("Provided IR model already contains XAI branch, return it as-is.")
@@ -62,7 +59,7 @@ def insert_xai(
 
 
 def _insert_xai_branch_into_model(
-    model: ov.Model, task_type: TaskType, insertion_parameters: Optional[InsertionParameters]
+    model: ov.Model, task_type: TaskType, insertion_parameters: InsertionParameters | None
 ) -> ov.Model:
     if task_type == TaskType.CLASSIFICATION:
         explain_method = create_white_box_classification_explain_method(model, insertion_parameters)  # type: ignore
@@ -90,6 +87,6 @@ def _set_xai_output_name_and_precision(
     model_xai.outputs[xai_output_index].tensor.set_names({SALIENCY_MAP_OUTPUT_NAME})
     if set_uint8:
         ppp = PrePostProcessor(model_xai)
-        ppp.output(SALIENCY_MAP_OUTPUT_NAME).tensor().set_element_type(Type.u8)
+        ppp.output(SALIENCY_MAP_OUTPUT_NAME).tensor().set_element_type(ov.Type.u8)
         model_xai = ppp.build()
     return model_xai

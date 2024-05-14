@@ -7,11 +7,11 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-import openvino
+import openvino.runtime as ov
 import pytest
 
 from openvino_xai.common.parameters import TaskType, XAIMethodType
-from openvino_xai.explanation.explainer import Explainer
+from openvino_xai.explanation.explain import Explainer
 from openvino_xai.explanation.explanation_parameters import (
     ExplainMode,
     ExplanationParameters,
@@ -175,7 +175,7 @@ class TestImageClassificationTimm:
         else:
             self.update_report("report_wb.csv", model_id, "True", "True")
 
-        model = openvino.runtime.Core().read_model(ir_path)
+        model = ov.Core().read_model(ir_path)
 
         if model_id in LIMITED_DIVERSE_SET_OF_CNN_MODELS:
             explain_method_type = XAIMethodType.RECIPROCAM
@@ -280,7 +280,7 @@ class TestImageClassificationTimm:
         else:
             self.update_report("report_bb.csv", model_id, "True", "True")
 
-        model = openvino.runtime.Core().read_model(onnx_path)
+        model = ov.Core().read_model(onnx_path)
 
         mean_values = [(item * 255) for item in model_cfg["mean"]]
         scale_values = [(item * 255) for item in model_cfg["std"]]

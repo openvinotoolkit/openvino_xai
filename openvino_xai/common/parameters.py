@@ -13,8 +13,8 @@ class TaskType(Enum):
         DETECTION - Detection task.
     """
 
-    CLASSIFICATION = "Classification"
-    DETECTION = "Detection"
+    CLASSIFICATION = "classification"
+    DETECTION = "detection"
 
 
 class XAIMethodType(Enum):
@@ -33,7 +33,7 @@ class XAIMethodType(Enum):
     RECIPROCAM = "reciprocam"
     VITRECIPROCAM = "vitreciprocam"
     DETCLASSPROBABILITYMAP = "detclassprobabilitymap"
-    RISE = "RISE"
+    RISE = "rise"
 
 
 WhiteBoxXAIMethods = {

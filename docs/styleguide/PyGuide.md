@@ -24,7 +24,29 @@ Automatic code formatting is mandatory for all Python files, but you can disable
 
 ## 3 Python Language Rules
 
-TBD
+### 3.1 Type Annotated Code
+
+Code should be annotated with type hints according to
+[PEP-484](https://www.python.org/dev/peps/pep-0484/) with [PEP-604](https://peps.python.org/pep-0604/) update, and type-check the code at
+build time with a type checking tool like [mypy](http://www.mypy-lang.org/).
+
+```python
+def func(a: int) -> List[int]:
+
+def func(a: int | str) -> List[int | str]:
+```
+
+### 3.2 Avoid using mutable default arguments
+
+Use None as the default value.
+
+```python
+def add_to_list(nums: List[int] | None = None, item: int) -> List[int]:
+  if nums is None:
+    nums = []
+  nums.append(item)
+  return nums
+```
 
 ## 4 Python Style Rules
 

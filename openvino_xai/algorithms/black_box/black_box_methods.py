@@ -1,10 +1,8 @@
-# mypy: disable-error-code="union-attr"
-
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from abc import ABC
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, List, Tuple
 
 import cv2
 import numpy as np
@@ -22,11 +20,11 @@ class RISE(BlackBoxXAIMethodBase):
     @classmethod
     def run(
         cls,
-        compiled_model: ov.Model,
+        compiled_model: ov.ie_api.CompiledModel,
         preprocess_fn: Callable[[np.ndarray], np.ndarray],
         postprocess_fn: Callable[[ov.utils.data_helpers.wrappers.OVDict], np.ndarray],
         data: np.ndarray,
-        explain_target_indices: Optional[List[int]] = None,
+        explain_target_indices: List[int] | None = None,
         num_masks: int = 5000,
         num_cells: int = 8,
         prob: float = 0.5,
@@ -81,13 +79,13 @@ class RISE(BlackBoxXAIMethodBase):
     def _run_synchronous_explanation(
         cls,
         data_preprocessed: np.ndarray,
-        target_classes: Optional[List[int]],
-        compiled_model,
-        postprocess_fn,
-        num_masks,
-        num_cells,
-        prob,
-        seed,
+        target_classes: List[int] | None,
+        compiled_model: ov.ie_api.CompiledModel,
+        postprocess_fn: Callable[[ov.utils.data_helpers.wrappers.OVDict], np.ndarray],
+        num_masks: int,
+        num_cells: int,
+        prob: float,
+        seed: int,
     ) -> np.ndarray:
         _, _, height, width = data_preprocessed.shape
         input_size = height, width
@@ -120,7 +118,7 @@ class RISE(BlackBoxXAIMethodBase):
         return sal_maps
 
     @staticmethod
-    def _get_scored_mask(raw_scores: np.ndarray, mask: np.ndarray, target_classes: Optional[List[int]]) -> np.ndarray:
+    def _get_scored_mask(raw_scores: np.ndarray, mask: np.ndarray, target_classes: List[int] | None) -> np.ndarray:
         if target_classes:
             return np.take(raw_scores, target_classes).reshape(-1, 1, 1) * mask
         else:
@@ -128,7 +126,7 @@ class RISE(BlackBoxXAIMethodBase):
 
     @staticmethod
     def _reconstruct_sparce_saliency_map(
-        sal_maps: np.ndarray, num_classes: int, input_size, target_classes: Optional[List[int]]
+        sal_maps: np.ndarray, num_classes: int, input_size, target_classes: List[int] | None
     ) -> np.ndarray:
         # TODO: see if np.put() or other alternatives works faster (requires flatten array)
         sal_maps_tmp = sal_maps

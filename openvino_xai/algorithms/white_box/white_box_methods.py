@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from abc import ABC, abstractmethod
-from typing import List, Optional, Tuple, Union
+from typing import List, Tuple
 
 import numpy as np
-import openvino
+import openvino.runtime as ov
 from openvino.runtime import opset10 as opset
 
 from openvino_xai.explanation.explanation_parameters import TargetExplainGroup
@@ -16,7 +16,7 @@ from openvino_xai.insertion.parse_model import IRParserCls
 class WhiteBoxXAIMethodBase(ABC):
     """Base class for methods that generates XAI branch of the model."""
 
-    def __init__(self, model: openvino.runtime.Model, embed_normalization: bool = True):
+    def __init__(self, model: ov.Model, embed_normalization: bool = True):
         self._model_ori = model
         self.embed_normalization = embed_normalization
 
@@ -33,7 +33,7 @@ class WhiteBoxXAIMethodBase(ABC):
         """Implements specific XAI algorithm"""
 
     @staticmethod
-    def _propagate_dynamic_batch_dimension(model: openvino.runtime.Model):
+    def _propagate_dynamic_batch_dimension(model: ov.Model):
         # TODO: support models with multiple inputs.
         assert len(model.inputs) == 1, "Support only for models with a single input."
         if not model.input(0).partial_shape[0].is_dynamic:
@@ -42,7 +42,7 @@ class WhiteBoxXAIMethodBase(ABC):
             model.reshape(partial_shape)
 
     @staticmethod
-    def _normalize_saliency_maps(saliency_maps: openvino.runtime.Node, per_class: bool) -> openvino.runtime.Node:
+    def _normalize_saliency_maps(saliency_maps: ov.Node, per_class: bool) -> ov.Node:
         """Normalize saliency maps to [0, 255] range, per-map."""
         # TODO: unify for per-class and for per-image
         if per_class:
@@ -78,8 +78,8 @@ class ActivationMapXAIMethod(WhiteBoxXAIMethodBase):
 
     def __init__(
         self,
-        model: openvino.runtime.Model,
-        target_layer: Optional[str] = None,
+        model: ov.Model,
+        target_layer: str | None = None,
         embed_normalization: bool = True,
     ):
         super().__init__(model, embed_normalization)
@@ -89,7 +89,7 @@ class ActivationMapXAIMethod(WhiteBoxXAIMethodBase):
         self.default_target_explain_group = TargetExplainGroup.IMAGE
         self._target_layer = target_layer
 
-    def generate_xai_branch(self) -> openvino.runtime.Node:
+    def generate_xai_branch(self) -> ov.Node:
         """Implements ActivationMap XAI algorithm."""
         target_node_ori = IRParserCls.get_target_node(self._model_ori, self.model_type, self._target_layer)
         saliency_maps = opset.reduce_mean(target_node_ori.output(0), 1)
@@ -102,7 +102,7 @@ class FeatureMapPerturbationBase(WhiteBoxXAIMethodBase):
     """Base class for Recipro-CAM methods.
 
     :param model: OpenVino model.
-    :type model: openvino.runtime.Model
+    :type model: ov.Model
     :parameter target_layer: Target layer (node) name after which the XAI branch will be inserted.
     :type target_layer: str
     :param embed_normalization: Whether to normalize output or not.
@@ -111,8 +111,8 @@ class FeatureMapPerturbationBase(WhiteBoxXAIMethodBase):
 
     def __init__(
         self,
-        model: openvino.runtime.Model,
-        target_layer: Optional[str] = None,
+        model: ov.Model,
+        target_layer: str | None = None,
         embed_normalization: bool = True,
     ):
         super().__init__(model, embed_normalization)
@@ -124,7 +124,7 @@ class FeatureMapPerturbationBase(WhiteBoxXAIMethodBase):
         self.default_target_explain_group = TargetExplainGroup.CUSTOM
         self._target_layer = target_layer
 
-    def generate_xai_branch(self):
+    def generate_xai_branch(self) -> ov.Node:
         """Implements FeatureMapPerturbation-based XAI algorithm."""
         model_clone = self._model_ori.clone()
         self._propagate_dynamic_batch_dimension(model_clone)
@@ -136,7 +136,7 @@ class FeatureMapPerturbationBase(WhiteBoxXAIMethodBase):
         return saliency_maps
 
     @abstractmethod
-    def _get_saliency_map(self, model_clone: openvino.runtime.Model):
+    def _get_saliency_map(self, model_clone: ov.Model):
         raise NotImplementedError
 
 
@@ -145,14 +145,14 @@ class ReciproCAMXAIMethod(FeatureMapPerturbationBase):
 
     def __init__(
         self,
-        model: openvino.runtime.Model,
-        target_layer: Optional[str] = None,
+        model: ov.Model,
+        target_layer: str | None = None,
         embed_normalization: bool = True,
     ):
         super().__init__(model, target_layer, embed_normalization)
         self.model_type = ModelType.CNN
 
-    def _get_saliency_map(self, model_clone: openvino.runtime.Model):
+    def _get_saliency_map(self, model_clone: ov.Model) -> ov.Node:
         target_node_ori = IRParserCls.get_target_node(self._model_ori, self.model_type, self._target_layer)
         target_node_name = self._target_layer or target_node_ori.get_friendly_name()
         post_target_node_clone = IRParserCls.get_post_target_node(model_clone, self.model_type, target_node_name)
@@ -212,8 +212,8 @@ class ViTReciproCAMXAIMethod(FeatureMapPerturbationBase):
 
     def __init__(
         self,
-        model: openvino.runtime.Model,
-        target_layer: Optional[str] = None,
+        model: ov.Model,
+        target_layer: str | None = None,
         embed_normalization: bool = True,
         use_gaussian: bool = True,
         cls_token: bool = True,
@@ -228,7 +228,7 @@ class ViTReciproCAMXAIMethod(FeatureMapPerturbationBase):
         # Count of target "Add" node (between the blocks), from the output, 1-indexed
         self._k = k * 2 + int(final_norm)
 
-    def _get_saliency_map(self, model_clone: openvino.runtime.Model):
+    def _get_saliency_map(self, model_clone: ov.Model) -> ov.Node:
         #      Add       -> add node before the target transformer blocks
         #   ↓       ↓
         #  skip   block  -> skip connection to the next block and target block itself
@@ -285,7 +285,7 @@ class ViTReciproCAMXAIMethod(FeatureMapPerturbationBase):
         saliency_maps = opset.reshape(tmp, (1, num_classes.get_length(), h, w), False)
         return saliency_maps
 
-    def _get_internal_size(self, target_node):
+    def _get_internal_size(self, target_node: ov.Node) -> Tuple[int, int, int, int]:
         _, token_number, dim = target_node.get_output_partial_shape(0)
         if token_number.is_dynamic or dim.is_dynamic:
             first_conv_node = IRParserCls.get_first_conv_node(self._model_ori)
@@ -300,7 +300,7 @@ class ViTReciproCAMXAIMethod(FeatureMapPerturbationBase):
             num_aux_tokens = token_number - (h * w)
         return dim, h, w, num_aux_tokens
 
-    def _get_add_node_from_two_nodes(self, node_list):
+    def _get_add_node_from_two_nodes(self, node_list: List[ov.Node]) -> ov.Node:
         self._post_add_node_check(node_list)
 
         node1, node2 = node_list
@@ -308,7 +308,7 @@ class ViTReciproCAMXAIMethod(FeatureMapPerturbationBase):
             return node1
         return node2
 
-    def _get_non_add_node_from_two_nodes(self, node_list):
+    def _get_non_add_node_from_two_nodes(self, node_list: List[ov.Node]) -> ov.Node:
         self._post_add_node_check(node_list)
 
         node1, node2 = node_list
@@ -317,7 +317,7 @@ class ViTReciproCAMXAIMethod(FeatureMapPerturbationBase):
         return node2
 
     @staticmethod
-    def _post_add_node_check(node_list):
+    def _post_add_node_check(node_list: List[ov.Node]):
         if len(node_list) != 2:
             raise ValueError(f"Only two outputs of the between block Add node supported, " f"but got {len(node_list)}.")
         node1, node2 = node_list
@@ -327,7 +327,7 @@ class ViTReciproCAMXAIMethod(FeatureMapPerturbationBase):
                 f"But got {node1.get_type_name()} and {node2.get_type_name()}."
             )
 
-    def _get_mosaic_feature_map(self, target_node_ori, dim, h, w, num_aux_tokens):
+    def _get_mosaic_feature_map(self, target_node_ori: ov.Node, dim: int, h: int, w: int, num_aux_tokens: int):
         if self._use_gaussian:
             if self._cls_token:
                 cls_token = opset.slice(
@@ -387,10 +387,10 @@ class DetClassProbabilityMapXAIMethod(WhiteBoxXAIMethodBase):
 
     def __init__(
         self,
-        model: openvino.runtime.Model,
+        model: ov.Model,
         target_layer: List[str],
-        num_anchors: Optional[List[int]] = None,
-        saliency_map_size: Union[Tuple[int, int], List[int]] = (23, 23),
+        num_anchors: List[int] | None = None,
+        saliency_map_size: Tuple[int, int] | List[int] = (23, 23),
         embed_normalization: bool = True,
     ):
         super().__init__(model, embed_normalization)
@@ -406,7 +406,7 @@ class DetClassProbabilityMapXAIMethod(WhiteBoxXAIMethodBase):
         )
         self._saliency_map_size = saliency_map_size  # Not always can be obtained from model -> defined externally
 
-    def generate_xai_branch(self) -> openvino.runtime.Node:
+    def generate_xai_branch(self) -> ov.Node:
         """Implements DetClassProbabilityMap XAI algorithm."""
         cls_head_output_nodes = []
         for op in self._model_ori.get_ordered_ops():

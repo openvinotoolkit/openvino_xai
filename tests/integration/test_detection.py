@@ -215,7 +215,7 @@ class TestDetWB:
 
         det_xai_method = create_white_box_detection_explain_method(model, insertion_parameters)
         assert isinstance(det_xai_method, DetClassProbabilityMapXAIMethod)
-        assert isinstance(det_xai_method.model_ori, openvino.runtime.Model)
+        assert isinstance(det_xai_method.model_ori, ov.Model)
 
     def get_default_model_and_insertion_parameters(self):
         retrieve_otx_model(self.data_dir, DEFAULT_MODEL)

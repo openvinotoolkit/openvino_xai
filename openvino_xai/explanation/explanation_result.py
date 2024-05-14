@@ -3,7 +3,7 @@
 
 import os
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Dict, List
 
 import cv2
 import numpy as np
@@ -25,17 +25,17 @@ class ExplanationResult:
     :type target_explain_group: TargetExplainGroup
     :param target_explain_labels: List of custom labels to explain, optional. Can be list of integer indices (int),
         or list of names (str) from label_names.
-    :type target_explain_labels: Optional[List[Union[int, str]]]
+    :type target_explain_labels: List[int | str] | None
     :param label_names: List of all label names.
-    :type label_names: List[str]
+    :type label_names: List[str] | None
     """
 
     def __init__(
         self,
         saliency_map: np.ndarray,
         target_explain_group: TargetExplainGroup,
-        target_explain_labels: Optional[List[Union[int, str]]] = None,
-        label_names: Optional[List[str]] = None,
+        target_explain_labels: List[int | str] | None = None,
+        label_names: List[str] | None = None,
     ):
         self._check_saliency_map(saliency_map)
         self._saliency_map = self._format_sal_map_as_dict(saliency_map)
@@ -63,12 +63,12 @@ class ExplanationResult:
         self.label_names = label_names
 
     @property
-    def saliency_map(self) -> Dict[Union[int, str], np.ndarray]:
+    def saliency_map(self) -> Dict[int | str, np.ndarray]:
         """Saliency map as a dict {map_id: np.ndarray}."""
         return self._saliency_map
 
     @saliency_map.setter
-    def saliency_map(self, saliency_map: Dict[Union[int, str], np.ndarray]):
+    def saliency_map(self, saliency_map: Dict[int | str, np.ndarray]):
         self._saliency_map = saliency_map
 
     @property
@@ -89,9 +89,9 @@ class ExplanationResult:
             raise RuntimeError("Batch size for saliency maps should be 1.")
 
     @staticmethod
-    def _format_sal_map_as_dict(raw_saliency_map: np.ndarray) -> Dict[Union[int, str], np.ndarray]:
+    def _format_sal_map_as_dict(raw_saliency_map: np.ndarray) -> Dict[int | str, np.ndarray]:
         """Returns dict with saliency maps in format {target_id: class_saliency_map}."""
-        dict_sal_map: Dict[Union[int, str], np.ndarray]
+        dict_sal_map: Dict[int | str, np.ndarray]
         if raw_saliency_map.ndim == 3:
             # Per-image saliency map
             dict_sal_map = {"per_image_map": raw_saliency_map[0]}
@@ -108,9 +108,9 @@ class ExplanationResult:
 
     def _select_target_saliency_maps(
         self,
-        target_explain_labels: Optional[List[Union[int, str]]] = None,
-        label_names: Optional[List[str]] = None,
-    ) -> Dict[Union[int, str], np.ndarray]:
+        target_explain_labels: List[int | str] | None = None,
+        label_names: List[str] | None = None,
+    ) -> Dict[int | str, np.ndarray]:
         assert self.layout == SaliencyMapLayout.MULTIPLE_MAPS_PER_IMAGE_GRAY
         explain_target_indices = self._select_target_indices(
             self.target_explain_group,
@@ -124,10 +124,10 @@ class ExplanationResult:
     @staticmethod
     def _select_target_indices(
         target_explain_group: TargetExplainGroup,
-        target_explain_labels: Optional[List[Union[int, str]]] = None,
-        label_names: Optional[List[str]] = None,
-        total_num_targets: Optional[int] = None,
-    ) -> Union[List[int], np.ndarray]:
+        target_explain_labels: List[int | str] | None = None,
+        label_names: List[str] | None = None,
+        total_num_targets: int | None = None,
+    ) -> List[int] | np.ndarray:
         explain_target_indices = get_explain_target_indices(target_explain_labels, label_names)
 
         if target_explain_labels is None:
@@ -138,7 +138,7 @@ class ExplanationResult:
             raise ValueError(f"All targets explanation indices have to be in range 0..{total_num_targets - 1}.")
         return explain_target_indices
 
-    def save(self, dir_path: Union[Path, str], name: Optional[str] = None) -> None:
+    def save(self, dir_path: Path | str, name: str | None = None) -> None:
         """Dumps saliency map."""
         # TODO: add unit test
         os.makedirs(dir_path, exist_ok=True)

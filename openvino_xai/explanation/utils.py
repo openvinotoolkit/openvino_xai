@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from enum import Enum
 from functools import partial
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, List, Tuple
 
 import cv2
 import numpy as np
@@ -46,7 +46,7 @@ def get_explain_target_indices(
 def preprocess_fn(
     x: np.ndarray,
     change_channel_order: bool = False,
-    input_size: Optional[Tuple[int, int]] = None,
+    input_size: Tuple[int, int] | None = None,
     mean: np.ndarray = np.array([0.0, 0.0, 0.0]),
     std: np.ndarray = np.array([1.0, 1.0, 1.0]),
     hwc_to_chw: bool = False,
@@ -76,12 +76,12 @@ def preprocess_fn(
 
 
 def get_preprocess_fn(
-    change_channel_order=False,
+    change_channel_order: bool = False,
     input_size=None,
-    mean=np.array([0.0, 0.0, 0.0]),
-    std=np.array([1.0, 1.0, 1.0]),
-    hwc_to_chw=False,
-    expand_zero_dim=True,
+    mean: np.ndarray = np.array([0.0, 0.0, 0.0]),
+    std: np.ndarray = np.array([1.0, 1.0, 1.0]),
+    hwc_to_chw: bool = False,
+    expand_zero_dim: bool = True,
 ) -> Callable[[ov.utils.data_helpers.wrappers.OVDict], np.ndarray]:
     """Returns partially initialized preprocess_fn."""
     return partial(

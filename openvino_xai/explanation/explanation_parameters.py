@@ -1,9 +1,9 @@
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from typing import List, Optional, Union
+from typing import List
 
 from openvino_xai.common.parameters import XAIMethodType
 
@@ -73,9 +73,9 @@ class ExplanationParameters:
     :type target_explain_group: TargetExplainGroup
     :param target_explain_labels: List of custom labels to explain, optional. Can be list of integer indices (int),
         or list of names (str) from label_names.
-    :type target_explain_labels: Optional[List[Union[int, str]]]
+    :type target_explain_labels: List[int | str] | None
     :param label_names: List of all label names.
-    :type label_names: Optional[List[str]]
+    :type label_names: List[str] | None
     :parameter post_processing_parameters: Post-process parameters.
     :type post_processing_parameters: PostProcessParameters
     :param black_box_method: Defines black-box method type.
@@ -83,11 +83,9 @@ class ExplanationParameters:
     """
 
     target_explain_group: TargetExplainGroup = TargetExplainGroup.CUSTOM
-    target_explain_labels: Optional[List[Union[int, str]]] = None
-    label_names: Optional[List[str]] = None
-    post_processing_parameters: PostProcessParameters = field(
-        default_factory=lambda: PostProcessParameters(overlay=True)
-    )
+    target_explain_labels: List[int | str] | None = None
+    label_names: List[str] | None = None
+    post_processing_parameters: PostProcessParameters | None = None
     black_box_method: XAIMethodType = XAIMethodType.RISE
 
 
@@ -104,8 +102,8 @@ class SaliencyMapLayout(Enum):
 
     ONE_MAP_PER_IMAGE_GRAY = "one_map_per_image_gray"
     ONE_MAP_PER_IMAGE_COLOR = "one_map_per_image_color"
-    MULTIPLE_MAPS_PER_IMAGE_GRAY = "MULTIPLE_MAPS_PER_IMAGE_GRAY"
-    MULTIPLE_MAPS_PER_IMAGE_COLOR = "MULTIPLE_MAPS_PER_IMAGE_COLOR"
+    MULTIPLE_MAPS_PER_IMAGE_GRAY = "multiple_maps_per_image_gray"
+    MULTIPLE_MAPS_PER_IMAGE_COLOR = "multiple_maps_per_image_color"
 
 
 GRAY_LAYOUTS = {

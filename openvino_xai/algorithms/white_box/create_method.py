@@ -1,9 +1,8 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Optional
 
-from openvino import runtime as ov
+import openvino.runtime as ov
 
 from openvino_xai.algorithms.white_box.white_box_methods import (
     ActivationMapXAIMethod,
@@ -21,12 +20,12 @@ from openvino_xai.insertion.insertion_parameters import (
 
 
 def create_white_box_classification_explain_method(
-    model: ov.Model, insertion_parameters: Optional[ClassificationInsertionParameters] = None
+    model: ov.Model, insertion_parameters: ClassificationInsertionParameters | None = None
 ) -> WhiteBoxXAIMethodBase:
     """Generates instance of the classification explanation method class.
 
     :param model: OV IR model.
-    :type model: openvino.runtime.Model
+    :type model: ov.Model
     :param insertion_parameters: Insertion parameters that parametrize explanation method,
         that will be inserted into the model graph.
     :type insertion_parameters: InsertionParameters
@@ -71,7 +70,7 @@ def create_white_box_detection_explain_method(
     """Generates instance of the detection explanation method class.
 
     :param model: OV IR model.
-    :type model: openvino.runtime.Model
+    :type model: ov.Model
     :param insertion_parameters: Insertion parameters that parametrize explanation method,
         that will be inserted into the model graph.
     :type insertion_parameters: InsertionParameters

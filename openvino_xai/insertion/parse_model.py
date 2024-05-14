@@ -1,9 +1,9 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Callable, List, Optional
+from typing import Callable, List
 
-import openvino
+import openvino.runtime as ov
 
 from openvino_xai.insertion.insertion_parameters import ModelType
 
@@ -12,12 +12,12 @@ class IRParser:
     """Parser parse OV IR model."""
 
     @staticmethod
-    def get_logit_node(model: openvino.runtime.Model, output_id: int = 0) -> openvino.runtime.Node:
+    def get_logit_node(model: ov.Model, output_id: int = 0) -> ov.Node:
         logit_node = model.get_output_op(output_id).input(0).get_source_output().get_node()
         return logit_node
 
     @staticmethod
-    def get_node_by_condition(ops: List[openvino.runtime.Node], condition: Callable, k: int = 1):
+    def get_node_by_condition(ops: List[ov.Node], condition: Callable, k: int = 1):
         """Returns k-th node, which satisfies the condition."""
         for op in ops:
             if condition(op):
@@ -26,7 +26,7 @@ class IRParser:
                     return op
 
     @classmethod
-    def _is_conv_node_w_spacial_size(cls, op: openvino.runtime.Node) -> bool:
+    def _is_conv_node_w_spacial_size(cls, op: ov.Node) -> bool:
         if op.get_type_name() != "Convolution":
             return False
         if not cls._has_spacial_size(op):
@@ -44,7 +44,7 @@ class IRParser:
         return True
 
     @classmethod
-    def _is_pooling_node_wo_spacial_size(cls, op: openvino.runtime.Node) -> bool:
+    def _is_pooling_node_wo_spacial_size(cls, op: ov.Node) -> bool:
         if "Pool" not in op.get_friendly_name():
             return False
         if cls._has_spacial_size(op):
@@ -52,7 +52,7 @@ class IRParser:
         return True
 
     @staticmethod
-    def _is_op_w_single_spacial_output(op: openvino.runtime.Node) -> bool:
+    def _is_op_w_single_spacial_output(op: ov.Node) -> bool:
         if op.get_type_name() == "Constant":
             return False
         if len(op.outputs()) > 1:
@@ -70,7 +70,7 @@ class IRParser:
         return True
 
     @staticmethod
-    def _has_spacial_size(node: openvino.runtime.Node, output_id: int = 0) -> Optional[bool]:
+    def _has_spacial_size(node: ov.Node, output_id: int = 0) -> bool:
         node_out_shape = node.output(output_id).partial_shape
 
         # NCHW
@@ -82,7 +82,7 @@ class IRParser:
         return (h != 1 and w != 1) or (h_ != 1 and w_ != 1)
 
     @staticmethod
-    def _is_add_node_w_two_non_constant_inputs(op: openvino.runtime.Node):
+    def _is_add_node_w_two_non_constant_inputs(op: ov.Node):
         if op.get_type_name() != "Add":
             return False
         input_nodes = op.inputs()
@@ -103,7 +103,7 @@ class IRParserCls(IRParser):
     # TODO: separate for CNNs and ViT
 
     @classmethod
-    def get_logit_node(cls, model: openvino.runtime.Model, output_id=0, search_softmax=False) -> openvino.runtime.Node:
+    def get_logit_node(cls, model: ov.Model, output_id=0, search_softmax=False) -> ov.Node:
         if search_softmax:
             reversed_ops = model.get_ordered_ops()[::-1]
             softmax_node = cls.get_node_by_condition(reversed_ops, lambda x: x.get_type_name() == "Softmax")
@@ -117,11 +117,11 @@ class IRParserCls(IRParser):
     @classmethod
     def get_target_node(
         cls,
-        model: openvino.runtime.Model,
-        model_type: Optional[ModelType] = None,
-        target_node_name: Optional[str] = None,
+        model: ov.Model,
+        model_type: ModelType | None = None,
+        target_node_name: str | None = None,
         k: int = 1,
-    ) -> openvino.runtime.Node:
+    ) -> ov.Node:
         """
         Returns target node.
         Target node - node after which XAI branch will be inserted,
@@ -159,10 +159,10 @@ class IRParserCls(IRParser):
     def get_post_target_node(
         cls,
         model,
-        model_type: Optional[ModelType] = None,
-        target_node_name: Optional[str] = None,
+        model_type: ModelType | None = None,
+        target_node_name: str | None = None,
         target_node_output_id: int = 0,
-    ) -> List[openvino.runtime.Node]:
+    ) -> List[ov.Node]:
         if target_node_name:
             target_node = cls.get_target_node(model, model_type, target_node_name)
             target_node_outputs = target_node.output(target_node_output_id).get_target_inputs()

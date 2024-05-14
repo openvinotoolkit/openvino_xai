@@ -27,18 +27,18 @@ def has_xai(model: ov.Model) -> bool:
     Function checks if the model contains XAI branch.
 
     :param model: OV IR model.
-    :type model: openvino.runtime.Model
+    :type model: ov.Model
     :return: True is the model has XAI branch and saliency_map output, False otherwise.
     """
     if not isinstance(model, ov.Model):
-        raise ValueError(f"Input model has to be openvino.runtime.Model instance, but got{type(model)}.")
+        raise ValueError(f"Input model has to be ov.Model instance, but got{type(model)}.")
     for output in model.outputs:
         if SALIENCY_MAP_OUTPUT_NAME in output.get_names():
             return True
     return False
 
 
-def retrieve_otx_model(data_dir, model_name, dir_url=None):
+def retrieve_otx_model(data_dir: str | Path, model_name: str, dir_url=None) -> None:
     destination_folder = Path(data_dir) / "otx_models"
     os.makedirs(destination_folder, exist_ok=True)
     if dir_url is None:

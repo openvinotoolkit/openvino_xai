@@ -1,7 +1,7 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Callable, Optional
+from typing import Callable
 
 import numpy as np
 import openvino.runtime as ov
@@ -11,7 +11,10 @@ from openvino_xai.algorithms.black_box.black_box_methods import RISE
 from openvino_xai.common.parameters import TaskType
 from openvino_xai.common.utils import SALIENCY_MAP_OUTPUT_NAME, has_xai, logger
 from openvino_xai.explanation.explanation_parameters import (
-    ExplainMode, ExplanationParameters, TargetExplainGroup)
+    ExplainMode,
+    ExplanationParameters,
+    TargetExplainGroup,
+)
 from openvino_xai.explanation.explanation_result import ExplanationResult
 from openvino_xai.explanation.post_process import PostProcessor
 from openvino_xai.explanation.utils import get_explain_target_indices
@@ -46,7 +49,7 @@ class Explainer:
         preprocess_fn: Callable[[np.ndarray], np.ndarray],
         postprocess_fn: Callable[[ov.utils.data_helpers.wrappers.OVDict], np.ndarray] = None,
         explain_mode: ExplainMode = ExplainMode.AUTO,
-        insertion_parameters: Optional[InsertionParameters] = None,
+        insertion_parameters: InsertionParameters | None = None,
     ) -> None:
         self.model = model
         self.compiled_model: ov.ie_api.CompiledModel | None = None

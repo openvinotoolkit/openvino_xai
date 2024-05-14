@@ -91,13 +91,15 @@ class PostProcessor:
         explanation: ExplanationResult,
         data: np.ndarray = None,
         output_size: Tuple[int, int] = None,
-        post_processing_parameters: PostProcessParameters = PostProcessParameters(),
+        post_processing_parameters: PostProcessParameters | None = None,
     ):
         self._explanation = explanation
         self._saliency_map_np: np.ndarray | None = None
         self._data = data
         self._output_size = output_size
 
+        if post_processing_parameters is None:
+            post_processing_parameters = PostProcessParameters(overlay=True)
         self._normalize = post_processing_parameters.normalize
         self._resize = post_processing_parameters.resize
         self._colormap = post_processing_parameters.colormap
