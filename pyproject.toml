@@ -32,6 +32,7 @@ classifiers = [
 [project.optional-dependencies]
 dev = [
   "pytest",
+  "pytest-cov",
   "pre-commit==3.7.0",
   "addict",
 ]
@@ -50,3 +51,19 @@ include = ["openvino_xai*"]
 
 [tool.black]
 line-length = 120
+
+[tool.coverage.paths]
+source = [
+    "openvino_xai",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+]
+
+[tool.coverage.run]
+omit = [
+    "**/__init__.py",
+]
