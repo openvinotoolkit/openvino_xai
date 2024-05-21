@@ -21,8 +21,9 @@ authors = [
 maintainers = [
   {name = "Intel(R) Corporation"},
 ]
-description = "OV XAI: a toolbox for explaining models in OpenVINO format"
+description = "OpenVINO XAI: a toolbox for explaining models in OpenVINO format"
 readme = "README.md"
+license = {file = "LICENSE"}
 keywords = ["pytorch", "cnn", "transformer", "xai", "black-box"]
 classifiers = [
   "License :: OSI Approved :: MIT Apache Software License",
