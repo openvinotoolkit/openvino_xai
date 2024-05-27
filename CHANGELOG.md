@@ -2,8 +2,17 @@
 
 ## [Unreleased]
 
-### What's Changed
+### Summary
+* Support of generation of classification and detection par-class and per-image saliency maps
+* Enable white-box (ReciproCAM) and black-box (RISE) eXplainable AI algorithms
+* Suppor of CNN and transformer-based architectures (validation on diverse set of timm models)
+* Enable Explainer (stateful object) as the main interface for XAI algorithms
 
+### What's Changed
+* Support classification task by @negvet in https://github.com/intel-sandbox/openvino_xai/commit/dd5fd9b73fe8c12e2d741792043372bcd900a850
+* Support detection task by @negvet in https://github.com/intel-sandbox/openvino_xai/commit/84f285f2f40a8b1fc50a8cd49798aae37afd58dc
+* Support Model API as inference engine by @negvet in https://github.com/intel-sandbox/openvino_xai/commit/5f575f122dedc0461975bd58f81e730a901a69a6
+* Support classification validation on OTX models by @negvet in https://github.com/intel-sandbox/openvino_xai/commit/008f25f3b09e480906d8edcf043da2ece9ca3e6b
 * Update requirements, add --output parameter for run.py by @GalyaZalesskaya in https://github.com/intel-sandbox/openvino_xai/pull/1
 * Separate cls and det exampels and improve cls tests by @negvet in https://github.com/intel-sandbox/openvino_xai/pull/2
 * Enable normalization and postprocessing. Add object for map by @negvet in https://github.com/intel-sandbox/openvino_xai/pull/3
@@ -59,7 +68,7 @@
 * Add CHANGLOG.md by @goodsong81 in https://github.com/intel-sandbox/openvino_xai/pull/65
 
 ### New Contributors
+* @negvet made their first contribution in https://github.com/intel-sandbox/openvino_xai/commit/dd5fd9b73fe8c12e2d741792043372bcd900a850
 * @GalyaZalesskaya made their first contribution in https://github.com/intel-sandbox/openvino_xai/pull/1
-* @negvet made their first contribution in https://github.com/intel-sandbox/openvino_xai/pull/2
 * @sovrasov made their first contribution in https://github.com/intel-sandbox/openvino_xai/pull/10
 * @goodsong81 made their first contribution in https://github.com/intel-sandbox/openvino_xai/pull/59
