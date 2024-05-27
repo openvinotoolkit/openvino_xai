@@ -9,6 +9,8 @@ import numpy as np
 import openvino.runtime as ov
 from tqdm import tqdm
 
+from openvino_xai.common.utils import normalize
+
 
 class BlackBoxXAIMethodBase(ABC):
     """Base class for methods that explain model in Black-Box mode."""
@@ -29,7 +31,7 @@ class RISE(BlackBoxXAIMethodBase):
         num_cells: int = 8,
         prob: float = 0.5,
         seed: int = 0,
-        normalize: bool = True,
+        normalize_output: bool = True,
     ):
         """
         Generates inference result of the RISE algorithm.
@@ -54,8 +56,8 @@ class RISE(BlackBoxXAIMethodBase):
         :type prob: float
         :param seed: Seed for random mask generation.
         :type seed: int
-        :param normalize: Whether to normalize output or not.
-        :type normalize: bool
+        :param normalize_output: Whether to normalize_output output or not.
+        :type normalize_output: bool
         """
         data_preprocessed = preprocess_fn(data)
 
@@ -70,8 +72,8 @@ class RISE(BlackBoxXAIMethodBase):
             seed,
         )
 
-        if normalize:
-            saliency_maps = cls._normalize_saliency_maps(saliency_maps)
+        if normalize_output:
+            saliency_maps = normalize(saliency_maps)
         saliency_maps = np.expand_dims(saliency_maps, axis=0)
         return saliency_maps
 
@@ -157,13 +159,3 @@ class RISE(BlackBoxXAIMethodBase):
         mask = upsampled_mask[x : x + input_size[0], y : y + input_size[1]]
         mask = np.clip(mask, 0, 1)
         return mask
-
-    @staticmethod
-    def _normalize_saliency_maps(saliency_map: np.ndarray) -> np.ndarray:
-        n, h, w = saliency_map.shape
-        saliency_map = saliency_map.reshape((n, h * w))
-        min_values = np.min(saliency_map, axis=-1)
-        max_values = np.max(saliency_map, axis=-1)
-        saliency_map = 255 * (saliency_map - min_values[:, None]) / (max_values - min_values + 1e-12)[:, None]
-        saliency_map = saliency_map.reshape((n, h, w)).astype(np.uint8)
-        return saliency_map

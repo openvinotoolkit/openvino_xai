@@ -1,9 +1,14 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import numpy as np
 import pytest
 
-from openvino_xai.explanation.utils import get_explain_target_indices
+from openvino_xai.explanation.utils import (
+    ActivationType,
+    get_explain_target_indices,
+    get_score,
+)
 
 VOC_NAMES = [
     "aeroplane",
@@ -52,3 +57,23 @@ def test_get_explain_target_indices_str_spelling():
     with pytest.raises(Exception) as exc_info:
         _ = get_explain_target_indices(LABELS_STR, VOC_NAMES)
     assert str(exc_info.value) == "No all label names found in label_names. Check spelling."
+
+
+def test_get_score():
+    x = np.random.rand(5)
+
+    score = get_score(x, 0)
+    assert score == x[0]
+
+    score = get_score(x, 0, activation=ActivationType.SOFTMAX)
+    x_ = np.exp(x - np.max(x))
+    x_ = x_ / x_.sum()
+    assert score == x_[0]
+
+    score = get_score(x, 0, activation=ActivationType.SIGMOID)
+    x_ = 1 / (1 + np.exp(-x))
+    assert score == x_[0]
+
+    x = np.random.rand(1, 5)
+    score = get_score(x, 0)
+    assert score == x[0][0]

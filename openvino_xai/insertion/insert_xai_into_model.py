@@ -1,6 +1,5 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-from pathlib import Path
 
 import openvino.runtime as ov
 from openvino.preprocess import PrePostProcessor
@@ -15,7 +14,7 @@ from openvino_xai.insertion.insertion_parameters import InsertionParameters
 
 
 def insert_xai(
-    model: ov.Model | str,
+    model: ov.Model,
     task_type: TaskType,
     insertion_parameters: InsertionParameters | None = None,
 ) -> ov.Model:
@@ -25,7 +24,7 @@ def insert_xai(
     Usage:
         model_xai = openvino_xai.insert_xai(model, task_type=TaskType.CLASSIFICATION)
 
-    :param model: Original IR or path to .xml.
+    :param model: Original IR.
     :type model: ov.Model | str
     :param task_type: Type of the task.
     :type task_type: TaskType
@@ -34,16 +33,6 @@ def insert_xai(
     :type insertion_parameters: InsertionParameters
     :return: IR with XAI branch.
     """
-
-    if isinstance(model, str):
-        model_suffix = Path(model).suffix
-        if not model_suffix == ".xml":
-            raise ValueError(
-                f"XAI can be inserted only into OV IR, "
-                f"but provided model has {model_suffix} extension. "
-                f"Please provide path to OV IR for white-box explanation methods."
-            )
-        model = ov.Core().read_model(model)
 
     if has_xai(model):
         logger.info("Provided IR model already contains XAI branch, return it as-is.")

@@ -56,7 +56,8 @@ MODELS_VOC = [
 ]
 
 
-DEFAULT_MODEL = "mlc_mobilenetv3_large_voc"
+DEFAULT_CLS_MODEL = "mlc_mobilenetv3_large_voc"
+DATA_DIR = Path(".data")
 
 
 class TestClsWB:
@@ -88,7 +89,9 @@ class TestClsWB:
             TargetExplainGroup.CUSTOM,
         ],
     )
-    def test_vitreciprocam(self, embed_normalization, target_explain_group):
+    def test_vitreciprocam(
+        self, embed_normalization: bool, target_explain_group: TargetExplainGroup | TargetExplainGroup
+    ):
         model_name = "deit-tiny"
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
@@ -102,7 +105,7 @@ class TestClsWB:
         explainer = Explainer(
             model=model,
             task_type=TaskType.CLASSIFICATION,
-            preprocess_fn=self.preprocess_fn,
+            preprocess_fn=self.preprocess_fn,  # type: ignore
             explain_mode=ExplainMode.WHITEBOX,
             insertion_parameters=insertion_parameters,
         )
@@ -146,7 +149,9 @@ class TestClsWB:
             TargetExplainGroup.CUSTOM,
         ],
     )
-    def test_reciprocam(self, model_name, embed_normalization, target_explain_group):
+    def test_reciprocam(
+        self, model_name: str, embed_normalization: bool, target_explain_group: TargetExplainGroup | TargetExplainGroup
+    ):
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
         model = ov.Core().read_model(model_path)
@@ -158,7 +163,7 @@ class TestClsWB:
         explainer = Explainer(
             model=model,
             task_type=TaskType.CLASSIFICATION,
-            preprocess_fn=self.preprocess_fn,
+            preprocess_fn=self.preprocess_fn,  # type: ignore
             explain_mode=ExplainMode.WHITEBOX,
             insertion_parameters=insertion_parameters,
         )
@@ -197,7 +202,7 @@ class TestClsWB:
 
     @pytest.mark.parametrize("model_name", MODELS)
     @pytest.mark.parametrize("embed_normalization", [True, False])
-    def test_activationmap(self, model_name, embed_normalization):
+    def test_activationmap(self, model_name: str, embed_normalization: bool):
         if model_name == "classification_model_with_xai_head":
             pytest.skip("model already has reciprocam xai head - this test cannot change it.")
         retrieve_otx_model(self.data_dir, model_name)
@@ -211,7 +216,7 @@ class TestClsWB:
         explainer = Explainer(
             model=model,
             task_type=TaskType.CLASSIFICATION,
-            preprocess_fn=self.preprocess_fn,
+            preprocess_fn=self.preprocess_fn,  # type: ignore
             explain_mode=ExplainMode.WHITEBOX,
             insertion_parameters=insertion_parameters,
         )
@@ -237,15 +242,17 @@ class TestClsWB:
         ],
     )
     @pytest.mark.parametrize("overlay", [True, False])
-    def test_classification_postprocessing(self, target_explain_group, overlay):
-        retrieve_otx_model(self.data_dir, DEFAULT_MODEL)
-        model_path = self.data_dir / "otx_models" / (DEFAULT_MODEL + ".xml")
+    def test_classification_postprocessing(
+        self, target_explain_group: TargetExplainGroup | TargetExplainGroup, overlay: bool
+    ):
+        retrieve_otx_model(self.data_dir, DEFAULT_CLS_MODEL)
+        model_path = self.data_dir / "otx_models" / (DEFAULT_CLS_MODEL + ".xml")
         model = ov.Core().read_model(model_path)
 
         explainer = Explainer(
             model=model,
             task_type=TaskType.CLASSIFICATION,
-            preprocess_fn=self.preprocess_fn,
+            preprocess_fn=self.preprocess_fn,  # type: ignore
             explain_mode=ExplainMode.WHITEBOX,
         )
 
@@ -256,13 +263,13 @@ class TestClsWB:
 
         explanation_parameters = ExplanationParameters(
             target_explain_group=target_explain_group,
-            target_explain_labels=explain_targets,
+            target_explain_labels=explain_targets,  # type: ignore
             post_processing_parameters=post_processing_parameters,
         )
         explanation = explainer(self.image, explanation_parameters)
         assert explanation is not None
         if target_explain_group == TargetExplainGroup.ALL:
-            assert len(explanation.saliency_map) == MODEL_NUM_CLASSES[DEFAULT_MODEL]
+            assert len(explanation.saliency_map) == MODEL_NUM_CLASSES[DEFAULT_CLS_MODEL]
         if target_explain_group == TargetExplainGroup.CUSTOM:
             assert len(explanation.saliency_map) == len(explain_targets)
             assert 1 in explanation.saliency_map
@@ -275,8 +282,8 @@ class TestClsWB:
                 assert map_.max() in {254, 255}, f"{map_.max()}"
 
     def test_two_sequential_norms(self):
-        retrieve_otx_model(self.data_dir, DEFAULT_MODEL)
-        model_path = self.data_dir / "otx_models" / (DEFAULT_MODEL + ".xml")
+        retrieve_otx_model(self.data_dir, DEFAULT_CLS_MODEL)
+        model_path = self.data_dir / "otx_models" / (DEFAULT_CLS_MODEL + ".xml")
         model = ov.Core().read_model(model_path)
 
         explainer = Explainer(
@@ -293,7 +300,7 @@ class TestClsWB:
         explanation = explainer(self.image, explanation_parameters)
 
         actual_sal_vals = explanation.saliency_map[0][0, :].astype(np.int16)
-        ref_sal_vals = self._ref_sal_maps_reciprocam[DEFAULT_MODEL].astype(np.uint8)
+        ref_sal_vals = self._ref_sal_maps_reciprocam[DEFAULT_CLS_MODEL].astype(np.uint8)
         # Reference values generated with embed_normalization=True
         assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
 
@@ -324,7 +331,13 @@ class TestClsBB:
         ],
     )
     @pytest.mark.parametrize("normalize", [True, False])
-    def test_classification_black_box_postprocessing(self, model_name, overlay, target_explain_group, normalize):
+    def test_classification_black_box_postprocessing(
+        self,
+        model_name: str,
+        overlay: bool,
+        target_explain_group: TargetExplainGroup | TargetExplainGroup,
+        normalize: bool,
+    ):
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
         model = ov.Core().read_model(model_path)
@@ -332,8 +345,8 @@ class TestClsBB:
         explainer = Explainer(
             model=model,
             task_type=TaskType.CLASSIFICATION,
-            preprocess_fn=self.preprocess_fn,
-            postprocess_fn=get_postprocess_fn(),
+            preprocess_fn=self.preprocess_fn,  # type: ignore
+            postprocess_fn=get_postprocess_fn(),  # type: ignore
             explain_mode=ExplainMode.BLACKBOX,
         )
 
@@ -353,7 +366,7 @@ class TestClsBB:
                 self.image,
                 explanation_parameters,
                 num_masks=5,
-                normalize=normalize,
+                normalize_output=normalize,
             )
 
             assert explanation is not None
@@ -373,7 +386,7 @@ class TestClsBB:
                 self.image,
                 explanation_parameters,
                 num_masks=5,
-                normalize=normalize,
+                normalize_output=normalize,
             )
 
             assert explanation is not None
@@ -389,12 +402,12 @@ class TestClsBB:
                         assert map_.max() in {254, 255}, f"{map_.max()}"
                     if model_name in self._ref_sal_maps:
                         actual_sal_vals = explanation.saliency_map[0][0, :10].astype(np.int16)
-                        ref_sal_vals = self._ref_sal_maps[DEFAULT_MODEL].astype(np.uint8)
+                        ref_sal_vals = self._ref_sal_maps[DEFAULT_CLS_MODEL].astype(np.uint8)
                         assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
 
     def test_classification_black_box_xai_model_as_input(self):
-        retrieve_otx_model(self.data_dir, DEFAULT_MODEL)
-        model_path = self.data_dir / "otx_models" / (DEFAULT_MODEL + ".xml")
+        retrieve_otx_model(self.data_dir, DEFAULT_CLS_MODEL)
+        model_path = self.data_dir / "otx_models" / (DEFAULT_CLS_MODEL + ".xml")
         model = ov.Core().read_model(model_path)
         model_xai = ovxai.insert_xai(
             model,
@@ -420,5 +433,5 @@ class TestClsBB:
         )
 
         actual_sal_vals = explanation.saliency_map[0][0, :10].astype(np.int16)
-        ref_sal_vals = self._ref_sal_maps[DEFAULT_MODEL].astype(np.uint8)
+        ref_sal_vals = self._ref_sal_maps[DEFAULT_CLS_MODEL].astype(np.uint8)
         assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)

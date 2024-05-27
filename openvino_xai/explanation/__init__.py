@@ -15,8 +15,6 @@ from openvino_xai.explanation.explanation_result import ExplanationResult
 from openvino_xai.explanation.post_process import (
     PostProcessor,
     colormap,
-    get_min_max,
-    normalize,
     overlay,
     resize,
 )
@@ -30,8 +28,6 @@ __all__ = [
     "SaliencyMapLayout",
     "ExplanationResult",
     "PostProcessor",
-    "normalize",
-    "get_min_max",
     "resize",
     "colormap",
     "overlay",

@@ -3,12 +3,13 @@
 """
 Common functionality.
 """
-
 import logging
 import os
 from pathlib import Path
+from typing import Tuple
 from urllib.request import urlretrieve
 
+import numpy as np
 import openvino.runtime as ov
 
 logger = logging.getLogger("openvino_xai")
@@ -53,3 +54,33 @@ def retrieve_otx_model(data_dir: str | Path, model_name: str, dir_url=None) -> N
                 f"{dir_url}/{snapshot_file}.{post_fix}",
                 f"{destination_folder}/{model_name}.{post_fix}",
             )
+
+
+def normalize(saliency_map: np.ndarray, cast_to_uint8: bool = True) -> np.ndarray:
+    """Normalize saliency maps to [0, 255] range."""
+    original_num_dims = saliency_map.shape
+    if len(original_num_dims) == 2:
+        # If input map is 2D array, add dim so that below code would work
+        saliency_map = saliency_map[np.newaxis, ...]
+
+    saliency_map = saliency_map.astype(np.float32)
+    num_maps, h, w = saliency_map.shape
+    saliency_map = saliency_map.reshape((num_maps, h * w))
+
+    min_values, max_values = get_min_max(saliency_map)
+    saliency_map = 255 * (saliency_map - min_values[:, None]) / (max_values - min_values + 1e-12)[:, None]
+    saliency_map = saliency_map.reshape(num_maps, h, w)
+
+    if original_num_dims == 2:
+        saliency_map = np.squeeze(saliency_map)
+
+    if cast_to_uint8:
+        return saliency_map.astype(np.uint8)
+    return saliency_map
+
+
+def get_min_max(saliency_map: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    """Returns min and max values of saliency map of shape (N, -1)."""
+    min_values = np.min(saliency_map, axis=-1)
+    max_values = np.max(saliency_map, axis=-1)
+    return min_values, max_values

@@ -6,6 +6,7 @@ from typing import Dict, List, Tuple
 import cv2
 import numpy as np
 
+from openvino_xai.common.utils import normalize
 from openvino_xai.explanation.explanation_parameters import (
     COLOR_MAPPED_LAYOUTS,
     GRAY_LAYOUTS,
@@ -15,36 +16,6 @@ from openvino_xai.explanation.explanation_parameters import (
     SaliencyMapLayout,
 )
 from openvino_xai.explanation.explanation_result import ExplanationResult
-
-
-def normalize(saliency_map: np.ndarray, cast_to_uint8: bool = True) -> np.ndarray:
-    """Normalize saliency maps to [0, 255] range."""
-    original_num_dims = saliency_map.shape
-    if len(original_num_dims) == 2:
-        # If input map is 2D array, add dim so that below code would work
-        saliency_map = saliency_map[np.newaxis, ...]
-
-    saliency_map = saliency_map.astype(np.float32)
-    num_maps, h, w = saliency_map.shape
-    saliency_map = saliency_map.reshape((num_maps, h * w))
-
-    min_values, max_values = get_min_max(saliency_map)
-    saliency_map = 255 * (saliency_map - min_values[:, None]) / (max_values - min_values + 1e-12)[:, None]
-    saliency_map = saliency_map.reshape(num_maps, h, w)
-
-    if original_num_dims == 2:
-        saliency_map = np.squeeze(saliency_map)
-
-    if cast_to_uint8:
-        return saliency_map.astype(np.uint8)
-    return saliency_map
-
-
-def get_min_max(saliency_map: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-    """Returns min and max values of saliency map of shape (N, -1)."""
-    min_values = np.min(saliency_map, axis=-1)
-    max_values = np.max(saliency_map, axis=-1)
-    return min_values, max_values
 
 
 def resize(saliency_map: np.ndarray, output_size: Tuple[int, int]) -> np.ndarray:

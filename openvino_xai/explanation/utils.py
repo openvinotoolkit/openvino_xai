@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from enum import Enum
 from functools import partial
-from typing import Callable, List, Tuple
+from typing import Any, Callable, List, Tuple
 
 import cv2
 import numpy as np
@@ -82,7 +82,7 @@ def get_preprocess_fn(
     std: np.ndarray = np.array([1.0, 1.0, 1.0]),
     hwc_to_chw: bool = False,
     expand_zero_dim: bool = True,
-) -> Callable[[ov.utils.data_helpers.wrappers.OVDict], np.ndarray]:
+) -> Callable[[Any], np.ndarray]:
     """Returns partially initialized preprocess_fn."""
     return partial(
         preprocess_fn,

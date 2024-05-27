@@ -65,7 +65,7 @@ MODEL_CONFIGS = addict.Addict(
 
 MODELS = list(MODEL_CONFIGS.keys())
 
-DEFAULT_MODEL = "det_mobilenetv2_atss_bccd"
+DEFAULT_DET_MODEL = "det_mobilenetv2_atss_bccd"
 
 TARGET_EXPLAIN_GROUPS = [
     TargetExplainGroup.ALL,
@@ -153,7 +153,7 @@ class TestDetWB:
         post_processing_parameters = PostProcessParameters(overlay=True)
 
         preprocess_fn = get_preprocess_fn(
-            input_size=MODEL_CONFIGS[DEFAULT_MODEL].input_size,
+            input_size=MODEL_CONFIGS[DEFAULT_DET_MODEL].input_size,
             hwc_to_chw=True,
         )
         explainer = Explainer(
@@ -173,7 +173,7 @@ class TestDetWB:
         assert explanation is not None
         assert explanation.sal_map_shape == (480, 640, 3)
         if target_explain_group == TargetExplainGroup.ALL:
-            assert len(explanation.saliency_map) == MODEL_CONFIGS[DEFAULT_MODEL].num_classes
+            assert len(explanation.saliency_map) == MODEL_CONFIGS[DEFAULT_DET_MODEL].num_classes
         if target_explain_group == TargetExplainGroup.CUSTOM:
             target_class = target_class_list[0]
             assert len(explanation.saliency_map) == len(target_class_list)
@@ -183,7 +183,7 @@ class TestDetWB:
         model, insertion_parameters = self.get_default_model_and_insertion_parameters()
 
         preprocess_fn = get_preprocess_fn(
-            input_size=MODEL_CONFIGS[DEFAULT_MODEL].input_size,
+            input_size=MODEL_CONFIGS[DEFAULT_DET_MODEL].input_size,
             hwc_to_chw=True,
         )
         explainer = Explainer(
@@ -201,7 +201,7 @@ class TestDetWB:
         explanation = explainer(self.image, explanation_parameters)
 
         actual_sal_vals = explanation.saliency_map[0][0, :10].astype(np.int16)
-        ref_sal_vals = self._ref_sal_maps_reciprocam[DEFAULT_MODEL].astype(np.uint8)
+        ref_sal_vals = self._ref_sal_maps_reciprocam[DEFAULT_DET_MODEL].astype(np.uint8)
         # Reference values generated with embed_normalization=True
         assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
 
@@ -218,14 +218,14 @@ class TestDetWB:
         assert isinstance(det_xai_method.model_ori, ov.Model)
 
     def get_default_model_and_insertion_parameters(self):
-        retrieve_otx_model(self.data_dir, DEFAULT_MODEL)
-        model_path = self.data_dir / "otx_models" / (DEFAULT_MODEL + ".xml")
+        retrieve_otx_model(self.data_dir, DEFAULT_DET_MODEL)
+        model_path = self.data_dir / "otx_models" / (DEFAULT_DET_MODEL + ".xml")
         model = ov.Core().read_model(model_path)
 
-        cls_head_output_node_names = MODEL_CONFIGS[DEFAULT_MODEL].node_names
+        cls_head_output_node_names = MODEL_CONFIGS[DEFAULT_DET_MODEL].node_names
         insertion_parameters = DetectionInsertionParameters(
             target_layer=cls_head_output_node_names,
-            num_anchors=MODEL_CONFIGS[DEFAULT_MODEL].anchors,
+            num_anchors=MODEL_CONFIGS[DEFAULT_DET_MODEL].anchors,
             saliency_map_size=self._sal_map_size,
             explain_method_type=XAIMethodType.DETCLASSPROBABILITYMAP,
         )

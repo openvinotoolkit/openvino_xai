@@ -17,6 +17,7 @@ from openvino_xai.explanation import (
 from openvino_xai.explanation.explain import Explainer
 from openvino_xai.explanation.utils import get_postprocess_fn, get_preprocess_fn
 from openvino_xai.insertion import ClassificationInsertionParameters
+from openvino_xai.insertion.insert_xai_into_model import insert_xai
 
 MODEL_NAME = "mlc_mobilenetv3_large_voc"
 
@@ -45,10 +46,17 @@ class TestExplainer:
             TargetExplainGroup.CUSTOM,
         ],
     )
-    def test_explainer(self, explain_mode, target_explain_group):
+    @pytest.mark.parametrize("with_xai_originally", [True, False])
+    def test_explainer(self, explain_mode, target_explain_group, with_xai_originally):
         retrieve_otx_model(self.data_dir, MODEL_NAME)
         model_path = self.data_dir / "otx_models" / (MODEL_NAME + ".xml")
         model = ov.Core().read_model(model_path)
+
+        if with_xai_originally:
+            model = insert_xai(
+                model,
+                task_type=TaskType.CLASSIFICATION,
+            )
 
         explainer = Explainer(
             model,

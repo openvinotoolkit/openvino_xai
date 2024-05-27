@@ -140,15 +140,15 @@ class ExplanationResult:
 
     def save(self, dir_path: Path | str, name: str | None = None) -> None:
         """Dumps saliency map."""
-        # TODO: add unit test
         os.makedirs(dir_path, exist_ok=True)
-        save_name = f"{name}_" if name else ""
+        save_name = name if name else ""
         for i, (cls_idx, map_to_save) in enumerate(self._saliency_map.items()):
             if isinstance(cls_idx, str):
-                target_name = cls_idx
+                cv2.imwrite(os.path.join(dir_path, f"{save_name}.jpg"), img=map_to_save)
+                return
             else:
                 if self.label_names:
                     target_name = self.label_names[cls_idx]
                 else:
                     target_name = str(cls_idx)
-            cv2.imwrite(os.path.join(dir_path, f"{save_name}target_{target_name}.jpg"), img=map_to_save)
+            cv2.imwrite(os.path.join(dir_path, f"{save_name}_target_{target_name}.jpg"), img=map_to_save)

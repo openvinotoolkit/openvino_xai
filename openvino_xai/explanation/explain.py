@@ -130,7 +130,7 @@ class Explainer:
         return explanation_result
 
     def model_forward(self, x: np.ndarray) -> ov.utils.data_helpers.wrappers.OVDict:
-        """Forward pass of the compiled model. Will apply preprocess_fn, but not post-processing."""
+        """Forward pass of the compiled model. Applies preprocess_fn."""
         x = self.preprocess_fn(x)
         return self.compiled_model(x)
 

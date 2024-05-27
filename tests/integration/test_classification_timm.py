@@ -28,7 +28,7 @@ from openvino_xai.explanation.utils import (
 from openvino_xai.insertion.insertion_parameters import (
     ClassificationInsertionParameters,
 )
-from openvino_xai.utils.timm_models_export import export_to_ir, export_to_onnx
+from openvino_xai.utils.model_export import export_to_ir, export_to_onnx
 
 timm = pytest.importorskip("timm")
 torch = pytest.importorskip("torch")
