@@ -4,7 +4,7 @@
 import numpy as np
 import pytest
 
-from openvino_xai.common.utils import get_min_max, normalize
+from openvino_xai.common.utils import get_min_max, scale
 from openvino_xai.explanation import colormap, overlay, resize
 from openvino_xai.explanation.explanation_parameters import (
     PostProcessParameters,
@@ -24,31 +24,31 @@ TARGET_EXPLAIN_GROUPS = [
 ]
 
 
-def test_normalize_3d():
+def test_scale_3d():
     # Test normalization on a multi-channel input
     input_saliency_map = (np.random.rand(3, 5, 5) - 0.5) * 1000
     assert (input_saliency_map < 0).any() and (input_saliency_map > 255).any()
-    normalized_map = normalize(input_saliency_map)
-    assert (normalized_map >= 0).all() and (normalized_map <= 255).all()
+    scaled_map = scale(input_saliency_map)
+    assert (scaled_map >= 0).all() and (scaled_map <= 255).all()
 
 
-def test_normalize_2d():
+def test_scale_2d():
     # Test normalization on a simple 2D input
     input_saliency_map = (np.random.rand(5, 5) - 0.5) * 1000
     assert (input_saliency_map < 0).any() and (input_saliency_map > 255).any()
-    normalized_map = normalize(input_saliency_map)
-    assert (normalized_map >= 0).all() and (normalized_map <= 255).all()
+    scaled_map = scale(input_saliency_map)
+    assert (scaled_map >= 0).all() and (scaled_map <= 255).all()
 
 
-def test_normalize_cast_to_int8():
+def test_scale_cast_to_int8():
     # Test if output is correctly cast to uint8
     input_saliency_map = (np.random.rand(3, 5, 5) - 0.5) * 1000
-    normalized_map = normalize(input_saliency_map)
-    assert normalized_map.dtype == np.uint8
+    scaled_map = scale(input_saliency_map)
+    assert scaled_map.dtype == np.uint8
 
     input_saliency_map = (np.random.rand(3, 5, 5) - 0.5) * 1000
-    normalized_map = normalize(input_saliency_map, cast_to_uint8=False)
-    assert normalized_map.dtype == np.float32
+    scaled_map = scale(input_saliency_map, cast_to_uint8=False)
+    assert scaled_map.dtype == np.float32
 
 
 def test_get_min_max():
@@ -84,7 +84,7 @@ def test_overlay():
 class TestPostProcessor:
     @pytest.mark.parametrize("saliency_maps", SALIENCY_MAPS)
     @pytest.mark.parametrize("target_explain_group", TARGET_EXPLAIN_GROUPS)
-    @pytest.mark.parametrize("normalize", [True, False])
+    @pytest.mark.parametrize("scale", [True, False])
     @pytest.mark.parametrize("resize", [True, False])
     @pytest.mark.parametrize("colormap", [True, False])
     @pytest.mark.parametrize("overlay", [True, False])
@@ -93,14 +93,14 @@ class TestPostProcessor:
         self,
         saliency_maps,
         target_explain_group,
-        normalize,
+        scale,
         resize,
         colormap,
         overlay,
         overlay_weight,
     ):
         post_processing_parameters = PostProcessParameters(
-            normalize=normalize,
+            scale=scale,
             resize=resize,
             colormap=colormap,
             overlay=overlay,
@@ -134,7 +134,7 @@ class TestPostProcessor:
             expected_dims += 1
         assert len(explanation.sal_map_shape) == expected_dims
 
-        if normalize and not colormap and not overlay:
+        if scale and not colormap and not overlay:
             for map_ in explanation.saliency_map.values():
                 assert map_.min() == 0, f"{map_.min()}"
                 assert map_.max() in {254, 255}, f"{map_.max()}"

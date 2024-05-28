@@ -42,8 +42,8 @@ class WhiteBoxXAIMethodBase(ABC):
             model.reshape(partial_shape)
 
     @staticmethod
-    def _normalize_saliency_maps(saliency_maps: ov.Node, per_class: bool) -> ov.Node:
-        """Normalize saliency maps to [0, 255] range, per-map."""
+    def _scale_saliency_maps(saliency_maps: ov.Node, per_class: bool) -> ov.Node:
+        """Scale saliency maps to [0, 255] range, per-map."""
         # TODO: unify for per-class and for per-image
         if per_class:
             # Normalization for per-class saliency maps
@@ -94,7 +94,7 @@ class ActivationMapXAIMethod(WhiteBoxXAIMethodBase):
         target_node_ori = IRParserCls.get_target_node(self._model_ori, self.model_type, self._target_layer)
         saliency_maps = opset.reduce_mean(target_node_ori.output(0), 1)
         if self.embed_normalization:
-            saliency_maps = self._normalize_saliency_maps(saliency_maps, self.per_class)
+            saliency_maps = self._scale_saliency_maps(saliency_maps, self.per_class)
         return saliency_maps
 
 
@@ -105,7 +105,7 @@ class FeatureMapPerturbationBase(WhiteBoxXAIMethodBase):
     :type model: ov.Model
     :parameter target_layer: Target layer (node) name after which the XAI branch will be inserted.
     :type target_layer: str
-    :param embed_normalization: Whether to normalize output or not.
+    :param embed_normalization: Whether to scale output or not.
     :type embed_normalization: bool
     """
 
@@ -132,7 +132,7 @@ class FeatureMapPerturbationBase(WhiteBoxXAIMethodBase):
         saliency_maps = self._get_saliency_map(model_clone)
 
         if self.embed_normalization:
-            saliency_maps = self._normalize_saliency_maps(saliency_maps, self.per_class)
+            saliency_maps = self._scale_saliency_maps(saliency_maps, self.per_class)
         return saliency_maps
 
     @abstractmethod
@@ -453,5 +453,5 @@ class DetClassProbabilityMapXAIMethod(WhiteBoxXAIMethodBase):
         saliency_maps = opset.softmax(saliency_maps.output(0), 1)
 
         if self.embed_normalization:
-            saliency_maps = self._normalize_saliency_maps(saliency_maps, self.per_class)
+            saliency_maps = self._scale_saliency_maps(saliency_maps, self.per_class)
         return saliency_maps

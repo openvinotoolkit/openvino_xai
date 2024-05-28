@@ -233,7 +233,7 @@ class TestImageClassificationTimm:
             raw_sal_map[-1, 0] = np.mean(np.delete(raw_sal_map[-2:, :2].flatten(), 2))
             raw_sal_map[-1, -1] = np.mean(np.delete(raw_sal_map[-2:, -2:].flatten(), 3))
             explanation.saliency_map[target_class] = raw_sal_map
-            post_processing_parameters = PostProcessParameters(normalize=True, overlay=True)
+            post_processing_parameters = PostProcessParameters(scale=True, overlay=True)
             post_processor = PostProcessor(
                 explanation=explanation,
                 data=image,

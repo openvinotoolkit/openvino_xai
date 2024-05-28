@@ -196,7 +196,7 @@ class TestDetWB:
 
         explanation_parameters = ExplanationParameters(
             target_explain_group=TargetExplainGroup.ALL,
-            post_processing_parameters=PostProcessParameters(normalize=True),
+            post_processing_parameters=PostProcessParameters(scale=True),
         )
         explanation = explainer(self.image, explanation_parameters)
 

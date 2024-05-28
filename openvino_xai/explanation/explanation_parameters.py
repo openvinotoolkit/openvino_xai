@@ -43,10 +43,10 @@ class PostProcessParameters:
     """
     PostProcessParameters parametrize postprocessing of saliency maps.
 
-    :parameter normalize: If True, normalize saliency map into [0, 255] range (filling the whole range).
-        By default, normalization to [0, 255] range is embedded into the IR model.
-        Therefore, normalize=False here by default.
-    :type normalize: bool
+    :parameter scale: If True, scale saliency map into [0, 255] range (filling the whole range).
+        By default, scaling is embedded into the IR model.
+        Therefore, scale=False here by default.
+    :type scale: bool
     :parameter resize: If True, resize saliency map to the input image size.
     :type resize: bool
     :parameter colormap: If True, apply colormap to the grayscale saliency map.
@@ -57,7 +57,7 @@ class PostProcessParameters:
     :type overlay_weight: float
     """
 
-    normalize: bool = False
+    scale: bool = False
     resize: bool = False
     colormap: bool = False
     overlay: bool = False

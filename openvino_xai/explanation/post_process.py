@@ -6,7 +6,7 @@ from typing import Dict, List, Tuple
 import cv2
 import numpy as np
 
-from openvino_xai.common.utils import normalize
+from openvino_xai.common.utils import scale
 from openvino_xai.explanation.explanation_parameters import (
     COLOR_MAPPED_LAYOUTS,
     GRAY_LAYOUTS,
@@ -71,7 +71,7 @@ class PostProcessor:
 
         if post_processing_parameters is None:
             post_processing_parameters = PostProcessParameters(overlay=True)
-        self._normalize = post_processing_parameters.normalize
+        self._scale = post_processing_parameters.scale
         self._resize = post_processing_parameters.resize
         self._colormap = post_processing_parameters.colormap
         self._overlay = post_processing_parameters.overlay
@@ -97,7 +97,7 @@ class PostProcessor:
         # Convert to numpy array to use vectorized normalization and speed up lots of classes scenario
         self._saliency_map_np = np.array(list(saliency_map_dict.values()))
 
-        if self._normalize and not self._resize and not self._overlay:
+        if self._scale and not self._resize and not self._overlay:
             self._apply_normalization()
 
         if self._overlay:
@@ -123,10 +123,10 @@ class PostProcessor:
     def _apply_normalization(self) -> None:
         if self.layout not in GRAY_LAYOUTS:
             raise ValueError(
-                f"Saliency map to normalize has to be grayscale. The layout must be in {GRAY_LAYOUTS}, "
+                f"Saliency map to scale has to be grayscale. The layout must be in {GRAY_LAYOUTS}, "
                 f"but got {self.layout}."
             )
-        self._saliency_map_np = normalize(self._saliency_map_np)
+        self._saliency_map_np = scale(self._saliency_map_np)
 
     def _apply_resize(self) -> None:
         # TODO: support resize of colormapped images.
@@ -144,7 +144,7 @@ class PostProcessor:
     def _apply_colormap(self) -> None:
         if self._saliency_map_np.dtype != np.uint8:
             raise ValueError(
-                "Colormap requires saliency map to has uint8 dtype. Enable 'normalize' flag for PostProcessor."
+                "Colormap requires saliency map to has uint8 dtype. Enable 'scale' flag for PostProcessor."
             )
         if self.layout not in GRAY_LAYOUTS:
             raise ValueError(

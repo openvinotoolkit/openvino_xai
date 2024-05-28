@@ -295,7 +295,7 @@ class TestClsWB:
 
         explanation_parameters = ExplanationParameters(
             target_explain_group=TargetExplainGroup.ALL,
-            post_processing_parameters=PostProcessParameters(normalize=True),
+            post_processing_parameters=PostProcessParameters(scale=True),
         )
         explanation = explainer(self.image, explanation_parameters)
 
@@ -330,13 +330,13 @@ class TestClsBB:
             TargetExplainGroup.CUSTOM,
         ],
     )
-    @pytest.mark.parametrize("normalize", [True, False])
+    @pytest.mark.parametrize("scale", [True, False])
     def test_classification_black_box_postprocessing(
         self,
         model_name: str,
         overlay: bool,
         target_explain_group: TargetExplainGroup | TargetExplainGroup,
-        normalize: bool,
+        scale: bool,
     ):
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
@@ -366,7 +366,7 @@ class TestClsBB:
                 self.image,
                 explanation_parameters,
                 num_masks=5,
-                normalize_output=normalize,
+                scale_output=scale,
             )
 
             assert explanation is not None
@@ -386,7 +386,7 @@ class TestClsBB:
                 self.image,
                 explanation_parameters,
                 num_masks=5,
-                normalize_output=normalize,
+                scale_output=scale,
             )
 
             assert explanation is not None
@@ -396,7 +396,7 @@ class TestClsBB:
             else:
                 assert len(explanation.saliency_map) == MODEL_NUM_CLASSES[model_name]
                 assert explanation.sal_map_shape == (224, 224)
-                if normalize:
+                if scale:
                     for map_ in explanation.saliency_map.values():
                         assert map_.min() == 0, f"{map_.min()}"
                         assert map_.max() in {254, 255}, f"{map_.max()}"
