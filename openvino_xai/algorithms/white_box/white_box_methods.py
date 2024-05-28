@@ -8,12 +8,29 @@ import numpy as np
 import openvino.runtime as ov
 from openvino.runtime import opset10 as opset
 
+from openvino_xai.common.utils import SALIENCY_MAP_OUTPUT_NAME
 from openvino_xai.explanation.explanation_parameters import TargetExplainGroup
+from openvino_xai.insertion.insert_xai_into_model import insert_xai_branch_into_model
 from openvino_xai.insertion.insertion_parameters import ModelType
 from openvino_xai.insertion.parse_model import IRParserCls
 
 
-class WhiteBoxXAIMethodBase(ABC):
+class MethodBase(ABC):
+    @abstractmethod
+    def generate_saliency_map(self, data: np.ndarray):
+        """Saliency map generation."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def model_forward(self, x: np.ndarray):
+        """Model forward pass."""
+        raise NotImplementedError
+
+    # def load_model():
+    # ?
+
+
+class WhiteBoxXAIMethodBase(MethodBase):
     """Base class for methods that generates XAI branch of the model."""
 
     def __init__(self, model: ov.Model, embed_normalization: bool = True):
@@ -30,7 +47,30 @@ class WhiteBoxXAIMethodBase(ABC):
 
     @abstractmethod
     def generate_xai_branch(self):
-        """Implements specific XAI algorithm"""
+        """Implements specific XAI algorithm."""
+
+
+
+
+    def generate_saliency_map(self, data: np.ndarray) -> np.ndarray:
+        """Saliency map generation. White-box implementation."""
+        model_output = self.model_forward(data)
+        return model_output[SALIENCY_MAP_OUTPUT_NAME]
+
+    def model_forward(self, x: np.ndarray) -> ov.utils.data_helpers.wrappers.OVDict:
+        """Forward pass of the compiled model. Applies preprocess_fn."""
+        x = self.preprocess_fn(x)
+        return self.compiled_model(x)
+
+    def _load_model(self) -> None:
+        # TODO: support other devices
+        self.compiled_model = ov.Core().compile_model(self._model_xai, "CPU")
+
+    def _insert_xai(self) -> None:
+        self._model_xai = insert_xai_branch_into_model(self._model_ori, self)
+
+
+
 
     @staticmethod
     def _propagate_dynamic_batch_dimension(model: ov.Model):

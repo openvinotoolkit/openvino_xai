@@ -38,7 +38,14 @@ def insert_xai(
         logger.info("Provided IR model already contains XAI branch, return it as-is.")
         return model
 
-    model_xai = _insert_xai_branch_into_model(model, task_type, insertion_parameters)
+    if task_type == TaskType.CLASSIFICATION:
+        explain_method = create_white_box_classification_explain_method(model, insertion_parameters)  # type: ignore
+    elif task_type == TaskType.DETECTION:
+        explain_method = create_white_box_detection_explain_method(model, insertion_parameters)  # type: ignore
+    else:
+        raise ValueError(f"Model type {task_type} is not supported")
+
+    model_xai = insert_xai_branch_into_model(model, explain_method, insertion_parameters)
 
     if not has_xai(model_xai):
         raise RuntimeError("Insertion of the XAI branch into the model was not successful.")
@@ -47,16 +54,11 @@ def insert_xai(
     return model_xai
 
 
-def _insert_xai_branch_into_model(
-    model: ov.Model, task_type: TaskType, insertion_parameters: InsertionParameters | None
+def insert_xai_branch_into_model(
+    model: ov.Model, 
+    explain_method,
 ) -> ov.Model:
-    if task_type == TaskType.CLASSIFICATION:
-        explain_method = create_white_box_classification_explain_method(model, insertion_parameters)  # type: ignore
-    elif task_type == TaskType.DETECTION:
-        explain_method = create_white_box_detection_explain_method(model, insertion_parameters)  # type: ignore
-    else:
-        raise ValueError(f"Model type {task_type} is not supported")
-
+    """TBD."""
     xai_output_node = explain_method.generate_xai_branch()
     model_ori_outputs = model.outputs
     model_ori_params = model.get_parameters()
