@@ -18,6 +18,7 @@ from openvino_xai.explanation.explain import Explainer
 from openvino_xai.explanation.utils import get_postprocess_fn, get_preprocess_fn
 from openvino_xai.insertion import ClassificationInsertionParameters
 from openvino_xai.insertion.insert_xai_into_model import insert_xai
+from tests.unit.explanation.test_explanation_utils import VOC_NAMES
 
 MODEL_NAME = "mlc_mobilenetv3_large_voc"
 
@@ -66,32 +67,10 @@ class TestExplainer:
             explain_mode=explain_mode,
         )
 
-        voc_labels = [
-            "aeroplane",
-            "bicycle",
-            "bird",
-            "boat",
-            "bottle",
-            "bus",
-            "car",
-            "cat",
-            "chair",
-            "cow",
-            "diningtable",
-            "dog",
-            "horse",
-            "motorbike",
-            "person",
-            "pottedplant",
-            "sheep",
-            "sofa",
-            "train",
-            "tvmonitor",
-        ]
         explanation_parameters = ExplanationParameters(
             target_explain_group=target_explain_group,
             target_explain_labels=[11, 14],
-            label_names=voc_labels,  # optional
+            label_names=VOC_NAMES,  # optional
         )
         explanation = explainer(self.image, explanation_parameters, num_masks=10)
 
@@ -99,6 +78,43 @@ class TestExplainer:
             assert len(explanation.saliency_map) == 20
         if target_explain_group == TargetExplainGroup.CUSTOM:
             assert len(explanation.saliency_map) == 2
+
+    def test_explainer_wo_preprocessing(self):
+        retrieve_otx_model(self.data_dir, MODEL_NAME)
+        model_path = self.data_dir / "otx_models" / (MODEL_NAME + ".xml")
+
+        # White-box
+        model = ov.Core().read_model(model_path)
+
+        explainer = Explainer(
+            model,
+            task_type=TaskType.CLASSIFICATION,
+        )
+
+        explanation_parameters = ExplanationParameters(
+            target_explain_labels=[11, 14],
+        )
+        processed_data = self.preprocess_fn(self.image)
+        explanation = explainer(processed_data, explanation_parameters)
+
+        assert len(explanation.saliency_map) == 2
+
+        # Black-box
+        model = ov.Core().read_model(model_path)
+        explainer = Explainer(
+            model,
+            task_type=TaskType.CLASSIFICATION,
+            explain_mode=ExplainMode.BLACKBOX,
+            postprocess_fn=get_postprocess_fn(),
+        )
+
+        explanation_parameters = ExplanationParameters(
+            target_explain_labels=[11, 14],
+        )
+        processed_data = self.preprocess_fn(self.image)
+        explanation = explainer(processed_data, explanation_parameters, num_masks=10)
+
+        assert len(explanation.saliency_map) == 2
 
     def test_auto_black_box_fallback(self):
         retrieve_otx_model(self.data_dir, MODEL_NAME)

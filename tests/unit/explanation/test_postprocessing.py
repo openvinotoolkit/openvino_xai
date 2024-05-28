@@ -120,10 +120,10 @@ class TestPostProcessor:
         )
 
         raw_sal_map_dims = len(explanation_result.sal_map_shape)
-        data = np.ones((20, 20, 3))
+        original_input_image = np.ones((20, 20, 3))
         post_processor = PostProcessor(
             explanation=explanation_result,
-            data=data,
+            original_input_image=original_input_image,
             post_processing_parameters=post_processing_parameters,
         )
         explanation = post_processor.run()
@@ -140,7 +140,7 @@ class TestPostProcessor:
                 assert map_.max() in {254, 255}, f"{map_.max()}"
         if resize or overlay:
             for map_ in explanation.saliency_map.values():
-                assert map_.shape[:2] == data.shape[:2]
+                assert map_.shape[:2] == original_input_image.shape[:2]
 
         if target_explain_group == TargetExplainGroup.IMAGE and not overlay:
             explanation_result = ExplanationResult(

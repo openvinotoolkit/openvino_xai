@@ -6,7 +6,7 @@ Common functionality.
 import logging
 import os
 from pathlib import Path
-from typing import Tuple
+from typing import Any, Tuple
 from urllib.request import urlretrieve
 
 import numpy as np
@@ -84,3 +84,8 @@ def get_min_max(saliency_map: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     min_values = np.min(saliency_map, axis=-1)
     max_values = np.max(saliency_map, axis=-1)
     return min_values, max_values
+
+
+class IdentityPreprocessFN:
+    def __call__(self, x: Any) -> Any:
+        return x

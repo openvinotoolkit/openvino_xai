@@ -9,7 +9,12 @@ import openvino.runtime as ov
 import openvino_xai
 from openvino_xai.algorithms.black_box.black_box_methods import RISE
 from openvino_xai.common.parameters import TaskType
-from openvino_xai.common.utils import SALIENCY_MAP_OUTPUT_NAME, has_xai, logger
+from openvino_xai.common.utils import (
+    SALIENCY_MAP_OUTPUT_NAME,
+    IdentityPreprocessFN,
+    has_xai,
+    logger,
+)
 from openvino_xai.explanation.explanation_parameters import (
     ExplainMode,
     ExplanationParameters,
@@ -32,8 +37,9 @@ class Explainer:
     :type model: ov.Model
     :param task_type: Type of the task.
     :type task_type: TaskType
-    :param preprocess_fn: Preprocessing function.
-    :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
+    :param preprocess_fn: Preprocessing function, identity function by default
+        (assume input images are already preprocessed by user).
+    :type preprocess_fn: Callable[[np.ndarray], np.ndarray] | IdentityPreprocessFN
     :param postprocess_fn: Postprocessing functions, required for black-box.
     :type postprocess_fn: Callable[[ov.utils.data_helpers.wrappers.OVDict], np.ndarray]
     :param explain_mode: Explain mode.
@@ -46,7 +52,7 @@ class Explainer:
         self,
         model: ov.Model,
         task_type: TaskType,
-        preprocess_fn: Callable[[np.ndarray], np.ndarray],
+        preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         postprocess_fn: Callable[[ov.utils.data_helpers.wrappers.OVDict], np.ndarray] = None,
         explain_mode: ExplainMode = ExplainMode.AUTO,
         insertion_parameters: InsertionParameters | None = None,
@@ -55,6 +61,12 @@ class Explainer:
         self.compiled_model: ov.ie_api.CompiledModel | None = None
         self.task_type = task_type
 
+        if isinstance(preprocess_fn, IdentityPreprocessFN):
+            logger.info(
+                "Assigning preprocess_fn to identity function assumes that input images were already preprocessed "
+                "by user before passing it to the model. "
+                "Please define preprocessing function OR preprocess images beforehand."
+            )
         self.preprocess_fn = preprocess_fn
         self.postprocess_fn = postprocess_fn
 
@@ -111,23 +123,19 @@ class Explainer:
         **kwargs,
     ) -> ExplanationResult:
         """Explainer call that generates processed explanation result."""
+        # TODO (negvet): support output_shape as argument among other post process parameters
         if self.explain_mode == ExplainMode.WHITEBOX:
             saliency_map = self._generate_saliency_map_white_box(data)
         else:
             saliency_map = self._generate_saliency_map_black_box(data, explanation_parameters, **kwargs)
 
         explanation_result = ExplanationResult(
-            saliency_map,
-            explanation_parameters.target_explain_group,
-            explanation_parameters.target_explain_labels,
-            explanation_parameters.label_names,
+            saliency_map=saliency_map,
+            target_explain_group=explanation_parameters.target_explain_group,
+            target_explain_labels=explanation_parameters.target_explain_labels,
+            label_names=explanation_parameters.label_names,
         )
-        explanation_result = PostProcessor(
-            explanation=explanation_result,
-            data=data,
-            post_processing_parameters=explanation_parameters.post_processing_parameters,
-        ).run()
-        return explanation_result
+        return self._post_process(explanation_result, data, explanation_parameters)
 
     def model_forward(self, x: np.ndarray) -> ov.utils.data_helpers.wrappers.OVDict:
         """Forward pass of the compiled model. Applies preprocess_fn."""
@@ -161,3 +169,20 @@ class Explainer:
             )
             return saliency_map
         raise ValueError(f"Task type {self.task_type} is not supported in the black-box mode.")
+
+    def _post_process(self, explanation_result, data, explanation_parameters):
+        if not isinstance(self.preprocess_fn, IdentityPreprocessFN):
+            # Assume if preprocess_fn is provided - input data is original image
+            explanation_result = PostProcessor(
+                explanation=explanation_result,
+                original_input_image=data,
+                post_processing_parameters=explanation_parameters.post_processing_parameters,
+            ).run()
+        else:
+            # preprocess_fn is not provided - assume input data is processed
+            explanation_result = PostProcessor(
+                explanation=explanation_result,
+                output_size=data.shape[:2],  # resize to model input by default
+                post_processing_parameters=explanation_parameters.post_processing_parameters,
+            ).run()
+        return explanation_result

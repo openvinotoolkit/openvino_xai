@@ -49,8 +49,8 @@ class PostProcessor:
 
     :param explanation: Explanation result object.
     :type explanation: ExplanationResult
-    :param data: Input data.
-    :type data: np.ndarray
+    :param original_input_image: Input original_input_image.
+    :type original_input_image: np.ndarray
     :param output_size: Output size used for resize operation.
     :type output_size: Tuple[int, int]
     :param post_processing_parameters: Parameters that define post-processing.
@@ -60,17 +60,17 @@ class PostProcessor:
     def __init__(
         self,
         explanation: ExplanationResult,
-        data: np.ndarray = None,
+        original_input_image: np.ndarray = None,
         output_size: Tuple[int, int] = None,
         post_processing_parameters: PostProcessParameters | None = None,
     ):
         self._explanation = explanation
         self._saliency_map_np: np.ndarray | None = None
-        self._data = data
+        self._original_input_image = original_input_image
         self._output_size = output_size
 
         if post_processing_parameters is None:
-            post_processing_parameters = PostProcessParameters(overlay=True)
+            post_processing_parameters = PostProcessParameters(resize=True, colormap=True)
         self._scale = post_processing_parameters.scale
         self._resize = post_processing_parameters.resize
         self._colormap = post_processing_parameters.colormap
@@ -101,14 +101,14 @@ class PostProcessor:
             self._apply_normalization()
 
         if self._overlay:
-            if self._data is None:
+            if self._original_input_image is None:
                 raise ValueError("Input data has to be provided for overlay.")
             self._apply_resize()
             self._apply_colormap()
             self._apply_overlay()
         else:
             if self._resize:
-                if self._data is None and self._output_size is None:
+                if self._original_input_image is None and self._output_size is None:
                     raise ValueError(
                         "Input data or output_size has to be provided for resize (for target size estimation)."
                     )
@@ -135,7 +135,7 @@ class PostProcessor:
                 f"Saliency map to resize has to be grayscale. The layout must be in {GRAY_LAYOUTS}, "
                 f"but got {self.layout}."
             )
-        output_size = self._output_size if self._output_size else self._data.shape[:2]
+        output_size = self._output_size if self._output_size else self._original_input_image.shape[:2]
         self._saliency_map_np = resize(self._saliency_map_np, output_size)
 
         # Normalization has to be applied after resize to keep map in range 0..255
@@ -159,7 +159,7 @@ class PostProcessor:
 
     def _apply_overlay(self) -> None:
         assert self.layout in COLOR_MAPPED_LAYOUTS, "Color mapped saliency map are expected for overlay."
-        self._saliency_map_np = overlay(self._saliency_map_np, self._data, self._overlay_weight)
+        self._saliency_map_np = overlay(self._saliency_map_np, self._original_input_image, self._overlay_weight)
 
     def _convert_sal_map_to_dict(self, class_idx: List) -> None:
         dict_sal_map: Dict[int | str, np.ndarray] = {}
