@@ -1,12 +1,12 @@
-# OpenVINO-XAI (OVXAI) usage
+# OpenVINO™ Explainable AI Toolkit Usage Guide
 
-OpenVINO-XAI provides a suite of eXplainable AI (XAI) algorithms for explanation of OpenVINO™ Intermediate Representation (IR).
+**OpenVINO™ Explainable AI (XAI) Toolkit** provides a suite of XAI algorithms for visual explanation of OpenVINO™ Intermediate Representation (IR) models.
 Model explanation helps to identify the parts of the input that are responsible for the model's prediction,
 which is useful for analyzing model's performance.
 
 Current tutorial is primarily for classification CNNs.
 
-OpenVINO-XAI API documentation can be found [here](https://curly-couscous-ovjvm29.pages.github.io/).
+OpenVINO XAI API documentation can be found [here](https://curly-couscous-ovjvm29.pages.github.io/).
 
 Content:
 
