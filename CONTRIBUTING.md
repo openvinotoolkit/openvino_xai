@@ -1,4 +1,4 @@
-# Contributing to OpenVINO™ Explainable AI (XAI) Toolkit
+# Contributing to OpenVINO™ Explainable AI Toolkit
 
 ## Code style
 

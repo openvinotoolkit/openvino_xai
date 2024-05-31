@@ -1,12 +1,12 @@
 <!-- markdownlint-disable -->
 TODO (Galina): enable
 
-# OpenVINO XAI: Classification explanation
+# OpenVINO™ Explainable AI Toolkit: Classification Explanation
+
+**OpenVINO™ Explainable AI (XAI) Toolkit** provides a suite of XAI algorithms for visual explanation of
+[OpenVINO™](https://github.com/openvinotoolkit/openvino) Intermediate Representation (IR) models.
 
 This notebook shows an example how to use OpenVINO XAI.
-
-**OpenVINO Explainable AI (XAI) Toolkit** provides a suite of XAI algorithms for visual explanation of
-[OpenVINO™](https://github.com/openvinotoolkit/openvino) Intermediate Representation (IR) models.
 
 It depicts a heatmap with areas of interest where neural network (classification or detection) focuses before making a decision.
 
