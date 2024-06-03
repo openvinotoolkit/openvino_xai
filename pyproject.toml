@@ -21,13 +21,14 @@ authors = [
 maintainers = [
   {name = "Intel(R) Corporation"},
 ]
-description = "OpenVINO XAI: a toolbox for explaining models in OpenVINO format"
+description = "OpenVINO™ Explainable AI (XAI) Toolkit: Visual Explanation for OpenVINO Models"
 readme = "README.md"
 license = {file = "LICENSE"}
-keywords = ["pytorch", "cnn", "transformer", "xai", "black-box"]
+keywords = ["openvino-toolkit", "explainable-ai", "xai", "cnn", "transformer", "black-box", "white-box"]
 classifiers = [
   "License :: OSI Approved :: MIT Apache Software License",
-  "Programming Language :: Python :: 3.9"
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
 ]
 
 [project.optional-dependencies]
@@ -44,9 +45,9 @@ dev_timm = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/intel-sandbox/openvino_xai"
+Homepage = "https://github.com/openvinotoolkit/openvino_xai"
 Documentation = "https://curly-couscous-ovjvm29.pages.github.io/"
-Repository = "https://github.com/intel-sandbox/openvino_xai.git"
+Repository = "https://github.com/openvinotoolkit/openvino_xai.git"
 
 [tool.setuptools.packages.find]
 include = ["openvino_xai*"]
