@@ -46,6 +46,8 @@ To explain [OpenVINO™](https://github.com/openvinotoolkit/openvino) Intermedia
 preprocessing function (and sometimes postprocessing).
 
 ```python
+from openvino_xai.common.parameters import Task
+
 explainer = Explainer(
     model,
     task=Task.CLASSIFICATION,
@@ -66,7 +68,7 @@ import cv2
 import numpy as np
 import openvino.runtime as ov
 
-import openvino_xai as ovxai
+from openvino_xai.common.parameters import Task
 from openvino_xai.explainer.explainer import Explainer
 from openvino_xai.explainer.explanation_parameters import ExplanationParameters
 
