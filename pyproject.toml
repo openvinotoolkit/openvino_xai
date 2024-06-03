@@ -35,6 +35,7 @@ classifiers = [
 dev = [
   "pytest",
   "pytest-cov",
+  "pytest-csv",
   "pre-commit==3.7.0",
   "addict",
 ]
