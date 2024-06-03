@@ -10,23 +10,25 @@ import openvino
 import openvino.runtime as ov
 import pytest
 
-from openvino_xai.algorithms.white_box.create_method import (
-    create_white_box_detection_explain_method,
-)
-from openvino_xai.algorithms.white_box.white_box_methods import (
-    DetClassProbabilityMapXAIMethod,
-)
-from openvino_xai.common.parameters import TaskType, XAIMethodType
+from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import retrieve_otx_model
-from openvino_xai.explanation.explain import Explainer
-from openvino_xai.explanation.explanation_parameters import (
+from openvino_xai.explainer.explainer import Explainer
+from openvino_xai.explainer.explanation_parameters import (
     ExplainMode,
     ExplanationParameters,
-    PostProcessParameters,
     TargetExplainGroup,
+    VisualizationParameters,
 )
-from openvino_xai.explanation.utils import get_preprocess_fn
-from openvino_xai.insertion.insertion_parameters import DetectionInsertionParameters
+from openvino_xai.explainer.utils import get_preprocess_fn
+from openvino_xai.methods.white_box.create_method import (
+    create_white_box_detection_explain_method,
+)
+from openvino_xai.methods.white_box.white_box_methods import (
+    DetClassProbabilityMapXAIMethod,
+)
+from openvino_xai.xai_branch_inserter.insertion_parameters import (
+    DetectionInsertionParameters,
+)
 
 MODEL_CONFIGS = addict.Addict(
     {
@@ -101,7 +103,7 @@ class TestDetWB:
             target_layer=cls_head_output_node_names,
             num_anchors=MODEL_CONFIGS[model_name].anchors,
             saliency_map_size=self._sal_map_size,
-            explain_method_type=XAIMethodType.DETCLASSPROBABILITYMAP,
+            explain_method=Method.DETCLASSPROBABILITYMAP,
         )
 
         preprocess_fn = get_preprocess_fn(
@@ -110,7 +112,7 @@ class TestDetWB:
         )
         explainer = Explainer(
             model=model,
-            task_type=TaskType.DETECTION,
+            task=Task.DETECTION,
             preprocess_fn=preprocess_fn,
             explain_mode=ExplainMode.WHITEBOX,  # defaults to AUTO
             insertion_parameters=insertion_parameters,
@@ -121,7 +123,7 @@ class TestDetWB:
             target_explain_group=target_explain_group,
             target_explain_labels=target_class_list,
             # w/o postrocessing
-            post_processing_parameters=PostProcessParameters(),
+            visualization_parameters=VisualizationParameters(),
         )
         explanation = explainer(self.image, explanation_parameters)
         assert explanation is not None
@@ -150,7 +152,7 @@ class TestDetWB:
         model, insertion_parameters = self.get_default_model_and_insertion_parameters()
 
         target_class_list = [1] if target_explain_group == TargetExplainGroup.CUSTOM else None
-        post_processing_parameters = PostProcessParameters(overlay=True)
+        visualization_parameters = VisualizationParameters(overlay=True)
 
         preprocess_fn = get_preprocess_fn(
             input_size=MODEL_CONFIGS[DEFAULT_DET_MODEL].input_size,
@@ -158,7 +160,7 @@ class TestDetWB:
         )
         explainer = Explainer(
             model=model,
-            task_type=TaskType.DETECTION,
+            task=Task.DETECTION,
             preprocess_fn=preprocess_fn,
             explain_mode=ExplainMode.WHITEBOX,
             insertion_parameters=insertion_parameters,
@@ -167,11 +169,11 @@ class TestDetWB:
         explanation_parameters = ExplanationParameters(
             target_explain_group=target_explain_group,
             target_explain_labels=target_class_list,
-            post_processing_parameters=post_processing_parameters,
+            visualization_parameters=visualization_parameters,
         )
         explanation = explainer(self.image, explanation_parameters)
         assert explanation is not None
-        assert explanation.sal_map_shape == (480, 640, 3)
+        assert explanation.shape == (480, 640, 3)
         if target_explain_group == TargetExplainGroup.ALL:
             assert len(explanation.saliency_map) == MODEL_CONFIGS[DEFAULT_DET_MODEL].num_classes
         if target_explain_group == TargetExplainGroup.CUSTOM:
@@ -188,7 +190,7 @@ class TestDetWB:
         )
         explainer = Explainer(
             model=model,
-            task_type=TaskType.DETECTION,
+            task=Task.DETECTION,
             preprocess_fn=preprocess_fn,
             explain_mode=ExplainMode.WHITEBOX,
             insertion_parameters=insertion_parameters,
@@ -196,7 +198,7 @@ class TestDetWB:
 
         explanation_parameters = ExplanationParameters(
             target_explain_group=TargetExplainGroup.ALL,
-            post_processing_parameters=PostProcessParameters(scale=True),
+            visualization_parameters=VisualizationParameters(scale=True),
         )
         explanation = explainer(self.image, explanation_parameters)
 
@@ -227,6 +229,6 @@ class TestDetWB:
             target_layer=cls_head_output_node_names,
             num_anchors=MODEL_CONFIGS[DEFAULT_DET_MODEL].anchors,
             saliency_map_size=self._sal_map_size,
-            explain_method_type=XAIMethodType.DETCLASSPROBABILITYMAP,
+            explain_method=Method.DETCLASSPROBABILITYMAP,
         )
         return model, insertion_parameters

@@ -4,8 +4,8 @@
 import openvino.runtime as ov
 
 from openvino_xai.common.utils import retrieve_otx_model
-from openvino_xai.insertion.insertion_parameters import ModelType
-from openvino_xai.insertion.parse_model import IRParserCls
+from openvino_xai.xai_branch_inserter.insertion_parameters import ModelType
+from openvino_xai.xai_branch_inserter.model_parser import IRParserCls
 from tests.integration.test_classification import DATA_DIR, DEFAULT_CLS_MODEL
 
 

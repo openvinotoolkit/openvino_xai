@@ -5,9 +5,9 @@ from pathlib import Path
 
 import openvino.runtime as ov
 
-from openvino_xai.common.parameters import TaskType
+from openvino_xai.common.parameters import Task
 from openvino_xai.common.utils import has_xai, retrieve_otx_model
-from openvino_xai.insertion.insert_xai_into_model import insert_xai
+from openvino_xai.xai_branch_inserter.xai_branch_inserter import insert_xai
 from tests.integration.test_classification import DEFAULT_CLS_MODEL
 
 DARA_DIR = Path(".data")
@@ -23,7 +23,7 @@ def test_has_xai():
 
     model_xai = insert_xai(
         model,
-        task_type=TaskType.CLASSIFICATION,
+        task=Task.CLASSIFICATION,
     )
 
     assert has_xai(model_xai)

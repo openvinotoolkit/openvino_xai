@@ -48,7 +48,7 @@ preprocessing function (and sometimes postprocessing).
 ```python
 explainer = Explainer(
     model,
-    task_type=TaskType.CLASSIFICATION,
+    task=Task.CLASSIFICATION,
     preprocess_fn=preprocess_fn,
 )
 explanation = explainer(data, explanation_parameters)
@@ -66,9 +66,9 @@ import cv2
 import numpy as np
 import openvino.runtime as ov
 
-from openvino_xai.common.parameters import TaskType
-from openvino_xai.explanation.explainer import Explainer
-from openvino_xai.explanation.explanation_parameters import ExplanationParameters
+import openvino_xai as ovxai
+from openvino_xai.explainer.explainer import Explainer
+from openvino_xai.explainer.explanation_parameters import ExplanationParameters
 
 
 def preprocess_fn(x: np.ndarray) -> np.ndarray:
@@ -84,7 +84,7 @@ model = ov.Core().read_model("path/to/model.xml")  # type: ov.Model
 # Explainer object will prepare and load the model once in the beginning
 explainer = Explainer(
     model,
-    task_type=TaskType.CLASSIFICATION,
+    task=Task.CLASSIFICATION,
     preprocess_fn=preprocess_fn,
 )
 
@@ -95,7 +95,7 @@ explanation_parameters = ExplanationParameters(
 )
 explanation = explainer(image, explanation_parameters)
 
-explanation: ExplanationResult
+explanation: Explanation
 explanation.saliency_map: Dict[int: np.ndarray]  # key - class id, value - processed saliency map e.g. 354x500x3
 
 # Saving saliency maps

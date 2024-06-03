@@ -36,6 +36,7 @@ otx_models/
 
 *.jpg
 *.jpeg
+*.JPEG
 *.png
 
 html_build/

@@ -7,17 +7,19 @@ import cv2
 import openvino.runtime as ov
 import pytest
 
-from openvino_xai.common.parameters import TaskType
+from openvino_xai.common.parameters import Task
 from openvino_xai.common.utils import retrieve_otx_model
-from openvino_xai.explanation import (
+from openvino_xai.explainer.explainer import Explainer
+from openvino_xai.explainer.explanation_parameters import (
     ExplainMode,
     ExplanationParameters,
     TargetExplainGroup,
 )
-from openvino_xai.explanation.explain import Explainer
-from openvino_xai.explanation.utils import get_postprocess_fn, get_preprocess_fn
-from openvino_xai.insertion import ClassificationInsertionParameters
-from openvino_xai.insertion.insert_xai_into_model import insert_xai
+from openvino_xai.explainer.utils import get_postprocess_fn, get_preprocess_fn
+from openvino_xai.xai_branch_inserter.insertion_parameters import (
+    ClassificationInsertionParameters,
+)
+from openvino_xai.xai_branch_inserter.xai_branch_inserter import insert_xai
 from tests.unit.explanation.test_explanation_utils import VOC_NAMES
 
 MODEL_NAME = "mlc_mobilenetv3_large_voc"
@@ -56,12 +58,12 @@ class TestExplainer:
         if with_xai_originally:
             model = insert_xai(
                 model,
-                task_type=TaskType.CLASSIFICATION,
+                task=Task.CLASSIFICATION,
             )
 
         explainer = Explainer(
             model,
-            task_type=TaskType.CLASSIFICATION,
+            task=Task.CLASSIFICATION,
             preprocess_fn=self.preprocess_fn,
             postprocess_fn=get_postprocess_fn(),
             explain_mode=explain_mode,
@@ -88,7 +90,7 @@ class TestExplainer:
 
         explainer = Explainer(
             model,
-            task_type=TaskType.CLASSIFICATION,
+            task=Task.CLASSIFICATION,
         )
 
         explanation_parameters = ExplanationParameters(
@@ -103,7 +105,7 @@ class TestExplainer:
         model = ov.Core().read_model(model_path)
         explainer = Explainer(
             model,
-            task_type=TaskType.CLASSIFICATION,
+            task=Task.CLASSIFICATION,
             explain_mode=ExplainMode.BLACKBOX,
             postprocess_fn=get_postprocess_fn(),
         )
@@ -127,7 +129,7 @@ class TestExplainer:
             )
             explainer = Explainer(
                 model=model,
-                task_type=TaskType.CLASSIFICATION,
+                task=Task.CLASSIFICATION,
                 preprocess_fn=self.preprocess_fn,
                 explain_mode=ExplainMode.AUTO,
                 insertion_parameters=insertion_parameters,
@@ -140,7 +142,7 @@ class TestExplainer:
         )
         explainer = Explainer(
             model=model,
-            task_type=TaskType.CLASSIFICATION,
+            task=Task.CLASSIFICATION,
             preprocess_fn=self.preprocess_fn,
             postprocess_fn=get_postprocess_fn(),
             explain_mode=ExplainMode.AUTO,

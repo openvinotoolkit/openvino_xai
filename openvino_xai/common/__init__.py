@@ -3,12 +3,12 @@
 """
 Common parameters and utils.
 """
-from openvino_xai.common.parameters import TaskType, XAIMethodType
+from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import has_xai, scale
 
 __all__ = [
-    "TaskType",
-    "XAIMethodType",
+    "Task",
+    "Method",
     "has_xai",
     "scale",
 ]

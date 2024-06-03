@@ -7,13 +7,13 @@ import numpy as np
 import openvino.runtime as ov
 import pytest
 
-from openvino_xai.algorithms.white_box.white_box_methods import (
+from openvino_xai.common.utils import retrieve_otx_model
+from openvino_xai.methods.white_box.white_box_methods import (
     ActivationMapXAIMethod,
     DetClassProbabilityMapXAIMethod,
     ReciproCAMXAIMethod,
     ViTReciproCAMXAIMethod,
 )
-from openvino_xai.common.utils import retrieve_otx_model
 from tests.integration.test_classification import DEFAULT_CLS_MODEL
 from tests.integration.test_detection import DEFAULT_DET_MODEL
 

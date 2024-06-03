@@ -5,9 +5,11 @@ import pytest
 from openvino import runtime as ov
 
 from openvino_xai import insert_xai
-from openvino_xai.common.parameters import TaskType, XAIMethodType
+from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import has_xai, retrieve_otx_model
-from openvino_xai.insertion.insertion_parameters import DetectionInsertionParameters
+from openvino_xai.xai_branch_inserter.insertion_parameters import (
+    DetectionInsertionParameters,
+)
 from tests.integration.test_classification import DATA_DIR, MODELS
 from tests.integration.test_detection import DEFAULT_DET_MODEL, MODEL_CONFIGS
 
@@ -23,7 +25,7 @@ def test_insertion_classification(model_name):
     if model_name == "classification_model_with_xai_head":
         assert has_xai(model_ir), "Input IR model should have XAI head."
 
-    model_with_xai = insert_xai(model_ir, TaskType.CLASSIFICATION)
+    model_with_xai = insert_xai(model_ir, Task.CLASSIFICATION)
 
     assert has_xai(model_with_xai), "Updated IR model should has XAI head."
 
@@ -37,10 +39,10 @@ def test_insertion_detection():
     insertion_parameters = DetectionInsertionParameters(
         target_layer=cls_head_output_node_names,
         num_anchors=MODEL_CONFIGS[DEFAULT_DET_MODEL].anchors,
-        explain_method_type=XAIMethodType.DETCLASSPROBABILITYMAP,
+        explain_method=Method.DETCLASSPROBABILITYMAP,
     )
 
-    model_with_xai = insert_xai(model, TaskType.DETECTION, insertion_parameters)
+    model_with_xai = insert_xai(model, Task.DETECTION, insertion_parameters)
     assert has_xai(model_with_xai), "Updated IR model should has XAI head."
 
 

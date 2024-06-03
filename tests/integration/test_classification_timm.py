@@ -10,25 +10,25 @@ import numpy as np
 import openvino.runtime as ov
 import pytest
 
-from openvino_xai.common.parameters import TaskType, XAIMethodType
-from openvino_xai.explanation.explain import Explainer
-from openvino_xai.explanation.explanation_parameters import (
+from openvino_xai.common.parameters import Method, Task
+from openvino_xai.explainer.explainer import Explainer
+from openvino_xai.explainer.explanation_parameters import (
     ExplainMode,
     ExplanationParameters,
-    PostProcessParameters,
     TargetExplainGroup,
+    VisualizationParameters,
 )
-from openvino_xai.explanation.post_process import PostProcessor
-from openvino_xai.explanation.utils import (
+from openvino_xai.explainer.utils import (
     ActivationType,
     get_postprocess_fn,
     get_preprocess_fn,
     get_score,
 )
-from openvino_xai.insertion.insertion_parameters import (
+from openvino_xai.explainer.visualize import Visualizer
+from openvino_xai.utils.model_export import export_to_ir, export_to_onnx
+from openvino_xai.xai_branch_inserter.insertion_parameters import (
     ClassificationInsertionParameters,
 )
-from openvino_xai.utils.model_export import export_to_ir, export_to_onnx
 
 timm = pytest.importorskip("timm")
 torch = pytest.importorskip("torch")
@@ -178,15 +178,15 @@ class TestImageClassificationTimm:
         model = ov.Core().read_model(ir_path)
 
         if model_id in LIMITED_DIVERSE_SET_OF_CNN_MODELS:
-            explain_method_type = XAIMethodType.RECIPROCAM
+            explain_method = Method.RECIPROCAM
         elif model_id in LIMITED_DIVERSE_SET_OF_VISION_TRANSFORMER_MODELS:
-            explain_method_type = XAIMethodType.VITRECIPROCAM
+            explain_method = Method.VITRECIPROCAM
         else:
             raise ValueError
 
         insertion_parameters = ClassificationInsertionParameters(
             embed_normalization=False,
-            explain_method_type=explain_method_type,
+            explain_method=explain_method,
         )
 
         mean_values = [(item * 255) for item in model_cfg["mean"]]
@@ -201,7 +201,7 @@ class TestImageClassificationTimm:
 
         explainer = Explainer(
             model=model,
-            task_type=TaskType.CLASSIFICATION,
+            task=Task.CLASSIFICATION,
             preprocess_fn=preprocess_fn,
             explain_mode=ExplainMode.WHITEBOX,  # defaults to AUTO
             insertion_parameters=insertion_parameters,
@@ -211,16 +211,16 @@ class TestImageClassificationTimm:
         explanation_parameters = ExplanationParameters(
             target_explain_group=TargetExplainGroup.CUSTOM,
             target_explain_labels=[target_class],
-            post_processing_parameters=PostProcessParameters(),
+            visualization_parameters=VisualizationParameters(),
         )
         image = cv2.imread("tests/assets/cheetah_person.jpg")
         explanation = explainer(image, explanation_parameters)
 
         assert explanation is not None
-        assert explanation.sal_map_shape[-1] > 1 and explanation.sal_map_shape[-2] > 1
-        print(f"{model_id}: Generated classification saliency maps with shape {explanation.sal_map_shape}.")
+        assert explanation.shape[-1] > 1 and explanation.shape[-2] > 1
+        print(f"{model_id}: Generated classification saliency maps with shape {explanation.shape}.")
         self.update_report("report_wb.csv", model_id, "True", "True", "True")
-        raw_shape = explanation.sal_map_shape
+        raw_shape = explanation.shape
         shape_str = "H=" + str(raw_shape[0]) + ", W=" + str(raw_shape[1])
         self.update_report("report_wb.csv", model_id, "True", "True", "True", shape_str)
 
@@ -233,11 +233,11 @@ class TestImageClassificationTimm:
             raw_sal_map[-1, 0] = np.mean(np.delete(raw_sal_map[-2:, :2].flatten(), 2))
             raw_sal_map[-1, -1] = np.mean(np.delete(raw_sal_map[-2:, -2:].flatten(), 3))
             explanation.saliency_map[target_class] = raw_sal_map
-            post_processing_parameters = PostProcessParameters(scale=True, overlay=True)
-            post_processor = PostProcessor(
+            visualization_parameters = VisualizationParameters(scale=True, overlay=True)
+            post_processor = Visualizer(
                 explanation=explanation,
                 data=image,
-                post_processing_parameters=post_processing_parameters,
+                visualization_parameters=visualization_parameters,
             )
             explanation = post_processor.run()
 
@@ -296,7 +296,7 @@ class TestImageClassificationTimm:
 
         explainer = Explainer(
             model=model,
-            task_type=TaskType.CLASSIFICATION,
+            task=Task.CLASSIFICATION,
             preprocess_fn=preprocess_fn,
             postprocess_fn=postprocess_fn,
             explain_mode=ExplainMode.BLACKBOX,  # defaults to AUTO
@@ -315,10 +315,10 @@ class TestImageClassificationTimm:
         )
 
         assert explanation is not None
-        assert explanation.sal_map_shape[-1] > 1 and explanation.sal_map_shape[-2] > 1
-        print(f"{model_id}: Generated classification saliency maps with shape {explanation.sal_map_shape}.")
+        assert explanation.shape[-1] > 1 and explanation.shape[-2] > 1
+        print(f"{model_id}: Generated classification saliency maps with shape {explanation.shape}.")
         self.update_report("report_bb.csv", model_id, "True", "True", "True")
-        shape = explanation.sal_map_shape
+        shape = explanation.shape
         shape_str = "H=" + str(shape[0]) + ", W=" + str(shape[1])
         self.update_report("report_bb.csv", model_id, "True", "True", "True", shape_str)
 
