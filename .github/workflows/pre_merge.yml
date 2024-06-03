@@ -72,6 +72,11 @@ jobs:
             .tox/pytest-${{ matrix.tox-env }}/*.xml
         # Use always() to always run this step to publish test results when there are test failures
         if: ${{ always() }}
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: .tox/pytest-${{ matrix.tox-env }}/unit-test-coverage.xml
+          flags: pytest-${{ matrix.tox-env }}
 
   Integration-Test:
     runs-on: ubuntu-22.04
