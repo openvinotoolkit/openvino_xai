@@ -1,17 +1,9 @@
-name: Code Scanning
+name: Security Code Scan
 
 on:
-  pull_request:
-    types:
-      - opened
-      - reopened
-      - synchronize
   push:
     branches:
       - releases/*
-  schedule:
-    # every UTC 6PM from Mon to Fri
-    - cron: "0 18 * * 1-5"
   workflow_dispatch: # run on request (no need for PR)
 
 # Declare default permissions as read only.
