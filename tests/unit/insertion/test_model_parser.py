@@ -1,11 +1,11 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import openvino.runtime as ov
 
 from openvino_xai.common.utils import retrieve_otx_model
-from openvino_xai.xai_branch_inserter.insertion_parameters import ModelType
-from openvino_xai.xai_branch_inserter.model_parser import IRParserCls
+from openvino_xai.inserter.model_parser import IRParserCls
+from openvino_xai.inserter.parameters import ModelType
 from tests.integration.test_classification import DATA_DIR, DEFAULT_CLS_MODEL
 
 

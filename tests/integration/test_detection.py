@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
@@ -13,21 +13,19 @@ import pytest
 from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import retrieve_otx_model
 from openvino_xai.explainer.explainer import Explainer
-from openvino_xai.explainer.explanation_parameters import (
+from openvino_xai.explainer.parameters import (
     ExplainMode,
     ExplanationParameters,
     TargetExplainGroup,
     VisualizationParameters,
 )
 from openvino_xai.explainer.utils import get_preprocess_fn
+from openvino_xai.inserter.parameters import DetectionInsertionParameters
 from openvino_xai.methods.white_box.create_method import (
     create_white_box_detection_explain_method,
 )
 from openvino_xai.methods.white_box.white_box_methods import (
     DetClassProbabilityMapXAIMethod,
-)
-from openvino_xai.xai_branch_inserter.insertion_parameters import (
-    DetectionInsertionParameters,
 )
 
 MODEL_CONFIGS = addict.Addict(

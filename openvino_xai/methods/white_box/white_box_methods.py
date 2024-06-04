@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from abc import ABC, abstractmethod
@@ -8,9 +8,9 @@ import numpy as np
 import openvino.runtime as ov
 from openvino.runtime import opset10 as opset
 
-from openvino_xai.explainer.explanation_parameters import TargetExplainGroup
-from openvino_xai.xai_branch_inserter.insertion_parameters import ModelType
-from openvino_xai.xai_branch_inserter.model_parser import IRParserCls
+from openvino_xai.explainer.parameters import TargetExplainGroup
+from openvino_xai.inserter.model_parser import IRParserCls
+from openvino_xai.inserter.parameters import ModelType
 
 
 class WhiteBoxXAIMethodBase(ABC):

@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from typing import Callable
@@ -15,15 +15,15 @@ from openvino_xai.common.utils import (
     logger,
 )
 from openvino_xai.explainer.explanation import Explanation
-from openvino_xai.explainer.explanation_parameters import (
+from openvino_xai.explainer.parameters import (
     ExplainMode,
     ExplanationParameters,
     TargetExplainGroup,
 )
 from openvino_xai.explainer.utils import get_explain_target_indices
-from openvino_xai.explainer.visualize import Visualizer
+from openvino_xai.explainer.visualizer import Visualizer
+from openvino_xai.inserter.parameters import InsertionParameters
 from openvino_xai.methods.black_box.black_box_methods import RISE
-from openvino_xai.xai_branch_inserter.insertion_parameters import InsertionParameters
 
 
 class Explainer:
@@ -170,7 +170,9 @@ class Explainer:
             return saliency_map
         raise ValueError(f"Task type {self.task} is not supported in the black-box mode.")
 
-    def _visualize(self, explanation, data, explanation_parameters):
+    def _visualize(
+        self, explanation: Explanation, data: np.ndarray, explanation_parameters: ExplanationParameters
+    ) -> Explanation:
         if not isinstance(self.preprocess_fn, IdentityPreprocessFN):
             # Assume if preprocess_fn is provided - input data is original image
             explanation = Visualizer(

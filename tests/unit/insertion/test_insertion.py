@@ -7,9 +7,7 @@ from openvino import runtime as ov
 from openvino_xai import insert_xai
 from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import has_xai, retrieve_otx_model
-from openvino_xai.xai_branch_inserter.insertion_parameters import (
-    DetectionInsertionParameters,
-)
+from openvino_xai.inserter.parameters import DetectionInsertionParameters
 from tests.integration.test_classification import DATA_DIR, MODELS
 from tests.integration.test_detection import DEFAULT_DET_MODEL, MODEL_CONFIGS
 

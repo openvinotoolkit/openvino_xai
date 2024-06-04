@@ -46,11 +46,9 @@ To explain [OpenVINO™](https://github.com/openvinotoolkit/openvino) Intermedia
 preprocessing function (and sometimes postprocessing).
 
 ```python
-from openvino_xai.common.parameters import Task
-
-explainer = Explainer(
+explainer = xai.Explainer(
     model,
-    task=Task.CLASSIFICATION,
+    task=xai.Task.CLASSIFICATION,
     preprocess_fn=preprocess_fn,
 )
 explanation = explainer(data, explanation_parameters)
@@ -68,8 +66,7 @@ import cv2
 import numpy as np
 import openvino.runtime as ov
 
-from openvino_xai.common.parameters import Task
-from openvino_xai.explainer.explainer import Explainer
+import openvino_xai as xai
 from openvino_xai.explainer.explanation_parameters import ExplanationParameters
 
 
@@ -84,9 +81,9 @@ def preprocess_fn(x: np.ndarray) -> np.ndarray:
 model = ov.Core().read_model("path/to/model.xml")  # type: ov.Model
 
 # Explainer object will prepare and load the model once in the beginning
-explainer = Explainer(
+explainer = xai.Explainer(
     model,
-    task=Task.CLASSIFICATION,
+    task=xai.Task.CLASSIFICATION,
     preprocess_fn=preprocess_fn,
 )
 

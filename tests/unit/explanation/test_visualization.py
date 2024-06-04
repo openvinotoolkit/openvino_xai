@@ -6,11 +6,11 @@ import pytest
 
 from openvino_xai.common.utils import get_min_max, scale
 from openvino_xai.explainer.explanation import Explanation
-from openvino_xai.explainer.explanation_parameters import (
+from openvino_xai.explainer.parameters import (
     TargetExplainGroup,
     VisualizationParameters,
 )
-from openvino_xai.explainer.visualize import Visualizer, colormap, overlay, resize
+from openvino_xai.explainer.visualizer import Visualizer, colormap, overlay, resize
 
 SALIENCY_MAPS = [
     (np.random.rand(1, 5, 5) * 255).astype(np.uint8),

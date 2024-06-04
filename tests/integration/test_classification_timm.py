@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import csv
@@ -12,7 +12,7 @@ import pytest
 
 from openvino_xai.common.parameters import Method, Task
 from openvino_xai.explainer.explainer import Explainer
-from openvino_xai.explainer.explanation_parameters import (
+from openvino_xai.explainer.parameters import (
     ExplainMode,
     ExplanationParameters,
     TargetExplainGroup,
@@ -24,11 +24,9 @@ from openvino_xai.explainer.utils import (
     get_preprocess_fn,
     get_score,
 )
-from openvino_xai.explainer.visualize import Visualizer
+from openvino_xai.explainer.visualizer import Visualizer
+from openvino_xai.inserter.parameters import ClassificationInsertionParameters
 from openvino_xai.utils.model_export import export_to_ir, export_to_onnx
-from openvino_xai.xai_branch_inserter.insertion_parameters import (
-    ClassificationInsertionParameters,
-)
 
 timm = pytest.importorskip("timm")
 torch = pytest.importorskip("torch")

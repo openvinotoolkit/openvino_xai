@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import argparse
@@ -10,18 +10,14 @@ import cv2
 import numpy as np
 import openvino.runtime as ov
 
-import openvino_xai as ovxai
-from openvino_xai.common.parameters import Method, Task
+import openvino_xai as xai
 from openvino_xai.common.utils import logger
-from openvino_xai.explainer.explainer import Explainer
-from openvino_xai.explainer.explanation_parameters import (
+from openvino_xai.explainer.parameters import (
     ExplainMode,
     ExplanationParameters,
     TargetExplainGroup,
 )
-from openvino_xai.xai_branch_inserter.insertion_parameters import (
-    ClassificationInsertionParameters,
-)
+from openvino_xai.inserter.parameters import ClassificationInsertionParameters
 
 
 def get_argument_parser():
@@ -56,9 +52,9 @@ def explain_auto(args):
     model = ov.Core().read_model(args.model_path)
 
     # Create explainer object
-    explainer = Explainer(
+    explainer = xai.Explainer(
         model=model,
-        task=Task.CLASSIFICATION,
+        task=xai.Task.CLASSIFICATION,
         preprocess_fn=preprocess_fn,
     )
 
@@ -99,13 +95,13 @@ def explain_white_box(args):
         target_layer="/backbone/conv/conv.2/Div",  # OTX mnet_v3
         # target_layer="/backbone/features/final_block/activate/Mul",  # OTX effnet
         embed_normalization=True, # True by default.  If set to True, saliency map normalization is embedded in the model
-        explain_method=Method.RECIPROCAM,  # ReciproCAM is the default XAI method for CNNs
+        explain_method=xai.Method.RECIPROCAM,  # ReciproCAM is the default XAI method for CNNs
     )
 
     # Create explainer object
-    explainer = Explainer(
+    explainer = xai.Explainer(
         model=model,
-        task=Task.CLASSIFICATION,
+        task=xai.Task.CLASSIFICATION,
         preprocess_fn=preprocess_fn,
         explain_mode=ExplainMode.WHITEBOX,  # defaults to AUTO
         insertion_parameters=insertion_parameters,
@@ -146,9 +142,9 @@ def explain_black_box(args):
     model = ov.Core().read_model(args.model_path)
 
     # Create explainer object
-    explainer = Explainer(
+    explainer = xai.Explainer(
         model=model,
-        task=Task.CLASSIFICATION,
+        task=xai.Task.CLASSIFICATION,
         preprocess_fn=preprocess_fn,
         postprocess_fn=postprocess_fn,
         explain_mode=ExplainMode.BLACKBOX,  # defaults to AUTO
@@ -192,9 +188,9 @@ def explain_white_box_multiple_images(args):
     model = ov.Core().read_model(args.model_path)
 
     # Create explainer object
-    explainer = Explainer(
+    explainer = xai.Explainer(
         model=model,
-        task=Task.CLASSIFICATION,
+        task=xai.Task.CLASSIFICATION,
         preprocess_fn=preprocess_fn,
     )
 
@@ -241,13 +237,13 @@ def explain_white_box_vit(args):
     insertion_parameters = ClassificationInsertionParameters(
         # target_layer="/layers.10/ffn/Add",  # OTX deit-tiny
         # target_layer="/blocks/blocks.10/Add_1",  # timm vit_base_patch8_224.augreg_in21k_ft_in1k
-        explain_method=Method.VITRECIPROCAM,
+        explain_method=xai.Method.VITRECIPROCAM,
     )
 
     # Create explainer object
-    explainer = Explainer(
+    explainer = xai.Explainer(
         model=model,
-        task=Task.CLASSIFICATION,
+        task=xai.Task.CLASSIFICATION,
         preprocess_fn=preprocess_fn,
         explain_mode=ExplainMode.WHITEBOX,  # defaults to AUTO
         insertion_parameters=insertion_parameters,
@@ -284,9 +280,9 @@ def insert_xai(args):
     model = ov.Core().read_model(args.model_path)
 
     # insert XAI branch
-    model_xai = ovxai.insert_xai(
+    model_xai = xai.insert_xai(
         model,
-        task=Task.CLASSIFICATION,
+        task=xai.Task.CLASSIFICATION,
     )
 
     logger.info("insert_xai: XAI branch inserted into IR.")
@@ -311,13 +307,13 @@ def insert_xai_w_params(args):
         target_layer="/backbone/conv/conv.2/Div",  # OTX mnet_v3
         # target_layer="/backbone/features/final_block/activate/Mul",  # OTX effnet
         embed_normalization=True,
-        explain_method=Method.RECIPROCAM,
+        explain_method=xai.Method.RECIPROCAM,
     )
 
     # insert XAI branch
-    model_xai = ovxai.insert_xai(
+    model_xai = xai.insert_xai(
         model,
-        task=Task.CLASSIFICATION,
+        task=xai.Task.CLASSIFICATION,
         insertion_parameters=insertion_parameters,
     )
 

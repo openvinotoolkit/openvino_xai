@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 
@@ -6,16 +6,16 @@ import openvino.runtime as ov
 
 from openvino_xai.common.parameters import Method
 from openvino_xai.common.utils import logger
+from openvino_xai.inserter.parameters import (
+    ClassificationInsertionParameters,
+    DetectionInsertionParameters,
+)
 from openvino_xai.methods.white_box.white_box_methods import (
     ActivationMapXAIMethod,
     DetClassProbabilityMapXAIMethod,
     ReciproCAMXAIMethod,
     ViTReciproCAMXAIMethod,
     WhiteBoxXAIMethodBase,
-)
-from openvino_xai.xai_branch_inserter.insertion_parameters import (
-    ClassificationInsertionParameters,
-    DetectionInsertionParameters,
 )
 
 

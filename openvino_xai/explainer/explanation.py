@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import os
@@ -10,7 +10,7 @@ import cv2
 import numpy as np
 
 from openvino_xai.common.utils import logger
-from openvino_xai.explainer.explanation_parameters import TargetExplainGroup
+from openvino_xai.explainer.parameters import TargetExplainGroup
 from openvino_xai.explainer.utils import get_explain_target_indices
 
 

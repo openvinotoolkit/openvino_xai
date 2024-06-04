@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """
 OpenVINO-XAI library for explaining OpenVINO™ IR models.
@@ -6,6 +6,7 @@ OpenVINO-XAI library for explaining OpenVINO™ IR models.
 
 
 from .common.parameters import Method, Task
-from .xai_branch_inserter import insert_xai
+from .explainer.explainer import Explainer
+from .inserter import insert_xai
 
-__all__ = ["insert_xai", "Method", "Task"]
+__all__ = ["Explainer", "insert_xai", "Method", "Task"]

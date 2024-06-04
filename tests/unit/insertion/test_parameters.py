@@ -1,8 +1,8 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from openvino_xai.common.parameters import Method
-from openvino_xai.xai_branch_inserter.insertion_parameters import (
+from openvino_xai.inserter.parameters import (
     ClassificationInsertionParameters,
     DetectionInsertionParameters,
 )

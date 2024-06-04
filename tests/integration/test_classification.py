@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
@@ -8,20 +8,18 @@ import numpy as np
 import openvino.runtime as ov
 import pytest
 
-import openvino_xai as ovxai
+import openvino_xai as xai
 from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import has_xai, retrieve_otx_model
 from openvino_xai.explainer.explainer import Explainer
-from openvino_xai.explainer.explanation_parameters import (
+from openvino_xai.explainer.parameters import (
     ExplainMode,
     ExplanationParameters,
     TargetExplainGroup,
     VisualizationParameters,
 )
 from openvino_xai.explainer.utils import get_postprocess_fn, get_preprocess_fn
-from openvino_xai.xai_branch_inserter.insertion_parameters import (
-    ClassificationInsertionParameters,
-)
+from openvino_xai.inserter.parameters import ClassificationInsertionParameters
 
 MODELS = [
     "mlc_mobilenetv3_large_voc",  # verified
@@ -409,7 +407,7 @@ class TestClsBB:
         retrieve_otx_model(self.data_dir, DEFAULT_CLS_MODEL)
         model_path = self.data_dir / "otx_models" / (DEFAULT_CLS_MODEL + ".xml")
         model = ov.Core().read_model(model_path)
-        model_xai = ovxai.insert_xai(
+        model_xai = xai.insert_xai(
             model,
             task=Task.CLASSIFICATION,
         )
