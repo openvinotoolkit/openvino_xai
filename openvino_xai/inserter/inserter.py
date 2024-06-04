@@ -6,11 +6,11 @@ from openvino.preprocess import PrePostProcessor
 
 from openvino_xai import Task
 from openvino_xai.common.utils import SALIENCY_MAP_OUTPUT_NAME, has_xai, logger
+from openvino_xai.inserter.parameters import InsertionParameters
 from openvino_xai.methods.white_box.create_method import (
     create_white_box_classification_explain_method,
     create_white_box_detection_explain_method,
 )
-from openvino_xai.inserter.parameters import InsertionParameters
 
 
 def insert_xai(
