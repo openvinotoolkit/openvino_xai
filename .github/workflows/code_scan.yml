@@ -1,0 +1,66 @@
+name: Security Code Scan
+
+on:
+  push:
+    branches:
+      - releases/*
+  workflow_dispatch: # run on request (no need for PR)
+
+# Declare default permissions as read only.
+permissions: read-all
+
+jobs:
+  Trivy-Scan:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - name: Set up Python
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          pip install .
+          pip freeze > requirements.txt
+      - name: Run Trivy security scan
+        uses: aquasecurity/trivy-action@0.20.0
+        with:
+          scan-type: fs
+          scan-ref: requirements.txt
+          output: trivy-scan-results.txt
+      - name: Run Trivy spdx scan
+        uses: aquasecurity/trivy-action@0.20.0
+        with:
+          scan-type: fs
+          scan-ref: requirements.txt
+          format: spdx-json
+          output: trivy-scan-results.spdx.json
+      - name: Upload Trivy scan results
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        with:
+          name: trivy-scan-results
+          path: trivy-scan-results.*
+        # Use always() to always run this step to publish scan results when there are test failures
+        if: ${{ always() }}
+
+  Bandit-Scan:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - name: Set up Python
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: pip install bandit
+      - name: Bandit Scanning
+        run: bandit -r -c .ci/ipas_default.config . -f txt -o bandit-scan-results.txt
+      - name: Upload Bandit artifact
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        with:
+          name: bandit-scan-results
+          path: bandit-scan-results.txt
+        # Use always() to always run this step to publish scan results when there are test failures
+        if: ${{ always() }}
