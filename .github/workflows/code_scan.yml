@@ -1,6 +1,9 @@
 name: Security Code Scan
 
 on:
+  schedule:
+    # every UTC 7PM from Mon to Fri
+    - cron: "0 19 * * 1-5"
   push:
     branches:
       - releases/*
