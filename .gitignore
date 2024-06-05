@@ -33,6 +33,7 @@ otx_models/
 .mypy_cache
 .ruff_cache
 .coverage
+.tox
 
 *.jpg
 *.jpeg
