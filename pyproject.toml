@@ -39,7 +39,7 @@ dev = [
   "pre-commit==3.7.0",
   "addict",
 ]
-dev_timm = [
+val = [
   "timm==0.9.5",
   "onnx==1.14.1",
 ]

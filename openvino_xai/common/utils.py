@@ -39,6 +39,7 @@ def has_xai(model: ov.Model) -> bool:
     return False
 
 
+# Not a part of product
 def retrieve_otx_model(data_dir: str | Path, model_name: str, dir_url=None) -> None:
     destination_folder = Path(data_dir) / "otx_models"
     os.makedirs(destination_folder, exist_ok=True)
@@ -50,7 +51,7 @@ def retrieve_otx_model(data_dir: str | Path, model_name: str, dir_url=None) -> N
 
     for post_fix in ["xml", "bin"]:
         if not os.path.isfile(os.path.join(destination_folder, model_name + f".{post_fix}")):
-            urlretrieve(
+            urlretrieve(  # nosec B310
                 f"{dir_url}/{snapshot_file}.{post_fix}",
                 f"{destination_folder}/{model_name}.{post_fix}",
             )

@@ -1,0 +1,41 @@
+name: E2E test
+
+on:
+  schedule:
+    # every UTC 7PM from Mon to Fri
+    - cron: "0 19 * * 1-5"
+  workflow_dispatch: # run on request (no need for PR)
+
+# Declare default permissions as read only.
+permissions: read-all
+
+jobs:
+  Pre-Merge-Checks:
+    uses: ./.github/workflows/pre_merge.yml
+
+  E2E-Test:
+    runs-on: ubuntu-22.04
+    needs: Pre-Merge-Checks
+    timeout-minutes: 120
+    # This is what will cancel the job concurrency
+    concurrency:
+      group: ${{ github.workflow }}-E2E-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - name: Install Python
+        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5.1.0
+        with:
+          python-version: "3.10"
+      - name: Install tox
+        run: python -m pip install tox==4.4.6
+      - name: Run E2E Test
+        run: tox -vv -e val-py310 -- tests/e2e --csv=.tox/val-py310/e2e-test.csv
+      - name: Upload artifacts
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        with:
+          name: e2e-test-results
+          path: .tox/val-py310/*.csv
+        # Use always() to always run this step to publish test results when there are test failures
+        if: ${{ always() }}
