@@ -21,9 +21,11 @@ Content:
 ## Explainer - interface to XAI algorithms
 
 ```python
-explainer = Explainer(
+import openvino_xai as xai
+
+explainer = xai.Explainer(
     model,
-    task_type=TaskType.CLASSIFICATION,
+    task=xai.Task.CLASSIFICATION,
     preprocess_fn=preprocess_fn,
 )
 explanation = explainer(data, explanation_parameters)
@@ -43,9 +45,8 @@ import cv2
 import numpy as np
 import openvino.runtime as ov
 
-from openvino_xai.common.parameters import TaskType
-from openvino_xai.explanation.explainer import Explainer
-from openvino_xai.explanation.explanation_parameters import ExplanationParameters
+import openvino_xai as xai
+from openvino_xai.explainer.explanation_parameters import ExplanationParameters
 
 
 def preprocess_fn(x: np.ndarray) -> np.ndarray:
@@ -59,9 +60,9 @@ def preprocess_fn(x: np.ndarray) -> np.ndarray:
 model = ov.Core().read_model("path/to/model.xml")  # type: ov.Model
 
 # Explainer object will prepare and load the model once in the beginning
-explainer = Explainer(
+explainer = xai.Explainer(
     model,
-    task_type=TaskType.CLASSIFICATION,
+    task=xai.Task.CLASSIFICATION,
     preprocess_fn=preprocess_fn,
 )
 
@@ -90,11 +91,9 @@ import cv2
 import numpy as np
 import openvino.runtime as ov
 
-from openvino_xai.common.parameters import TaskType, XAIMethodType
-from openvino_xai.explanation.explainer import Explainer
-from openvino_xai.explanation.explanation_parameters import ExplainMode, ExplanationParameters, TargetExplainGroup,
-    PostProcessParameters
-from openvino_xai.insertion.insertion_parameters import ClassificationInsertionParameters
+import openvino_xai as xai
+from openvino_xai.explainer.parameters import ExplainMode, ExplanationParameters, TargetExplainGroup, VisualizationParameters
+from openvino_xai.inserter.parameters import ClassificationInsertionParameters
 
 
 def preprocess_fn(x: np.ndarray) -> np.ndarray:
@@ -111,13 +110,13 @@ model = ov.Core().read_model("path/to/model.xml")  # type: ov.Model
 insertion_parameters = ClassificationInsertionParameters(
     # target_layer="last_conv_node_name",  # target_layer - node after which XAI branch will be inserted
     embed_normalization=True,  # True by default.  If set to True, saliency map normalization is embedded in the model
-    explain_method_type=XAIMethodType.RECIPROCAM,  # ReciproCAM is the default XAI method for CNNs
+    explain_method=xai.Method.RECIPROCAM,  # ReciproCAM is the default XAI method for CNNs
 )
 
 # Explainer object will prepare and load the model once in the beginning
-explainer = Explainer(
+explainer = xai.Explainer(
     model,
-    task_type=TaskType.CLASSIFICATION,
+    task=xai.Task.CLASSIFICATION,
     preprocess_fn=preprocess_fn,
     explain_mode=ExplainMode.WHITEBOX,
     insertion_parameters=insertion_parameters,
@@ -131,7 +130,7 @@ explanation_parameters = ExplanationParameters(
     target_explain_group=TargetExplainGroup.CUSTOM,
     target_explain_labels=[11, 14],  # target classes to explain, also ['dog', 'person'] is a valid input
     label_names=voc_labels,
-    post_processing_parameters=PostProcessParameters(overlay=True),  # by default, saliency map overlay over image
+    visualization_parameters=VisualizationParameters(overlay=True),  # by default, saliency map overlay over image
 )
 explanation = explainer(image, explanation_parameters)
 
@@ -154,9 +153,8 @@ import cv2
 import numpy as np
 import openvino.runtime as ov
 
-from openvino_xai.common.parameters import TaskType
-from openvino_xai.explanation.explainer import Explainer
-from openvino_xai.explanation.explanation_parameters import ExplainMode, ExplanationParameters
+import openvino_xai as xai
+from openvino_xai.explainer.explanation_parameters import ExplainMode, ExplanationParameters
 
 
 def preprocess_fn(x: np.ndarray) -> np.ndarray:
@@ -176,9 +174,9 @@ def postprocess_fn(x: ov.utils.data_helpers.wrappers.OVDict):
 model = ov.Core().read_model("path/to/model.xml")  # type: ov.Model
 
 # Explainer object will prepare and load the model once in the beginning
-explainer = Explainer(
+explainer = xai.Explainer(
     model,
-    task_type=TaskType.CLASSIFICATION,
+    task=xai.Task.CLASSIFICATION,
     preprocess_fn=preprocess_fn,
     postprocess_fn=postprocess_fn,
     explain_mode=ExplainMode.BLACKBOX,
@@ -212,9 +210,9 @@ Note: original model outputs are not affected and the model should be inferable 
 
 ```python
 import openvino.runtime as ov
-import openvino_xai as ovxai
-from openvino_xai.common.parameters import TaskType, XAIMethodType
-from openvino_xai.insertion.insertion_parameters import ClassificationInsertionParameters
+
+import openvino_xai as xai
+from openvino_xai.inserter.parameters import ClassificationInsertionParameters
 
 
 # Creating model
@@ -224,13 +222,13 @@ model = ov.Core().read_model("path/to/model.xml")  # type: ov.Model
 insertion_parameters = ClassificationInsertionParameters(
     # target_layer="last_conv_node_name",  # target_layer - node after which XAI branch will be inserted
     embed_normalization=True,  # True by default.  If set to True, saliency map normalization is embedded in the model
-    explain_method_type=XAIMethodType.RECIPROCAM,  # ReciproCAM is the default XAI method for CNNs
+    explain_method=xai.Method.RECIPROCAM,  # ReciproCAM is the default XAI method for CNNs
 )
 
 # Inserting XAI branch into the model graph
-model_xai = ovxai.insert_xai(
+model_xai = xai.insert_xai(
     model=model,
-    task_type=TaskType.CLASSIFICATION,
+    task=xai.Task.CLASSIFICATION,
     insertion_parameters=insertion_parameters,
 )  # type: ov.Model
 

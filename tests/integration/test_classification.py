@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
@@ -8,20 +8,18 @@ import numpy as np
 import openvino.runtime as ov
 import pytest
 
-import openvino_xai as ovxai
-from openvino_xai.common.parameters import TaskType, XAIMethodType
+import openvino_xai as xai
+from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import has_xai, retrieve_otx_model
-from openvino_xai.explanation.explain import Explainer
-from openvino_xai.explanation.explanation_parameters import (
+from openvino_xai.explainer.explainer import Explainer
+from openvino_xai.explainer.parameters import (
     ExplainMode,
     ExplanationParameters,
-    PostProcessParameters,
     TargetExplainGroup,
+    VisualizationParameters,
 )
-from openvino_xai.explanation.utils import get_postprocess_fn, get_preprocess_fn
-from openvino_xai.insertion.insertion_parameters import (
-    ClassificationInsertionParameters,
-)
+from openvino_xai.explainer.utils import get_postprocess_fn, get_preprocess_fn
+from openvino_xai.inserter.parameters import ClassificationInsertionParameters
 
 MODELS = [
     "mlc_mobilenetv3_large_voc",  # verified
@@ -99,12 +97,12 @@ class TestClsWB:
         model = ov.Core().read_model(model_path)
         insertion_parameters = ClassificationInsertionParameters(
             embed_normalization=embed_normalization,
-            explain_method_type=XAIMethodType.VITRECIPROCAM,
+            explain_method=Method.VITRECIPROCAM,
         )
 
         explainer = Explainer(
             model=model,
-            task_type=TaskType.CLASSIFICATION,
+            task=Task.CLASSIFICATION,
             preprocess_fn=self.preprocess_fn,  # type: ignore
             explain_mode=ExplainMode.WHITEBOX,
             insertion_parameters=insertion_parameters,
@@ -113,7 +111,7 @@ class TestClsWB:
         if target_explain_group == TargetExplainGroup.ALL:
             explanation_parameters = ExplanationParameters(
                 target_explain_group=target_explain_group,
-                post_processing_parameters=PostProcessParameters(),
+                visualization_parameters=VisualizationParameters(),
             )
             explanation = explainer(self.image, explanation_parameters)
             assert explanation is not None
@@ -132,7 +130,7 @@ class TestClsWB:
             explanation_parameters = ExplanationParameters(
                 target_explain_group=target_explain_group,
                 target_explain_labels=[target_class],
-                post_processing_parameters=PostProcessParameters(),
+                visualization_parameters=VisualizationParameters(),
             )
             explanation = explainer(self.image, explanation_parameters)
             assert explanation is not None
@@ -157,12 +155,12 @@ class TestClsWB:
         model = ov.Core().read_model(model_path)
         insertion_parameters = ClassificationInsertionParameters(
             embed_normalization=embed_normalization,
-            explain_method_type=XAIMethodType.RECIPROCAM,
+            explain_method=Method.RECIPROCAM,
         )
 
         explainer = Explainer(
             model=model,
-            task_type=TaskType.CLASSIFICATION,
+            task=Task.CLASSIFICATION,
             preprocess_fn=self.preprocess_fn,  # type: ignore
             explain_mode=ExplainMode.WHITEBOX,
             insertion_parameters=insertion_parameters,
@@ -171,7 +169,7 @@ class TestClsWB:
         if target_explain_group == TargetExplainGroup.ALL:
             explanation_parameters = ExplanationParameters(
                 target_explain_group=target_explain_group,
-                post_processing_parameters=PostProcessParameters(),
+                visualization_parameters=VisualizationParameters(),
             )
             explanation = explainer(self.image, explanation_parameters)
             assert explanation is not None
@@ -192,7 +190,7 @@ class TestClsWB:
             explanation_parameters = ExplanationParameters(
                 target_explain_group=target_explain_group,
                 target_explain_labels=[target_class],
-                post_processing_parameters=PostProcessParameters(),
+                visualization_parameters=VisualizationParameters(),
             )
             explanation = explainer(self.image, explanation_parameters)
             assert explanation is not None
@@ -210,19 +208,19 @@ class TestClsWB:
         model = ov.Core().read_model(model_path)
         insertion_parameters = ClassificationInsertionParameters(
             embed_normalization=embed_normalization,
-            explain_method_type=XAIMethodType.ACTIVATIONMAP,
+            explain_method=Method.ACTIVATIONMAP,
         )
 
         explainer = Explainer(
             model=model,
-            task_type=TaskType.CLASSIFICATION,
+            task=Task.CLASSIFICATION,
             preprocess_fn=self.preprocess_fn,  # type: ignore
             explain_mode=ExplainMode.WHITEBOX,
             insertion_parameters=insertion_parameters,
         )
 
         explanation_parameters = ExplanationParameters(
-            post_processing_parameters=PostProcessParameters(),
+            visualization_parameters=VisualizationParameters(),
         )
         explanation = explainer(self.image, explanation_parameters)
         if model_name in self._ref_sal_maps_activationmap and embed_normalization:
@@ -251,7 +249,7 @@ class TestClsWB:
 
         explainer = Explainer(
             model=model,
-            task_type=TaskType.CLASSIFICATION,
+            task=Task.CLASSIFICATION,
             preprocess_fn=self.preprocess_fn,  # type: ignore
             explain_mode=ExplainMode.WHITEBOX,
         )
@@ -259,12 +257,12 @@ class TestClsWB:
         explain_targets = None
         if target_explain_group == TargetExplainGroup.CUSTOM:
             explain_targets = [1]
-        post_processing_parameters = PostProcessParameters(overlay=overlay)
+        visualization_parameters = VisualizationParameters(overlay=overlay)
 
         explanation_parameters = ExplanationParameters(
             target_explain_group=target_explain_group,
             target_explain_labels=explain_targets,  # type: ignore
-            post_processing_parameters=post_processing_parameters,
+            visualization_parameters=visualization_parameters,
         )
         explanation = explainer(self.image, explanation_parameters)
         assert explanation is not None
@@ -274,9 +272,9 @@ class TestClsWB:
             assert len(explanation.saliency_map) == len(explain_targets)
             assert 1 in explanation.saliency_map
         if overlay:
-            assert explanation.sal_map_shape == (354, 500, 3)
+            assert explanation.shape == (354, 500, 3)
         else:
-            assert explanation.sal_map_shape == (7, 7)
+            assert explanation.shape == (7, 7)
             for map_ in explanation.saliency_map.values():
                 assert map_.min() == 0, f"{map_.min()}"
                 assert map_.max() in {254, 255}, f"{map_.max()}"
@@ -288,14 +286,14 @@ class TestClsWB:
 
         explainer = Explainer(
             model=model,
-            task_type=TaskType.CLASSIFICATION,
+            task=Task.CLASSIFICATION,
             preprocess_fn=self.preprocess_fn,
             explain_mode=ExplainMode.WHITEBOX,
         )
 
         explanation_parameters = ExplanationParameters(
             target_explain_group=TargetExplainGroup.ALL,
-            post_processing_parameters=PostProcessParameters(scale=True),
+            visualization_parameters=VisualizationParameters(scale=True),
         )
         explanation = explainer(self.image, explanation_parameters)
 
@@ -344,20 +342,20 @@ class TestClsBB:
 
         explainer = Explainer(
             model=model,
-            task_type=TaskType.CLASSIFICATION,
+            task=Task.CLASSIFICATION,
             preprocess_fn=self.preprocess_fn,  # type: ignore
             postprocess_fn=get_postprocess_fn(),  # type: ignore
             explain_mode=ExplainMode.BLACKBOX,
         )
 
-        post_processing_parameters = PostProcessParameters(
+        visualization_parameters = VisualizationParameters(
             overlay=overlay,
         )
 
         if target_explain_group == TargetExplainGroup.CUSTOM:
             target_class = 1
             explanation_parameters = ExplanationParameters(
-                post_processing_parameters=post_processing_parameters,
+                visualization_parameters=visualization_parameters,
                 target_explain_group=target_explain_group,
                 target_explain_labels=[target_class],
             )
@@ -379,7 +377,7 @@ class TestClsBB:
 
         if target_explain_group == TargetExplainGroup.ALL:
             explanation_parameters = ExplanationParameters(
-                post_processing_parameters=post_processing_parameters,
+                visualization_parameters=visualization_parameters,
                 target_explain_group=target_explain_group,
             )
             explanation = explainer(
@@ -392,10 +390,10 @@ class TestClsBB:
             assert explanation is not None
             if overlay:
                 assert len(explanation.saliency_map) == MODEL_NUM_CLASSES[model_name]
-                assert explanation.sal_map_shape == (354, 500, 3)
+                assert explanation.shape == (354, 500, 3)
             else:
                 assert len(explanation.saliency_map) == MODEL_NUM_CLASSES[model_name]
-                assert explanation.sal_map_shape == (224, 224)
+                assert explanation.shape == (224, 224)
                 if scale:
                     for map_ in explanation.saliency_map.values():
                         assert map_.min() == 0, f"{map_.min()}"
@@ -409,21 +407,21 @@ class TestClsBB:
         retrieve_otx_model(self.data_dir, DEFAULT_CLS_MODEL)
         model_path = self.data_dir / "otx_models" / (DEFAULT_CLS_MODEL + ".xml")
         model = ov.Core().read_model(model_path)
-        model_xai = ovxai.insert_xai(
+        model_xai = xai.insert_xai(
             model,
-            task_type=TaskType.CLASSIFICATION,
+            task=Task.CLASSIFICATION,
         )
         assert has_xai(model_xai), "Updated IR model should has XAI head."
 
         explainer = Explainer(
             model=model_xai,
-            task_type=TaskType.CLASSIFICATION,
+            task=Task.CLASSIFICATION,
             preprocess_fn=self.preprocess_fn,
             postprocess_fn=get_postprocess_fn(),
             explain_mode=ExplainMode.BLACKBOX,
         )
         explanation_parameters = ExplanationParameters(
-            post_processing_parameters=PostProcessParameters(overlay=False),
+            visualization_parameters=VisualizationParameters(overlay=False),
             target_explain_labels=[0],
         )
         explanation = explainer(

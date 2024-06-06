@@ -22,9 +22,9 @@ To explain the model (getting saliency maps), use openvino_xai.explanation
 Algorithms
 ----------
 
-To access/modify implemented XAI methods, use openvino_xai.algorithms
+To access/modify implemented XAI methods, use openvino_xai.methods
 
-.. automodule:: openvino_xai.algorithms
+.. automodule:: openvino_xai.methods
     :members:
 
 Insertion

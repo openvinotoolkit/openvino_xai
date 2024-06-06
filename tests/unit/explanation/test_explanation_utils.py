@@ -1,10 +1,10 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import numpy as np
 import pytest
 
-from openvino_xai.explanation.utils import (
+from openvino_xai.explainer.utils import (
     ActivationType,
     get_explain_target_indices,
     get_score,

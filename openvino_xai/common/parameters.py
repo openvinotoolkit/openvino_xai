@@ -1,10 +1,10 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from enum import Enum
 
 
-class TaskType(Enum):
+class Task(Enum):
     """
     Enum representing the different task types:
 
@@ -17,7 +17,7 @@ class TaskType(Enum):
     DETECTION = "detection"
 
 
-class XAIMethodType(Enum):
+class Method(Enum):
     """
     Enum representing the different XAI methods:
 
@@ -37,18 +37,18 @@ class XAIMethodType(Enum):
 
 
 WhiteBoxXAIMethods = {
-    XAIMethodType.ACTIVATIONMAP,
-    XAIMethodType.RECIPROCAM,
-    XAIMethodType.DETCLASSPROBABILITYMAP,
+    Method.ACTIVATIONMAP,
+    Method.RECIPROCAM,
+    Method.DETCLASSPROBABILITYMAP,
 }
 BlackBoxXAIMethods = {
-    XAIMethodType.RISE,
+    Method.RISE,
 }
 ClassificationXAIMethods = {
-    XAIMethodType.ACTIVATIONMAP,
-    XAIMethodType.RECIPROCAM,
-    XAIMethodType.RISE,
+    Method.ACTIVATIONMAP,
+    Method.RECIPROCAM,
+    Method.RISE,
 }
 DetectionXAIMethods = {
-    XAIMethodType.DETCLASSPROBABILITYMAP,
+    Method.DETCLASSPROBABILITYMAP,
 }
