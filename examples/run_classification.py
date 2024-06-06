@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import argparse
@@ -17,6 +17,7 @@ from openvino_xai.explanation.explain import Explainer
 from openvino_xai.explanation.explanation_parameters import (
     ExplainMode,
     ExplanationParameters,
+    PostProcessParameters,
     TargetExplainGroup,
 )
 from openvino_xai.insertion.insertion_parameters import (
@@ -119,6 +120,7 @@ def explain_white_box(args):
         target_explain_group=TargetExplainGroup.CUSTOM,  # CUSTOM list of classes to explain, also ALL possible
         target_explain_labels=[11, 14],  # target classes to explain, also ['dog', 'person'] is a valid input
         label_names=voc_labels,  # optional names
+        post_processing_parameters=PostProcessParameters(overlay=True)
     )
 
     # Generate explanation
@@ -162,6 +164,7 @@ def explain_black_box(args):
         target_explain_group=TargetExplainGroup.CUSTOM,  # CUSTOM list of classes to explain, also ALL possible
         target_explain_labels=['dog', 'person'],  # target classes to explain, also [11, 14] possible
         label_names=voc_labels,  # optional names
+        post_processing_parameters=PostProcessParameters(overlay=True)
     )
 
     # Generate explanation

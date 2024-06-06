@@ -1,76 +1,73 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from abc import ABC, abstractmethod
-from typing import List, Tuple
+from abc import abstractmethod
+from typing import Callable, List, Tuple
+from venv import logger
 
 import numpy as np
 import openvino.runtime as ov
 from openvino.runtime import opset10 as opset
 
-from openvino_xai.common.utils import SALIENCY_MAP_OUTPUT_NAME
-from openvino_xai.explanation.explanation_parameters import TargetExplainGroup
+from openvino_xai.algorithms.method_base import MethodBase
+from openvino_xai.common.utils import SALIENCY_MAP_OUTPUT_NAME, IdentityPreprocessFN, has_xai
 from openvino_xai.insertion.insert_xai_into_model import insert_xai_branch_into_model
 from openvino_xai.insertion.insertion_parameters import ModelType
 from openvino_xai.insertion.parse_model import IRParserCls
 
 
-class MethodBase(ABC):
-    @abstractmethod
-    def generate_saliency_map(self, data: np.ndarray):
-        """Saliency map generation."""
-        raise NotImplementedError
-
-    @abstractmethod
-    def model_forward(self, x: np.ndarray):
-        """Model forward pass."""
-        raise NotImplementedError
-
-    # def load_model():
-    # ?
-
-
 class WhiteBoxXAIMethodBase(MethodBase):
-    """Base class for methods that generates XAI branch of the model."""
+    """
+    Base class for white-box XAI methods.
+    
+    :param model: OpenVINO model.
+    :type model: ov.Model
+    :param preprocess_fn: Preprocessing function, identity function by default
+        (assume input images are already preprocessed by user).
+    :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
+    :param embed_normalization: Whether to scale output or not.
+    :type embed_normalization: bool
+    """
 
-    def __init__(self, model: ov.Model, embed_normalization: bool = True):
+    def __init__(
+            self,
+            model: ov.Model,
+            preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
+            embed_normalization: bool = True,
+        ):
+        super().__init__(preprocess_fn=preprocess_fn)
         self._model_ori = model
+        self.preprocess_fn = preprocess_fn
         self.embed_normalization = embed_normalization
 
     @property
     def model_ori(self):
         return self._model_ori
 
-    @property
-    def model_ori_params(self):
-        return self._model_ori.get_parameters()
-
     @abstractmethod
     def generate_xai_branch(self):
         """Implements specific XAI algorithm."""
 
-
-
-
-    def generate_saliency_map(self, data: np.ndarray) -> np.ndarray:
+    def generate_saliency_map(self, data: np.ndarray, *args, **kwargs) -> np.ndarray:
         """Saliency map generation. White-box implementation."""
         model_output = self.model_forward(data)
         return model_output[SALIENCY_MAP_OUTPUT_NAME]
 
-    def model_forward(self, x: np.ndarray) -> ov.utils.data_helpers.wrappers.OVDict:
-        """Forward pass of the compiled model. Applies preprocess_fn."""
-        x = self.preprocess_fn(x)
-        return self.compiled_model(x)
+    def prepare_model(self, load_model: bool = True) -> ov.Model:
+        if has_xai(self._model_ori):
+            logger.info("Provided IR model already contains XAI branch.")
+            self._model = self._model_ori
+            if load_model:
+                self.load_model()
+            return self._model
 
-    def _load_model(self) -> None:
-        # TODO: support other devices
-        self.compiled_model = ov.Core().compile_model(self._model_xai, "CPU")
-
-    def _insert_xai(self) -> None:
-        self._model_xai = insert_xai_branch_into_model(self._model_ori, self)
-
-
-
+        xai_output_node = self.generate_xai_branch()
+        self._model = insert_xai_branch_into_model(self._model_ori, xai_output_node, self.embed_normalization)
+        if not has_xai(self._model):
+            raise RuntimeError("Insertion of the XAI branch into the model was not successful.")
+        if load_model:
+            self.load_model()
+        return self._model
 
     @staticmethod
     def _propagate_dynamic_batch_dimension(model: ov.Model):
@@ -114,20 +111,37 @@ class WhiteBoxXAIMethodBase(MethodBase):
 
 
 class ActivationMapXAIMethod(WhiteBoxXAIMethodBase):
-    """Implements ActivationMap"""
+    """
+    Implements ActivationMap.
+    
+    :param model: OpenVINO model.
+    :type model: ov.Model
+    :param preprocess_fn: Preprocessing function, identity function by default
+        (assume input images are already preprocessed by user).
+    :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
+    :parameter target_layer: Target layer (node) name after which the XAI branch will be inserted.
+    :type target_layer: str
+    :param embed_normalization: Whether to scale output or not.
+    :type embed_normalization: bool
+    :param prepare_model: Loading (compiling) the model prior to inference.
+    :type prepare_model: bool
+    """
 
     def __init__(
         self,
         model: ov.Model,
+        preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         target_layer: str | None = None,
         embed_normalization: bool = True,
+        prepare_model: bool = True,
     ):
-        super().__init__(model, embed_normalization)
+        super().__init__(model, preprocess_fn, embed_normalization)
         self.per_class = False
         self.model_type = ModelType.CNN
-        self.supported_target_explain_groups = [TargetExplainGroup.IMAGE]
-        self.default_target_explain_group = TargetExplainGroup.IMAGE
         self._target_layer = target_layer
+        
+        if prepare_model:
+            self.prepare_model()
 
     def generate_xai_branch(self) -> ov.Node:
         """Implements ActivationMap XAI algorithm."""
@@ -139,10 +153,14 @@ class ActivationMapXAIMethod(WhiteBoxXAIMethodBase):
 
 
 class FeatureMapPerturbationBase(WhiteBoxXAIMethodBase):
-    """Base class for Recipro-CAM methods.
+    """
+    Base class for FeatureMapPerturbation-based methods.
 
-    :param model: OpenVino model.
+    :param model: OpenVINO model.
     :type model: ov.Model
+    :param preprocess_fn: Preprocessing function, identity function by default
+        (assume input images are already preprocessed by user).
+    :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
     :parameter target_layer: Target layer (node) name after which the XAI branch will be inserted.
     :type target_layer: str
     :param embed_normalization: Whether to scale output or not.
@@ -152,20 +170,16 @@ class FeatureMapPerturbationBase(WhiteBoxXAIMethodBase):
     def __init__(
         self,
         model: ov.Model,
+        preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         target_layer: str | None = None,
         embed_normalization: bool = True,
     ):
-        super().__init__(model, embed_normalization)
+        super().__init__(model, preprocess_fn, embed_normalization)
         self.per_class = True
-        self.supported_target_explain_groups = [
-            TargetExplainGroup.ALL,
-            TargetExplainGroup.CUSTOM,
-        ]
-        self.default_target_explain_group = TargetExplainGroup.CUSTOM
         self._target_layer = target_layer
 
     def generate_xai_branch(self) -> ov.Node:
-        """Implements FeatureMapPerturbation-based XAI algorithm."""
+        """Implements FeatureMapPerturbation-based XAI method."""
         model_clone = self._model_ori.clone()
         self._propagate_dynamic_batch_dimension(model_clone)
 
@@ -181,16 +195,35 @@ class FeatureMapPerturbationBase(WhiteBoxXAIMethodBase):
 
 
 class ReciproCAMXAIMethod(FeatureMapPerturbationBase):
-    """Implements Recipro-CAM for CNN models"""
+    """
+    Implements Recipro-CAM for CNN models.
+    
+    :param model: OpenVINO model.
+    :type model: ov.Model
+    :param preprocess_fn: Preprocessing function, identity function by default
+        (assume input images are already preprocessed by user).
+    :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
+    :parameter target_layer: Target layer (node) name after which the XAI branch will be inserted.
+    :type target_layer: str
+    :param embed_normalization: Whether to scale output or not.
+    :type embed_normalization: bool
+    :param prepare_model: Loading (compiling) the model prior to inference.
+    :type prepare_model: bool
+    """
 
     def __init__(
         self,
         model: ov.Model,
+        preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         target_layer: str | None = None,
         embed_normalization: bool = True,
+        prepare_model: bool = True,
     ):
-        super().__init__(model, target_layer, embed_normalization)
+        super().__init__(model, preprocess_fn, target_layer, embed_normalization)
         self.model_type = ModelType.CNN
+
+        if prepare_model:
+            self.prepare_model()
 
     def _get_saliency_map(self, model_clone: ov.Model) -> ov.Node:
         target_node_ori = IRParserCls.get_target_node(self._model_ori, self.model_type, self._target_layer)
@@ -238,8 +271,18 @@ class ReciproCAMXAIMethod(FeatureMapPerturbationBase):
 
 
 class ViTReciproCAMXAIMethod(FeatureMapPerturbationBase):
-    """Implements ViTRecipro-CAM for transformer models.
+    """
+    Implements ViTRecipro-CAM for transformer models.
 
+    :param model: OpenVINO model.
+    :type model: ov.Model
+    :param preprocess_fn: Preprocessing function, identity function by default
+        (assume input images are already preprocessed by user).
+    :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
+    :parameter target_layer: Target layer (node) name after which the XAI branch will be inserted.
+    :type target_layer: str
+    :param embed_normalization: Whether to scale output or not.
+    :type embed_normalization: bool
     :param use_gaussian: Whether to use Gaussian for mask generation or not.
     :type use_gaussian: bool
     :param cls_token: Whether to use cls token for mosaic prediction or not.
@@ -248,25 +291,32 @@ class ViTReciproCAMXAIMethod(FeatureMapPerturbationBase):
     :type final_norm: bool
     :param k: Count of the transformer block (from head) before which XAI branch will be inserted, 1-indexed.
     :type k: int
+    :param prepare_model: Loading (compiling) the model prior to inference.
+    :type prepare_model: bool
     """
 
     def __init__(
         self,
         model: ov.Model,
+        preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         target_layer: str | None = None,
         embed_normalization: bool = True,
         use_gaussian: bool = True,
         cls_token: bool = True,
         final_norm: bool = True,
         k: int = 1,
+        prepare_model: bool = True,
     ):
-        super().__init__(model, target_layer, embed_normalization)
+        super().__init__(model, preprocess_fn, target_layer, embed_normalization)
         self.model_type = ModelType.TRANSFORMER
         self._use_gaussian = use_gaussian
         self._cls_token = cls_token
 
         # Count of target "Add" node (between the blocks), from the output, 1-indexed
         self._k = k * 2 + int(final_norm)
+
+        if prepare_model:
+            self.prepare_model()
 
     def _get_saliency_map(self, model_clone: ov.Model) -> ov.Node:
         #      Add       -> add node before the target transformer blocks
@@ -423,28 +473,46 @@ class ViTReciproCAMXAIMethod(FeatureMapPerturbationBase):
 
 
 class DetClassProbabilityMapXAIMethod(WhiteBoxXAIMethodBase):
-    """Implements DetClassProbabilityMap, used for single-stage detectors, e.g. SSD, YOLOX or ATSS."""
+    """
+    Implements DetClassProbabilityMap, used for single-stage detectors, e.g. SSD, YOLOX or ATSS.
+    
+    :param model: OpenVINO model.
+    :type model: ov.Model
+    :parameter target_layer: Target layer (node) name after which the XAI branch will be inserted.
+    :type target_layer: str
+    :param preprocess_fn: Preprocessing function, identity function by default
+        (assume input images are already preprocessed by user).
+    :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
+    :parameter num_anchors: Number of anchors per scale.
+    :type num_anchors: List[int]
+    :parameter saliency_map_size: Size of the output saliency map.
+    :type saliency_map_size: Tuple[int, int] | List[int]
+    :param embed_normalization: Whether to scale output or not.
+    :type embed_normalization: bool
+    :param prepare_model: Loading (compiling) the model prior to inference.
+    :type prepare_model: bool
+    """
 
     def __init__(
         self,
         model: ov.Model,
         target_layer: List[str],
+        preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         num_anchors: List[int] | None = None,
         saliency_map_size: Tuple[int, int] | List[int] = (23, 23),
         embed_normalization: bool = True,
+        prepare_model: bool = True,
     ):
-        super().__init__(model, embed_normalization)
+        super().__init__(model, preprocess_fn, embed_normalization)
         self.per_class = True
-        self.supported_target_explain_groups = [
-            TargetExplainGroup.ALL,
-            TargetExplainGroup.CUSTOM,
-        ]
-        self.default_target_explain_group = TargetExplainGroup.ALL
         self._target_layer = target_layer
         self._num_anchors = (
             num_anchors  # Either num_anchors or num_classes has to be provided to process cls head output
         )
         self._saliency_map_size = saliency_map_size  # Not always can be obtained from model -> defined externally
+
+        if prepare_model:
+            self.prepare_model()
 
     def generate_xai_branch(self) -> ov.Node:
         """Implements DetClassProbabilityMap XAI algorithm."""

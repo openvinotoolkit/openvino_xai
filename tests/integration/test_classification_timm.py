@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import csv
@@ -236,7 +236,7 @@ class TestImageClassificationTimm:
             post_processing_parameters = PostProcessParameters(scale=True, overlay=True)
             post_processor = PostProcessor(
                 explanation=explanation,
-                data=image,
+                original_input_image=image,
                 post_processing_parameters=post_processing_parameters,
             )
             explanation = post_processor.run()

@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
@@ -24,7 +24,7 @@ class TestActivationMap:
     _ref_sal_maps = {DEFAULT_CLS_MODEL: np.array([32, 12, 34, 47, 36, 0, 42], dtype=np.int16)}
 
     @pytest.fixture(autouse=True)
-    def setUp(self) -> None:
+    def set_up(self) -> None:
         """Setup the test case."""
         data_dir = Path(".data")
         self.model_name = DEFAULT_CLS_MODEL
@@ -35,21 +35,19 @@ class TestActivationMap:
 
     def test_initialization(self):
         """Test ActivationMapXAIMethod is created properly."""
-
-        xai_method = ActivationMapXAIMethod(self.model, self.target_layer)
+        xai_method = ActivationMapXAIMethod(self.model, self.target_layer, prepare_model=False)
 
         assert xai_method.model_ori == self.model
         assert isinstance(xai_method.model_ori, ov.Model)
         assert xai_method.embed_normalization
         assert not xai_method.per_class
-        assert len(xai_method.supported_target_explain_groups) == 1
         assert xai_method._target_layer == self.target_layer
 
     def test_generate_xai_branch(self):
         """Test that ActivationMapXAIMethod creates a proper XAI branch node."""
-        detection_xai_method = ActivationMapXAIMethod(self.model, self.target_layer)
+        activationmap_method = ActivationMapXAIMethod(self.model, self.target_layer, prepare_model=False)
 
-        xai_output_node = detection_xai_method.generate_xai_branch()
+        xai_output_node = activationmap_method.generate_xai_branch()
 
         # Check node's type and output shape
         assert isinstance(xai_output_node, ov.Node)
@@ -96,20 +94,19 @@ class TestReciproCAM:
     def test_initialization(self):
         """Test ReciproCAMXAIMethod is created properly."""
 
-        reciprocam_xai_method = ReciproCAMXAIMethod(self.model, self.target_layer)
+        reciprocam_xai_method = ReciproCAMXAIMethod(self.model, self.target_layer, prepare_model=False)
 
         assert reciprocam_xai_method.model_ori == self.model
         assert isinstance(reciprocam_xai_method.model_ori, ov.Model)
         assert reciprocam_xai_method.embed_normalization
         assert reciprocam_xai_method.per_class
-        assert len(reciprocam_xai_method.supported_target_explain_groups) == 2
         assert reciprocam_xai_method._target_layer == self.target_layer
 
     def test_generate_xai_branch(self):
         """Test that ReciproCAMXAIMethod creates a proper XAI branch node."""
-        detection_xai_method = ReciproCAMXAIMethod(self.model, self.target_layer)
+        reciprocam_xai_method = ReciproCAMXAIMethod(self.model, self.target_layer, prepare_model=False)
 
-        xai_output_node = detection_xai_method.generate_xai_branch()
+        xai_output_node = reciprocam_xai_method.generate_xai_branch()
 
         # Check node's type and output shape
         assert isinstance(xai_output_node, ov.Node)
@@ -156,21 +153,20 @@ class TestViTReciproCAM:
     def test_initialization(self):
         """Test ViTReciproCAMXAIMethod is created properly."""
 
-        reciprocam_xai_method = ViTReciproCAMXAIMethod(self.model, self.target_layer)
+        reciprocam_xai_method = ViTReciproCAMXAIMethod(self.model, self.target_layer, prepare_model=False)
 
         assert reciprocam_xai_method.model_ori == self.model
         assert isinstance(reciprocam_xai_method.model_ori, ov.Model)
         assert reciprocam_xai_method.embed_normalization
         assert reciprocam_xai_method.per_class
-        assert len(reciprocam_xai_method.supported_target_explain_groups) == 2
         assert reciprocam_xai_method._target_layer == self.target_layer
 
     @pytest.mark.parametrize("use_gaussian", [True, False])
     def test_generate_xai_branch(self, use_gaussian):
         """Test that ViTReciproCAMXAIMethod creates a proper XAI branch node."""
-        detection_xai_method = ViTReciproCAMXAIMethod(self.model, self.target_layer, use_gaussian=use_gaussian)
+        reciprocam_xai_method = ViTReciproCAMXAIMethod(self.model, self.target_layer, use_gaussian=use_gaussian, prepare_model=False)
 
-        xai_output_node = detection_xai_method.generate_xai_branch()
+        xai_output_node = reciprocam_xai_method.generate_xai_branch()
 
         # Check node's type and output shape
         assert isinstance(xai_output_node, ov.Node)
@@ -230,20 +226,19 @@ class TestDetProbMapXAI:
     def test_initialization(self):
         """Test DetClassProbabilityMapXAIMethod is created properly."""
 
-        detection_xai_method = DetClassProbabilityMapXAIMethod(self.model, self.target_layer, self.num_anchors)
+        detection_xai_method = DetClassProbabilityMapXAIMethod(self.model, self.target_layer, num_anchors=self.num_anchors, prepare_model=False)
 
         assert detection_xai_method.model_ori == self.model
         assert isinstance(detection_xai_method.model_ori, ov.Model)
         assert detection_xai_method.embed_normalization
         assert detection_xai_method.per_class
-        assert len(detection_xai_method.supported_target_explain_groups) == 2
         assert detection_xai_method._target_layer == self.target_layer
         assert detection_xai_method._num_anchors == self.num_anchors
         assert detection_xai_method._saliency_map_size == (23, 23)
 
     def test_generate_xai_branch(self):
         """Test that DetClassProbabilityMapXAIMethod creates a proper XAI branch node."""
-        detection_xai_method = DetClassProbabilityMapXAIMethod(self.model, self.target_layer, self.num_anchors)
+        detection_xai_method = DetClassProbabilityMapXAIMethod(self.model, self.target_layer, num_anchors=self.num_anchors, prepare_model=False)
 
         xai_output_node = detection_xai_method.generate_xai_branch()
 

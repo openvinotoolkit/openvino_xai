@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
@@ -6,13 +6,10 @@ from pathlib import Path
 import addict
 import cv2
 import numpy as np
-import openvino
 import openvino.runtime as ov
 import pytest
 
-from openvino_xai.algorithms.white_box.create_method import (
-    create_white_box_detection_explain_method,
-)
+from openvino_xai.algorithms.create_method import WhiteBoxMethodFactory
 from openvino_xai.algorithms.white_box.white_box_methods import (
     DetClassProbabilityMapXAIMethod,
 )
@@ -209,11 +206,15 @@ class TestDetWB:
             assert map_.min() == 0, f"{map_.min()}"
             assert map_.max() in {254, 255}, f"{map_.max()}"
 
-    def test_create_white_box_detection_explain_method(self):
-        """Test create_white_box_detection_explain_method."""
+    def test_create_white_box_detection_method(self):
+        """Test create_white_box_detection_method."""
         model, insertion_parameters = self.get_default_model_and_insertion_parameters()
 
-        det_xai_method = create_white_box_detection_explain_method(model, insertion_parameters)
+        preprocess_fn = get_preprocess_fn(
+            input_size=MODEL_CONFIGS[DEFAULT_DET_MODEL].input_size,
+            hwc_to_chw=True,
+        )
+        det_xai_method = WhiteBoxMethodFactory.create_method(TaskType.DETECTION, model, preprocess_fn, insertion_parameters)
         assert isinstance(det_xai_method, DetClassProbabilityMapXAIMethod)
         assert isinstance(det_xai_method.model_ori, ov.Model)
 

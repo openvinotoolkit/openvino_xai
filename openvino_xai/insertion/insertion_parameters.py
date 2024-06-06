@@ -1,9 +1,9 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 from openvino_xai.common.parameters import XAIMethodType
 
@@ -25,15 +25,12 @@ class ClassificationInsertionParameters(InsertionParameters):
     :type embed_normalization: bool
     :parameter explain_method_type: Explain method to use for model explanation.
     :type explain_method_type: openvino_xai.common.parameters.XAIMethodType
-    :parameter white_box_method_kwargs: Defines white-box method kwargs.
-    :type white_box_method_kwargs: dict
     """
 
     target_layer: str | None = None
     embed_normalization: bool | None = True
 
     explain_method_type: XAIMethodType = XAIMethodType.RECIPROCAM
-    white_box_method_kwargs: Dict = field(default_factory=dict)
 
 
 @dataclass

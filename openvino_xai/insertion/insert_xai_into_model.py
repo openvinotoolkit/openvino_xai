@@ -1,15 +1,11 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import openvino.runtime as ov
 from openvino.preprocess import PrePostProcessor
 
-from openvino_xai.algorithms.white_box.create_method import (
-    create_white_box_classification_explain_method,
-    create_white_box_detection_explain_method,
-)
 from openvino_xai.common.parameters import TaskType
-from openvino_xai.common.utils import SALIENCY_MAP_OUTPUT_NAME, has_xai, logger
+from openvino_xai.common.utils import SALIENCY_MAP_OUTPUT_NAME, IdentityPreprocessFN, has_xai, logger
 from openvino_xai.insertion.insertion_parameters import InsertionParameters
 
 
@@ -33,19 +29,21 @@ def insert_xai(
     :type insertion_parameters: InsertionParameters
     :return: IR with XAI branch.
     """
+    from openvino_xai.algorithms.create_method import WhiteBoxMethodFactory
 
     if has_xai(model):
         logger.info("Provided IR model already contains XAI branch, return it as-is.")
         return model
 
-    if task_type == TaskType.CLASSIFICATION:
-        explain_method = create_white_box_classification_explain_method(model, insertion_parameters)  # type: ignore
-    elif task_type == TaskType.DETECTION:
-        explain_method = create_white_box_detection_explain_method(model, insertion_parameters)  # type: ignore
-    else:
-        raise ValueError(f"Model type {task_type} is not supported")
+    method = WhiteBoxMethodFactory.create_method(
+        task_type=task_type,
+        model=model,
+        preprocess_fn=IdentityPreprocessFN(),
+        insertion_parameters=insertion_parameters,
+        prepare_model=False,
+        )
 
-    model_xai = insert_xai_branch_into_model(model, explain_method, insertion_parameters)
+    model_xai = method.prepare_model(load_model=False)
 
     if not has_xai(model_xai):
         raise RuntimeError("Insertion of the XAI branch into the model was not successful.")
@@ -56,16 +54,15 @@ def insert_xai(
 
 def insert_xai_branch_into_model(
     model: ov.Model, 
-    explain_method,
+    xai_output_node,
+    set_uint8,
 ) -> ov.Model:
-    """TBD."""
-    xai_output_node = explain_method.generate_xai_branch()
+    """Creates new model with XAI branch."""
     model_ori_outputs = model.outputs
     model_ori_params = model.get_parameters()
     model_xai = ov.Model([*model_ori_outputs, xai_output_node.output(0)], model_ori_params)
 
     xai_output_index = len(model_ori_outputs)
-    set_uint8 = explain_method.embed_normalization  # TODO: make a property
     model_xai = _set_xai_output_name_and_precision(model_xai, xai_output_index, set_uint8)
     return model_xai
 
