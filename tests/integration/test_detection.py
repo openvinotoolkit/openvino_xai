@@ -22,7 +22,7 @@ from openvino_xai.explainer.utils import get_preprocess_fn
 from openvino_xai.inserter.parameters import DetectionInsertionParameters
 from openvino_xai.methods.create_method import WhiteBoxMethodFactory
 from openvino_xai.methods.white_box.white_box_methods import (
-    DetClassProbabilityMapXAIMethod,
+    DetClassProbabilityMap,
 )
 
 MODEL_CONFIGS = addict.Addict(
@@ -215,7 +215,7 @@ class TestDetWB:
             hwc_to_chw=True,
         )
         det_xai_method = WhiteBoxMethodFactory.create_method(Task.DETECTION, model, preprocess_fn, insertion_parameters)
-        assert isinstance(det_xai_method, DetClassProbabilityMapXAIMethod)
+        assert isinstance(det_xai_method, DetClassProbabilityMap)
         assert isinstance(det_xai_method.model_ori, ov.Model)
 
     def get_default_model_and_insertion_parameters(self):

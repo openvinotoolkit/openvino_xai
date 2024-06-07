@@ -20,7 +20,7 @@ from openvino_xai.inserter.parameters import ModelType
 from openvino_xai.methods.method_base import MethodBase
 
 
-class WhiteBoxXAIMethodBase(MethodBase):
+class WhiteBoxMethodBase(MethodBase):
     """
     Base class for white-box XAI methods.
 
@@ -114,7 +114,7 @@ class WhiteBoxXAIMethodBase(MethodBase):
             return saliency_maps
 
 
-class ActivationMapXAIMethod(WhiteBoxXAIMethodBase):
+class ActivationMap(WhiteBoxMethodBase):
     """
     Implements ActivationMap.
 
@@ -156,7 +156,7 @@ class ActivationMapXAIMethod(WhiteBoxXAIMethodBase):
         return saliency_maps
 
 
-class FeatureMapPerturbationBase(WhiteBoxXAIMethodBase):
+class FeatureMapPerturbationBase(WhiteBoxMethodBase):
     """
     Base class for FeatureMapPerturbation-based methods.
 
@@ -198,7 +198,7 @@ class FeatureMapPerturbationBase(WhiteBoxXAIMethodBase):
         raise NotImplementedError
 
 
-class ReciproCAMXAIMethod(FeatureMapPerturbationBase):
+class ReciproCAM(FeatureMapPerturbationBase):
     """
     Implements Recipro-CAM for CNN models.
 
@@ -274,7 +274,7 @@ class ReciproCAMXAIMethod(FeatureMapPerturbationBase):
         return h < c and w < c
 
 
-class ViTReciproCAMXAIMethod(FeatureMapPerturbationBase):
+class ViTReciproCAM(FeatureMapPerturbationBase):
     """
     Implements ViTRecipro-CAM for transformer models.
 
@@ -476,7 +476,7 @@ class ViTReciproCAMXAIMethod(FeatureMapPerturbationBase):
         return mosaic_feature_map
 
 
-class DetClassProbabilityMapXAIMethod(WhiteBoxXAIMethodBase):
+class DetClassProbabilityMap(WhiteBoxMethodBase):
     """
     Implements DetClassProbabilityMap, used for single-stage detectors, e.g. SSD, YOLOX or ATSS.
 

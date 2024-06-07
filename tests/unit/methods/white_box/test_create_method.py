@@ -15,10 +15,10 @@ from openvino_xai.inserter.parameters import (
 )
 from openvino_xai.methods.create_method import WhiteBoxMethodFactory
 from openvino_xai.methods.white_box.white_box_methods import (
-    ActivationMapXAIMethod,
-    DetClassProbabilityMapXAIMethod,
-    ReciproCAMXAIMethod,
-    ViTReciproCAMXAIMethod,
+    ActivationMap,
+    DetClassProbabilityMap,
+    ReciproCAM,
+    ViTReciproCAM,
 )
 from tests.integration.test_classification import DEFAULT_CLS_MODEL
 from tests.integration.test_detection import DEFAULT_DET_MODEL, MODEL_CONFIGS
@@ -42,14 +42,14 @@ def test_create_wb_cls_cnn_method():
     explain_method = WhiteBoxMethodFactory.create_method(
         Task.CLASSIFICATION, model_cnn, PREPROCESS_FN, insertion_parameters
     )
-    assert isinstance(explain_method, ReciproCAMXAIMethod)
+    assert isinstance(explain_method, ReciproCAM)
 
     model_cnn = ov.Core().read_model(model_path)
     insertion_parameters = ClassificationInsertionParameters()
     explain_method = WhiteBoxMethodFactory.create_method(
         Task.CLASSIFICATION, model_cnn, PREPROCESS_FN, insertion_parameters
     )
-    assert isinstance(explain_method, ReciproCAMXAIMethod)
+    assert isinstance(explain_method, ReciproCAM)
 
     model_cnn = ov.Core().read_model(model_path)
     insertion_parameters = ClassificationInsertionParameters(
@@ -58,7 +58,7 @@ def test_create_wb_cls_cnn_method():
     explain_method = WhiteBoxMethodFactory.create_method(
         Task.CLASSIFICATION, model_cnn, PREPROCESS_FN, insertion_parameters
     )
-    assert isinstance(explain_method, ReciproCAMXAIMethod)
+    assert isinstance(explain_method, ReciproCAM)
 
     model_cnn = ov.Core().read_model(model_path)
     insertion_parameters = ClassificationInsertionParameters(
@@ -67,7 +67,7 @@ def test_create_wb_cls_cnn_method():
     explain_method = WhiteBoxMethodFactory.create_method(
         Task.CLASSIFICATION, model_cnn, PREPROCESS_FN, insertion_parameters
     )
-    assert isinstance(explain_method, ActivationMapXAIMethod)
+    assert isinstance(explain_method, ActivationMap)
 
     model_cnn = ov.Core().read_model(model_path)
     with pytest.raises(Exception) as exc_info:
@@ -90,7 +90,7 @@ def test_create_wb_cls_vit_method():
     explain_method = WhiteBoxMethodFactory.create_method(
         Task.CLASSIFICATION, model_vit, PREPROCESS_FN, insertion_parameters
     )
-    assert isinstance(explain_method, ViTReciproCAMXAIMethod)
+    assert isinstance(explain_method, ViTReciproCAM)
 
 
 def test_create_wb_det_cnn_method():
@@ -108,7 +108,7 @@ def test_create_wb_det_cnn_method():
     )
 
     explain_method = WhiteBoxMethodFactory.create_method(Task.DETECTION, model, PREPROCESS_FN, insertion_parameters)
-    assert isinstance(explain_method, DetClassProbabilityMapXAIMethod)
+    assert isinstance(explain_method, DetClassProbabilityMap)
 
     model = ov.Core().read_model(model_path)
     with pytest.raises(Exception) as exc_info:

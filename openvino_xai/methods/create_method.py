@@ -16,11 +16,11 @@ from openvino_xai.inserter.parameters import (
 )
 from openvino_xai.methods.black_box.black_box_methods import RISE, BlackBoxXAIMethodBase
 from openvino_xai.methods.white_box.white_box_methods import (
-    ActivationMapXAIMethod,
-    DetClassProbabilityMapXAIMethod,
-    ReciproCAMXAIMethod,
-    ViTReciproCAMXAIMethod,
-    WhiteBoxXAIMethodBase,
+    ActivationMap,
+    DetClassProbabilityMap,
+    ReciproCAM,
+    ViTReciproCAM,
+    WhiteBoxMethodBase,
 )
 
 
@@ -50,7 +50,7 @@ class WhiteBoxMethodFactory(MethodFactory):
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         insertion_parameters: InsertionParameters | None = None,
         **kwargs,
-    ) -> WhiteBoxXAIMethodBase:
+    ) -> WhiteBoxMethodBase:
         if task == Task.CLASSIFICATION:
             return cls.create_classification_method(model, preprocess_fn, insertion_parameters, **kwargs)  # type: ignore
         if task == Task.DETECTION:
@@ -63,7 +63,7 @@ class WhiteBoxMethodFactory(MethodFactory):
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         insertion_parameters: ClassificationInsertionParameters | None = None,
         **kwargs,
-    ) -> WhiteBoxXAIMethodBase:
+    ) -> WhiteBoxMethodBase:
         """Generates instance of the classification white-box method class.
 
         :param model: OV IR model.
@@ -83,12 +83,12 @@ class WhiteBoxMethodFactory(MethodFactory):
 
         if insertion_parameters is None:
             logger.info("Using ReciproCAM method (for CNNs).")
-            return ReciproCAMXAIMethod(model, preprocess_fn, **kwargs)
+            return ReciproCAM(model, preprocess_fn, **kwargs)
 
         explain_method = insertion_parameters.explain_method
         if explain_method == Method.RECIPROCAM:
             logger.info("Using ReciproCAM method (for CNNs).")
-            return ReciproCAMXAIMethod(
+            return ReciproCAM(
                 model,
                 preprocess_fn,
                 insertion_parameters.target_layer,
@@ -97,7 +97,7 @@ class WhiteBoxMethodFactory(MethodFactory):
             )
         if explain_method == Method.VITRECIPROCAM:
             logger.info("Using ViTReciproCAM method (for vision transformers).")
-            return ViTReciproCAMXAIMethod(
+            return ViTReciproCAM(
                 model,
                 preprocess_fn,
                 insertion_parameters.target_layer,
@@ -106,7 +106,7 @@ class WhiteBoxMethodFactory(MethodFactory):
             )
         if explain_method == Method.ACTIVATIONMAP:
             logger.info("Using ActivationMap method (for CNNs).")
-            return ActivationMapXAIMethod(
+            return ActivationMap(
                 model,
                 preprocess_fn,
                 insertion_parameters.target_layer,
@@ -121,7 +121,7 @@ class WhiteBoxMethodFactory(MethodFactory):
         preprocess_fn: Callable[[np.ndarray], np.ndarray],
         insertion_parameters: DetectionInsertionParameters,
         **kwargs,
-    ) -> WhiteBoxXAIMethodBase:
+    ) -> WhiteBoxMethodBase:
         """Generates instance of the detection white-box method class.
 
         :param model: OV IR model.
@@ -139,7 +139,7 @@ class WhiteBoxMethodFactory(MethodFactory):
 
         explain_method = insertion_parameters.explain_method
         if explain_method == Method.DETCLASSPROBABILITYMAP:
-            return DetClassProbabilityMapXAIMethod(
+            return DetClassProbabilityMap(
                 model,
                 insertion_parameters.target_layer,
                 preprocess_fn,
