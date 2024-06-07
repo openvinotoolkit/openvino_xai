@@ -87,9 +87,7 @@ class TestClsWB:
             TargetExplainGroup.CUSTOM,
         ],
     )
-    def test_vitreciprocam(
-        self, embed_scale: bool, target_explain_group: TargetExplainGroup | TargetExplainGroup
-    ):
+    def test_vitreciprocam(self, embed_scale: bool, target_explain_group: TargetExplainGroup | TargetExplainGroup):
         model_name = "deit-tiny"
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")

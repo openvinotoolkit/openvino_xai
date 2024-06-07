@@ -1,18 +1,16 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from openvino_xai.common.utils import IdentityPreprocessFN
-from openvino_xai.inserter.model_parser import IRParserCls
-from openvino_xai.inserter.parameters import ModelType
-from openvino_xai.methods.base import WhiteBoxMethodBase
-
+from typing import Callable
 
 import numpy as np
 import openvino.runtime as ov
 from openvino.runtime import opset10 as opset
 
-
-from typing import Callable
+from openvino_xai.common.utils import IdentityPreprocessFN
+from openvino_xai.inserter.model_parser import IRParserCls
+from openvino_xai.inserter.parameters import ModelType
+from openvino_xai.methods.base import WhiteBoxMethodBase
 
 
 class ActivationMap(WhiteBoxMethodBase):

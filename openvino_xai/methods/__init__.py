@@ -6,9 +6,13 @@ XAI algorithms.
 from openvino_xai.methods.base import WhiteBoxMethodBase
 from openvino_xai.methods.black_box.rise import RISE
 from openvino_xai.methods.white_box.activation_map import ActivationMap
-from openvino_xai.methods.white_box.recipro_cam import FeatureMapPerturbationBase, ReciproCAM, ViTReciproCAM
 from openvino_xai.methods.white_box.det_class_probability_map import (
     DetClassProbabilityMap,
+)
+from openvino_xai.methods.white_box.recipro_cam import (
+    FeatureMapPerturbationBase,
+    ReciproCAM,
+    ViTReciproCAM,
 )
 
 __all__ = [

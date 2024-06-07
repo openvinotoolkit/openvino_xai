@@ -10,7 +10,7 @@ import openvino.runtime as ov
 from openvino.runtime import opset10 as opset
 
 from openvino_xai.common.utils import SALIENCY_MAP_OUTPUT_NAME, IdentityPreprocessFN
-from openvino_xai.inserter.inserter import insert_xai_branch_into_model, has_xai
+from openvino_xai.inserter.inserter import has_xai, insert_xai_branch_into_model
 
 
 class MethodBase(ABC):

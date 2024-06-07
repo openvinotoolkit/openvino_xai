@@ -2,19 +2,17 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
+from abc import abstractmethod
+from typing import Callable, List, Tuple
+
+import numpy as np
+import openvino.runtime as ov
 from openvino.runtime import opset10 as opset
+
 from openvino_xai.common.utils import IdentityPreprocessFN
 from openvino_xai.inserter.model_parser import IRParserCls
 from openvino_xai.inserter.parameters import ModelType
 from openvino_xai.methods.base import WhiteBoxMethodBase
-
-
-import numpy as np
-import openvino.runtime as ov
-
-
-from abc import abstractmethod
-from typing import Callable, List, Tuple
 
 
 class FeatureMapPerturbationBase(WhiteBoxMethodBase):

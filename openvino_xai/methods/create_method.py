@@ -17,10 +17,10 @@ from openvino_xai.inserter.parameters import (
 from openvino_xai.methods.base import BlackBoxXAIMethodBase, WhiteBoxMethodBase
 from openvino_xai.methods.black_box.rise import RISE
 from openvino_xai.methods.white_box.activation_map import ActivationMap
-from openvino_xai.methods.white_box.recipro_cam import ReciproCAM, ViTReciproCAM
 from openvino_xai.methods.white_box.det_class_probability_map import (
     DetClassProbabilityMap,
 )
+from openvino_xai.methods.white_box.recipro_cam import ReciproCAM, ViTReciproCAM
 
 
 class MethodFactory(ABC):

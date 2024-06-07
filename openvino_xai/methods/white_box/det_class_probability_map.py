@@ -7,9 +7,7 @@ import numpy as np
 import openvino.runtime as ov
 from openvino.runtime import opset10 as opset
 
-from openvino_xai.common.utils import (
-    IdentityPreprocessFN,
-)
+from openvino_xai.common.utils import IdentityPreprocessFN
 from openvino_xai.methods.base import WhiteBoxMethodBase
 
 
