@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import argparse
@@ -9,15 +9,14 @@ import cv2
 import numpy as np
 import openvino.runtime as ov
 
-from openvino_xai.common.parameters import TaskType, XAIMethodType
+import openvino_xai as xai
 from openvino_xai.common.utils import logger
-from openvino_xai.explanation.explain import Explainer
-from openvino_xai.explanation.explanation_parameters import (
+from openvino_xai.explainer.parameters import (
     ExplainMode,
     ExplanationParameters,
     TargetExplainGroup,
 )
-from openvino_xai.insertion.insertion_parameters import DetectionInsertionParameters
+from openvino_xai.inserter.parameters import DetectionInsertionParameters
 
 
 def get_argument_parser():
@@ -67,13 +66,13 @@ def main(argv):
         target_layer=cls_head_output_node_names,
         # num_anchors=[1, 1, 1, 1, 1],
         saliency_map_size=(23, 23),  # Optional
-        explain_method_type=XAIMethodType.DETCLASSPROBABILITYMAP,  # Optional
+        explain_method=xai.Method.DETCLASSPROBABILITYMAP,  # Optional
     )
 
     # Create explainer object
-    explainer = Explainer(
+    explainer = xai.Explainer(
         model=model,
-        task_type=TaskType.DETECTION,
+        task=xai.Task.DETECTION,
         preprocess_fn=preprocess_fn,
         explain_mode=ExplainMode.WHITEBOX,  # defaults to AUTO
         insertion_parameters=insertion_parameters,
@@ -91,7 +90,7 @@ def main(argv):
 
     logger.info(
         f"Generated {len(explanation.saliency_map)} detection "
-        f"saliency maps of layout {explanation.layout} with shape {explanation.sal_map_shape}."
+        f"saliency maps of layout {explanation.layout} with shape {explanation.shape}."
     )
 
     # Save saliency maps for visual inspection
