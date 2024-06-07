@@ -10,7 +10,7 @@ import pytest
 
 from openvino_xai.common.utils import retrieve_otx_model
 from openvino_xai.explainer.utils import get_postprocess_fn, get_preprocess_fn
-from openvino_xai.methods.black_box.black_box_methods import RISE
+from openvino_xai.methods.black_box.rise import RISE
 from tests.integration.test_classification import DEFAULT_CLS_MODEL
 
 

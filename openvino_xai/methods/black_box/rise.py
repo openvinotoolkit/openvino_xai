@@ -9,11 +9,7 @@ import openvino.runtime as ov
 from tqdm import tqdm
 
 from openvino_xai.common.utils import IdentityPreprocessFN, scale
-from openvino_xai.methods.method_base import MethodBase
-
-
-class BlackBoxXAIMethodBase(MethodBase):
-    """Base class for methods that explain model in Black-Box mode."""
+from openvino_xai.methods.base import BlackBoxXAIMethodBase
 
 
 class RISE(BlackBoxXAIMethodBase):

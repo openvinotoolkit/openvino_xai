@@ -14,11 +14,10 @@ from openvino_xai.inserter.parameters import (
     DetectionInsertionParameters,
 )
 from openvino_xai.methods.create_method import WhiteBoxMethodFactory
-from openvino_xai.methods.white_box.white_box_methods import (
-    ActivationMap,
+from openvino_xai.methods.white_box.activation_map import ActivationMap
+from openvino_xai.methods.white_box.recipro_cam import ReciproCAM, ViTReciproCAM
+from openvino_xai.methods.white_box.det_class_probability_map import (
     DetClassProbabilityMap,
-    ReciproCAM,
-    ViTReciproCAM,
 )
 from tests.integration.test_classification import DEFAULT_CLS_MODEL
 from tests.integration.test_detection import DEFAULT_DET_MODEL, MODEL_CONFIGS

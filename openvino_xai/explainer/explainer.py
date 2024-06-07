@@ -17,12 +17,12 @@ from openvino_xai.explainer.parameters import (
 from openvino_xai.explainer.utils import get_explain_target_indices
 from openvino_xai.explainer.visualizer import Visualizer
 from openvino_xai.inserter.parameters import InsertionParameters
-from openvino_xai.methods.black_box.black_box_methods import BlackBoxXAIMethodBase
+from openvino_xai.methods.base import BlackBoxXAIMethodBase
 from openvino_xai.methods.create_method import (
     BlackBoxMethodFactory,
     WhiteBoxMethodFactory,
 )
-from openvino_xai.methods.method_base import MethodBase
+from openvino_xai.methods.base import MethodBase
 
 
 class Explainer:

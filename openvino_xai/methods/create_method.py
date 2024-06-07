@@ -14,13 +14,12 @@ from openvino_xai.inserter.parameters import (
     DetectionInsertionParameters,
     InsertionParameters,
 )
-from openvino_xai.methods.black_box.black_box_methods import RISE, BlackBoxXAIMethodBase
-from openvino_xai.methods.white_box.white_box_methods import (
-    ActivationMap,
+from openvino_xai.methods.base import BlackBoxXAIMethodBase, WhiteBoxMethodBase
+from openvino_xai.methods.black_box.rise import RISE
+from openvino_xai.methods.white_box.activation_map import ActivationMap
+from openvino_xai.methods.white_box.recipro_cam import ReciproCAM, ViTReciproCAM
+from openvino_xai.methods.white_box.det_class_probability_map import (
     DetClassProbabilityMap,
-    ReciproCAM,
-    ViTReciproCAM,
-    WhiteBoxMethodBase,
 )
 
 
