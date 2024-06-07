@@ -85,16 +85,16 @@ class TestDetWB:
     _sal_map_size = (23, 23)
 
     @pytest.mark.parametrize("model_name", MODELS)
-    @pytest.mark.parametrize("embed_normalization", [True, False])
+    @pytest.mark.parametrize("embed_scale", [True, False])
     @pytest.mark.parametrize("target_explain_group", TARGET_EXPLAIN_GROUPS)
-    def test_detclassprobabilitymap(self, model_name, embed_normalization, target_explain_group):
+    def test_detclassprobabilitymap(self, model_name, embed_scale, target_explain_group):
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
         model = ov.Core().read_model(model_path)
 
         cls_head_output_node_names = MODEL_CONFIGS[model_name].node_names
         insertion_parameters = DetectionInsertionParameters(
-            embed_normalization=embed_normalization,
+            embed_scale=embed_scale,
             target_layer=cls_head_output_node_names,
             num_anchors=MODEL_CONFIGS[model_name].anchors,
             saliency_map_size=self._sal_map_size,
@@ -129,8 +129,8 @@ class TestDetWB:
 
             actual_sal_vals = explanation.saliency_map[0][0, :10].astype(np.int16)
             ref_sal_vals = self._ref_sal_maps_reciprocam[model_name].astype(np.uint8)
-            if embed_normalization:
-                # Reference values generated with embed_normalization=True
+            if embed_scale:
+                # Reference values generated with embed_scale=True
                 assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
             else:
                 assert np.sum(np.abs(actual_sal_vals - ref_sal_vals)) > 100
@@ -199,7 +199,7 @@ class TestDetWB:
 
         actual_sal_vals = explanation.saliency_map[0][0, :10].astype(np.int16)
         ref_sal_vals = self._ref_sal_maps_reciprocam[DEFAULT_DET_MODEL].astype(np.uint8)
-        # Reference values generated with embed_normalization=True
+        # Reference values generated with embed_scale=True
         assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
 
         for map_ in explanation.saliency_map.values():

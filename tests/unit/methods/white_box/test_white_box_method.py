@@ -39,7 +39,7 @@ class TestActivationMap:
 
         assert xai_method.model_ori == self.model
         assert isinstance(xai_method.model_ori, ov.Model)
-        assert xai_method.embed_normalization
+        assert xai_method.embed_scale
         assert not xai_method.per_class
         assert xai_method._target_layer == self.target_layer
 
@@ -98,7 +98,7 @@ class TestReciproCAM:
 
         assert reciprocam_xai_method.model_ori == self.model
         assert isinstance(reciprocam_xai_method.model_ori, ov.Model)
-        assert reciprocam_xai_method.embed_normalization
+        assert reciprocam_xai_method.embed_scale
         assert reciprocam_xai_method.per_class
         assert reciprocam_xai_method._target_layer == self.target_layer
 
@@ -157,7 +157,7 @@ class TestViTReciproCAM:
 
         assert reciprocam_xai_method.model_ori == self.model
         assert isinstance(reciprocam_xai_method.model_ori, ov.Model)
-        assert reciprocam_xai_method.embed_normalization
+        assert reciprocam_xai_method.embed_scale
         assert reciprocam_xai_method.per_class
         assert reciprocam_xai_method._target_layer == self.target_layer
 
@@ -234,7 +234,7 @@ class TestDetProbMapXAI:
 
         assert detection_xai_method.model_ori == self.model
         assert isinstance(detection_xai_method.model_ori, ov.Model)
-        assert detection_xai_method.embed_normalization
+        assert detection_xai_method.embed_scale
         assert detection_xai_method.per_class
         assert detection_xai_method._target_layer == self.target_layer
         assert detection_xai_method._num_anchors == self.num_anchors

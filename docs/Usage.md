@@ -109,7 +109,7 @@ model = ov.Core().read_model("path/to/model.xml")  # type: ov.Model
 # Optional - create insertion parameters
 insertion_parameters = ClassificationInsertionParameters(
     # target_layer="last_conv_node_name",  # target_layer - node after which XAI branch will be inserted
-    embed_normalization=True,  # True by default.  If set to True, saliency map normalization is embedded in the model
+    embed_scale=True,  # True by default.  If set to True, saliency map normalization is embedded in the model
     explain_method=xai.Method.RECIPROCAM,  # ReciproCAM is the default XAI method for CNNs
 )
 
@@ -221,7 +221,7 @@ model = ov.Core().read_model("path/to/model.xml")  # type: ov.Model
 # Optional - create insertion parameters
 insertion_parameters = ClassificationInsertionParameters(
     # target_layer="last_conv_node_name",  # target_layer - node after which XAI branch will be inserted
-    embed_normalization=True,  # True by default.  If set to True, saliency map normalization is embedded in the model
+    embed_scale=True,  # True by default.  If set to True, saliency map normalization is embedded in the model
     explain_method=xai.Method.RECIPROCAM,  # ReciproCAM is the default XAI method for CNNs
 )
 

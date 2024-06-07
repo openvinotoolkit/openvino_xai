@@ -183,7 +183,7 @@ class TestImageClassificationTimm:
             raise ValueError
 
         insertion_parameters = ClassificationInsertionParameters(
-            embed_normalization=False,
+            embed_scale=False,
             explain_method=explain_method,
         )
 

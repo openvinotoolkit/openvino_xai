@@ -29,20 +29,20 @@ class WhiteBoxXAIMethodBase(MethodBase):
     :param preprocess_fn: Preprocessing function, identity function by default
         (assume input images are already preprocessed by user).
     :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
-    :param embed_normalization: Whether to scale output or not.
-    :type embed_normalization: bool
+    :param embed_scale: Whether to scale output or not.
+    :type embed_scale: bool
     """
 
     def __init__(
         self,
         model: ov.Model,
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
-        embed_normalization: bool = True,
+        embed_scale: bool = True,
     ):
         super().__init__(preprocess_fn=preprocess_fn)
         self._model_ori = model
         self.preprocess_fn = preprocess_fn
-        self.embed_normalization = embed_normalization
+        self.embed_scale = embed_scale
 
     @property
     def model_ori(self):
@@ -66,7 +66,7 @@ class WhiteBoxXAIMethodBase(MethodBase):
             return self._model
 
         xai_output_node = self.generate_xai_branch()
-        self._model = insert_xai_branch_into_model(self._model_ori, xai_output_node, self.embed_normalization)
+        self._model = insert_xai_branch_into_model(self._model_ori, xai_output_node, self.embed_scale)
         if not has_xai(self._model):
             raise RuntimeError("Insertion of the XAI branch into the model was not successful.")
         if load_model:
@@ -125,8 +125,8 @@ class ActivationMapXAIMethod(WhiteBoxXAIMethodBase):
     :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
     :parameter target_layer: Target layer (node) name after which the XAI branch will be inserted.
     :type target_layer: str
-    :param embed_normalization: Whether to scale output or not.
-    :type embed_normalization: bool
+    :param embed_scale: Whether to scale output or not.
+    :type embed_scale: bool
     :param prepare_model: Loading (compiling) the model prior to inference.
     :type prepare_model: bool
     """
@@ -136,10 +136,10 @@ class ActivationMapXAIMethod(WhiteBoxXAIMethodBase):
         model: ov.Model,
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         target_layer: str | None = None,
-        embed_normalization: bool = True,
+        embed_scale: bool = True,
         prepare_model: bool = True,
     ):
-        super().__init__(model, preprocess_fn, embed_normalization)
+        super().__init__(model, preprocess_fn, embed_scale)
         self.per_class = False
         self.model_type = ModelType.CNN
         self._target_layer = target_layer
@@ -151,7 +151,7 @@ class ActivationMapXAIMethod(WhiteBoxXAIMethodBase):
         """Implements ActivationMap XAI algorithm."""
         target_node_ori = IRParserCls.get_target_node(self._model_ori, self.model_type, self._target_layer)
         saliency_maps = opset.reduce_mean(target_node_ori.output(0), 1)
-        if self.embed_normalization:
+        if self.embed_scale:
             saliency_maps = self._scale_saliency_maps(saliency_maps, self.per_class)
         return saliency_maps
 
@@ -167,8 +167,8 @@ class FeatureMapPerturbationBase(WhiteBoxXAIMethodBase):
     :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
     :parameter target_layer: Target layer (node) name after which the XAI branch will be inserted.
     :type target_layer: str
-    :param embed_normalization: Whether to scale output or not.
-    :type embed_normalization: bool
+    :param embed_scale: Whether to scale output or not.
+    :type embed_scale: bool
     """
 
     def __init__(
@@ -176,9 +176,9 @@ class FeatureMapPerturbationBase(WhiteBoxXAIMethodBase):
         model: ov.Model,
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         target_layer: str | None = None,
-        embed_normalization: bool = True,
+        embed_scale: bool = True,
     ):
-        super().__init__(model, preprocess_fn, embed_normalization)
+        super().__init__(model, preprocess_fn, embed_scale)
         self.per_class = True
         self._target_layer = target_layer
 
@@ -189,7 +189,7 @@ class FeatureMapPerturbationBase(WhiteBoxXAIMethodBase):
 
         saliency_maps = self._get_saliency_map(model_clone)
 
-        if self.embed_normalization:
+        if self.embed_scale:
             saliency_maps = self._scale_saliency_maps(saliency_maps, self.per_class)
         return saliency_maps
 
@@ -209,8 +209,8 @@ class ReciproCAMXAIMethod(FeatureMapPerturbationBase):
     :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
     :parameter target_layer: Target layer (node) name after which the XAI branch will be inserted.
     :type target_layer: str
-    :param embed_normalization: Whether to scale output or not.
-    :type embed_normalization: bool
+    :param embed_scale: Whether to scale output or not.
+    :type embed_scale: bool
     :param prepare_model: Loading (compiling) the model prior to inference.
     :type prepare_model: bool
     """
@@ -220,10 +220,10 @@ class ReciproCAMXAIMethod(FeatureMapPerturbationBase):
         model: ov.Model,
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         target_layer: str | None = None,
-        embed_normalization: bool = True,
+        embed_scale: bool = True,
         prepare_model: bool = True,
     ):
-        super().__init__(model, preprocess_fn, target_layer, embed_normalization)
+        super().__init__(model, preprocess_fn, target_layer, embed_scale)
         self.model_type = ModelType.CNN
 
         if prepare_model:
@@ -285,8 +285,8 @@ class ViTReciproCAMXAIMethod(FeatureMapPerturbationBase):
     :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
     :parameter target_layer: Target layer (node) name after which the XAI branch will be inserted.
     :type target_layer: str
-    :param embed_normalization: Whether to scale output or not.
-    :type embed_normalization: bool
+    :param embed_scale: Whether to scale output or not.
+    :type embed_scale: bool
     :param use_gaussian: Whether to use Gaussian for mask generation or not.
     :type use_gaussian: bool
     :param cls_token: Whether to use cls token for mosaic prediction or not.
@@ -304,14 +304,14 @@ class ViTReciproCAMXAIMethod(FeatureMapPerturbationBase):
         model: ov.Model,
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         target_layer: str | None = None,
-        embed_normalization: bool = True,
+        embed_scale: bool = True,
         use_gaussian: bool = True,
         cls_token: bool = True,
         final_norm: bool = True,
         k: int = 1,
         prepare_model: bool = True,
     ):
-        super().__init__(model, preprocess_fn, target_layer, embed_normalization)
+        super().__init__(model, preprocess_fn, target_layer, embed_scale)
         self.model_type = ModelType.TRANSFORMER
         self._use_gaussian = use_gaussian
         self._cls_token = cls_token
@@ -491,8 +491,8 @@ class DetClassProbabilityMapXAIMethod(WhiteBoxXAIMethodBase):
     :type num_anchors: List[int]
     :parameter saliency_map_size: Size of the output saliency map.
     :type saliency_map_size: Tuple[int, int] | List[int]
-    :param embed_normalization: Whether to scale output or not.
-    :type embed_normalization: bool
+    :param embed_scale: Whether to scale output or not.
+    :type embed_scale: bool
     :param prepare_model: Loading (compiling) the model prior to inference.
     :type prepare_model: bool
     """
@@ -504,10 +504,10 @@ class DetClassProbabilityMapXAIMethod(WhiteBoxXAIMethodBase):
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         num_anchors: List[int] | None = None,
         saliency_map_size: Tuple[int, int] | List[int] = (23, 23),
-        embed_normalization: bool = True,
+        embed_scale: bool = True,
         prepare_model: bool = True,
     ):
-        super().__init__(model, preprocess_fn, embed_normalization)
+        super().__init__(model, preprocess_fn, embed_scale)
         self.per_class = True
         self._target_layer = target_layer
         self._num_anchors = (
@@ -564,6 +564,6 @@ class DetClassProbabilityMapXAIMethod(WhiteBoxXAIMethodBase):
         saliency_maps = opset.reduce_mean(opset.concat(cls_head_output_nodes, 0), 0, keep_dims=True)
         saliency_maps = opset.softmax(saliency_maps.output(0), 1)
 
-        if self.embed_normalization:
+        if self.embed_scale:
             saliency_maps = self._scale_saliency_maps(saliency_maps, self.per_class)
         return saliency_maps
