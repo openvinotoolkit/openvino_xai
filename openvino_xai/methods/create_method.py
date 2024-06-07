@@ -3,31 +3,41 @@
 
 from abc import ABC, abstractmethod
 from typing import Callable
-import numpy as np
 
+import numpy as np
 import openvino.runtime as ov
-from openvino_xai.common.parameters import Task
+
+from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import IdentityPreprocessFN, logger
-from openvino_xai.inserter.parameters import ClassificationInsertionParameters, DetectionInsertionParameters
-from openvino_xai.common.parameters import Method
+from openvino_xai.inserter.parameters import (
+    ClassificationInsertionParameters,
+    DetectionInsertionParameters,
+    InsertionParameters,
+)
 from openvino_xai.methods.black_box.black_box_methods import RISE, BlackBoxXAIMethodBase
-from openvino_xai.methods.white_box.white_box_methods import ActivationMapXAIMethod, DetClassProbabilityMapXAIMethod, ReciproCAMXAIMethod, ViTReciproCAMXAIMethod, WhiteBoxXAIMethodBase
+from openvino_xai.methods.white_box.white_box_methods import (
+    ActivationMapXAIMethod,
+    DetClassProbabilityMapXAIMethod,
+    ReciproCAMXAIMethod,
+    ViTReciproCAMXAIMethod,
+    WhiteBoxXAIMethodBase,
+)
 
 
 class MethodFactory(ABC):
     @classmethod
     @abstractmethod
-    def create_method(cls):
+    def create_method(cls, *args, **kwargs):
         """Creates method."""
 
     @staticmethod
     @abstractmethod
-    def create_classification_method():
+    def create_classification_method(*args, **kwargs):
         """Creates classification method."""
 
     @staticmethod
     @abstractmethod
-    def create_detection_method():
+    def create_detection_method(*args, **kwargs):
         """Creates detection method."""
 
 
@@ -38,13 +48,13 @@ class WhiteBoxMethodFactory(MethodFactory):
         task: Task,
         model: ov.Model,
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
-        insertion_parameters: ClassificationInsertionParameters | None = None,
+        insertion_parameters: InsertionParameters | None = None,
         **kwargs,
     ) -> WhiteBoxXAIMethodBase:
         if task == Task.CLASSIFICATION:
-            return cls.create_classification_method(model, preprocess_fn, insertion_parameters, **kwargs)
+            return cls.create_classification_method(model, preprocess_fn, insertion_parameters, **kwargs)  # type: ignore
         if task == Task.DETECTION:
-            return cls.create_detection_method(model, preprocess_fn, insertion_parameters, **kwargs)
+            return cls.create_detection_method(model, preprocess_fn, insertion_parameters, **kwargs)  # type: ignore
         raise ValueError(f"Model type {task} is not supported in white-box mode.")
 
     @staticmethod
@@ -99,7 +109,7 @@ class WhiteBoxMethodFactory(MethodFactory):
             return ActivationMapXAIMethod(
                 model,
                 preprocess_fn,
-                insertion_parameters.target_layer, 
+                insertion_parameters.target_layer,
                 insertion_parameters.embed_normalization,
                 **kwargs,
             )
@@ -178,4 +188,4 @@ class BlackBoxMethodFactory(MethodFactory):
 
     @staticmethod
     def create_detection_method(*args, **kwargs) -> BlackBoxXAIMethodBase:
-        raise ValueError(f"Detection models are not supported in black-box mode yet.")
+        raise ValueError("Detection models are not supported in black-box mode yet.")

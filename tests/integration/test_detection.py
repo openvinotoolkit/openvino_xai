@@ -9,10 +9,6 @@ import numpy as np
 import openvino.runtime as ov
 import pytest
 
-from openvino_xai.methods.create_method import WhiteBoxMethodFactory
-from openvino_xai.methods.white_box.white_box_methods import (
-    DetClassProbabilityMapXAIMethod,
-)
 from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import retrieve_otx_model
 from openvino_xai.explainer.explainer import Explainer
@@ -24,6 +20,7 @@ from openvino_xai.explainer.parameters import (
 )
 from openvino_xai.explainer.utils import get_preprocess_fn
 from openvino_xai.inserter.parameters import DetectionInsertionParameters
+from openvino_xai.methods.create_method import WhiteBoxMethodFactory
 from openvino_xai.methods.white_box.white_box_methods import (
     DetClassProbabilityMapXAIMethod,
 )

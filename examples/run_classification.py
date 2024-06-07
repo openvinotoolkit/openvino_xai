@@ -15,8 +15,8 @@ from openvino_xai.common.utils import logger
 from openvino_xai.explainer.parameters import (
     ExplainMode,
     ExplanationParameters,
-    VisualizationParameters,
     TargetExplainGroup,
+    VisualizationParameters,
 )
 from openvino_xai.inserter.parameters import ClassificationInsertionParameters
 

@@ -164,7 +164,9 @@ class TestViTReciproCAM:
     @pytest.mark.parametrize("use_gaussian", [True, False])
     def test_generate_xai_branch(self, use_gaussian):
         """Test that ViTReciproCAMXAIMethod creates a proper XAI branch node."""
-        reciprocam_xai_method = ViTReciproCAMXAIMethod(self.model, self.target_layer, use_gaussian=use_gaussian, prepare_model=False)
+        reciprocam_xai_method = ViTReciproCAMXAIMethod(
+            self.model, self.target_layer, use_gaussian=use_gaussian, prepare_model=False
+        )
 
         xai_output_node = reciprocam_xai_method.generate_xai_branch()
 
@@ -226,7 +228,9 @@ class TestDetProbMapXAI:
     def test_initialization(self):
         """Test DetClassProbabilityMapXAIMethod is created properly."""
 
-        detection_xai_method = DetClassProbabilityMapXAIMethod(self.model, self.target_layer, num_anchors=self.num_anchors, prepare_model=False)
+        detection_xai_method = DetClassProbabilityMapXAIMethod(
+            self.model, self.target_layer, num_anchors=self.num_anchors, prepare_model=False
+        )
 
         assert detection_xai_method.model_ori == self.model
         assert isinstance(detection_xai_method.model_ori, ov.Model)
@@ -238,7 +242,9 @@ class TestDetProbMapXAI:
 
     def test_generate_xai_branch(self):
         """Test that DetClassProbabilityMapXAIMethod creates a proper XAI branch node."""
-        detection_xai_method = DetClassProbabilityMapXAIMethod(self.model, self.target_layer, num_anchors=self.num_anchors, prepare_model=False)
+        detection_xai_method = DetClassProbabilityMapXAIMethod(
+            self.model, self.target_layer, num_anchors=self.num_anchors, prepare_model=False
+        )
 
         xai_output_node = detection_xai_method.generate_xai_branch()
 

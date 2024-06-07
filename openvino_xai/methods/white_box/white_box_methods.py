@@ -9,17 +9,21 @@ import numpy as np
 import openvino.runtime as ov
 from openvino.runtime import opset10 as opset
 
-from openvino_xai.methods.method_base import MethodBase
-from openvino_xai.common.utils import SALIENCY_MAP_OUTPUT_NAME, IdentityPreprocessFN, has_xai
+from openvino_xai.common.utils import (
+    SALIENCY_MAP_OUTPUT_NAME,
+    IdentityPreprocessFN,
+    has_xai,
+)
 from openvino_xai.inserter.inserter import insert_xai_branch_into_model
-from openvino_xai.inserter.parameters import ModelType
 from openvino_xai.inserter.model_parser import IRParserCls
+from openvino_xai.inserter.parameters import ModelType
+from openvino_xai.methods.method_base import MethodBase
 
 
 class WhiteBoxXAIMethodBase(MethodBase):
     """
     Base class for white-box XAI methods.
-    
+
     :param model: OpenVINO model.
     :type model: ov.Model
     :param preprocess_fn: Preprocessing function, identity function by default
@@ -30,11 +34,11 @@ class WhiteBoxXAIMethodBase(MethodBase):
     """
 
     def __init__(
-            self,
-            model: ov.Model,
-            preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
-            embed_normalization: bool = True,
-        ):
+        self,
+        model: ov.Model,
+        preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
+        embed_normalization: bool = True,
+    ):
         super().__init__(preprocess_fn=preprocess_fn)
         self._model_ori = model
         self.preprocess_fn = preprocess_fn
@@ -113,7 +117,7 @@ class WhiteBoxXAIMethodBase(MethodBase):
 class ActivationMapXAIMethod(WhiteBoxXAIMethodBase):
     """
     Implements ActivationMap.
-    
+
     :param model: OpenVINO model.
     :type model: ov.Model
     :param preprocess_fn: Preprocessing function, identity function by default
@@ -139,7 +143,7 @@ class ActivationMapXAIMethod(WhiteBoxXAIMethodBase):
         self.per_class = False
         self.model_type = ModelType.CNN
         self._target_layer = target_layer
-        
+
         if prepare_model:
             self.prepare_model()
 
@@ -197,7 +201,7 @@ class FeatureMapPerturbationBase(WhiteBoxXAIMethodBase):
 class ReciproCAMXAIMethod(FeatureMapPerturbationBase):
     """
     Implements Recipro-CAM for CNN models.
-    
+
     :param model: OpenVINO model.
     :type model: ov.Model
     :param preprocess_fn: Preprocessing function, identity function by default
@@ -475,7 +479,7 @@ class ViTReciproCAMXAIMethod(FeatureMapPerturbationBase):
 class DetClassProbabilityMapXAIMethod(WhiteBoxXAIMethodBase):
     """
     Implements DetClassProbabilityMap, used for single-stage detectors, e.g. SSD, YOLOX or ATSS.
-    
+
     :param model: OpenVINO model.
     :type model: ov.Model
     :parameter target_layer: Target layer (node) name after which the XAI branch will be inserted.

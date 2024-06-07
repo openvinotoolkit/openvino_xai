@@ -5,7 +5,12 @@ import openvino.runtime as ov
 from openvino.preprocess import PrePostProcessor
 
 from openvino_xai import Task
-from openvino_xai.common.utils import SALIENCY_MAP_OUTPUT_NAME, IdentityPreprocessFN, has_xai, logger
+from openvino_xai.common.utils import (
+    SALIENCY_MAP_OUTPUT_NAME,
+    IdentityPreprocessFN,
+    has_xai,
+    logger,
+)
 from openvino_xai.inserter.parameters import InsertionParameters
 
 
@@ -41,7 +46,7 @@ def insert_xai(
         preprocess_fn=IdentityPreprocessFN(),
         insertion_parameters=insertion_parameters,
         prepare_model=False,
-        )
+    )
 
     model_xai = method.prepare_model(load_model=False)
 
@@ -53,7 +58,7 @@ def insert_xai(
 
 
 def insert_xai_branch_into_model(
-    model: ov.Model, 
+    model: ov.Model,
     xai_output_node,
     set_uint8,
 ) -> ov.Model:

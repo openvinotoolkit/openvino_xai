@@ -6,15 +6,8 @@ from typing import Callable
 import numpy as np
 import openvino.runtime as ov
 
-import openvino_xai
 from openvino_xai import Task
-from openvino_xai.methods.black_box.black_box_methods import BlackBoxXAIMethodBase
-from openvino_xai.methods.create_method import BlackBoxMethodFactory, WhiteBoxMethodFactory
-
-from openvino_xai.common.utils import (
-    IdentityPreprocessFN,
-    logger,
-)
+from openvino_xai.common.utils import IdentityPreprocessFN, logger
 from openvino_xai.explainer.explanation import Explanation
 from openvino_xai.explainer.parameters import (
     ExplainMode,
@@ -24,7 +17,12 @@ from openvino_xai.explainer.parameters import (
 from openvino_xai.explainer.utils import get_explain_target_indices
 from openvino_xai.explainer.visualizer import Visualizer
 from openvino_xai.inserter.parameters import InsertionParameters
-from openvino_xai.methods.black_box.black_box_methods import RISE
+from openvino_xai.methods.black_box.black_box_methods import BlackBoxXAIMethodBase
+from openvino_xai.methods.create_method import (
+    BlackBoxMethodFactory,
+    WhiteBoxMethodFactory,
+)
+from openvino_xai.methods.method_base import MethodBase
 
 
 class Explainer:
@@ -75,12 +73,15 @@ class Explainer:
 
         self.explain_mode = explain_mode
 
+        self.method: MethodBase = None
         self.create_method(self.explain_mode, self.task)
 
     def create_method(self, explain_mode: ExplainMode, task: Task) -> None:
         if explain_mode == ExplainMode.WHITEBOX:
             try:
-                self.method = WhiteBoxMethodFactory.create_method(task, self.model, self.preprocess_fn, self.insertion_parameters)
+                self.method = WhiteBoxMethodFactory.create_method(
+                    task, self.model, self.preprocess_fn, self.insertion_parameters
+                )
                 logger.info("Explaining the model in white-box mode.")
             except Exception as e:
                 print(e)
@@ -90,13 +91,17 @@ class Explainer:
             self.method = BlackBoxMethodFactory.create_method(task, self.model, self.preprocess_fn, self.postprocess_fn)
         elif self.explain_mode == ExplainMode.AUTO:
             try:
-                self.method = WhiteBoxMethodFactory.create_method(task, self.model, self.preprocess_fn, self.insertion_parameters)
+                self.method = WhiteBoxMethodFactory.create_method(
+                    task, self.model, self.preprocess_fn, self.insertion_parameters
+                )
                 logger.info("Explaining the model in the white-box mode.")
             except Exception as e:
                 print(e)
                 logger.info("Failed to insert XAI into the model - using black-box mode.")
                 self._check_postprocess_fn()
-                self.method = BlackBoxMethodFactory.create_method(task, self.model, self.preprocess_fn, self.postprocess_fn)
+                self.method = BlackBoxMethodFactory.create_method(
+                    task, self.model, self.preprocess_fn, self.postprocess_fn
+                )
                 logger.info("Explaining the model in the black-box mode.")
         else:
             raise ValueError(f"Not supported explain mode {self.explain_mode}.")
@@ -109,7 +114,10 @@ class Explainer:
     ) -> Explanation:
         """Explainer call that generates processed explanation result."""
         explain_target_indices = None
-        if isinstance(self.method, BlackBoxXAIMethodBase) and explanation_parameters.target_explain_group == TargetExplainGroup.CUSTOM:
+        if (
+            isinstance(self.method, BlackBoxXAIMethodBase)
+            and explanation_parameters.target_explain_group == TargetExplainGroup.CUSTOM
+        ):
             explain_target_indices = get_explain_target_indices(
                 explanation_parameters.target_explain_labels,
                 explanation_parameters.label_names,
@@ -117,7 +125,7 @@ class Explainer:
 
         saliency_map = self.method.generate_saliency_map(
             data,
-            explain_target_indices=explain_target_indices,
+            explain_target_indices=explain_target_indices,  # type: ignore
             **kwargs,
         )
 
@@ -131,8 +139,6 @@ class Explainer:
 
     def model_forward(self, x: np.ndarray, preprocess: bool = True) -> ov.utils.data_helpers.wrappers.OVDict:
         """Forward pass of the compiled model."""
-        if self.method.model_compiled is None:
-            raise RuntimeError("Model is not compiled. Call prepare_model() first.")
         return self.method.model_forward(x, preprocess)
 
     def _visualize(
