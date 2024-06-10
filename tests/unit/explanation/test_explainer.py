@@ -60,7 +60,7 @@ class TestExplainer:
             )
 
         explainer = Explainer(
-            model,
+            model=model,
             task=Task.CLASSIFICATION,
             preprocess_fn=self.preprocess_fn,
             postprocess_fn=get_postprocess_fn(),
@@ -132,7 +132,6 @@ class TestExplainer:
                 explain_mode=ExplainMode.AUTO,
                 insertion_parameters=insertion_parameters,
             )
-            assert explainer.explain_mode == ExplainMode.BLACKBOX
         assert str(exc_info.value) == "Postprocess function has to be provided for the black-box mode."
 
         insertion_parameters = ClassificationInsertionParameters(
@@ -146,7 +145,6 @@ class TestExplainer:
             explain_mode=ExplainMode.AUTO,
             insertion_parameters=insertion_parameters,
         )
-        assert explainer.explain_mode == ExplainMode.BLACKBOX
         explanation_parameters = ExplanationParameters(
             target_explain_group=TargetExplainGroup.ALL,
         )

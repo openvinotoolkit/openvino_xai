@@ -6,7 +6,6 @@ from pathlib import Path
 import addict
 import cv2
 import numpy as np
-import openvino
 import openvino.runtime as ov
 import pytest
 
@@ -21,11 +20,9 @@ from openvino_xai.explainer.parameters import (
 )
 from openvino_xai.explainer.utils import get_preprocess_fn
 from openvino_xai.inserter.parameters import DetectionInsertionParameters
-from openvino_xai.methods.white_box.create_method import (
-    create_white_box_detection_explain_method,
-)
-from openvino_xai.methods.white_box.white_box_methods import (
-    DetClassProbabilityMapXAIMethod,
+from openvino_xai.methods.factory import WhiteBoxMethodFactory
+from openvino_xai.methods.white_box.det_class_probability_map import (
+    DetClassProbabilityMap,
 )
 
 MODEL_CONFIGS = addict.Addict(
@@ -88,16 +85,16 @@ class TestDetWB:
     _sal_map_size = (23, 23)
 
     @pytest.mark.parametrize("model_name", MODELS)
-    @pytest.mark.parametrize("embed_normalization", [True, False])
+    @pytest.mark.parametrize("embed_scaling", [True, False])
     @pytest.mark.parametrize("target_explain_group", TARGET_EXPLAIN_GROUPS)
-    def test_detclassprobabilitymap(self, model_name, embed_normalization, target_explain_group):
+    def test_detclassprobabilitymap(self, model_name, embed_scaling, target_explain_group):
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
         model = ov.Core().read_model(model_path)
 
         cls_head_output_node_names = MODEL_CONFIGS[model_name].node_names
         insertion_parameters = DetectionInsertionParameters(
-            embed_normalization=embed_normalization,
+            embed_scaling=embed_scaling,
             target_layer=cls_head_output_node_names,
             num_anchors=MODEL_CONFIGS[model_name].anchors,
             saliency_map_size=self._sal_map_size,
@@ -132,8 +129,8 @@ class TestDetWB:
 
             actual_sal_vals = explanation.saliency_map[0][0, :10].astype(np.int16)
             ref_sal_vals = self._ref_sal_maps_reciprocam[model_name].astype(np.uint8)
-            if embed_normalization:
-                # Reference values generated with embed_normalization=True
+            if embed_scaling:
+                # Reference values generated with embed_scaling=True
                 assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
             else:
                 assert np.sum(np.abs(actual_sal_vals - ref_sal_vals)) > 100
@@ -196,25 +193,29 @@ class TestDetWB:
 
         explanation_parameters = ExplanationParameters(
             target_explain_group=TargetExplainGroup.ALL,
-            visualization_parameters=VisualizationParameters(scale=True),
+            visualization_parameters=VisualizationParameters(scaling=True),
         )
         explanation = explainer(self.image, explanation_parameters)
 
         actual_sal_vals = explanation.saliency_map[0][0, :10].astype(np.int16)
         ref_sal_vals = self._ref_sal_maps_reciprocam[DEFAULT_DET_MODEL].astype(np.uint8)
-        # Reference values generated with embed_normalization=True
+        # Reference values generated with embed_scaling=True
         assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
 
         for map_ in explanation.saliency_map.values():
             assert map_.min() == 0, f"{map_.min()}"
             assert map_.max() in {254, 255}, f"{map_.max()}"
 
-    def test_create_white_box_detection_explain_method(self):
-        """Test create_white_box_detection_explain_method."""
+    def test_create_white_box_detection_method(self):
+        """Test create_white_box_detection_method."""
         model, insertion_parameters = self.get_default_model_and_insertion_parameters()
 
-        det_xai_method = create_white_box_detection_explain_method(model, insertion_parameters)
-        assert isinstance(det_xai_method, DetClassProbabilityMapXAIMethod)
+        preprocess_fn = get_preprocess_fn(
+            input_size=MODEL_CONFIGS[DEFAULT_DET_MODEL].input_size,
+            hwc_to_chw=True,
+        )
+        det_xai_method = WhiteBoxMethodFactory.create_method(Task.DETECTION, model, preprocess_fn, insertion_parameters)
+        assert isinstance(det_xai_method, DetClassProbabilityMap)
         assert isinstance(det_xai_method.model_ori, ov.Model)
 
     def get_default_model_and_insertion_parameters(self):

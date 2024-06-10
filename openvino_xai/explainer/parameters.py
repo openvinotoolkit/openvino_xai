@@ -43,10 +43,10 @@ class VisualizationParameters:
     """
     VisualizationParameters parametrize postprocessing of saliency maps.
 
-    :parameter scale: If True, scale saliency map into [0, 255] range (filling the whole range).
+    :parameter scaling: If True, scaling saliency map into [0, 255] range (filling the whole range).
         By default, scaling is embedded into the IR model.
-        Therefore, scale=False here by default.
-    :type scale: bool
+        Therefore, scaling=False here by default.
+    :type scaling: bool
     :parameter resize: If True, resize saliency map to the input image size.
     :type resize: bool
     :parameter colormap: If True, apply colormap to the grayscale saliency map.
@@ -57,7 +57,7 @@ class VisualizationParameters:
     :type overlay_weight: float
     """
 
-    scale: bool = False
+    scaling: bool = False
     resize: bool = False
     colormap: bool = False
     overlay: bool = False

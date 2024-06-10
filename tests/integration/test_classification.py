@@ -79,7 +79,7 @@ class TestClsWB:
         hwc_to_chw=True,
     )
 
-    @pytest.mark.parametrize("embed_normalization", [True, False])
+    @pytest.mark.parametrize("embed_scaling", [True, False])
     @pytest.mark.parametrize(
         "target_explain_group",
         [
@@ -87,16 +87,14 @@ class TestClsWB:
             TargetExplainGroup.CUSTOM,
         ],
     )
-    def test_vitreciprocam(
-        self, embed_normalization: bool, target_explain_group: TargetExplainGroup | TargetExplainGroup
-    ):
+    def test_vitreciprocam(self, embed_scaling: bool, target_explain_group: TargetExplainGroup | TargetExplainGroup):
         model_name = "deit-tiny"
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
 
         model = ov.Core().read_model(model_path)
         insertion_parameters = ClassificationInsertionParameters(
-            embed_normalization=embed_normalization,
+            embed_scaling=embed_scaling,
             explain_method=Method.VITRECIPROCAM,
         )
 
@@ -119,8 +117,8 @@ class TestClsWB:
             if model_name in self._ref_sal_maps_vitreciprocam:
                 actual_sal_vals = explanation.saliency_map[0][0, :].astype(np.int16)
                 ref_sal_vals = self._ref_sal_maps_vitreciprocam[model_name].astype(np.uint8)
-                if embed_normalization:
-                    # Reference values generated with embed_normalization=True
+                if embed_scaling:
+                    # Reference values generated with embed_scaling=True
                     assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
                 else:
                     assert np.sum(np.abs(actual_sal_vals - ref_sal_vals)) > 100
@@ -139,7 +137,7 @@ class TestClsWB:
             assert explanation.saliency_map[target_class].ndim == 2
 
     @pytest.mark.parametrize("model_name", MODELS)
-    @pytest.mark.parametrize("embed_normalization", [True, False])
+    @pytest.mark.parametrize("embed_scaling", [True, False])
     @pytest.mark.parametrize(
         "target_explain_group",
         [
@@ -148,13 +146,13 @@ class TestClsWB:
         ],
     )
     def test_reciprocam(
-        self, model_name: str, embed_normalization: bool, target_explain_group: TargetExplainGroup | TargetExplainGroup
+        self, model_name: str, embed_scaling: bool, target_explain_group: TargetExplainGroup | TargetExplainGroup
     ):
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
         model = ov.Core().read_model(model_path)
         insertion_parameters = ClassificationInsertionParameters(
-            embed_normalization=embed_normalization,
+            embed_scaling=embed_scaling,
             explain_method=Method.RECIPROCAM,
         )
 
@@ -177,8 +175,8 @@ class TestClsWB:
             if model_name in self._ref_sal_maps_reciprocam:
                 actual_sal_vals = explanation.saliency_map[0][0, :].astype(np.int16)
                 ref_sal_vals = self._ref_sal_maps_reciprocam[model_name].astype(np.uint8)
-                if embed_normalization:
-                    # Reference values generated with embed_normalization=True
+                if embed_scaling:
+                    # Reference values generated with embed_scaling=True
                     assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
                 else:
                     if model_name == "classification_model_with_xai_head":
@@ -199,15 +197,15 @@ class TestClsWB:
             assert explanation.saliency_map[target_class].ndim == 2
 
     @pytest.mark.parametrize("model_name", MODELS)
-    @pytest.mark.parametrize("embed_normalization", [True, False])
-    def test_activationmap(self, model_name: str, embed_normalization: bool):
+    @pytest.mark.parametrize("embed_scaling", [True, False])
+    def test_activationmap(self, model_name: str, embed_scaling: bool):
         if model_name == "classification_model_with_xai_head":
             pytest.skip("model already has reciprocam xai head - this test cannot change it.")
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
         model = ov.Core().read_model(model_path)
         insertion_parameters = ClassificationInsertionParameters(
-            embed_normalization=embed_normalization,
+            embed_scaling=embed_scaling,
             explain_method=Method.ACTIVATIONMAP,
         )
 
@@ -223,10 +221,10 @@ class TestClsWB:
             visualization_parameters=VisualizationParameters(),
         )
         explanation = explainer(self.image, explanation_parameters)
-        if model_name in self._ref_sal_maps_activationmap and embed_normalization:
+        if model_name in self._ref_sal_maps_activationmap and embed_scaling:
             actual_sal_vals = explanation.saliency_map["per_image_map"][0, :].astype(np.int16)
             ref_sal_vals = self._ref_sal_maps_activationmap[model_name].astype(np.uint8)
-            # Reference values generated with embed_normalization=True
+            # Reference values generated with embed_scaling=True
             assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
         assert explanation is not None
         assert "per_image_map" in explanation.saliency_map
@@ -293,13 +291,13 @@ class TestClsWB:
 
         explanation_parameters = ExplanationParameters(
             target_explain_group=TargetExplainGroup.ALL,
-            visualization_parameters=VisualizationParameters(scale=True),
+            visualization_parameters=VisualizationParameters(scaling=True),
         )
         explanation = explainer(self.image, explanation_parameters)
 
         actual_sal_vals = explanation.saliency_map[0][0, :].astype(np.int16)
         ref_sal_vals = self._ref_sal_maps_reciprocam[DEFAULT_CLS_MODEL].astype(np.uint8)
-        # Reference values generated with embed_normalization=True
+        # Reference values generated with embed_scaling=True
         assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
 
         for map_ in explanation.saliency_map.values():
@@ -328,13 +326,13 @@ class TestClsBB:
             TargetExplainGroup.CUSTOM,
         ],
     )
-    @pytest.mark.parametrize("scale", [True, False])
+    @pytest.mark.parametrize("scaling", [True, False])
     def test_classification_black_box_postprocessing(
         self,
         model_name: str,
         overlay: bool,
         target_explain_group: TargetExplainGroup | TargetExplainGroup,
-        scale: bool,
+        scaling: bool,
     ):
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
@@ -364,7 +362,7 @@ class TestClsBB:
                 self.image,
                 explanation_parameters,
                 num_masks=5,
-                scale_output=scale,
+                scale_output=scaling,
             )
 
             assert explanation is not None
@@ -384,7 +382,7 @@ class TestClsBB:
                 self.image,
                 explanation_parameters,
                 num_masks=5,
-                scale_output=scale,
+                scale_output=scaling,
             )
 
             assert explanation is not None
@@ -394,7 +392,7 @@ class TestClsBB:
             else:
                 assert len(explanation.saliency_map) == MODEL_NUM_CLASSES[model_name]
                 assert explanation.shape == (224, 224)
-                if scale:
+                if scaling:
                     for map_ in explanation.saliency_map.values():
                         assert map_.min() == 0, f"{map_.min()}"
                         assert map_.max() in {254, 255}, f"{map_.max()}"

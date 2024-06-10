@@ -16,6 +16,7 @@ from openvino_xai.explainer.parameters import (
     ExplainMode,
     ExplanationParameters,
     TargetExplainGroup,
+    VisualizationParameters,
 )
 from openvino_xai.inserter.parameters import ClassificationInsertionParameters
 
@@ -94,7 +95,7 @@ def explain_white_box(args):
         # target_layer="last_conv_node_name",  # target_layer - node after which XAI branch will be inserted
         target_layer="/backbone/conv/conv.2/Div",  # OTX mnet_v3
         # target_layer="/backbone/features/final_block/activate/Mul",  # OTX effnet
-        embed_normalization=True, # True by default.  If set to True, saliency map normalization is embedded in the model
+        embed_scaling=True, # True by default.  If set to True, saliency map scale (0 ~ 255) operation is embedded in the model
         explain_method=xai.Method.RECIPROCAM,  # ReciproCAM is the default XAI method for CNNs
     )
 
@@ -115,6 +116,7 @@ def explain_white_box(args):
         target_explain_group=TargetExplainGroup.CUSTOM,  # CUSTOM list of classes to explain, also ALL possible
         target_explain_labels=[11, 14],  # target classes to explain, also ['dog', 'person'] is a valid input
         label_names=voc_labels,  # optional names
+        visualization_parameters=VisualizationParameters(overlay=True)
     )
 
     # Generate explanation
@@ -158,6 +160,7 @@ def explain_black_box(args):
         target_explain_group=TargetExplainGroup.CUSTOM,  # CUSTOM list of classes to explain, also ALL possible
         target_explain_labels=['dog', 'person'],  # target classes to explain, also [11, 14] possible
         label_names=voc_labels,  # optional names
+        visualization_parameters=VisualizationParameters(overlay=True)
     )
 
     # Generate explanation
@@ -306,7 +309,7 @@ def insert_xai_w_params(args):
     insertion_parameters = ClassificationInsertionParameters(
         target_layer="/backbone/conv/conv.2/Div",  # OTX mnet_v3
         # target_layer="/backbone/features/final_block/activate/Mul",  # OTX effnet
-        embed_normalization=True,
+        embed_scaling=True,
         explain_method=xai.Method.RECIPROCAM,
     )
 
