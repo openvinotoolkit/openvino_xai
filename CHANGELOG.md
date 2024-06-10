@@ -18,7 +18,7 @@
 * Support classification validation on OTX models by @negvet in https://github.com/intel-sandbox/openvino_xai/commit/008f25f3b09e480906d8edcf043da2ece9ca3e6b
 * Update requirements, add --output parameter for run.py by @GalyaZalesskaya in https://github.com/intel-sandbox/openvino_xai/pull/1
 * Separate cls and det exampels and improve cls tests by @negvet in https://github.com/intel-sandbox/openvino_xai/pull/2
-* Enable scale and postprocessing. Add object for map by @negvet in https://github.com/intel-sandbox/openvino_xai/pull/3
+* Enable scaling and postprocessing. Add object for map by @negvet in https://github.com/intel-sandbox/openvino_xai/pull/3
 * Fix saliency map dtype by @negvet in https://github.com/intel-sandbox/openvino_xai/pull/5
 * Minor fix for map dtype by @negvet in https://github.com/intel-sandbox/openvino_xai/pull/6
 * Support just IR update by @negvet in https://github.com/intel-sandbox/openvino_xai/pull/7

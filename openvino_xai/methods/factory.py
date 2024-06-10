@@ -94,7 +94,7 @@ class WhiteBoxMethodFactory(MethodFactory):
                 model,
                 preprocess_fn,
                 insertion_parameters.target_layer,
-                insertion_parameters.embed_scale,
+                insertion_parameters.embed_scaling,
                 **kwargs,
             )
         if explain_method == Method.VITRECIPROCAM:
@@ -103,7 +103,7 @@ class WhiteBoxMethodFactory(MethodFactory):
                 model,
                 preprocess_fn,
                 insertion_parameters.target_layer,
-                insertion_parameters.embed_scale,
+                insertion_parameters.embed_scaling,
                 **kwargs,
             )
         if explain_method == Method.ACTIVATIONMAP:
@@ -112,7 +112,7 @@ class WhiteBoxMethodFactory(MethodFactory):
                 model,
                 preprocess_fn,
                 insertion_parameters.target_layer,
-                insertion_parameters.embed_scale,
+                insertion_parameters.embed_scaling,
                 **kwargs,
             )
         raise ValueError(f"Requested explanation method {explain_method} is not implemented.")
@@ -147,7 +147,7 @@ class WhiteBoxMethodFactory(MethodFactory):
                 preprocess_fn,
                 insertion_parameters.num_anchors,
                 insertion_parameters.saliency_map_size,
-                insertion_parameters.embed_scale,
+                insertion_parameters.embed_scaling,
                 **kwargs,
             )
         raise ValueError(f"Requested explanation method {explain_method} is not implemented.")

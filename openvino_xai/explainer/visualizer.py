@@ -6,7 +6,7 @@ from typing import Dict, List, Tuple
 import cv2
 import numpy as np
 
-from openvino_xai.common.utils import scale
+from openvino_xai.common.utils import scaling
 from openvino_xai.explainer.explanation import (
     COLOR_MAPPED_LAYOUTS,
     GRAY_LAYOUTS,
@@ -71,7 +71,7 @@ class Visualizer:
 
         if visualization_parameters is None:
             visualization_parameters = VisualizationParameters(resize=True, colormap=True)
-        self._scale = visualization_parameters.scale
+        self._scaling = visualization_parameters.scaling
         self._resize = visualization_parameters.resize
         self._colormap = visualization_parameters.colormap
         self._overlay = visualization_parameters.overlay
@@ -97,8 +97,8 @@ class Visualizer:
         # Convert to numpy array to use vectorized scale (0 ~ 255) operation and speed up lots of classes scenario
         self._saliency_map_np = np.array(list(saliency_map_dict.values()))
 
-        if self._scale and not self._resize and not self._overlay:
-            self._apply_scale()
+        if self._scaling and not self._resize and not self._overlay:
+            self._apply_scaling()
 
         if self._overlay:
             if self._original_input_image is None:
@@ -120,13 +120,13 @@ class Visualizer:
         self._convert_sal_map_to_dict(class_idx_to_return)
         return self._explanation
 
-    def _apply_scale(self) -> None:
+    def _apply_scaling(self) -> None:
         if self.layout not in GRAY_LAYOUTS:
             raise ValueError(
                 f"Saliency map to scale has to be grayscale. The layout must be in {GRAY_LAYOUTS}, "
                 f"but got {self.layout}."
             )
-        self._saliency_map_np = scale(self._saliency_map_np)
+        self._saliency_map_np = scaling(self._saliency_map_np)
 
     def _apply_resize(self) -> None:
         # TODO: support resize of colormapped images.
@@ -138,12 +138,12 @@ class Visualizer:
         output_size = self._output_size if self._output_size else self._original_input_image.shape[:2]
         self._saliency_map_np = resize(self._saliency_map_np, output_size)
 
-        # Scale has to be applied after resize to keep map in range 0..255
-        self._apply_scale()
+        # Scaling has to be applied after resize to keep map in range 0..255
+        self._apply_scaling()
 
     def _apply_colormap(self) -> None:
         if self._saliency_map_np.dtype != np.uint8:
-            raise ValueError("Colormap requires saliency map to has uint8 dtype. Enable 'scale' flag for Visualizer.")
+            raise ValueError("Colormap requires saliency map to has uint8 dtype. Enable 'scaling' flag for Visualizer.")
         if self.layout not in GRAY_LAYOUTS:
             raise ValueError(
                 f"Saliency map to colormap has to be grayscale. The layout must be in {GRAY_LAYOUTS}, "

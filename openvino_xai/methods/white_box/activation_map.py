@@ -24,8 +24,8 @@ class ActivationMap(WhiteBoxMethod):
     :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
     :parameter target_layer: Target layer (node) name after which the XAI branch will be inserted.
     :type target_layer: str
-    :param embed_scale: Whether to scale output or not.
-    :type embed_scale: bool
+    :param embed_scaling: Whether to scale output or not.
+    :type embed_scaling: bool
     :param prepare_model: Loading (compiling) the model prior to inference.
     :type prepare_model: bool
     """
@@ -35,10 +35,10 @@ class ActivationMap(WhiteBoxMethod):
         model: ov.Model,
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         target_layer: str | None = None,
-        embed_scale: bool = True,
+        embed_scaling: bool = True,
         prepare_model: bool = True,
     ):
-        super().__init__(model, preprocess_fn, embed_scale)
+        super().__init__(model, preprocess_fn, embed_scaling)
         self.per_class = False
         self.model_type = ModelType.CNN
         self._target_layer = target_layer
@@ -50,6 +50,6 @@ class ActivationMap(WhiteBoxMethod):
         """Implements ActivationMap XAI algorithm."""
         target_node_ori = IRParserCls.get_target_node(self._model_ori, self.model_type, self._target_layer)
         saliency_maps = opset.reduce_mean(target_node_ori.output(0), 1)
-        if self.embed_scale:
+        if self.embed_scaling:
             saliency_maps = self._scale_saliency_maps(saliency_maps, self.per_class)
         return saliency_maps

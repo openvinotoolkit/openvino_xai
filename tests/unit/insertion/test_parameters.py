@@ -11,7 +11,7 @@ from openvino_xai.inserter.parameters import (
 def test_classification_insertion_parameters():
     cls_insertion_params = ClassificationInsertionParameters()
     assert cls_insertion_params.target_layer is None
-    assert cls_insertion_params.embed_scale
+    assert cls_insertion_params.embed_scaling
     assert cls_insertion_params.explain_method == Method.RECIPROCAM
 
 
@@ -20,5 +20,5 @@ def test_detection_insertion_parameters():
     assert det_insertion_params.target_layer == ["target_layer_name"]
     assert det_insertion_params.num_anchors == [5, 5, 5]
     assert det_insertion_params.saliency_map_size == (23, 23)
-    assert det_insertion_params.embed_scale
+    assert det_insertion_params.embed_scaling
     assert det_insertion_params.explain_method == Method.DETCLASSPROBABILITYMAP

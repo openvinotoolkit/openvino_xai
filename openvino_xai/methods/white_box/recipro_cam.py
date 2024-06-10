@@ -26,8 +26,8 @@ class FeatureMapPerturbationBase(WhiteBoxMethod):
     :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
     :parameter target_layer: Target layer (node) name after which the XAI branch will be inserted.
     :type target_layer: str
-    :param embed_scale: Whether to scale output or not.
-    :type embed_scale: bool
+    :param embed_scaling: Whether to scale output or not.
+    :type embed_scaling: bool
     """
 
     def __init__(
@@ -35,9 +35,9 @@ class FeatureMapPerturbationBase(WhiteBoxMethod):
         model: ov.Model,
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         target_layer: str | None = None,
-        embed_scale: bool = True,
+        embed_scaling: bool = True,
     ):
-        super().__init__(model, preprocess_fn, embed_scale)
+        super().__init__(model, preprocess_fn, embed_scaling)
         self.per_class = True
         self._target_layer = target_layer
 
@@ -48,7 +48,7 @@ class FeatureMapPerturbationBase(WhiteBoxMethod):
 
         saliency_maps = self._get_saliency_map(model_clone)
 
-        if self.embed_scale:
+        if self.embed_scaling:
             saliency_maps = self._scale_saliency_maps(saliency_maps, self.per_class)
         return saliency_maps
 
@@ -68,8 +68,8 @@ class ReciproCAM(FeatureMapPerturbationBase):
     :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
     :parameter target_layer: Target layer (node) name after which the XAI branch will be inserted.
     :type target_layer: str
-    :param embed_scale: Whether to scale output or not.
-    :type embed_scale: bool
+    :param embed_scaling: Whether to scale output or not.
+    :type embed_scaling: bool
     :param prepare_model: Loading (compiling) the model prior to inference.
     :type prepare_model: bool
     """
@@ -79,10 +79,10 @@ class ReciproCAM(FeatureMapPerturbationBase):
         model: ov.Model,
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         target_layer: str | None = None,
-        embed_scale: bool = True,
+        embed_scaling: bool = True,
         prepare_model: bool = True,
     ):
-        super().__init__(model, preprocess_fn, target_layer, embed_scale)
+        super().__init__(model, preprocess_fn, target_layer, embed_scaling)
         self.model_type = ModelType.CNN
 
         if prepare_model:
@@ -144,8 +144,8 @@ class ViTReciproCAM(FeatureMapPerturbationBase):
     :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
     :parameter target_layer: Target layer (node) name after which the XAI branch will be inserted.
     :type target_layer: str
-    :param embed_scale: Whether to scale output or not.
-    :type embed_scale: bool
+    :param embed_scaling: Whether to scale output or not.
+    :type embed_scaling: bool
     :param use_gaussian: Whether to use Gaussian for mask generation or not.
     :type use_gaussian: bool
     :param cls_token: Whether to use cls token for mosaic prediction or not.
@@ -163,14 +163,14 @@ class ViTReciproCAM(FeatureMapPerturbationBase):
         model: ov.Model,
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         target_layer: str | None = None,
-        embed_scale: bool = True,
+        embed_scaling: bool = True,
         use_gaussian: bool = True,
         cls_token: bool = True,
         final_norm: bool = True,
         k: int = 1,
         prepare_model: bool = True,
     ):
-        super().__init__(model, preprocess_fn, target_layer, embed_scale)
+        super().__init__(model, preprocess_fn, target_layer, embed_scaling)
         self.model_type = ModelType.TRANSFORMER
         self._use_gaussian = use_gaussian
         self._cls_token = cls_token

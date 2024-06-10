@@ -9,7 +9,7 @@ import openvino.runtime as ov
 from openvino.runtime.utils.data_helpers.wrappers import OVDict
 from tqdm import tqdm
 
-from openvino_xai.common.utils import IdentityPreprocessFN, scale
+from openvino_xai.common.utils import IdentityPreprocessFN, scaling
 from openvino_xai.methods.black_box.base import BlackBoxXAIMethod
 
 
@@ -87,7 +87,7 @@ class RISE(BlackBoxXAIMethod):
         )
 
         if scale_output:
-            saliency_maps = scale(saliency_maps)
+            saliency_maps = scaling(saliency_maps)
         saliency_maps = np.expand_dims(saliency_maps, axis=0)
         return saliency_maps
 

@@ -27,20 +27,20 @@ class WhiteBoxMethod(MethodBase):
     :param preprocess_fn: Preprocessing function, identity function by default
         (assume input images are already preprocessed by user).
     :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
-    :param embed_scale: Whether to scale output or not.
-    :type embed_scale: bool
+    :param embed_scaling: Whether to scale output or not.
+    :type embed_scaling: bool
     """
 
     def __init__(
         self,
         model: ov.Model,
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
-        embed_scale: bool = True,
+        embed_scaling: bool = True,
     ):
         super().__init__(preprocess_fn=preprocess_fn)
         self._model_ori = model
         self.preprocess_fn = preprocess_fn
-        self.embed_scale = embed_scale
+        self.embed_scaling = embed_scaling
 
     @property
     def model_ori(self):
@@ -64,7 +64,7 @@ class WhiteBoxMethod(MethodBase):
             return self._model
 
         xai_output_node = self.generate_xai_branch()
-        self._model = insert_xai_branch_into_model(self._model_ori, xai_output_node, self.embed_scale)
+        self._model = insert_xai_branch_into_model(self._model_ori, xai_output_node, self.embed_scaling)
         if not has_xai(self._model):
             raise RuntimeError("Insertion of the XAI branch into the model was not successful.")
         if load_model:

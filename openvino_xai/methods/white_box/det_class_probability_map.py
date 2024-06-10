@@ -26,8 +26,8 @@ class DetClassProbabilityMap(WhiteBoxMethod):
     :type num_anchors: List[int]
     :parameter saliency_map_size: Size of the output saliency map.
     :type saliency_map_size: Tuple[int, int] | List[int]
-    :param embed_scale: Whether to scale output or not.
-    :type embed_scale: bool
+    :param embed_scaling: Whether to scale output or not.
+    :type embed_scaling: bool
     :param prepare_model: Loading (compiling) the model prior to inference.
     :type prepare_model: bool
     """
@@ -39,10 +39,10 @@ class DetClassProbabilityMap(WhiteBoxMethod):
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         num_anchors: List[int] | None = None,
         saliency_map_size: Tuple[int, int] | List[int] = (23, 23),
-        embed_scale: bool = True,
+        embed_scaling: bool = True,
         prepare_model: bool = True,
     ):
-        super().__init__(model, preprocess_fn, embed_scale)
+        super().__init__(model, preprocess_fn, embed_scaling)
         self.per_class = True
         self._target_layer = target_layer
         self._num_anchors = (
@@ -99,6 +99,6 @@ class DetClassProbabilityMap(WhiteBoxMethod):
         saliency_maps = opset.reduce_mean(opset.concat(cls_head_output_nodes, 0), 0, keep_dims=True)
         saliency_maps = opset.softmax(saliency_maps.output(0), 1)
 
-        if self.embed_scale:
+        if self.embed_scaling:
             saliency_maps = self._scale_saliency_maps(saliency_maps, self.per_class)
         return saliency_maps

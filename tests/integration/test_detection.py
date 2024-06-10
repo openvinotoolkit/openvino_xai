@@ -85,16 +85,16 @@ class TestDetWB:
     _sal_map_size = (23, 23)
 
     @pytest.mark.parametrize("model_name", MODELS)
-    @pytest.mark.parametrize("embed_scale", [True, False])
+    @pytest.mark.parametrize("embed_scaling", [True, False])
     @pytest.mark.parametrize("target_explain_group", TARGET_EXPLAIN_GROUPS)
-    def test_detclassprobabilitymap(self, model_name, embed_scale, target_explain_group):
+    def test_detclassprobabilitymap(self, model_name, embed_scaling, target_explain_group):
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
         model = ov.Core().read_model(model_path)
 
         cls_head_output_node_names = MODEL_CONFIGS[model_name].node_names
         insertion_parameters = DetectionInsertionParameters(
-            embed_scale=embed_scale,
+            embed_scaling=embed_scaling,
             target_layer=cls_head_output_node_names,
             num_anchors=MODEL_CONFIGS[model_name].anchors,
             saliency_map_size=self._sal_map_size,
@@ -129,8 +129,8 @@ class TestDetWB:
 
             actual_sal_vals = explanation.saliency_map[0][0, :10].astype(np.int16)
             ref_sal_vals = self._ref_sal_maps_reciprocam[model_name].astype(np.uint8)
-            if embed_scale:
-                # Reference values generated with embed_scale=True
+            if embed_scaling:
+                # Reference values generated with embed_scaling=True
                 assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
             else:
                 assert np.sum(np.abs(actual_sal_vals - ref_sal_vals)) > 100
@@ -193,13 +193,13 @@ class TestDetWB:
 
         explanation_parameters = ExplanationParameters(
             target_explain_group=TargetExplainGroup.ALL,
-            visualization_parameters=VisualizationParameters(scale=True),
+            visualization_parameters=VisualizationParameters(scaling=True),
         )
         explanation = explainer(self.image, explanation_parameters)
 
         actual_sal_vals = explanation.saliency_map[0][0, :10].astype(np.int16)
         ref_sal_vals = self._ref_sal_maps_reciprocam[DEFAULT_DET_MODEL].astype(np.uint8)
-        # Reference values generated with embed_scale=True
+        # Reference values generated with embed_scaling=True
         assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
 
         for map_ in explanation.saliency_map.values():
