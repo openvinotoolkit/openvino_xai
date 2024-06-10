@@ -9,8 +9,12 @@ import numpy as np
 import openvino.runtime as ov
 from openvino.runtime import opset10 as opset
 
-from openvino_xai.common.utils import SALIENCY_MAP_OUTPUT_NAME, IdentityPreprocessFN
-from openvino_xai.inserter.inserter import has_xai, insert_xai_branch_into_model
+from openvino_xai.common.utils import (
+    SALIENCY_MAP_OUTPUT_NAME,
+    IdentityPreprocessFN,
+    has_xai,
+)
+from openvino_xai.inserter.inserter import insert_xai_branch_into_model
 from openvino_xai.methods.base import MethodBase
 
 
