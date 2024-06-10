@@ -21,7 +21,7 @@ class ClassificationInsertionParameters(InsertionParameters):
 
     :parameter target_layer: Target layer (node) name after which the XAI branch will be inserted.
     :type target_layer: str
-    :parameter embed_scale: If set to True, saliency map normalization is embedded in the model.
+    :parameter embed_scale: If set to True, saliency map scale (0 ~ 255) operation is embedded in the model.
     :type embed_scale: bool
     :parameter explain_method: Explain method to use for model explanation.
     :type explain_method: openvino_xai.common.parameters.Method
@@ -44,7 +44,7 @@ class DetectionInsertionParameters(InsertionParameters):
     :type num_anchors: List[int]
     :parameter saliency_map_size: Size of the output saliency map.
     :type saliency_map_size: Tuple[int, int] | List[int]
-    :parameter embed_scale: If set to True, saliency map normalization is embedded in the model.
+    :parameter embed_scale: If set to True, saliency map scale (0 ~ 255) operation is embedded in the model.
     :type embed_scale: bool
     :parameter explain_method: Explain method to use for model explanation.
     :type explain_method: Method

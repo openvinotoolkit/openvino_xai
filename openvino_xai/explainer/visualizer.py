@@ -94,11 +94,11 @@ class Visualizer:
         saliency_map_dict = self._explanation.saliency_map
         class_idx_to_return = list(saliency_map_dict.keys())
 
-        # Convert to numpy array to use vectorized normalization and speed up lots of classes scenario
+        # Convert to numpy array to use vectorized scale (0 ~ 255) operation and speed up lots of classes scenario
         self._saliency_map_np = np.array(list(saliency_map_dict.values()))
 
         if self._scale and not self._resize and not self._overlay:
-            self._apply_normalization()
+            self._apply_scale()
 
         if self._overlay:
             if self._original_input_image is None:
@@ -120,7 +120,7 @@ class Visualizer:
         self._convert_sal_map_to_dict(class_idx_to_return)
         return self._explanation
 
-    def _apply_normalization(self) -> None:
+    def _apply_scale(self) -> None:
         if self.layout not in GRAY_LAYOUTS:
             raise ValueError(
                 f"Saliency map to scale has to be grayscale. The layout must be in {GRAY_LAYOUTS}, "
@@ -138,8 +138,8 @@ class Visualizer:
         output_size = self._output_size if self._output_size else self._original_input_image.shape[:2]
         self._saliency_map_np = resize(self._saliency_map_np, output_size)
 
-        # Normalization has to be applied after resize to keep map in range 0..255
-        self._apply_normalization()
+        # Scale has to be applied after resize to keep map in range 0..255
+        self._apply_scale()
 
     def _apply_colormap(self) -> None:
         if self._saliency_map_np.dtype != np.uint8:

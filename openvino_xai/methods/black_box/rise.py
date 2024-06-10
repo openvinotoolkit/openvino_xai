@@ -6,19 +6,20 @@ from typing import Callable, List, Tuple
 import cv2
 import numpy as np
 import openvino.runtime as ov
+from openvino.runtime.utils.data_helpers.wrappers import OVDict
 from tqdm import tqdm
 
 from openvino_xai.common.utils import IdentityPreprocessFN, scale
-from openvino_xai.methods.base import BlackBoxXAIMethodBase
+from openvino_xai.methods.black_box.base import BlackBoxXAIMethod
 
 
-class RISE(BlackBoxXAIMethodBase):
+class RISE(BlackBoxXAIMethod):
     """RISE explains classification models in black-box mode using RISE (https://arxiv.org/abs/1806.07421).
 
     :param model: OpenVINO model.
     :type model: ov.Model
     :param postprocess_fn: Preprocessing function that extract scores from IR model output.
-    :type postprocess_fn: Callable[[ov.utils.data_helpers.wrappers.OVDict], np.ndarray]
+    :type postprocess_fn: Callable[[OVDict], np.ndarray]
     :param preprocess_fn: Preprocessing function, identity function by default
         (assume input images are already preprocessed by user).
     :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
@@ -29,7 +30,7 @@ class RISE(BlackBoxXAIMethodBase):
     def __init__(
         self,
         model: ov.Model,
-        postprocess_fn: Callable[[ov.utils.data_helpers.wrappers.OVDict], np.ndarray],
+        postprocess_fn: Callable[[OVDict], np.ndarray],
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         prepare_model: bool = True,
     ):

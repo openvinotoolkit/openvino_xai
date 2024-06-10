@@ -13,7 +13,7 @@ from openvino_xai.inserter.parameters import (
     ClassificationInsertionParameters,
     DetectionInsertionParameters,
 )
-from openvino_xai.methods.create_method import WhiteBoxMethodFactory
+from openvino_xai.methods.factory import WhiteBoxMethodFactory
 from openvino_xai.methods.white_box.activation_map import ActivationMap
 from openvino_xai.methods.white_box.det_class_probability_map import (
     DetClassProbabilityMap,

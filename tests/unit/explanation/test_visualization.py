@@ -24,7 +24,7 @@ TARGET_EXPLAIN_GROUPS = [
 
 
 def test_scale_3d():
-    # Test normalization on a multi-channel input
+    # Test scale on a multi-channel input
     input_saliency_map = (np.random.rand(3, 5, 5) - 0.5) * 1000
     assert (input_saliency_map < 0).any() and (input_saliency_map > 255).any()
     scaled_map = scale(input_saliency_map)
@@ -32,7 +32,7 @@ def test_scale_3d():
 
 
 def test_scale_2d():
-    # Test normalization on a simple 2D input
+    # Test scale on a simple 2D input
     input_saliency_map = (np.random.rand(5, 5) - 0.5) * 1000
     assert (input_saliency_map < 0).any() and (input_saliency_map > 255).any()
     scaled_map = scale(input_saliency_map)

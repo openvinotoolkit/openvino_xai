@@ -5,6 +5,7 @@ from typing import Callable
 
 import numpy as np
 import openvino.runtime as ov
+from openvino.runtime.utils.data_helpers.wrappers import OVDict
 
 from openvino_xai import Task
 from openvino_xai.common.utils import IdentityPreprocessFN, logger
@@ -17,8 +18,9 @@ from openvino_xai.explainer.parameters import (
 from openvino_xai.explainer.utils import get_explain_target_indices
 from openvino_xai.explainer.visualizer import Visualizer
 from openvino_xai.inserter.parameters import InsertionParameters
-from openvino_xai.methods.base import BlackBoxXAIMethodBase, MethodBase
-from openvino_xai.methods.create_method import (
+from openvino_xai.methods.base import MethodBase
+from openvino_xai.methods.black_box.base import BlackBoxXAIMethod
+from openvino_xai.methods.factory import (
     BlackBoxMethodFactory,
     WhiteBoxMethodFactory,
 )
@@ -26,7 +28,7 @@ from openvino_xai.methods.create_method import (
 
 class Explainer:
     """
-    Explainer creates methods uses them to generate explanations.
+    Explainer creates methods and uses them to generate explanations.
 
     Usage:
         explanation = explainer_object(data, explanation_parameters)
@@ -39,7 +41,7 @@ class Explainer:
         (assume input images are already preprocessed by user).
     :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
     :param postprocess_fn: Postprocessing functions, required for black-box.
-    :type postprocess_fn: Callable[[ov.utils.data_helpers.wrappers.OVDict], np.ndarray]
+    :type postprocess_fn: Callable[[OVDict], np.ndarray]
     :param explain_mode: Explain mode.
     :type explain_mode: ExplainMode
     :param insertion_parameters: XAI insertion parameters.
@@ -51,7 +53,7 @@ class Explainer:
         model: ov.Model,
         task: Task,
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
-        postprocess_fn: Callable[[ov.utils.data_helpers.wrappers.OVDict], np.ndarray] = None,
+        postprocess_fn: Callable[[OVDict], np.ndarray] = None,
         explain_mode: ExplainMode = ExplainMode.AUTO,
         insertion_parameters: InsertionParameters | None = None,
     ) -> None:
@@ -72,25 +74,27 @@ class Explainer:
 
         self.explain_mode = explain_mode
 
-        self.method: MethodBase = None
-        self.create_method(self.explain_mode, self.task)
+        self.method: MethodBase = self.create_method(self.explain_mode, self.task)
 
     def create_method(self, explain_mode: ExplainMode, task: Task) -> None:
         if explain_mode == ExplainMode.WHITEBOX:
             try:
-                self.method = WhiteBoxMethodFactory.create_method(
+                method = WhiteBoxMethodFactory.create_method(
                     task, self.model, self.preprocess_fn, self.insertion_parameters
                 )
                 logger.info("Explaining the model in white-box mode.")
+                return method
             except Exception as e:
                 print(e)
                 raise RuntimeError("Failed to insert XAI into the model. Try to use black-box.")
         elif self.explain_mode == ExplainMode.BLACKBOX:
             self._check_postprocess_fn()
-            self.method = BlackBoxMethodFactory.create_method(task, self.model, self.preprocess_fn, self.postprocess_fn)
+            method = BlackBoxMethodFactory.create_method(task, self.model, self.preprocess_fn, self.postprocess_fn)
+            logger.info("Explaining the model in black-box mode.")
+            return method
         elif self.explain_mode == ExplainMode.AUTO:
             try:
-                self.method = WhiteBoxMethodFactory.create_method(
+                method = WhiteBoxMethodFactory.create_method(
                     task, self.model, self.preprocess_fn, self.insertion_parameters
                 )
                 logger.info("Explaining the model in the white-box mode.")
@@ -98,10 +102,11 @@ class Explainer:
                 print(e)
                 logger.info("Failed to insert XAI into the model - using black-box mode.")
                 self._check_postprocess_fn()
-                self.method = BlackBoxMethodFactory.create_method(
+                method = BlackBoxMethodFactory.create_method(
                     task, self.model, self.preprocess_fn, self.postprocess_fn
                 )
                 logger.info("Explaining the model in the black-box mode.")
+            return method
         else:
             raise ValueError(f"Not supported explain mode {self.explain_mode}.")
 
@@ -114,7 +119,7 @@ class Explainer:
         """Explainer call that generates processed explanation result."""
         explain_target_indices = None
         if (
-            isinstance(self.method, BlackBoxXAIMethodBase)
+            isinstance(self.method, BlackBoxXAIMethod)
             and explanation_parameters.target_explain_group == TargetExplainGroup.CUSTOM
         ):
             explain_target_indices = get_explain_target_indices(
@@ -136,7 +141,7 @@ class Explainer:
         )
         return self._visualize(explanation, data, explanation_parameters)
 
-    def model_forward(self, x: np.ndarray, preprocess: bool = True) -> ov.utils.data_helpers.wrappers.OVDict:
+    def model_forward(self, x: np.ndarray, preprocess: bool = True) -> OVDict:
         """Forward pass of the compiled model."""
         return self.method.model_forward(x, preprocess)
 

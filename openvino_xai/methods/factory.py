@@ -6,6 +6,7 @@ from typing import Callable
 
 import numpy as np
 import openvino.runtime as ov
+from openvino.runtime.utils.data_helpers.wrappers import OVDict
 
 from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import IdentityPreprocessFN, logger
@@ -14,9 +15,10 @@ from openvino_xai.inserter.parameters import (
     DetectionInsertionParameters,
     InsertionParameters,
 )
-from openvino_xai.methods.base import BlackBoxXAIMethodBase, WhiteBoxMethodBase
+from openvino_xai.methods.black_box.base import BlackBoxXAIMethod
 from openvino_xai.methods.black_box.rise import RISE
 from openvino_xai.methods.white_box.activation_map import ActivationMap
+from openvino_xai.methods.white_box.base import WhiteBoxMethod
 from openvino_xai.methods.white_box.det_class_probability_map import (
     DetClassProbabilityMap,
 )
@@ -49,7 +51,7 @@ class WhiteBoxMethodFactory(MethodFactory):
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         insertion_parameters: InsertionParameters | None = None,
         **kwargs,
-    ) -> WhiteBoxMethodBase:
+    ) -> WhiteBoxMethod:
         if task == Task.CLASSIFICATION:
             return cls.create_classification_method(model, preprocess_fn, insertion_parameters, **kwargs)  # type: ignore
         if task == Task.DETECTION:
@@ -62,7 +64,7 @@ class WhiteBoxMethodFactory(MethodFactory):
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         insertion_parameters: ClassificationInsertionParameters | None = None,
         **kwargs,
-    ) -> WhiteBoxMethodBase:
+    ) -> WhiteBoxMethod:
         """Generates instance of the classification white-box method class.
 
         :param model: OV IR model.
@@ -120,7 +122,7 @@ class WhiteBoxMethodFactory(MethodFactory):
         preprocess_fn: Callable[[np.ndarray], np.ndarray],
         insertion_parameters: DetectionInsertionParameters,
         **kwargs,
-    ) -> WhiteBoxMethodBase:
+    ) -> WhiteBoxMethod:
         """Generates instance of the detection white-box method class.
 
         :param model: OV IR model.
@@ -159,7 +161,7 @@ class BlackBoxMethodFactory(MethodFactory):
         preprocess_fn,
         postprocess_fn,
         **kwargs,
-    ) -> BlackBoxXAIMethodBase:
+    ) -> BlackBoxXAIMethod:
         if task == Task.CLASSIFICATION:
             return cls.create_classification_method(model, postprocess_fn, preprocess_fn, **kwargs)
         if task == Task.DETECTION:
@@ -169,16 +171,16 @@ class BlackBoxMethodFactory(MethodFactory):
     @staticmethod
     def create_classification_method(
         model: ov.Model,
-        postprocess_fn: Callable[[ov.utils.data_helpers.wrappers.OVDict], np.ndarray],
+        postprocess_fn: Callable[[OVDict], np.ndarray],
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         **kwargs,
-    ) -> BlackBoxXAIMethodBase:
+    ) -> BlackBoxXAIMethod:
         """Generates instance of the classification black-box method class.
 
         :param model: OV IR model.
         :type model: ov.Model
         :param postprocess_fn: Preprocessing function that extract scores from IR model output.
-        :type postprocess_fn: Callable[[ov.utils.data_helpers.wrappers.OVDict], np.ndarray]
+        :type postprocess_fn: Callable[[OVDict], np.ndarray]
         :param preprocess_fn: Preprocessing function, identity function by default
             (assume input images are already preprocessed by user).
         :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
@@ -186,5 +188,5 @@ class BlackBoxMethodFactory(MethodFactory):
         return RISE(model, postprocess_fn, preprocess_fn, **kwargs)
 
     @staticmethod
-    def create_detection_method(*args, **kwargs) -> BlackBoxXAIMethodBase:
+    def create_detection_method(*args, **kwargs) -> BlackBoxXAIMethod:
         raise ValueError("Detection models are not supported in black-box mode yet.")

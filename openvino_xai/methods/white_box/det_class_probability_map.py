@@ -8,10 +8,10 @@ import openvino.runtime as ov
 from openvino.runtime import opset10 as opset
 
 from openvino_xai.common.utils import IdentityPreprocessFN
-from openvino_xai.methods.base import WhiteBoxMethodBase
+from openvino_xai.methods.white_box.base import WhiteBoxMethod
 
 
-class DetClassProbabilityMap(WhiteBoxMethodBase):
+class DetClassProbabilityMap(WhiteBoxMethod):
     """
     Implements DetClassProbabilityMap, used for single-stage detectors, e.g. SSD, YOLOX or ATSS.
 

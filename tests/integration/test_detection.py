@@ -20,7 +20,7 @@ from openvino_xai.explainer.parameters import (
 )
 from openvino_xai.explainer.utils import get_preprocess_fn
 from openvino_xai.inserter.parameters import DetectionInsertionParameters
-from openvino_xai.methods.create_method import WhiteBoxMethodFactory
+from openvino_xai.methods.factory import WhiteBoxMethodFactory
 from openvino_xai.methods.white_box.det_class_probability_map import (
     DetClassProbabilityMap,
 )

@@ -10,10 +10,10 @@ from openvino.runtime import opset10 as opset
 from openvino_xai.common.utils import IdentityPreprocessFN
 from openvino_xai.inserter.model_parser import IRParserCls
 from openvino_xai.inserter.parameters import ModelType
-from openvino_xai.methods.base import WhiteBoxMethodBase
+from openvino_xai.methods.white_box.base import WhiteBoxMethod
 
 
-class ActivationMap(WhiteBoxMethodBase):
+class ActivationMap(WhiteBoxMethod):
     """
     Implements ActivationMap.
 

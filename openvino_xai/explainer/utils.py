@@ -6,7 +6,7 @@ from typing import Any, Callable, List, Tuple
 
 import cv2
 import numpy as np
-import openvino.runtime as ov
+from openvino.runtime.utils.data_helpers.wrappers import OVDict
 
 
 def get_explain_target_indices(
@@ -95,7 +95,7 @@ def get_preprocess_fn(
     )
 
 
-def postprocess_fn(x: ov.utils.data_helpers.wrappers.OVDict, logit_name="logits") -> np.ndarray:
+def postprocess_fn(x: OVDict, logit_name="logits") -> np.ndarray:
     """Postprocess function."""
     return x[logit_name]
 

@@ -34,7 +34,7 @@ def insert_xai(
     :type insertion_parameters: InsertionParameters
     :return: IR with XAI branch.
     """
-    from openvino_xai.methods.create_method import WhiteBoxMethodFactory
+    from openvino_xai.methods.factory import WhiteBoxMethodFactory
 
     if has_xai(model):
         logger.info("Provided IR model already contains XAI branch, return it as-is.")
