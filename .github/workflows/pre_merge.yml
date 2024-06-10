@@ -11,6 +11,7 @@ on:
       - reopened
       - synchronize
   workflow_dispatch: # run on request (no need for PR)
+  workflow_call:  # run by other workflow
 
 # Declare default permissions as read only.
 permissions: read-all
