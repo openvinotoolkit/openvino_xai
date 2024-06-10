@@ -49,7 +49,7 @@ class VisualizationParameters:
     :type scaling: bool
     :parameter resize: If True, resize saliency map to the input image size.
     :type resize: bool
-    :parameter colormap: If True, apply colormap to the grayscaling saliency map.
+    :parameter colormap: If True, apply colormap to the grayscale saliency map.
     :type colormap: bool
     :parameter overlay: If True, generate overlay of the saliency map over the input image.
     :type overlay: bool
