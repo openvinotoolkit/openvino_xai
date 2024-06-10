@@ -28,7 +28,7 @@ class MethodBase(ABC):
         return self._model_compiled
 
     @abstractmethod
-    def prepare_model(self) -> ov.Model:
+    def prepare_model(self, load_model: bool = True) -> ov.Model:
         """Model preparation steps."""
 
     def model_forward(self, x: np.ndarray, preprocess: bool = True) -> OVDict:

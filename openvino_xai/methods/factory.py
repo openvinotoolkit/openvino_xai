@@ -15,6 +15,7 @@ from openvino_xai.inserter.parameters import (
     DetectionInsertionParameters,
     InsertionParameters,
 )
+from openvino_xai.methods.base import MethodBase
 from openvino_xai.methods.black_box.base import BlackBoxXAIMethod
 from openvino_xai.methods.black_box.rise import RISE
 from openvino_xai.methods.white_box.activation_map import ActivationMap
@@ -28,17 +29,17 @@ from openvino_xai.methods.white_box.recipro_cam import ReciproCAM, ViTReciproCAM
 class MethodFactory(ABC):
     @classmethod
     @abstractmethod
-    def create_method(cls, *args, **kwargs):
+    def create_method(cls, *args, **kwargs) -> MethodBase:
         """Creates method."""
 
     @staticmethod
     @abstractmethod
-    def create_classification_method(*args, **kwargs):
+    def create_classification_method(*args, **kwargs) -> MethodBase:
         """Creates classification method."""
 
     @staticmethod
     @abstractmethod
-    def create_detection_method(*args, **kwargs):
+    def create_detection_method(*args, **kwargs) -> MethodBase:
         """Creates detection method."""
 
 
@@ -51,7 +52,7 @@ class WhiteBoxMethodFactory(MethodFactory):
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         insertion_parameters: InsertionParameters | None = None,
         **kwargs,
-    ) -> WhiteBoxMethod:
+    ) -> MethodBase:
         if task == Task.CLASSIFICATION:
             return cls.create_classification_method(model, preprocess_fn, insertion_parameters, **kwargs)  # type: ignore
         if task == Task.DETECTION:
@@ -161,7 +162,7 @@ class BlackBoxMethodFactory(MethodFactory):
         preprocess_fn,
         postprocess_fn,
         **kwargs,
-    ) -> BlackBoxXAIMethod:
+    ) -> MethodBase:
         if task == Task.CLASSIFICATION:
             return cls.create_classification_method(model, postprocess_fn, preprocess_fn, **kwargs)
         if task == Task.DETECTION:

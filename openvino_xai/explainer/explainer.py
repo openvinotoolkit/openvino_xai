@@ -20,10 +20,7 @@ from openvino_xai.explainer.visualizer import Visualizer
 from openvino_xai.inserter.parameters import InsertionParameters
 from openvino_xai.methods.base import MethodBase
 from openvino_xai.methods.black_box.base import BlackBoxXAIMethod
-from openvino_xai.methods.factory import (
-    BlackBoxMethodFactory,
-    WhiteBoxMethodFactory,
-)
+from openvino_xai.methods.factory import BlackBoxMethodFactory, WhiteBoxMethodFactory
 
 
 class Explainer:
@@ -74,9 +71,9 @@ class Explainer:
 
         self.explain_mode = explain_mode
 
-        self.method: MethodBase = self.create_method(self.explain_mode, self.task)
+        self.method = self.create_method(self.explain_mode, self.task)
 
-    def create_method(self, explain_mode: ExplainMode, task: Task) -> None:
+    def create_method(self, explain_mode: ExplainMode, task: Task) -> MethodBase:
         if explain_mode == ExplainMode.WHITEBOX:
             try:
                 method = WhiteBoxMethodFactory.create_method(
@@ -102,9 +99,7 @@ class Explainer:
                 print(e)
                 logger.info("Failed to insert XAI into the model - using black-box mode.")
                 self._check_postprocess_fn()
-                method = BlackBoxMethodFactory.create_method(
-                    task, self.model, self.preprocess_fn, self.postprocess_fn
-                )
+                method = BlackBoxMethodFactory.create_method(task, self.model, self.preprocess_fn, self.postprocess_fn)
                 logger.info("Explaining the model in the black-box mode.")
             return method
         else:

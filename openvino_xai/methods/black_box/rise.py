@@ -40,8 +40,9 @@ class RISE(BlackBoxXAIMethod):
         if prepare_model:
             self.prepare_model()
 
-    def prepare_model(self) -> ov.Model:
-        self.load_model()
+    def prepare_model(self, load_model: bool = True) -> ov.Model:
+        if load_model:
+            self.load_model()
         return self._model
 
     def generate_saliency_map(

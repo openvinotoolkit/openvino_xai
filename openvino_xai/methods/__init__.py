@@ -3,9 +3,9 @@
 """
 XAI algorithms.
 """
-from openvino_xai.methods.white_box.base import WhiteBoxMethod
 from openvino_xai.methods.black_box.rise import RISE
 from openvino_xai.methods.white_box.activation_map import ActivationMap
+from openvino_xai.methods.white_box.base import WhiteBoxMethod
 from openvino_xai.methods.white_box.det_class_probability_map import (
     DetClassProbabilityMap,
 )

@@ -1,19 +1,17 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from openvino_xai.common.utils import SALIENCY_MAP_OUTPUT_NAME, IdentityPreprocessFN
-from openvino_xai.inserter.inserter import has_xai, insert_xai_branch_into_model
-from openvino_xai.methods.base import MethodBase
-
+from abc import abstractmethod
+from typing import Callable
+from venv import logger
 
 import numpy as np
 import openvino.runtime as ov
 from openvino.runtime import opset10 as opset
 
-
-from abc import abstractmethod
-from typing import Callable
-from venv import logger
+from openvino_xai.common.utils import SALIENCY_MAP_OUTPUT_NAME, IdentityPreprocessFN
+from openvino_xai.inserter.inserter import has_xai, insert_xai_branch_into_model
+from openvino_xai.methods.base import MethodBase
 
 
 class WhiteBoxMethod(MethodBase):
