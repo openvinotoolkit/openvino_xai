@@ -3,7 +3,7 @@
 
 import openvino.runtime as ov
 
-from openvino_xai import Task
+from openvino_xai.common.parameters import Task
 from openvino_xai.common.utils import IdentityPreprocessFN, has_xai, logger
 from openvino_xai.inserter.parameters import InsertionParameters
 from openvino_xai.methods.factory import WhiteBoxMethodFactory
