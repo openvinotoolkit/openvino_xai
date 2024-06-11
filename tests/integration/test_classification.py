@@ -8,7 +8,7 @@ import numpy as np
 import openvino.runtime as ov
 import pytest
 
-import openvino_xai as xai
+import openvino_xai.api.api as xai
 from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import has_xai, retrieve_otx_model
 from openvino_xai.explainer.explainer import Explainer

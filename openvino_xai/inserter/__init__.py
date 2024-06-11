@@ -3,7 +3,6 @@
 """
 Interface for inserting XAI branch into OV IR.
 """
-from openvino_xai.inserter.inserter import insert_xai
 from openvino_xai.inserter.parameters import (
     ClassificationInsertionParameters,
     DetectionInsertionParameters,
@@ -11,7 +10,6 @@ from openvino_xai.inserter.parameters import (
 )
 
 __all__ = [
-    "insert_xai",
     "InsertionParameters",
     "ClassificationInsertionParameters",
     "DetectionInsertionParameters",
