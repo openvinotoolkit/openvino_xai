@@ -7,7 +7,7 @@ import openvino.runtime as ov
 
 from openvino_xai.common.parameters import Task
 from openvino_xai.common.utils import has_xai, retrieve_otx_model
-from openvino_xai.inserter.inserter import insert_xai
+from openvino_xai.api.api import insert_xai
 from tests.integration.test_classification import DEFAULT_CLS_MODEL
 
 DARA_DIR = Path(".data")

@@ -16,7 +16,7 @@ from openvino_xai.explainer.parameters import (
     TargetExplainGroup,
 )
 from openvino_xai.explainer.utils import get_postprocess_fn, get_preprocess_fn
-from openvino_xai.inserter.inserter import insert_xai
+from openvino_xai.api.api import insert_xai
 from openvino_xai.inserter.parameters import ClassificationInsertionParameters
 from tests.unit.explanation.test_explanation_utils import VOC_NAMES
 
