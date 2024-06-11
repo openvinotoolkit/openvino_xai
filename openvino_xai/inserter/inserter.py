@@ -4,9 +4,7 @@
 import openvino.runtime as ov
 from openvino.preprocess import PrePostProcessor
 
-from openvino_xai.common.utils import (
-    SALIENCY_MAP_OUTPUT_NAME,
-)
+from openvino_xai.common.utils import SALIENCY_MAP_OUTPUT_NAME
 
 
 def insert_xai_branch_into_model(

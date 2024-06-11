@@ -1,12 +1,11 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import openvino.runtime as ov
+
 from openvino_xai import Task
 from openvino_xai.common.utils import IdentityPreprocessFN, has_xai, logger
 from openvino_xai.inserter.parameters import InsertionParameters
-
-import openvino.runtime as ov
-
 from openvino_xai.methods.factory import WhiteBoxMethodFactory
 
 
