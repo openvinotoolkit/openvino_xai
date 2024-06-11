@@ -13,7 +13,6 @@ import openvino_xai as xai
 from openvino_xai.common.utils import logger
 from openvino_xai.explainer.parameters import (
     ExplainMode,
-    ExplanationParameters,
     TargetExplainGroup,
 )
 from openvino_xai.inserter.parameters import DetectionInsertionParameters
@@ -80,13 +79,13 @@ def main(argv):
 
     # Prepare input image and explanation parameters, can be different for each explain call
     image = cv2.imread(args.image_path)
-    explanation_parameters = ExplanationParameters(
+
+    # Generate explanation
+    explanation = explainer(
+        image, 
         target_explain_group=TargetExplainGroup.CUSTOM,  # CUSTOM list of classes to explain, also ALL possible
         target_explain_labels=[0, 1, 2, 3, 4],  # target classes to explain
     )
-
-    # Generate explanation
-    explanation = explainer(image, explanation_parameters)
 
     logger.info(
         f"Generated {len(explanation.saliency_map)} detection "

@@ -15,7 +15,6 @@ from openvino_xai.explainer.explanation import (
     Explanation,
     Layout,
 )
-from openvino_xai.explainer.parameters import VisualizationParameters
 
 
 def resize(saliency_map: np.ndarray, output_size: Tuple[int, int]) -> np.ndarray:
@@ -62,20 +61,22 @@ class Visualizer:
         explanation: Explanation,
         original_input_image: np.ndarray = None,
         output_size: Tuple[int, int] = None,
-        visualization_parameters: VisualizationParameters | None = None,
+        scaling: bool = False,
+        resize: bool = True,
+        colormap: bool = True,
+        overlay: bool = False,
+        overlay_weight: float = 0.5,
     ):
         self._explanation = explanation
         self._saliency_map_np: np.ndarray | None = None
         self._original_input_image = original_input_image
         self._output_size = output_size
 
-        if visualization_parameters is None:
-            visualization_parameters = VisualizationParameters(resize=True, colormap=True)
-        self._scaling = visualization_parameters.scaling
-        self._resize = visualization_parameters.resize
-        self._colormap = visualization_parameters.colormap
-        self._overlay = visualization_parameters.overlay
-        self._overlay_weight = visualization_parameters.overlay_weight
+        self._scaling = scaling
+        self._resize = resize
+        self._colormap = colormap
+        self._overlay = overlay
+        self._overlay_weight = overlay_weight
 
     @property
     def layout(self) -> Layout:
