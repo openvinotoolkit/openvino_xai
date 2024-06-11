@@ -11,7 +11,6 @@ import numpy as np
 import openvino.runtime as ov
 
 import openvino_xai as xai
-import openvino_xai.api.api
 from openvino_xai.common.utils import logger
 from openvino_xai.explainer.parameters import (
     ExplainMode,
@@ -284,7 +283,7 @@ def insert_xai(args):
     model = ov.Core().read_model(args.model_path)
 
     # insert XAI branch
-    model_xai = openvino_xai.insert_xai(
+    model_xai = xai.insert_xai(
         model,
         task=xai.Task.CLASSIFICATION,
     )
@@ -315,7 +314,7 @@ def insert_xai_w_params(args):
     )
 
     # insert XAI branch
-    model_xai = openvino_xai.insert_xai(
+    model_xai = xai.insert_xai(
         model,
         task=xai.Task.CLASSIFICATION,
         insertion_parameters=insertion_parameters,
