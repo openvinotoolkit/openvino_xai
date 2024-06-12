@@ -1,12 +1,7 @@
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from dataclasses import dataclass
 from enum import Enum
-from typing import List
-
-from openvino_xai.common.parameters import Method
-
 
 class ExplainMode(Enum):
     """

@@ -12,7 +12,7 @@ import pytest
 from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import retrieve_otx_model
 from openvino_xai.explainer.explainer import Explainer
-from openvino_xai.explainer.parameters import (
+from openvino_xai.explainer.mode import (
     ExplainMode,
     TargetExplainGroup,
 )

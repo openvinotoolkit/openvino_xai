@@ -11,7 +11,7 @@ from openvino_xai import Task
 from openvino_xai.common.parameters import Method
 from openvino_xai.common.utils import IdentityPreprocessFN, logger
 from openvino_xai.explainer.explanation import Explanation
-from openvino_xai.explainer.parameters import (
+from openvino_xai.explainer.mode import (
     ExplainMode,
     TargetExplainGroup,
 )

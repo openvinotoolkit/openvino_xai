@@ -11,7 +11,7 @@ from openvino_xai.api.api import insert_xai
 from openvino_xai.common.parameters import Task
 from openvino_xai.common.utils import retrieve_otx_model
 from openvino_xai.explainer.explainer import Explainer
-from openvino_xai.explainer.parameters import (
+from openvino_xai.explainer.mode import (
     ExplainMode,
     TargetExplainGroup,
 )
