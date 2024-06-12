@@ -74,6 +74,14 @@ class Explainer:
         self.method = self.create_method(self.explain_mode, self.task)
 
     def create_method(self, explain_mode: ExplainMode, task: Task) -> MethodBase:
+        """
+        Creates XAI method.
+
+        :param explain_mode: Explain mode.
+        :type explain_mode: ExplainMode
+        :param task: Type of the task: CLASSIFICATION or DETECTION.
+        :type task: Task
+        """
         if explain_mode == ExplainMode.WHITEBOX:
             try:
                 method = WhiteBoxMethodFactory.create_method(
@@ -118,7 +126,57 @@ class Explainer:
         overlay_weight: float = 0.5,
         **kwargs,
     ) -> Explanation:
-        """Explainer call that generates processed explanation result."""
+        return self.explain(
+            data,
+            target_explain_group,
+            target_explain_labels,
+            label_names,
+            scaling,
+            resize,
+            colormap,
+            overlay,
+            overlay_weight,
+            **kwargs,
+        )
+
+    def explain(
+        self,
+        data: np.ndarray,
+        target_explain_group: TargetExplainGroup = TargetExplainGroup.CUSTOM,
+        target_explain_labels: List[int | str] | None = None,
+        label_names: List[str] | None = None,
+        scaling: bool = False,
+        resize: bool = True,
+        colormap: bool = True,
+        overlay: bool = False,
+        overlay_weight: float = 0.5,
+        **kwargs,
+    ) -> Explanation:
+        """
+        Interface that generates explanation result.
+
+        :param data: Input image.
+        :type data: np.ndarray
+        :param target_explain_group: Defines targets to explain: all, only predictions, custom list, per-image.
+        :type target_explain_group: TargetExplainGroup
+        :param target_explain_labels: List of custom labels to explain, optional. Can be list of integer indices (int),
+            or list of names (str) from label_names.
+        :type target_explain_labels: List[int | str] | None
+        :param label_names: List of all label names.
+        :type label_names: List[str] | None
+        :parameter scaling: If True, scaling saliency map into [0, 255] range (filling the whole range).
+            By default, scaling is embedded into the IR model.
+            Therefore, scaling=False here by default.
+        :type scaling: bool
+        :parameter resize: If True, resize saliency map to the input image size.
+        :type resize: bool
+        :parameter colormap: If True, apply colormap to the grayscale saliency map.
+        :type colormap: bool
+        :parameter overlay: If True, generate overlay of the saliency map over the input image.
+        :type overlay: bool
+        :parameter overlay_weight: Weight of the saliency map when overlaying the input data with the saliency map.
+        :type overlay_weight: float
+        """
         explain_target_indices = None
         if (
             isinstance(self.method, BlackBoxXAIMethod)

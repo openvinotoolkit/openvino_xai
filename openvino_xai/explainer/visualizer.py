@@ -52,8 +52,18 @@ class Visualizer:
     :type original_input_image: np.ndarray
     :param output_size: Output size used for resize operation.
     :type output_size: Tuple[int, int]
-    :param visualization_parameters: Parameters that define post-processing for saliency map.
-    :type visualization_parameters: VisualizationParameters
+    :parameter scaling: If True, scaling saliency map into [0, 255] range (filling the whole range).
+        By default, scaling is embedded into the IR model.
+        Therefore, scaling=False here by default.
+    :type scaling: bool
+    :parameter resize: If True, resize saliency map to the input image size.
+    :type resize: bool
+    :parameter colormap: If True, apply colormap to the grayscale saliency map.
+    :type colormap: bool
+    :parameter overlay: If True, generate overlay of the saliency map over the input image.
+    :type overlay: bool
+    :parameter overlay_weight: Weight of the saliency map when overlaying the input data with the saliency map.
+    :type overlay_weight: float
     """
 
     def __init__(
