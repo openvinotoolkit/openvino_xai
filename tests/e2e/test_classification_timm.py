@@ -14,9 +14,7 @@ from openvino_xai.common.parameters import Method, Task
 from openvino_xai.explainer.explainer import Explainer
 from openvino_xai.explainer.parameters import (
     ExplainMode,
-    ExplanationParameters,
     TargetExplainGroup,
-    VisualizationParameters,
 )
 from openvino_xai.explainer.utils import (
     ActivationType,
@@ -206,13 +204,14 @@ class TestImageClassificationTimm:
         )
 
         target_class = self.supported_num_classes[model_cfg["num_classes"]]
-        explanation_parameters = ExplanationParameters(
+        image = cv2.imread("tests/assets/cheetah_person.jpg")
+        explanation = explainer(
+            image, 
             target_explain_group=TargetExplainGroup.CUSTOM,
             target_explain_labels=[target_class],
-            visualization_parameters=VisualizationParameters(),
+            resize=False,
+            colormap=False,
         )
-        image = cv2.imread("tests/assets/cheetah_person.jpg")
-        explanation = explainer(image, explanation_parameters)
 
         assert explanation is not None
         assert explanation.shape[-1] > 1 and explanation.shape[-2] > 1
@@ -231,13 +230,15 @@ class TestImageClassificationTimm:
             raw_sal_map[-1, 0] = np.mean(np.delete(raw_sal_map[-2:, :2].flatten(), 2))
             raw_sal_map[-1, -1] = np.mean(np.delete(raw_sal_map[-2:, -2:].flatten(), 3))
             explanation.saliency_map[target_class] = raw_sal_map
-            visualization_parameters = VisualizationParameters(scaling=True, overlay=True)
-            post_processor = Visualizer(
+            visualizer = Visualizer(
                 explanation=explanation,
                 original_input_image=image,
-                visualization_parameters=visualization_parameters,
+                scaling=True,
+                overlay=True,
+                resize=False,
+                colormap=False,
             )
-            explanation = post_processor.run()
+            explanation = visualizer.run()
 
             model_output = explainer.model_forward(image)
             target_confidence = get_score(model_output["logits"], target_class, activation=ActivationType.SOFTMAX)
@@ -302,13 +303,10 @@ class TestImageClassificationTimm:
 
         image = cv2.imread("tests/assets/cheetah_person.jpg")
         target_class = self.supported_num_classes[model_cfg["num_classes"]]
-        explanation_parameters = ExplanationParameters(
-            target_explain_group=TargetExplainGroup.CUSTOM,
-            target_explain_labels=[target_class],
-        )
         explanation = explainer(
             image,
-            explanation_parameters=explanation_parameters,
+            target_explain_group=TargetExplainGroup.CUSTOM,
+            target_explain_labels=[target_class],
             num_masks=2000,  # kwargs of the RISE algo
         )
 

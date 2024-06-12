@@ -14,9 +14,7 @@ from openvino_xai.common.utils import retrieve_otx_model
 from openvino_xai.explainer.explainer import Explainer
 from openvino_xai.explainer.parameters import (
     ExplainMode,
-    ExplanationParameters,
     TargetExplainGroup,
-    VisualizationParameters,
 )
 from openvino_xai.explainer.utils import get_preprocess_fn
 from openvino_xai.inserter.parameters import DetectionInsertionParameters
@@ -114,13 +112,13 @@ class TestDetWB:
         )
 
         target_class_list = [1] if target_explain_group == TargetExplainGroup.CUSTOM else None
-        explanation_parameters = ExplanationParameters(
+        explanation = explainer(
+            self.image, 
             target_explain_group=target_explain_group,
             target_explain_labels=target_class_list,
-            # w/o postrocessing
-            visualization_parameters=VisualizationParameters(),
-        )
-        explanation = explainer(self.image, explanation_parameters)
+            resize=False,
+            colormap=False,
+            )
         assert explanation is not None
 
         if target_explain_group == TargetExplainGroup.ALL:
@@ -143,11 +141,10 @@ class TestDetWB:
             assert explanation.saliency_map[target_class].shape == self._sal_map_size
 
     @pytest.mark.parametrize("target_explain_group", TARGET_EXPLAIN_GROUPS)
-    def test_detection_postprocessing(self, target_explain_group):
+    def test_detection_visualizing(self, target_explain_group):
         model, insertion_parameters = self.get_default_model_and_insertion_parameters()
 
         target_class_list = [1] if target_explain_group == TargetExplainGroup.CUSTOM else None
-        visualization_parameters = VisualizationParameters(overlay=True)
 
         preprocess_fn = get_preprocess_fn(
             input_size=MODEL_CONFIGS[DEFAULT_DET_MODEL].input_size,
@@ -161,12 +158,12 @@ class TestDetWB:
             insertion_parameters=insertion_parameters,
         )
 
-        explanation_parameters = ExplanationParameters(
+        explanation = explainer(
+            self.image,
             target_explain_group=target_explain_group,
             target_explain_labels=target_class_list,
-            visualization_parameters=visualization_parameters,
+            overlay=True,
         )
-        explanation = explainer(self.image, explanation_parameters)
         assert explanation is not None
         assert explanation.shape == (480, 640, 3)
         if target_explain_group == TargetExplainGroup.ALL:
@@ -191,11 +188,13 @@ class TestDetWB:
             insertion_parameters=insertion_parameters,
         )
 
-        explanation_parameters = ExplanationParameters(
+        explanation = explainer(
+            self.image, 
             target_explain_group=TargetExplainGroup.ALL,
-            visualization_parameters=VisualizationParameters(scaling=True),
-        )
-        explanation = explainer(self.image, explanation_parameters)
+            scaling=True,
+            resize=False,
+            colormap=False,
+            )
 
         actual_sal_vals = explanation.saliency_map[0][0, :10].astype(np.int16)
         ref_sal_vals = self._ref_sal_maps_reciprocam[DEFAULT_DET_MODEL].astype(np.uint8)

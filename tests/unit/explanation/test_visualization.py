@@ -8,7 +8,6 @@ from openvino_xai.common.utils import get_min_max, scaling
 from openvino_xai.explainer.explanation import Explanation
 from openvino_xai.explainer.parameters import (
     TargetExplainGroup,
-    VisualizationParameters,
 )
 from openvino_xai.explainer.visualizer import Visualizer, colormap, overlay, resize
 
@@ -98,13 +97,6 @@ class TestVisualizer:
         overlay,
         overlay_weight,
     ):
-        visualization_parameters = VisualizationParameters(
-            scaling=scaling,
-            resize=resize,
-            colormap=colormap,
-            overlay=overlay,
-            overlay_weight=overlay_weight,
-        )
 
         if target_explain_group == TargetExplainGroup.CUSTOM:
             explain_targets = [0]
@@ -123,7 +115,11 @@ class TestVisualizer:
         post_processor = Visualizer(
             explanation=explanation,
             original_input_image=original_input_image,
-            visualization_parameters=visualization_parameters,
+            scaling=scaling,
+            resize=resize,
+            colormap=colormap,
+            overlay=overlay,
+            overlay_weight=overlay_weight,
         )
         explanation = post_processor.run()
 
@@ -148,7 +144,11 @@ class TestVisualizer:
             post_processor = Visualizer(
                 explanation=explanation,
                 output_size=(20, 20),
-                visualization_parameters=visualization_parameters,
+                scaling=scaling,
+                resize=resize,
+                colormap=colormap,
+                overlay=overlay,
+                overlay_weight=overlay_weight,
             )
             saliency_map_processed_output_size = post_processor.run()
             maps_data = explanation.saliency_map

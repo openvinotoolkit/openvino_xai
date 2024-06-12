@@ -13,7 +13,6 @@ from openvino_xai.common.utils import retrieve_otx_model
 from openvino_xai.explainer.explainer import Explainer
 from openvino_xai.explainer.parameters import (
     ExplainMode,
-    ExplanationParameters,
     TargetExplainGroup,
 )
 from openvino_xai.explainer.utils import get_postprocess_fn, get_preprocess_fn
@@ -67,12 +66,12 @@ class TestExplainer:
             explain_mode=explain_mode,
         )
 
-        explanation_parameters = ExplanationParameters(
+        explanation = explainer(
+            self.image, 
             target_explain_group=target_explain_group,
             target_explain_labels=[11, 14],
             label_names=VOC_NAMES,  # optional
-        )
-        explanation = explainer(self.image, explanation_parameters, num_masks=10)
+            num_masks=10,)
 
         if target_explain_group == TargetExplainGroup.ALL:
             assert len(explanation.saliency_map) == 20
@@ -91,11 +90,8 @@ class TestExplainer:
             task=Task.CLASSIFICATION,
         )
 
-        explanation_parameters = ExplanationParameters(
-            target_explain_labels=[11, 14],
-        )
         processed_data = self.preprocess_fn(self.image)
-        explanation = explainer(processed_data, explanation_parameters)
+        explanation = explainer(processed_data, target_explain_labels=[11, 14])
 
         assert len(explanation.saliency_map) == 2
 
@@ -108,11 +104,8 @@ class TestExplainer:
             postprocess_fn=get_postprocess_fn(),
         )
 
-        explanation_parameters = ExplanationParameters(
-            target_explain_labels=[11, 14],
-        )
         processed_data = self.preprocess_fn(self.image)
-        explanation = explainer(processed_data, explanation_parameters, num_masks=10)
+        explanation = explainer(processed_data, target_explain_labels=[11, 14], num_masks=10)
 
         assert len(explanation.saliency_map) == 2
 
@@ -145,8 +138,5 @@ class TestExplainer:
             explain_mode=ExplainMode.AUTO,
             insertion_parameters=insertion_parameters,
         )
-        explanation_parameters = ExplanationParameters(
-            target_explain_group=TargetExplainGroup.ALL,
-        )
-        explanation = explainer(self.image, explanation_parameters, num_masks=10)
+        explanation = explainer(self.image, target_explain_group=TargetExplainGroup.ALL, num_masks=10)
         assert len(explanation.saliency_map) == 20
