@@ -1,11 +1,13 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import atheris
 import sys
+
+import atheris
 
 with atheris.instrument_imports():
     from openvino_xai import Explainer, insert_xai
+
 
 def TestOneInput(input_bytes):
     data_provider = atheris.FuzzedDataProvider(input_bytes)
@@ -28,6 +30,7 @@ def TestOneInput(input_bytes):
         )
     except ValueError as e:
         pass
+
 
 atheris.Setup(sys.argv, TestOneInput)
 atheris.Fuzz()
