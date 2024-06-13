@@ -16,7 +16,7 @@ jobs:
   E2E-Test:
     runs-on: [large-disk]
     needs: Sanity-Checks
-    timeout-minutes: 120
+    timeout-minutes: 240
     # This is what will cancel the job concurrency
     concurrency:
       group: ${{ github.workflow }}-E2E-${{ github.ref }}
