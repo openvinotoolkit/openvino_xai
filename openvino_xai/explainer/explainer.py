@@ -11,10 +11,7 @@ from openvino_xai import Task
 from openvino_xai.common.parameters import Method
 from openvino_xai.common.utils import IdentityPreprocessFN, logger
 from openvino_xai.explainer.explanation import Explanation
-from openvino_xai.explainer.mode import (
-    ExplainMode,
-    TargetExplainGroup,
-)
+from openvino_xai.explainer.mode import ExplainMode, TargetExplainGroup
 from openvino_xai.explainer.utils import get_explain_target_indices
 from openvino_xai.explainer.visualizer import Visualizer
 from openvino_xai.methods.base import MethodBase
@@ -174,10 +171,7 @@ class Explainer:
         :type overlay_weight: float
         """
         explain_target_indices = None
-        if (
-            isinstance(self.method, BlackBoxXAIMethod)
-            and target_explain_group == TargetExplainGroup.CUSTOM
-        ):
+        if isinstance(self.method, BlackBoxXAIMethod) and target_explain_group == TargetExplainGroup.CUSTOM:
             explain_target_indices = get_explain_target_indices(
                 target_explain_labels,
                 label_names,
@@ -211,9 +205,9 @@ class Explainer:
 
     def _create_white_box_method(self, task: Task) -> MethodBase:
         method = WhiteBoxMethodFactory.create_method(
-            task, 
-            self.model, 
-            self.preprocess_fn, 
+            task,
+            self.model,
+            self.preprocess_fn,
             self.explain_method,
             self.target_layer,
             self.embed_scaling,
@@ -230,9 +224,9 @@ class Explainer:
         return method
 
     def _visualize(
-        self, 
-        explanation: Explanation, 
-        data: np.ndarray, 
+        self,
+        explanation: Explanation,
+        data: np.ndarray,
         scaling: bool,
         resize: bool,
         colormap: bool,

@@ -3,6 +3,7 @@
 
 from enum import Enum
 
+
 class ExplainMode(Enum):
     """
     Enum describes different explain modes.

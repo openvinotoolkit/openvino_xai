@@ -12,10 +12,7 @@ import openvino.runtime as ov
 
 import openvino_xai as xai
 from openvino_xai.common.utils import logger
-from openvino_xai.explainer.mode import (
-    ExplainMode,
-    TargetExplainGroup,
-)
+from openvino_xai.explainer.mode import ExplainMode, TargetExplainGroup
 
 
 def get_argument_parser():

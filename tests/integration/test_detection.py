@@ -12,10 +12,7 @@ import pytest
 from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import retrieve_otx_model
 from openvino_xai.explainer.explainer import Explainer
-from openvino_xai.explainer.mode import (
-    ExplainMode,
-    TargetExplainGroup,
-)
+from openvino_xai.explainer.mode import ExplainMode, TargetExplainGroup
 from openvino_xai.explainer.utils import get_preprocess_fn
 from openvino_xai.methods.factory import WhiteBoxMethodFactory
 from openvino_xai.methods.white_box.det_class_probability_map import (
@@ -108,12 +105,12 @@ class TestDetWB:
 
         target_class_list = [1] if target_explain_group == TargetExplainGroup.CUSTOM else None
         explanation = explainer(
-            self.image, 
+            self.image,
             target_explain_group=target_explain_group,
             target_explain_labels=target_class_list,
             resize=False,
             colormap=False,
-            )
+        )
         assert explanation is not None
 
         if target_explain_group == TargetExplainGroup.ALL:
@@ -192,12 +189,12 @@ class TestDetWB:
         )
 
         explanation = explainer(
-            self.image, 
+            self.image,
             target_explain_group=TargetExplainGroup.ALL,
             scaling=True,
             resize=False,
             colormap=False,
-            )
+        )
 
         actual_sal_vals = explanation.saliency_map[0][0, :10].astype(np.int16)
         ref_sal_vals = self._ref_sal_maps_reciprocam[DEFAULT_DET_MODEL].astype(np.uint8)
@@ -218,14 +215,14 @@ class TestDetWB:
         )
         cls_head_output_node_names = MODEL_CONFIGS[DEFAULT_DET_MODEL].node_names
         det_xai_method = WhiteBoxMethodFactory.create_method(
-            Task.DETECTION, 
-            model, 
-            preprocess_fn, 
+            Task.DETECTION,
+            model,
+            preprocess_fn,
             explain_method=Method.DETCLASSPROBABILITYMAP,
             target_layer=cls_head_output_node_names,
             num_anchors=MODEL_CONFIGS[DEFAULT_DET_MODEL].anchors,
             saliency_map_size=self._sal_map_size,
-            )
+        )
         assert isinstance(det_xai_method, DetClassProbabilityMap)
         assert isinstance(det_xai_method.model_ori, ov.Model)
 

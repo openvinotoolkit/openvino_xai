@@ -46,28 +46,28 @@ class WhiteBoxMethodFactory(MethodFactory):
         model: ov.Model,
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         explain_method: Method | None = None,
-        target_layer: str | None = None,
+        target_layer: str | List[str] | None = None,
         embed_scaling: bool | None = True,
         **kwargs,
     ) -> MethodBase:
         if task == Task.CLASSIFICATION:
             return cls.create_classification_method(
-                model, 
-                preprocess_fn, 
+                model,
+                preprocess_fn,
                 explain_method,
-                target_layer,
+                target_layer,  # type: ignore
                 embed_scaling,
                 **kwargs,
-            )  # type: ignore
+            )
         if task == Task.DETECTION:
             return cls.create_detection_method(
-                model, 
-                preprocess_fn, 
+                model,
+                preprocess_fn,
                 explain_method,
-                target_layer,
+                target_layer,  # type: ignore
                 embed_scaling,
                 **kwargs,
-            )  # type: ignore
+            )
         raise ValueError(f"Model type {task} is not supported in white-box mode.")
 
     @staticmethod

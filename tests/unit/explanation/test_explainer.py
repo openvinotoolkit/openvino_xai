@@ -11,10 +11,7 @@ from openvino_xai.api.api import insert_xai
 from openvino_xai.common.parameters import Task
 from openvino_xai.common.utils import retrieve_otx_model
 from openvino_xai.explainer.explainer import Explainer
-from openvino_xai.explainer.mode import (
-    ExplainMode,
-    TargetExplainGroup,
-)
+from openvino_xai.explainer.mode import ExplainMode, TargetExplainGroup
 from openvino_xai.explainer.utils import get_postprocess_fn, get_preprocess_fn
 from tests.unit.explanation.test_explanation_utils import VOC_NAMES
 
@@ -66,11 +63,12 @@ class TestExplainer:
         )
 
         explanation = explainer(
-            self.image, 
+            self.image,
             target_explain_group=target_explain_group,
             target_explain_labels=[11, 14],
             label_names=VOC_NAMES,  # optional
-            num_masks=10,)
+            num_masks=10,
+        )
 
         if target_explain_group == TargetExplainGroup.ALL:
             assert len(explanation.saliency_map) == 20

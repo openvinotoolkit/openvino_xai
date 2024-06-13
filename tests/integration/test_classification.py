@@ -12,10 +12,7 @@ import openvino_xai.api.api as xai
 from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import has_xai, retrieve_otx_model
 from openvino_xai.explainer.explainer import Explainer
-from openvino_xai.explainer.mode import (
-    ExplainMode,
-    TargetExplainGroup,
-)
+from openvino_xai.explainer.mode import ExplainMode, TargetExplainGroup
 from openvino_xai.explainer.utils import get_postprocess_fn, get_preprocess_fn
 
 MODELS = [
@@ -102,7 +99,7 @@ class TestClsWB:
 
         if target_explain_group == TargetExplainGroup.ALL:
             explanation = explainer(
-                self.image, 
+                self.image,
                 target_explain_group=target_explain_group,
                 resize=False,
                 colormap=False,
@@ -121,7 +118,7 @@ class TestClsWB:
         if target_explain_group == TargetExplainGroup.CUSTOM:
             target_class = 1
             explanation = explainer(
-                self.image, 
+                self.image,
                 target_explain_group=target_explain_group,
                 target_explain_labels=[target_class],
                 resize=False,
@@ -159,7 +156,7 @@ class TestClsWB:
 
         if target_explain_group == TargetExplainGroup.ALL:
             explanation = explainer(
-                self.image, 
+                self.image,
                 target_explain_group=target_explain_group,
                 resize=False,
                 colormap=False,
@@ -180,7 +177,7 @@ class TestClsWB:
         if target_explain_group == TargetExplainGroup.CUSTOM:
             target_class = 1
             explanation = explainer(
-                self.image, 
+                self.image,
                 target_explain_group=target_explain_group,
                 target_explain_labels=[target_class],
                 resize=False,
@@ -210,7 +207,7 @@ class TestClsWB:
         )
 
         explanation = explainer(
-            self.image, 
+            self.image,
             resize=False,
             colormap=False,
         )
@@ -250,13 +247,13 @@ class TestClsWB:
             explain_targets = [1]
 
         explanation = explainer(
-            self.image, 
+            self.image,
             target_explain_group=target_explain_group,
             target_explain_labels=explain_targets,  # type: ignore
             overlay=overlay,
             resize=False,
             colormap=False,
-            )
+        )
         assert explanation is not None
         if target_explain_group == TargetExplainGroup.ALL:
             assert len(explanation.saliency_map) == MODEL_NUM_CLASSES[DEFAULT_CLS_MODEL]
@@ -284,7 +281,7 @@ class TestClsWB:
         )
 
         explanation = explainer(
-            self.image, 
+            self.image,
             target_explain_group=TargetExplainGroup.ALL,
             scaling=True,
             resize=False,

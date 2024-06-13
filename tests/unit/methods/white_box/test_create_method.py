@@ -40,9 +40,7 @@ def test_create_wb_cls_cnn_method():
     assert isinstance(explain_method, ReciproCAM)
 
     model_cnn = ov.Core().read_model(model_path)
-    explain_method = WhiteBoxMethodFactory.create_method(
-        Task.CLASSIFICATION, model_cnn, PREPROCESS_FN
-    )
+    explain_method = WhiteBoxMethodFactory.create_method(Task.CLASSIFICATION, model_cnn, PREPROCESS_FN)
     assert isinstance(explain_method, ReciproCAM)
 
     model_cnn = ov.Core().read_model(model_path)
@@ -60,7 +58,10 @@ def test_create_wb_cls_cnn_method():
     model_cnn = ov.Core().read_model(model_path)
     with pytest.raises(Exception) as exc_info:
         explain_method = WhiteBoxMethodFactory.create_method(
-            Task.CLASSIFICATION, model_cnn, PREPROCESS_FN, explain_method="abc",
+            Task.CLASSIFICATION,
+            model_cnn,
+            PREPROCESS_FN,
+            explain_method="abc",
         )
     assert str(exc_info.value) == "Requested explanation method abc is not implemented."
 
@@ -84,32 +85,30 @@ def test_create_wb_det_cnn_method():
     cls_head_output_node_names = MODEL_CONFIGS[DEFAULT_DET_MODEL].node_names
 
     explain_method = WhiteBoxMethodFactory.create_method(
-        Task.DETECTION, 
-        model, 
-        PREPROCESS_FN, 
+        Task.DETECTION,
+        model,
+        PREPROCESS_FN,
         target_layer=cls_head_output_node_names,
         explain_method=Method.DETCLASSPROBABILITYMAP,
         num_anchors=MODEL_CONFIGS[DEFAULT_DET_MODEL].anchors,
         saliency_map_size=sal_map_size,
-        )
+    )
     assert isinstance(explain_method, DetClassProbabilityMap)
 
     model = ov.Core().read_model(model_path)
     with pytest.raises(Exception) as exc_info:
-        explain_method = WhiteBoxMethodFactory.create_method(
-            Task.DETECTION, model, PREPROCESS_FN, target_layer=None
-        )
+        explain_method = WhiteBoxMethodFactory.create_method(Task.DETECTION, model, PREPROCESS_FN, target_layer=None)
     assert str(exc_info.value) == "target_layer is required for the detection."
 
     model = ov.Core().read_model(model_path)
     with pytest.raises(Exception) as exc_info:
         explain_method = WhiteBoxMethodFactory.create_method(
-            Task.DETECTION, 
-            model, 
-            PREPROCESS_FN, 
+            Task.DETECTION,
+            model,
+            PREPROCESS_FN,
             target_layer=cls_head_output_node_names,
             explain_method="abc",
             num_anchors=MODEL_CONFIGS[DEFAULT_DET_MODEL].anchors,
             saliency_map_size=sal_map_size,
-            )
+        )
     assert str(exc_info.value) == "Requested explanation method abc is not implemented."

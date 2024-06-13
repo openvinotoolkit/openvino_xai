@@ -6,9 +6,7 @@ import pytest
 
 from openvino_xai.common.utils import get_min_max, scaling
 from openvino_xai.explainer.explanation import Explanation
-from openvino_xai.explainer.mode import (
-    TargetExplainGroup,
-)
+from openvino_xai.explainer.mode import TargetExplainGroup
 from openvino_xai.explainer.visualizer import Visualizer, colormap, overlay, resize
 
 SALIENCY_MAPS = [
@@ -97,7 +95,6 @@ class TestVisualizer:
         overlay,
         overlay_weight,
     ):
-
         if target_explain_group == TargetExplainGroup.CUSTOM:
             explain_targets = [0]
         else:

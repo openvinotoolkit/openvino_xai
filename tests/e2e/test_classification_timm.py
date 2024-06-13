@@ -12,10 +12,7 @@ import pytest
 
 from openvino_xai.common.parameters import Method, Task
 from openvino_xai.explainer.explainer import Explainer
-from openvino_xai.explainer.mode import (
-    ExplainMode,
-    TargetExplainGroup,
-)
+from openvino_xai.explainer.mode import ExplainMode, TargetExplainGroup
 from openvino_xai.explainer.utils import (
     ActivationType,
     get_postprocess_fn,
@@ -201,7 +198,7 @@ class TestImageClassificationTimm:
         target_class = self.supported_num_classes[model_cfg["num_classes"]]
         image = cv2.imread("tests/assets/cheetah_person.jpg")
         explanation = explainer(
-            image, 
+            image,
             target_explain_group=TargetExplainGroup.CUSTOM,
             target_explain_labels=[target_class],
             resize=False,

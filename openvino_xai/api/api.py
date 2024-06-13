@@ -1,6 +1,8 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from typing import List
+
 import openvino.runtime as ov
 
 from openvino_xai.common.parameters import Method, Task
@@ -12,7 +14,7 @@ def insert_xai(
     model: ov.Model,
     task: Task,
     explain_method: Method | None = None,
-    target_layer: str | None = None,
+    target_layer: str | List[str] | None = None,
     embed_scaling: bool | None = True,
     **kwargs,
 ) -> ov.Model:

@@ -35,12 +35,12 @@ def test_insertion_detection():
     cls_head_output_node_names = MODEL_CONFIGS[DEFAULT_DET_MODEL].node_names
 
     model_with_xai = insert_xai(
-        model, 
-        Task.DETECTION, 
+        model,
+        Task.DETECTION,
         explain_method=Method.DETCLASSPROBABILITYMAP,
         target_layer=cls_head_output_node_names,
         num_anchors=MODEL_CONFIGS[DEFAULT_DET_MODEL].anchors,
-        )
+    )
     assert has_xai(model_with_xai), "Updated IR model should has XAI head."
 
 
