@@ -1,10 +1,10 @@
 name: Publish to PyPI
 
 on:
+  workflow_dispatch: # run on request (no need for PR)
   push:
     tags:
       - '*'
-  workflow_dispatch: # run on request (no need for PR)
 
 # Declare default permissions as read only.
 permissions: read-all
