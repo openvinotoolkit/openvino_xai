@@ -5,15 +5,10 @@ from typing import Callable
 
 import numpy as np
 import openvino.runtime as ov
+from openvino.runtime.utils.data_helpers.wrappers import OVDict
 
-import openvino_xai
 from openvino_xai import Task
-from openvino_xai.common.utils import (
-    SALIENCY_MAP_OUTPUT_NAME,
-    IdentityPreprocessFN,
-    has_xai,
-    logger,
-)
+from openvino_xai.common.utils import IdentityPreprocessFN, logger
 from openvino_xai.explainer.explanation import Explanation
 from openvino_xai.explainer.parameters import (
     ExplainMode,
@@ -23,12 +18,14 @@ from openvino_xai.explainer.parameters import (
 from openvino_xai.explainer.utils import get_explain_target_indices
 from openvino_xai.explainer.visualizer import Visualizer
 from openvino_xai.inserter.parameters import InsertionParameters
-from openvino_xai.methods.black_box.black_box_methods import RISE
+from openvino_xai.methods.base import MethodBase
+from openvino_xai.methods.black_box.base import BlackBoxXAIMethod
+from openvino_xai.methods.factory import BlackBoxMethodFactory, WhiteBoxMethodFactory
 
 
 class Explainer:
     """
-    Explainer sets explain mode, prepares the model, and generates explanations.
+    Explainer creates methods and uses them to generate explanations.
 
     Usage:
         explanation = explainer_object(data, explanation_parameters)
@@ -39,9 +36,9 @@ class Explainer:
     :type task: Task
     :param preprocess_fn: Preprocessing function, identity function by default
         (assume input images are already preprocessed by user).
-    :type preprocess_fn: Callable[[np.ndarray], np.ndarray] | IdentityPreprocessFN
+    :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
     :param postprocess_fn: Postprocessing functions, required for black-box.
-    :type postprocess_fn: Callable[[ov.utils.data_helpers.wrappers.OVDict], np.ndarray]
+    :type postprocess_fn: Callable[[OVDict], np.ndarray]
     :param explain_mode: Explain mode.
     :type explain_mode: ExplainMode
     :param insertion_parameters: XAI insertion parameters.
@@ -53,7 +50,7 @@ class Explainer:
         model: ov.Model,
         task: Task,
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
-        postprocess_fn: Callable[[ov.utils.data_helpers.wrappers.OVDict], np.ndarray] = None,
+        postprocess_fn: Callable[[OVDict], np.ndarray] = None,
         explain_mode: ExplainMode = ExplainMode.AUTO,
         insertion_parameters: InsertionParameters | None = None,
     ) -> None:
@@ -74,47 +71,39 @@ class Explainer:
 
         self.explain_mode = explain_mode
 
-        self._set_explain_mode()
+        self.method = self.create_method(self.explain_mode, self.task)
 
-        self._load_model()
-
-    def _set_explain_mode(self) -> None:
-        if self.explain_mode == ExplainMode.WHITEBOX:
-            if has_xai(self.model):
-                logger.info("Model already has XAI - using white-box mode.")
-            else:
-                self._insert_xai()
-                logger.info("Explaining the model in the white-box mode.")
+    def create_method(self, explain_mode: ExplainMode, task: Task) -> MethodBase:
+        if explain_mode == ExplainMode.WHITEBOX:
+            try:
+                method = WhiteBoxMethodFactory.create_method(
+                    task, self.model, self.preprocess_fn, self.insertion_parameters
+                )
+                logger.info("Explaining the model in white-box mode.")
+                return method
+            except Exception as e:
+                print(e)
+                raise RuntimeError("Failed to insert XAI into the model. Try to use black-box.")
         elif self.explain_mode == ExplainMode.BLACKBOX:
-            if self.postprocess_fn is None:
-                raise ValueError("Postprocess function has to be provided for the black-box mode.")
-            logger.info("Explaining the model in the black-box mode.")
+            self._check_postprocess_fn()
+            method = BlackBoxMethodFactory.create_method(task, self.model, self.preprocess_fn, self.postprocess_fn)
+            logger.info("Explaining the model in black-box mode.")
+            return method
         elif self.explain_mode == ExplainMode.AUTO:
-            if has_xai(self.model):
-                logger.info("Model already has XAI - using white-box mode.")
-                self.explain_mode = ExplainMode.WHITEBOX
-            else:
-                try:
-                    self._insert_xai()
-                    self.explain_mode = ExplainMode.WHITEBOX
-                    logger.info("Explaining the model in the white-box mode.")
-                except Exception as e:
-                    print(e)
-                    logger.info("Failed to insert XAI into the model - use black-box mode.")
-                    if self.postprocess_fn is None:
-                        raise ValueError("Postprocess function has to be provided for the black-box mode.")
-                    self.explain_mode = ExplainMode.BLACKBOX
-                    logger.info("Explaining the model in the black-box mode.")
+            try:
+                method = WhiteBoxMethodFactory.create_method(
+                    task, self.model, self.preprocess_fn, self.insertion_parameters
+                )
+                logger.info("Explaining the model in the white-box mode.")
+            except Exception as e:
+                print(e)
+                logger.info("Failed to insert XAI into the model - using black-box mode.")
+                self._check_postprocess_fn()
+                method = BlackBoxMethodFactory.create_method(task, self.model, self.preprocess_fn, self.postprocess_fn)
+                logger.info("Explaining the model in the black-box mode.")
+            return method
         else:
             raise ValueError(f"Not supported explain mode {self.explain_mode}.")
-
-    def _insert_xai(self) -> None:
-        logger.info("Model does not have XAI - trying to insert XAI to use white-box mode.")
-        # Do we need to keep the original model?
-        self.model = openvino_xai.insert_xai(self.model, self.task, self.insertion_parameters)
-
-    def _load_model(self) -> None:
-        self.compiled_model = ov.Core().compile_model(self.model, "CPU")
 
     def __call__(
         self,
@@ -123,11 +112,21 @@ class Explainer:
         **kwargs,
     ) -> Explanation:
         """Explainer call that generates processed explanation result."""
-        # TODO (negvet): support output_shape as argument among other post process parameters
-        if self.explain_mode == ExplainMode.WHITEBOX:
-            saliency_map = self._generate_saliency_map_white_box(data)
-        else:
-            saliency_map = self._generate_saliency_map_black_box(data, explanation_parameters, **kwargs)
+        explain_target_indices = None
+        if (
+            isinstance(self.method, BlackBoxXAIMethod)
+            and explanation_parameters.target_explain_group == TargetExplainGroup.CUSTOM
+        ):
+            explain_target_indices = get_explain_target_indices(
+                explanation_parameters.target_explain_labels,
+                explanation_parameters.label_names,
+            )
+
+        saliency_map = self.method.generate_saliency_map(
+            data,
+            explain_target_indices=explain_target_indices,  # type: ignore
+            **kwargs,
+        )
 
         explanation = Explanation(
             saliency_map=saliency_map,
@@ -137,38 +136,9 @@ class Explainer:
         )
         return self._visualize(explanation, data, explanation_parameters)
 
-    def model_forward(self, x: np.ndarray) -> ov.utils.data_helpers.wrappers.OVDict:
-        """Forward pass of the compiled model. Applies preprocess_fn."""
-        x = self.preprocess_fn(x)
-        return self.compiled_model(x)
-
-    def _generate_saliency_map_white_box(self, data: np.ndarray) -> np.ndarray:
-        model_output = self.model_forward(data)
-        return model_output[SALIENCY_MAP_OUTPUT_NAME]
-
-    def _generate_saliency_map_black_box(
-        self,
-        data: np.ndarray,
-        explanation_parameters: ExplanationParameters,
-        **kwargs,
-    ) -> np.ndarray:
-        explain_target_indices = None
-        if explanation_parameters.target_explain_group == TargetExplainGroup.CUSTOM:
-            explain_target_indices = get_explain_target_indices(
-                explanation_parameters.target_explain_labels,
-                explanation_parameters.label_names,
-            )
-        if self.task == Task.CLASSIFICATION:
-            saliency_map = RISE.run(
-                self.compiled_model,
-                self.preprocess_fn,
-                self.postprocess_fn,
-                data,
-                explain_target_indices,
-                **kwargs,
-            )
-            return saliency_map
-        raise ValueError(f"Task type {self.task} is not supported in the black-box mode.")
+    def model_forward(self, x: np.ndarray, preprocess: bool = True) -> OVDict:
+        """Forward pass of the compiled model."""
+        return self.method.model_forward(x, preprocess)
 
     def _visualize(
         self, explanation: Explanation, data: np.ndarray, explanation_parameters: ExplanationParameters
@@ -188,3 +158,7 @@ class Explainer:
                 visualization_parameters=explanation_parameters.visualization_parameters,
             ).run()
         return explanation
+
+    def _check_postprocess_fn(self) -> None:
+        if self.postprocess_fn is None:
+            raise ValueError("Postprocess function has to be provided for the black-box mode.")

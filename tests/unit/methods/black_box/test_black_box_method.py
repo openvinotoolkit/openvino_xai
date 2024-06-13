@@ -10,7 +10,7 @@ import pytest
 
 from openvino_xai.common.utils import retrieve_otx_model
 from openvino_xai.explainer.utils import get_postprocess_fn, get_preprocess_fn
-from openvino_xai.methods.black_box.black_box_methods import RISE
+from openvino_xai.methods.black_box.rise import RISE
 from tests.integration.test_classification import DEFAULT_CLS_MODEL
 
 
@@ -29,16 +29,14 @@ class TestRISE:
         retrieve_otx_model(self.data_dir, DEFAULT_CLS_MODEL)
         model_path = self.data_dir / "otx_models" / (DEFAULT_CLS_MODEL + ".xml")
         model = ov.Core().read_model(model_path)
-        compiled_model = ov.Core().compile_model(model, "CPU")
 
-        saliency_map = RISE.run(
-            compiled_model,
-            self.preprocess_fn,
-            self.postprocess_fn,
+        rise_method = RISE(model, self.postprocess_fn, self.preprocess_fn)
+        saliency_map = rise_method.generate_saliency_map(
             self.image,
             explain_target_indices,
             num_masks=5,
         )
+
         assert saliency_map.dtype == np.uint8
         assert saliency_map.shape == (1, 20, 224, 224)
         assert (saliency_map >= 0).all() and (saliency_map <= 255).all()

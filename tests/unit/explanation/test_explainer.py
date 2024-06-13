@@ -7,6 +7,7 @@ import cv2
 import openvino.runtime as ov
 import pytest
 
+from openvino_xai.api.api import insert_xai
 from openvino_xai.common.parameters import Task
 from openvino_xai.common.utils import retrieve_otx_model
 from openvino_xai.explainer.explainer import Explainer
@@ -16,7 +17,6 @@ from openvino_xai.explainer.parameters import (
     TargetExplainGroup,
 )
 from openvino_xai.explainer.utils import get_postprocess_fn, get_preprocess_fn
-from openvino_xai.inserter.inserter import insert_xai
 from openvino_xai.inserter.parameters import ClassificationInsertionParameters
 from tests.unit.explanation.test_explanation_utils import VOC_NAMES
 
@@ -60,7 +60,7 @@ class TestExplainer:
             )
 
         explainer = Explainer(
-            model,
+            model=model,
             task=Task.CLASSIFICATION,
             preprocess_fn=self.preprocess_fn,
             postprocess_fn=get_postprocess_fn(),
@@ -132,7 +132,6 @@ class TestExplainer:
                 explain_mode=ExplainMode.AUTO,
                 insertion_parameters=insertion_parameters,
             )
-            assert explainer.explain_mode == ExplainMode.BLACKBOX
         assert str(exc_info.value) == "Postprocess function has to be provided for the black-box mode."
 
         insertion_parameters = ClassificationInsertionParameters(
@@ -146,7 +145,6 @@ class TestExplainer:
             explain_mode=ExplainMode.AUTO,
             insertion_parameters=insertion_parameters,
         )
-        assert explainer.explain_mode == ExplainMode.BLACKBOX
         explanation_parameters = ExplanationParameters(
             target_explain_group=TargetExplainGroup.ALL,
         )

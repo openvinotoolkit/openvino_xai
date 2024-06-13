@@ -183,7 +183,7 @@ class TestImageClassificationTimm:
             raise ValueError
 
         insertion_parameters = ClassificationInsertionParameters(
-            embed_normalization=False,
+            embed_scaling=False,
             explain_method=explain_method,
         )
 
@@ -231,10 +231,10 @@ class TestImageClassificationTimm:
             raw_sal_map[-1, 0] = np.mean(np.delete(raw_sal_map[-2:, :2].flatten(), 2))
             raw_sal_map[-1, -1] = np.mean(np.delete(raw_sal_map[-2:, -2:].flatten(), 3))
             explanation.saliency_map[target_class] = raw_sal_map
-            visualization_parameters = VisualizationParameters(scale=True, overlay=True)
+            visualization_parameters = VisualizationParameters(scaling=True, overlay=True)
             post_processor = Visualizer(
                 explanation=explanation,
-                data=image,
+                original_input_image=image,
                 visualization_parameters=visualization_parameters,
             )
             explanation = post_processor.run()

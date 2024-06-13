@@ -4,11 +4,11 @@
 Common parameters and utils.
 """
 from openvino_xai.common.parameters import Method, Task
-from openvino_xai.common.utils import has_xai, scale
+from openvino_xai.common.utils import has_xai, scaling
 
 __all__ = [
     "Task",
     "Method",
     "has_xai",
-    "scale",
+    "scaling",
 ]

@@ -109,7 +109,7 @@ model = ov.Core().read_model("path/to/model.xml")  # type: ov.Model
 # Optional - create insertion parameters
 insertion_parameters = ClassificationInsertionParameters(
     # target_layer="last_conv_node_name",  # target_layer - node after which XAI branch will be inserted
-    embed_normalization=True,  # True by default.  If set to True, saliency map normalization is embedded in the model
+    embed_scaling=True,  # True by default.  If set to True, saliency map scale (0 ~ 255) operation is embedded in the model
     explain_method=xai.Method.RECIPROCAM,  # ReciproCAM is the default XAI method for CNNs
 )
 
@@ -152,6 +152,7 @@ and introduces significant computational overhead.
 import cv2
 import numpy as np
 import openvino.runtime as ov
+from openvino.runtime.utils.data_helpers.wrappers import OVDict
 
 import openvino_xai as xai
 from openvino_xai.explainer.explanation_parameters import ExplainMode, ExplanationParameters
@@ -164,7 +165,7 @@ def preprocess_fn(x: np.ndarray) -> np.ndarray:
     return x
 
 
-def postprocess_fn(x: ov.utils.data_helpers.wrappers.OVDict):
+def postprocess_fn(x: OVDict):
     # Implementing own post-process function based on model's implementation
     # Output logits
     return x["logits"]
@@ -221,7 +222,7 @@ model = ov.Core().read_model("path/to/model.xml")  # type: ov.Model
 # Optional - create insertion parameters
 insertion_parameters = ClassificationInsertionParameters(
     # target_layer="last_conv_node_name",  # target_layer - node after which XAI branch will be inserted
-    embed_normalization=True,  # True by default.  If set to True, saliency map normalization is embedded in the model
+    embed_scaling=True,  # True by default.  If set to True, saliency map scale (0 ~ 255) operation is embedded in the model
     explain_method=xai.Method.RECIPROCAM,  # ReciproCAM is the default XAI method for CNNs
 )
 

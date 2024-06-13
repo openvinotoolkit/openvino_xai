@@ -1,30 +1,52 @@
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from abc import ABC
 from typing import Callable, List, Tuple
 
 import cv2
 import numpy as np
 import openvino.runtime as ov
+from openvino.runtime.utils.data_helpers.wrappers import OVDict
 from tqdm import tqdm
 
-from openvino_xai.common.utils import scale
+from openvino_xai.common.utils import IdentityPreprocessFN, scaling
+from openvino_xai.methods.black_box.base import BlackBoxXAIMethod
 
 
-class BlackBoxXAIMethodBase(ABC):
-    """Base class for methods that explain model in Black-Box mode."""
+class RISE(BlackBoxXAIMethod):
+    """RISE explains classification models in black-box mode using RISE (https://arxiv.org/abs/1806.07421).
 
+    :param model: OpenVINO model.
+    :type model: ov.Model
+    :param postprocess_fn: Preprocessing function that extract scores from IR model output.
+    :type postprocess_fn: Callable[[OVDict], np.ndarray]
+    :param preprocess_fn: Preprocessing function, identity function by default
+        (assume input images are already preprocessed by user).
+    :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
+    :param prepare_model: Loading (compiling) the model prior to inference.
+    :type prepare_model: bool
+    """
 
-class RISE(BlackBoxXAIMethodBase):
-    """RISEExplainer explains classification models in black-box mode using RISE (https://arxiv.org/abs/1806.07421)."""
+    def __init__(
+        self,
+        model: ov.Model,
+        postprocess_fn: Callable[[OVDict], np.ndarray],
+        preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
+        prepare_model: bool = True,
+    ):
+        super().__init__(model=model, preprocess_fn=preprocess_fn)
+        self.postprocess_fn = postprocess_fn
 
-    @classmethod
-    def run(
-        cls,
-        compiled_model: ov.ie_api.CompiledModel,
-        preprocess_fn: Callable[[np.ndarray], np.ndarray],
-        postprocess_fn: Callable[[ov.utils.data_helpers.wrappers.OVDict], np.ndarray],
+        if prepare_model:
+            self.prepare_model()
+
+    def prepare_model(self, load_model: bool = True) -> ov.Model:
+        if load_model:
+            self.load_model()
+        return self._model
+
+    def generate_saliency_map(
+        self,
         data: np.ndarray,
         explain_target_indices: List[int] | None = None,
         num_masks: int = 5000,
@@ -36,12 +58,6 @@ class RISE(BlackBoxXAIMethodBase):
         """
         Generates inference result of the RISE algorithm.
 
-        :param compiled_model: Compiled model.
-        :type compiled_model: ov.Model
-        :param preprocess_fn: Preprocessing function.
-        :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
-        :param postprocess_fn: Postprocessing functions, required for black-box.
-        :type postprocess_fn: Callable[[ov.utils.data_helpers.wrappers.OVDict], np.ndarray]
         :param data: Input image.
         :type data: np.ndarray
         :param explain_target_indices: List of target indices to explain.
@@ -59,13 +75,11 @@ class RISE(BlackBoxXAIMethodBase):
         :param scale_output: Whether to scale output or not.
         :type scale_output: bool
         """
-        data_preprocessed = preprocess_fn(data)
+        data_preprocessed = self.preprocess_fn(data)
 
-        saliency_maps = cls._run_synchronous_explanation(
+        saliency_maps = self._run_synchronous_explanation(
             data_preprocessed,
             explain_target_indices,
-            compiled_model,
-            postprocess_fn,
             num_masks,
             num_cells,
             prob,
@@ -73,17 +87,14 @@ class RISE(BlackBoxXAIMethodBase):
         )
 
         if scale_output:
-            saliency_maps = scale(saliency_maps)
+            saliency_maps = scaling(saliency_maps)
         saliency_maps = np.expand_dims(saliency_maps, axis=0)
         return saliency_maps
 
-    @classmethod
     def _run_synchronous_explanation(
-        cls,
+        self,
         data_preprocessed: np.ndarray,
         target_classes: List[int] | None,
-        compiled_model: ov.ie_api.CompiledModel,
-        postprocess_fn: Callable[[ov.utils.data_helpers.wrappers.OVDict], np.ndarray],
         num_masks: int,
         num_cells: int,
         prob: float,
@@ -92,8 +103,8 @@ class RISE(BlackBoxXAIMethodBase):
         _, _, height, width = data_preprocessed.shape
         input_size = height, width
 
-        forward_output = compiled_model(data_preprocessed)
-        logits = postprocess_fn(forward_output)
+        forward_output = self.model_forward(data_preprocessed, preprocess=False)
+        logits = self.postprocess_fn(forward_output)
         _, num_classes = logits.shape
 
         if target_classes is None:
@@ -105,18 +116,18 @@ class RISE(BlackBoxXAIMethodBase):
 
         sal_maps = np.zeros((num_targets, input_size[0], input_size[1]))
         for _ in tqdm(range(0, num_masks), desc="Explaining in synchronous mode"):
-            mask = cls._generate_mask(input_size, num_cells, prob, rand_generator)
+            mask = self._generate_mask(input_size, num_cells, prob, rand_generator)
             # Add channel dimensions for masks
             masked = mask * data_preprocessed
 
-            forward_output = compiled_model(masked)
-            raw_scores = postprocess_fn(forward_output)
+            forward_output = self.model_forward(masked, preprocess=False)
+            raw_scores = self.postprocess_fn(forward_output)
 
-            sal = cls._get_scored_mask(raw_scores, mask, target_classes)
+            sal = self._get_scored_mask(raw_scores, mask, target_classes)
             sal_maps += sal
 
         if target_classes is not None:
-            sal_maps = cls._reconstruct_sparce_saliency_map(sal_maps, num_classes, input_size, target_classes)
+            sal_maps = self._reconstruct_sparce_saliency_map(sal_maps, num_classes, input_size, target_classes)
         return sal_maps
 
     @staticmethod
@@ -142,7 +153,6 @@ class RISE(BlackBoxXAIMethodBase):
         """Generate masks for RISE
         Returns:
             mask (np.array): float mask from 0 to 1 with size of model input
-
         """
         cell_size = np.ceil(np.array(input_size) / num_cells)
         up_size = np.array((num_cells + 1) * cell_size, dtype=np.uint32)

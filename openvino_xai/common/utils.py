@@ -57,8 +57,8 @@ def retrieve_otx_model(data_dir: str | Path, model_name: str, dir_url=None) -> N
             )
 
 
-def scale(saliency_map: np.ndarray, cast_to_uint8: bool = True) -> np.ndarray:
-    """Scale saliency maps to [0, 255] range."""
+def scaling(saliency_map: np.ndarray, cast_to_uint8: bool = True) -> np.ndarray:
+    """Scaling saliency maps to [0, 255] range."""
     original_num_dims = saliency_map.shape
     if len(original_num_dims) == 2:
         # If input map is 2D array, add dim so that below code would work

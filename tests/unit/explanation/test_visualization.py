@@ -4,7 +4,7 @@
 import numpy as np
 import pytest
 
-from openvino_xai.common.utils import get_min_max, scale
+from openvino_xai.common.utils import get_min_max, scaling
 from openvino_xai.explainer.explanation import Explanation
 from openvino_xai.explainer.parameters import (
     TargetExplainGroup,
@@ -23,30 +23,30 @@ TARGET_EXPLAIN_GROUPS = [
 ]
 
 
-def test_scale_3d():
-    # Test normalization on a multi-channel input
+def test_scaling_3d():
+    # Test scaling on a multi-channel input
     input_saliency_map = (np.random.rand(3, 5, 5) - 0.5) * 1000
     assert (input_saliency_map < 0).any() and (input_saliency_map > 255).any()
-    scaled_map = scale(input_saliency_map)
+    scaled_map = scaling(input_saliency_map)
     assert (scaled_map >= 0).all() and (scaled_map <= 255).all()
 
 
-def test_scale_2d():
-    # Test normalization on a simple 2D input
+def test_scaling_2d():
+    # Test scaling on a simple 2D input
     input_saliency_map = (np.random.rand(5, 5) - 0.5) * 1000
     assert (input_saliency_map < 0).any() and (input_saliency_map > 255).any()
-    scaled_map = scale(input_saliency_map)
+    scaled_map = scaling(input_saliency_map)
     assert (scaled_map >= 0).all() and (scaled_map <= 255).all()
 
 
-def test_scale_cast_to_int8():
+def test_scaling_cast_to_int8():
     # Test if output is correctly cast to uint8
     input_saliency_map = (np.random.rand(3, 5, 5) - 0.5) * 1000
-    scaled_map = scale(input_saliency_map)
+    scaled_map = scaling(input_saliency_map)
     assert scaled_map.dtype == np.uint8
 
     input_saliency_map = (np.random.rand(3, 5, 5) - 0.5) * 1000
-    scaled_map = scale(input_saliency_map, cast_to_uint8=False)
+    scaled_map = scaling(input_saliency_map, cast_to_uint8=False)
     assert scaled_map.dtype == np.float32
 
 
@@ -83,7 +83,7 @@ def test_overlay():
 class TestVisualizer:
     @pytest.mark.parametrize("saliency_maps", SALIENCY_MAPS)
     @pytest.mark.parametrize("target_explain_group", TARGET_EXPLAIN_GROUPS)
-    @pytest.mark.parametrize("scale", [True, False])
+    @pytest.mark.parametrize("scaling", [True, False])
     @pytest.mark.parametrize("resize", [True, False])
     @pytest.mark.parametrize("colormap", [True, False])
     @pytest.mark.parametrize("overlay", [True, False])
@@ -92,14 +92,14 @@ class TestVisualizer:
         self,
         saliency_maps,
         target_explain_group,
-        scale,
+        scaling,
         resize,
         colormap,
         overlay,
         overlay_weight,
     ):
         visualization_parameters = VisualizationParameters(
-            scale=scale,
+            scaling=scaling,
             resize=resize,
             colormap=colormap,
             overlay=overlay,
@@ -133,7 +133,7 @@ class TestVisualizer:
             expected_dims += 1
         assert len(explanation.shape) == expected_dims
 
-        if scale and not colormap and not overlay:
+        if scaling and not colormap and not overlay:
             for map_ in explanation.saliency_map.values():
                 assert map_.min() == 0, f"{map_.min()}"
                 assert map_.max() in {254, 255}, f"{map_.max()}"

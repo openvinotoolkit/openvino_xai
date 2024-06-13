@@ -5,8 +5,8 @@ OpenVINO-XAI library for explaining OpenVINO™ IR models.
 """
 
 
+from .api.api import insert_xai
 from .common.parameters import Method, Task
 from .explainer.explainer import Explainer
-from .inserter import insert_xai
 
 __all__ = ["Explainer", "insert_xai", "Method", "Task"]

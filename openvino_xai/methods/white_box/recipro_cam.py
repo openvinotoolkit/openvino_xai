@@ -1,137 +1,54 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from abc import ABC, abstractmethod
-from typing import List, Tuple
+
+from abc import abstractmethod
+from typing import Callable, List, Tuple
 
 import numpy as np
 import openvino.runtime as ov
 from openvino.runtime import opset10 as opset
 
-from openvino_xai.explainer.parameters import TargetExplainGroup
+from openvino_xai.common.utils import IdentityPreprocessFN
 from openvino_xai.inserter.model_parser import IRParserCls
 from openvino_xai.inserter.parameters import ModelType
+from openvino_xai.methods.white_box.base import WhiteBoxMethod
 
 
-class WhiteBoxXAIMethodBase(ABC):
-    """Base class for methods that generates XAI branch of the model."""
+class FeatureMapPerturbationBase(WhiteBoxMethod):
+    """
+    Base class for FeatureMapPerturbation-based methods.
 
-    def __init__(self, model: ov.Model, embed_normalization: bool = True):
-        self._model_ori = model
-        self.embed_normalization = embed_normalization
-
-    @property
-    def model_ori(self):
-        return self._model_ori
-
-    @property
-    def model_ori_params(self):
-        return self._model_ori.get_parameters()
-
-    @abstractmethod
-    def generate_xai_branch(self):
-        """Implements specific XAI algorithm"""
-
-    @staticmethod
-    def _propagate_dynamic_batch_dimension(model: ov.Model):
-        # TODO: support models with multiple inputs.
-        assert len(model.inputs) == 1, "Support only for models with a single input."
-        if not model.input(0).partial_shape[0].is_dynamic:
-            partial_shape = model.input(0).partial_shape
-            partial_shape[0] = -1  # make batch dimensions to be dynamic
-            model.reshape(partial_shape)
-
-    @staticmethod
-    def _scale_saliency_maps(saliency_maps: ov.Node, per_class: bool) -> ov.Node:
-        """Scale saliency maps to [0, 255] range, per-map."""
-        # TODO: unify for per-class and for per-image
-        if per_class:
-            # Normalization for per-class saliency maps
-            _, num_classes, h, w = saliency_maps.get_output_partial_shape(0)
-            num_classes, h, w = num_classes.get_length(), h.get_length(), w.get_length()
-            saliency_maps = opset.reshape(saliency_maps, (num_classes, h * w), False)
-            max_val = opset.unsqueeze(opset.reduce_max(saliency_maps.output(0), [1]), 1)
-            min_val = opset.unsqueeze(opset.reduce_min(saliency_maps.output(0), [1]), 1)
-            numerator = opset.subtract(saliency_maps.output(0), min_val.output(0))
-            denominator = opset.add(
-                opset.subtract(max_val.output(0), min_val.output(0)), opset.constant(1e-12, dtype=np.float32)
-            )
-            saliency_maps = opset.divide(numerator, denominator)
-            saliency_maps = opset.multiply(saliency_maps.output(0), opset.constant(255, dtype=np.float32))
-            saliency_maps = opset.reshape(saliency_maps, (1, num_classes, h, w), False)
-            return saliency_maps
-        else:
-            # Normalization for per-image saliency map
-            max_val = opset.reduce_max(saliency_maps.output(0), [0, 1, 2])
-            min_val = opset.reduce_min(saliency_maps.output(0), [0, 1, 2])
-            numerator = opset.subtract(saliency_maps.output(0), min_val.output(0))
-            denominator = opset.add(
-                opset.subtract(max_val.output(0), min_val.output(0)), opset.constant(1e-12, dtype=np.float32)
-            )
-            saliency_maps = opset.divide(numerator, denominator)
-            saliency_maps = opset.multiply(saliency_maps.output(0), opset.constant(255, dtype=np.float32))
-            return saliency_maps
-
-
-class ActivationMapXAIMethod(WhiteBoxXAIMethodBase):
-    """Implements ActivationMap"""
-
-    def __init__(
-        self,
-        model: ov.Model,
-        target_layer: str | None = None,
-        embed_normalization: bool = True,
-    ):
-        super().__init__(model, embed_normalization)
-        self.per_class = False
-        self.model_type = ModelType.CNN
-        self.supported_target_explain_groups = [TargetExplainGroup.IMAGE]
-        self.default_target_explain_group = TargetExplainGroup.IMAGE
-        self._target_layer = target_layer
-
-    def generate_xai_branch(self) -> ov.Node:
-        """Implements ActivationMap XAI algorithm."""
-        target_node_ori = IRParserCls.get_target_node(self._model_ori, self.model_type, self._target_layer)
-        saliency_maps = opset.reduce_mean(target_node_ori.output(0), 1)
-        if self.embed_normalization:
-            saliency_maps = self._scale_saliency_maps(saliency_maps, self.per_class)
-        return saliency_maps
-
-
-class FeatureMapPerturbationBase(WhiteBoxXAIMethodBase):
-    """Base class for Recipro-CAM methods.
-
-    :param model: OpenVino model.
+    :param model: OpenVINO model.
     :type model: ov.Model
+    :param preprocess_fn: Preprocessing function, identity function by default
+        (assume input images are already preprocessed by user).
+    :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
     :parameter target_layer: Target layer (node) name after which the XAI branch will be inserted.
     :type target_layer: str
-    :param embed_normalization: Whether to scale output or not.
-    :type embed_normalization: bool
+    :param embed_scaling: Whether to scale output or not.
+    :type embed_scaling: bool
     """
 
     def __init__(
         self,
         model: ov.Model,
+        preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         target_layer: str | None = None,
-        embed_normalization: bool = True,
+        embed_scaling: bool = True,
     ):
-        super().__init__(model, embed_normalization)
+        super().__init__(model, preprocess_fn, embed_scaling)
         self.per_class = True
-        self.supported_target_explain_groups = [
-            TargetExplainGroup.ALL,
-            TargetExplainGroup.CUSTOM,
-        ]
-        self.default_target_explain_group = TargetExplainGroup.CUSTOM
         self._target_layer = target_layer
 
     def generate_xai_branch(self) -> ov.Node:
-        """Implements FeatureMapPerturbation-based XAI algorithm."""
+        """Implements FeatureMapPerturbation-based XAI method."""
         model_clone = self._model_ori.clone()
         self._propagate_dynamic_batch_dimension(model_clone)
 
         saliency_maps = self._get_saliency_map(model_clone)
 
-        if self.embed_normalization:
+        if self.embed_scaling:
             saliency_maps = self._scale_saliency_maps(saliency_maps, self.per_class)
         return saliency_maps
 
@@ -140,17 +57,36 @@ class FeatureMapPerturbationBase(WhiteBoxXAIMethodBase):
         raise NotImplementedError
 
 
-class ReciproCAMXAIMethod(FeatureMapPerturbationBase):
-    """Implements Recipro-CAM for CNN models"""
+class ReciproCAM(FeatureMapPerturbationBase):
+    """
+    Implements Recipro-CAM for CNN models.
+
+    :param model: OpenVINO model.
+    :type model: ov.Model
+    :param preprocess_fn: Preprocessing function, identity function by default
+        (assume input images are already preprocessed by user).
+    :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
+    :parameter target_layer: Target layer (node) name after which the XAI branch will be inserted.
+    :type target_layer: str
+    :param embed_scaling: Whether to scale output or not.
+    :type embed_scaling: bool
+    :param prepare_model: Loading (compiling) the model prior to inference.
+    :type prepare_model: bool
+    """
 
     def __init__(
         self,
         model: ov.Model,
+        preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         target_layer: str | None = None,
-        embed_normalization: bool = True,
+        embed_scaling: bool = True,
+        prepare_model: bool = True,
     ):
-        super().__init__(model, target_layer, embed_normalization)
+        super().__init__(model, preprocess_fn, target_layer, embed_scaling)
         self.model_type = ModelType.CNN
+
+        if prepare_model:
+            self.prepare_model()
 
     def _get_saliency_map(self, model_clone: ov.Model) -> ov.Node:
         target_node_ori = IRParserCls.get_target_node(self._model_ori, self.model_type, self._target_layer)
@@ -197,9 +133,19 @@ class ReciproCAMXAIMethod(FeatureMapPerturbationBase):
         return h < c and w < c
 
 
-class ViTReciproCAMXAIMethod(FeatureMapPerturbationBase):
-    """Implements ViTRecipro-CAM for transformer models.
+class ViTReciproCAM(FeatureMapPerturbationBase):
+    """
+    Implements ViTRecipro-CAM for transformer models.
 
+    :param model: OpenVINO model.
+    :type model: ov.Model
+    :param preprocess_fn: Preprocessing function, identity function by default
+        (assume input images are already preprocessed by user).
+    :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
+    :parameter target_layer: Target layer (node) name after which the XAI branch will be inserted.
+    :type target_layer: str
+    :param embed_scaling: Whether to scale output or not.
+    :type embed_scaling: bool
     :param use_gaussian: Whether to use Gaussian for mask generation or not.
     :type use_gaussian: bool
     :param cls_token: Whether to use cls token for mosaic prediction or not.
@@ -208,25 +154,32 @@ class ViTReciproCAMXAIMethod(FeatureMapPerturbationBase):
     :type final_norm: bool
     :param k: Count of the transformer block (from head) before which XAI branch will be inserted, 1-indexed.
     :type k: int
+    :param prepare_model: Loading (compiling) the model prior to inference.
+    :type prepare_model: bool
     """
 
     def __init__(
         self,
         model: ov.Model,
+        preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         target_layer: str | None = None,
-        embed_normalization: bool = True,
+        embed_scaling: bool = True,
         use_gaussian: bool = True,
         cls_token: bool = True,
         final_norm: bool = True,
         k: int = 1,
+        prepare_model: bool = True,
     ):
-        super().__init__(model, target_layer, embed_normalization)
+        super().__init__(model, preprocess_fn, target_layer, embed_scaling)
         self.model_type = ModelType.TRANSFORMER
         self._use_gaussian = use_gaussian
         self._cls_token = cls_token
 
         # Count of target "Add" node (between the blocks), from the output, 1-indexed
         self._k = k * 2 + int(final_norm)
+
+        if prepare_model:
+            self.prepare_model()
 
     def _get_saliency_map(self, model_clone: ov.Model) -> ov.Node:
         #      Add       -> add node before the target transformer blocks
@@ -380,78 +333,3 @@ class ViTReciproCAMXAIMethod(FeatureMapPerturbationBase):
             feature_map_repeated = opset.tile(target_node_ori.output(0), (h * w, 1, 1))  # e.g. 784x785x768
             mosaic_feature_map = opset.multiply(feature_map_repeated, mosaic_feature_map_mask)
         return mosaic_feature_map
-
-
-class DetClassProbabilityMapXAIMethod(WhiteBoxXAIMethodBase):
-    """Implements DetClassProbabilityMap, used for single-stage detectors, e.g. SSD, YOLOX or ATSS."""
-
-    def __init__(
-        self,
-        model: ov.Model,
-        target_layer: List[str],
-        num_anchors: List[int] | None = None,
-        saliency_map_size: Tuple[int, int] | List[int] = (23, 23),
-        embed_normalization: bool = True,
-    ):
-        super().__init__(model, embed_normalization)
-        self.per_class = True
-        self.supported_target_explain_groups = [
-            TargetExplainGroup.ALL,
-            TargetExplainGroup.CUSTOM,
-        ]
-        self.default_target_explain_group = TargetExplainGroup.ALL
-        self._target_layer = target_layer
-        self._num_anchors = (
-            num_anchors  # Either num_anchors or num_classes has to be provided to process cls head output
-        )
-        self._saliency_map_size = saliency_map_size  # Not always can be obtained from model -> defined externally
-
-    def generate_xai_branch(self) -> ov.Node:
-        """Implements DetClassProbabilityMap XAI algorithm."""
-        cls_head_output_nodes = []
-        for op in self._model_ori.get_ordered_ops():
-            if op.get_friendly_name() in self._target_layer:
-                cls_head_output_nodes.append(op)
-        if len(cls_head_output_nodes) != len(self._target_layer):
-            raise ValueError(
-                f"Not all target layers found. "
-                f"Expected to find {len(self._target_layer)}, found {len(cls_head_output_nodes)}."
-            )
-
-        # TODO: better handle num_classes num_anchors availability
-        _, num_channels, _, _ = cls_head_output_nodes[-1].get_output_partial_shape(0)
-
-        if self._num_anchors:
-            num_cls_out_channels = num_channels.get_length() // self._num_anchors[-1]
-        else:
-            num_cls_out_channels = num_channels.get_length()
-
-        if self._num_anchors:
-            # Handle anchors
-            for scale_idx in range(len(cls_head_output_nodes)):
-                cls_scores_per_scale = cls_head_output_nodes[scale_idx]
-                _, _, h, w = cls_scores_per_scale.get_output_partial_shape(0)
-                cls_scores_anchor_grouped = opset.reshape(
-                    cls_scores_per_scale,
-                    (1, self._num_anchors[scale_idx], num_cls_out_channels, h.get_length(), w.get_length()),
-                    False,
-                )
-                cls_scores_out = opset.reduce_max(cls_scores_anchor_grouped, 1)
-                cls_head_output_nodes[scale_idx] = cls_scores_out
-
-        # Handle scales
-        for scale_idx in range(len(cls_head_output_nodes)):
-            cls_head_output_nodes[scale_idx] = opset.interpolate(
-                cls_head_output_nodes[scale_idx].output(0),
-                output_shape=np.array([1, num_cls_out_channels, *self._saliency_map_size]),
-                scales=np.array([1, 1, 1, 1], dtype=np.float32),
-                mode="linear",
-                shape_calculation_mode="sizes",
-            )
-
-        saliency_maps = opset.reduce_mean(opset.concat(cls_head_output_nodes, 0), 0, keep_dims=True)
-        saliency_maps = opset.softmax(saliency_maps.output(0), 1)
-
-        if self.embed_normalization:
-            saliency_maps = self._scale_saliency_maps(saliency_maps, self.per_class)
-        return saliency_maps
