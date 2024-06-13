@@ -228,7 +228,10 @@ class TestDetProbMapXAI:
         """Test DetClassProbabilityMap is created properly."""
 
         detection_xai_method = DetClassProbabilityMap(
-            self.model, self.target_layer, num_anchors=self.num_anchors, prepare_model=False
+            self.model, 
+            target_layer=self.target_layer, 
+            num_anchors=self.num_anchors, 
+            prepare_model=False,
         )
 
         assert detection_xai_method.model_ori == self.model
@@ -242,7 +245,10 @@ class TestDetProbMapXAI:
     def test_generate_xai_branch(self):
         """Test that DetClassProbabilityMap creates a proper XAI branch node."""
         detection_xai_method = DetClassProbabilityMap(
-            self.model, self.target_layer, num_anchors=self.num_anchors, prepare_model=False
+            self.model, 
+            target_layer=self.target_layer, 
+            num_anchors=self.num_anchors, 
+            prepare_model=False,
         )
 
         xai_output_node = detection_xai_method.generate_xai_branch()

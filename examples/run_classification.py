@@ -16,7 +16,6 @@ from openvino_xai.explainer.mode import (
     ExplainMode,
     TargetExplainGroup,
 )
-from openvino_xai.inserter.parameters import ClassificationInsertionParameters
 
 
 def get_argument_parser():
@@ -81,21 +80,12 @@ def explain_auto(args):
 def explain_white_box(args):
     """
     Advanced use case using ExplainMode.WHITEBOX.
-    insertion_parameters are provided to further configure the white-box method.
+    Insertion parameters (e.g. target_layer) are provided to further configure the white-box method (optional).
     """
 
     # Create ov.Model
     model: ov.Model
     model = ov.Core().read_model(args.model_path)
-
-    # Optional - define insertion parameters
-    insertion_parameters = ClassificationInsertionParameters(
-        # target_layer="last_conv_node_name",  # target_layer - node after which XAI branch will be inserted
-        target_layer="/backbone/conv/conv.2/Div",  # OTX mnet_v3
-        # target_layer="/backbone/features/final_block/activate/Mul",  # OTX effnet
-        embed_scaling=True, # True by default.  If set to True, saliency map scale (0 ~ 255) operation is embedded in the model
-        explain_method=xai.Method.RECIPROCAM,  # ReciproCAM is the default XAI method for CNNs
-    )
 
     # Create explainer object
     explainer = xai.Explainer(
@@ -103,7 +93,11 @@ def explain_white_box(args):
         task=xai.Task.CLASSIFICATION,
         preprocess_fn=preprocess_fn,
         explain_mode=ExplainMode.WHITEBOX,  # defaults to AUTO
-        insertion_parameters=insertion_parameters,
+        explain_method=xai.Method.RECIPROCAM,  # ReciproCAM is the default XAI method for CNNs
+        # target_layer="last_conv_node_name",  # target_layer - node after which XAI branch will be inserted
+        target_layer="/backbone/conv/conv.2/Div",  # OTX mnet_v3
+        # target_layer="/backbone/features/final_block/activate/Mul",  # OTX effnet
+        embed_scaling=True, # True by default.  If set to True, saliency map scale (0 ~ 255) operation is embedded in the model
     )
 
     # Prepare input image and explanation parameters, can be different for each explain call
@@ -226,20 +220,15 @@ def explain_white_box_vit(args):
     model: ov.Model
     model = ov.Core().read_model(args.model_path)
 
-    # Optional - define insertion parameters
-    insertion_parameters = ClassificationInsertionParameters(
-        # target_layer="/layers.10/ffn/Add",  # OTX deit-tiny
-        # target_layer="/blocks/blocks.10/Add_1",  # timm vit_base_patch8_224.augreg_in21k_ft_in1k
-        explain_method=xai.Method.VITRECIPROCAM,
-    )
-
     # Create explainer object
     explainer = xai.Explainer(
         model=model,
         task=xai.Task.CLASSIFICATION,
         preprocess_fn=preprocess_fn,
         explain_mode=ExplainMode.WHITEBOX,  # defaults to AUTO
-        insertion_parameters=insertion_parameters,
+        explain_method=xai.Method.VITRECIPROCAM,
+        # target_layer="/layers.10/ffn/Add",  # OTX deit-tiny
+        # target_layer="/blocks/blocks.10/Add_1",  # timm vit_base_patch8_224.augreg_in21k_ft_in1k
     )
 
     # Prepare input image and explanation parameters, can be different for each explain call
@@ -288,26 +277,21 @@ def insert_xai(args):
 def insert_xai_w_params(args):
     """
     White-box scenario.
-    Insertion of the XAI branch into the IR with insertion parameters, thus IR has additional 'saliency_map' output.
+    Insertion of the XAI branch into the IR with insertion parameters (e.g. target_layer), thus, IR has additional 'saliency_map' output.
     """
 
     # Create ov.Model
     model: ov.Model
     model = ov.Core().read_model(args.model_path)
 
-    # Define insertion parameters
-    insertion_parameters = ClassificationInsertionParameters(
-        target_layer="/backbone/conv/conv.2/Div",  # OTX mnet_v3
-        # target_layer="/backbone/features/final_block/activate/Mul",  # OTX effnet
-        embed_scaling=True,
-        explain_method=xai.Method.RECIPROCAM,
-    )
-
     # insert XAI branch
     model_xai = xai.insert_xai(
         model,
         task=xai.Task.CLASSIFICATION,
-        insertion_parameters=insertion_parameters,
+        explain_method=xai.Method.RECIPROCAM,
+        target_layer="/backbone/conv/conv.2/Div",  # OTX mnet_v3
+        # target_layer="/backbone/features/final_block/activate/Mul",  # OTX effnet
+        embed_scaling=True,
     )
 
     logger.info("insert_xai_w_params: XAI branch inserted into IR with parameters.")

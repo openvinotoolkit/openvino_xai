@@ -17,7 +17,6 @@ from openvino_xai.explainer.mode import (
 )
 from openvino_xai.explainer.utils import get_explain_target_indices
 from openvino_xai.explainer.visualizer import Visualizer
-from openvino_xai.inserter.parameters import InsertionParameters
 from openvino_xai.methods.base import MethodBase
 from openvino_xai.methods.black_box.base import BlackBoxXAIMethod
 from openvino_xai.methods.factory import BlackBoxMethodFactory, WhiteBoxMethodFactory
@@ -41,8 +40,12 @@ class Explainer:
     :type postprocess_fn: Callable[[OVDict], np.ndarray]
     :param explain_mode: Explain mode.
     :type explain_mode: ExplainMode
-    :param insertion_parameters: XAI insertion parameters.
-    :type insertion_parameters: InsertionParameters]
+    :parameter explain_method: Explain method to use for model explanation.
+    :type explain_method: Method
+    :parameter target_layer: Target layer(s) (node(s)) name after which the XAI branch will be inserted.
+    :type target_layer: str | List[str]
+    :parameter embed_scaling: If set to True, saliency map scale (0 ~ 255) operation is embedded in the model.
+    :type embed_scaling: bool
     """
 
     def __init__(
@@ -52,7 +55,10 @@ class Explainer:
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         postprocess_fn: Callable[[OVDict], np.ndarray] = None,
         explain_mode: ExplainMode = ExplainMode.AUTO,
-        insertion_parameters: InsertionParameters | None = None,
+        explain_method: Method | None = None,
+        target_layer: str | List[str] | None = None,
+        embed_scaling: bool | None = True,
+        **kwargs,
     ) -> None:
         self.model = model
         self.compiled_model: ov.ie_api.CompiledModel | None = None
@@ -67,7 +73,10 @@ class Explainer:
         self.preprocess_fn = preprocess_fn
         self.postprocess_fn = postprocess_fn
 
-        self.insertion_parameters = insertion_parameters
+        self.target_layer = target_layer
+        self.embed_scaling = embed_scaling
+        self.explain_method = explain_method
+        self.white_box_method_kwargs = kwargs
 
         self.explain_mode = explain_mode
 
@@ -85,7 +94,13 @@ class Explainer:
         if explain_mode == ExplainMode.WHITEBOX:
             try:
                 method = WhiteBoxMethodFactory.create_method(
-                    task, self.model, self.preprocess_fn, self.insertion_parameters
+                    task, 
+                    self.model, 
+                    self.preprocess_fn, 
+                    self.explain_method,
+                    self.target_layer,
+                    self.embed_scaling,
+                    **self.white_box_method_kwargs,
                 )
                 logger.info("Explaining the model in white-box mode.")
                 return method
@@ -100,7 +115,13 @@ class Explainer:
         elif self.explain_mode == ExplainMode.AUTO:
             try:
                 method = WhiteBoxMethodFactory.create_method(
-                    task, self.model, self.preprocess_fn, self.insertion_parameters
+                    task, 
+                    self.model, 
+                    self.preprocess_fn, 
+                    self.explain_method,
+                    self.target_layer,
+                    self.embed_scaling,
+                    **self.white_box_method_kwargs,
                 )
                 logger.info("Explaining the model in the white-box mode.")
             except Exception as e:

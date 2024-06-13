@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from abc import ABC, abstractmethod
-from typing import Callable
+from typing import Callable, List
 
 import numpy as np
 import openvino.runtime as ov
@@ -10,11 +10,6 @@ from openvino.runtime.utils.data_helpers.wrappers import OVDict
 
 from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import IdentityPreprocessFN, logger
-from openvino_xai.inserter.parameters import (
-    ClassificationInsertionParameters,
-    DetectionInsertionParameters,
-    InsertionParameters,
-)
 from openvino_xai.methods.base import MethodBase
 from openvino_xai.methods.black_box.base import BlackBoxXAIMethod
 from openvino_xai.methods.black_box.rise import RISE
@@ -50,20 +45,38 @@ class WhiteBoxMethodFactory(MethodFactory):
         task: Task,
         model: ov.Model,
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
-        insertion_parameters: InsertionParameters | None = None,
+        explain_method: Method | None = None,
+        target_layer: str | None = None,
+        embed_scaling: bool | None = True,
         **kwargs,
     ) -> MethodBase:
         if task == Task.CLASSIFICATION:
-            return cls.create_classification_method(model, preprocess_fn, insertion_parameters, **kwargs)  # type: ignore
+            return cls.create_classification_method(
+                model, 
+                preprocess_fn, 
+                explain_method,
+                target_layer,
+                embed_scaling,
+                **kwargs,
+            )  # type: ignore
         if task == Task.DETECTION:
-            return cls.create_detection_method(model, preprocess_fn, insertion_parameters, **kwargs)  # type: ignore
+            return cls.create_detection_method(
+                model, 
+                preprocess_fn, 
+                explain_method,
+                target_layer,
+                embed_scaling,
+                **kwargs,
+            )  # type: ignore
         raise ValueError(f"Model type {task} is not supported in white-box mode.")
 
     @staticmethod
     def create_classification_method(
         model: ov.Model,
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
-        insertion_parameters: ClassificationInsertionParameters | None = None,
+        explain_method: Method | None = None,
+        target_layer: str | None = None,
+        embed_scaling: bool | None = True,
         **kwargs,
     ) -> WhiteBoxMethod:
         """Generates instance of the classification white-box method class.
@@ -73,28 +86,26 @@ class WhiteBoxMethodFactory(MethodFactory):
         :param preprocess_fn: Preprocessing function, identity function by default
             (assume input images are already preprocessed by user).
         :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
-        :param insertion_parameters: Insertion parameters that parametrize explanation method,
-            that will be inserted into the model graph.
-        :type insertion_parameters: InsertionParameters
+        :parameter explain_method: Explain method to use for model explanation.
+        :type explain_method: Method
+        :parameter target_layer: Target layer(s) (node(s)) name after which the XAI branch will be inserted.
+        :type target_layer: str | List[str]
+        :parameter embed_scaling: If set to True, saliency map scale (0 ~ 255) operation is embedded in the model.
+        :type embed_scaling: bool
         """
 
-        if insertion_parameters is None or insertion_parameters.target_layer is None:
+        if target_layer is None:
             logger.info("Target insertion layer is not provided - trying to find it in auto mode.")
         else:
-            logger.info(f"Target insertion layer {insertion_parameters.target_layer} is provided.")
+            logger.info(f"Target insertion layer {target_layer} is provided.")
 
-        if insertion_parameters is None:
-            logger.info("Using ReciproCAM method (for CNNs).")
-            return ReciproCAM(model, preprocess_fn, **kwargs)
-
-        explain_method = insertion_parameters.explain_method
-        if explain_method == Method.RECIPROCAM:
+        if explain_method is None or explain_method == Method.RECIPROCAM:
             logger.info("Using ReciproCAM method (for CNNs).")
             return ReciproCAM(
                 model,
                 preprocess_fn,
-                insertion_parameters.target_layer,
-                insertion_parameters.embed_scaling,
+                target_layer,
+                embed_scaling,
                 **kwargs,
             )
         if explain_method == Method.VITRECIPROCAM:
@@ -102,8 +113,8 @@ class WhiteBoxMethodFactory(MethodFactory):
             return ViTReciproCAM(
                 model,
                 preprocess_fn,
-                insertion_parameters.target_layer,
-                insertion_parameters.embed_scaling,
+                target_layer,
+                embed_scaling,
                 **kwargs,
             )
         if explain_method == Method.ACTIVATIONMAP:
@@ -111,8 +122,8 @@ class WhiteBoxMethodFactory(MethodFactory):
             return ActivationMap(
                 model,
                 preprocess_fn,
-                insertion_parameters.target_layer,
-                insertion_parameters.embed_scaling,
+                target_layer,
+                embed_scaling,
                 **kwargs,
             )
         raise ValueError(f"Requested explanation method {explain_method} is not implemented.")
@@ -121,7 +132,9 @@ class WhiteBoxMethodFactory(MethodFactory):
     def create_detection_method(
         model: ov.Model,
         preprocess_fn: Callable[[np.ndarray], np.ndarray],
-        insertion_parameters: DetectionInsertionParameters,
+        explain_method: Method | None = None,
+        target_layer: List[str] | None = None,
+        embed_scaling: bool = True,
         **kwargs,
     ) -> WhiteBoxMethod:
         """Generates instance of the detection white-box method class.
@@ -131,23 +144,23 @@ class WhiteBoxMethodFactory(MethodFactory):
         :param preprocess_fn: Preprocessing function, identity function by default
             (assume input images are already preprocessed by user).
         :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
-        :param insertion_parameters: Insertion parameters that parametrize explanation method,
-            that will be inserted into the model graph.
-        :type insertion_parameters: InsertionParameters
+        :parameter explain_method: Explain method to use for model explanation.
+        :type explain_method: Method
+        :parameter target_layer: Target layer(s) (node(s)) name after which the XAI branch will be inserted.
+        :type target_layer: str | List[str]
+        :parameter embed_scaling: If set to True, saliency map scale (0 ~ 255) operation is embedded in the model.
+        :type embed_scaling: bool
         """
 
-        if insertion_parameters is None:
-            raise ValueError("insertion_parameters is required for the detection models.")
+        if target_layer is None:
+            raise ValueError("target_layer is required for the detection.")
 
-        explain_method = insertion_parameters.explain_method
-        if explain_method == Method.DETCLASSPROBABILITYMAP:
+        if explain_method is None or explain_method == Method.DETCLASSPROBABILITYMAP:
             return DetClassProbabilityMap(
-                model,
-                insertion_parameters.target_layer,
-                preprocess_fn,
-                insertion_parameters.num_anchors,
-                insertion_parameters.saliency_map_size,
-                insertion_parameters.embed_scaling,
+                model=model,
+                preprocess_fn=preprocess_fn,
+                target_layer=target_layer,
+                embed_scaling=embed_scaling,
                 **kwargs,
             )
         raise ValueError(f"Requested explanation method {explain_method} is not implemented.")

@@ -5,7 +5,7 @@ from typing import Callable, List
 
 import openvino.runtime as ov
 
-from openvino_xai.inserter.parameters import ModelType
+from openvino_xai.inserter.model_type import ModelType
 
 
 class IRParser:

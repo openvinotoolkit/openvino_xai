@@ -16,7 +16,6 @@ from openvino_xai.explainer.mode import (
     TargetExplainGroup,
 )
 from openvino_xai.explainer.utils import get_postprocess_fn, get_preprocess_fn
-from openvino_xai.inserter.parameters import ClassificationInsertionParameters
 from tests.unit.explanation.test_explanation_utils import VOC_NAMES
 
 MODEL_NAME = "mlc_mobilenetv3_large_voc"
@@ -115,28 +114,22 @@ class TestExplainer:
         model = ov.Core().read_model(model_path)
 
         with pytest.raises(Exception) as exc_info:
-            insertion_parameters = ClassificationInsertionParameters(
-                target_layer="some_wrong_name",
-            )
             explainer = Explainer(
                 model=model,
                 task=Task.CLASSIFICATION,
                 preprocess_fn=self.preprocess_fn,
                 explain_mode=ExplainMode.AUTO,
-                insertion_parameters=insertion_parameters,
+                target_layer="some_wrong_name",
             )
         assert str(exc_info.value) == "Postprocess function has to be provided for the black-box mode."
 
-        insertion_parameters = ClassificationInsertionParameters(
-            target_layer="some_wrong_name",
-        )
         explainer = Explainer(
             model=model,
             task=Task.CLASSIFICATION,
             preprocess_fn=self.preprocess_fn,
             postprocess_fn=get_postprocess_fn(),
             explain_mode=ExplainMode.AUTO,
-            insertion_parameters=insertion_parameters,
+            target_layer="some_wrong_name",
         )
         explanation = explainer(self.image, target_explain_group=TargetExplainGroup.ALL, num_masks=10)
         assert len(explanation.saliency_map) == 20

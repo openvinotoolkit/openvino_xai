@@ -15,7 +15,6 @@ from openvino_xai.explainer.mode import (
     ExplainMode,
     TargetExplainGroup,
 )
-from openvino_xai.inserter.parameters import DetectionInsertionParameters
 
 
 def get_argument_parser():
@@ -61,12 +60,6 @@ def main(argv):
     #     "/bbox_head/atss_cls_3/Conv/WithoutBiases",
     #     "/bbox_head/atss_cls_4/Conv/WithoutBiases",
     # ]
-    insertion_parameters = DetectionInsertionParameters(
-        target_layer=cls_head_output_node_names,
-        # num_anchors=[1, 1, 1, 1, 1],
-        saliency_map_size=(23, 23),  # Optional
-        explain_method=xai.Method.DETCLASSPROBABILITYMAP,  # Optional
-    )
 
     # Create explainer object
     explainer = xai.Explainer(
@@ -74,7 +67,8 @@ def main(argv):
         task=xai.Task.DETECTION,
         preprocess_fn=preprocess_fn,
         explain_mode=ExplainMode.WHITEBOX,  # defaults to AUTO
-        insertion_parameters=insertion_parameters,
+        target_layer=cls_head_output_node_names,
+        saliency_map_size=(23, 23),  # Optional
     )
 
     # Prepare input image and explanation parameters, can be different for each explain call

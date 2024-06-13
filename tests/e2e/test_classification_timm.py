@@ -23,7 +23,6 @@ from openvino_xai.explainer.utils import (
     get_score,
 )
 from openvino_xai.explainer.visualizer import Visualizer
-from openvino_xai.inserter.parameters import ClassificationInsertionParameters
 from openvino_xai.utils.model_export import export_to_ir, export_to_onnx
 
 timm = pytest.importorskip("timm")
@@ -180,11 +179,6 @@ class TestImageClassificationTimm:
         else:
             raise ValueError
 
-        insertion_parameters = ClassificationInsertionParameters(
-            embed_scaling=False,
-            explain_method=explain_method,
-        )
-
         mean_values = [(item * 255) for item in model_cfg["mean"]]
         scale_values = [(item * 255) for item in model_cfg["std"]]
         preprocess_fn = get_preprocess_fn(
@@ -200,7 +194,8 @@ class TestImageClassificationTimm:
             task=Task.CLASSIFICATION,
             preprocess_fn=preprocess_fn,
             explain_mode=ExplainMode.WHITEBOX,  # defaults to AUTO
-            insertion_parameters=insertion_parameters,
+            explain_method=explain_method,
+            embed_scaling=False,
         )
 
         target_class = self.supported_num_classes[model_cfg["num_classes"]]

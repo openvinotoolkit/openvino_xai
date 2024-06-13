@@ -3,16 +3,18 @@
 
 import openvino.runtime as ov
 
-from openvino_xai.common.parameters import Task
+from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import IdentityPreprocessFN, has_xai, logger
-from openvino_xai.inserter.parameters import InsertionParameters
 from openvino_xai.methods.factory import WhiteBoxMethodFactory
 
 
 def insert_xai(
     model: ov.Model,
     task: Task,
-    insertion_parameters: InsertionParameters | None = None,
+    explain_method: Method | None = None,
+    target_layer: str | None = None,
+    embed_scaling: bool | None = True,
+    **kwargs,
 ) -> ov.Model:
     """
     Function that inserts XAI branch into IR.
@@ -24,10 +26,12 @@ def insert_xai(
     :type model: ov.Model | str
     :param task: Type of the task: CLASSIFICATION or DETECTION.
     :type task: Task
-    :param insertion_parameters: Insertion parameters that parametrize white-box method,
-        that will be inserted into the model graph (optional).
-    :type insertion_parameters: InsertionParameters
-    :return: IR with XAI branch.
+    :parameter explain_method: Explain method to use for model explanation.
+    :type explain_method: Method
+    :parameter target_layer: Target layer(s) (node(s)) name after which the XAI branch will be inserted.
+    :type target_layer: str | List[str]
+    :parameter embed_scaling: If set to True, saliency map scale (0 ~ 255) operation is embedded in the model.
+    :type embed_scaling: bool
     """
 
     if has_xai(model):
@@ -38,8 +42,11 @@ def insert_xai(
         task=task,
         model=model,
         preprocess_fn=IdentityPreprocessFN(),
-        insertion_parameters=insertion_parameters,
+        explain_method=explain_method,
+        target_layer=target_layer,
+        embed_scaling=embed_scaling,
         prepare_model=False,
+        **kwargs,
     )
 
     model_xai = method.prepare_model(load_model=False)

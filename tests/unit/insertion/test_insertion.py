@@ -7,7 +7,6 @@ from openvino import runtime as ov
 from openvino_xai.api.api import insert_xai
 from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import has_xai, retrieve_otx_model
-from openvino_xai.inserter.parameters import DetectionInsertionParameters
 from tests.integration.test_classification import DATA_DIR, MODELS
 from tests.integration.test_detection import DEFAULT_DET_MODEL, MODEL_CONFIGS
 
@@ -34,13 +33,14 @@ def test_insertion_detection():
     model = ov.Core().read_model(model_path)
 
     cls_head_output_node_names = MODEL_CONFIGS[DEFAULT_DET_MODEL].node_names
-    insertion_parameters = DetectionInsertionParameters(
+
+    model_with_xai = insert_xai(
+        model, 
+        Task.DETECTION, 
+        explain_method=Method.DETCLASSPROBABILITYMAP,
         target_layer=cls_head_output_node_names,
         num_anchors=MODEL_CONFIGS[DEFAULT_DET_MODEL].anchors,
-        explain_method=Method.DETCLASSPROBABILITYMAP,
-    )
-
-    model_with_xai = insert_xai(model, Task.DETECTION, insertion_parameters)
+        )
     assert has_xai(model_with_xai), "Updated IR model should has XAI head."
 
 

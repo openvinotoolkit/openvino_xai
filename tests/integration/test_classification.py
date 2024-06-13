@@ -17,7 +17,6 @@ from openvino_xai.explainer.mode import (
     TargetExplainGroup,
 )
 from openvino_xai.explainer.utils import get_postprocess_fn, get_preprocess_fn
-from openvino_xai.inserter.parameters import ClassificationInsertionParameters
 
 MODELS = [
     "mlc_mobilenetv3_large_voc",  # verified
@@ -91,17 +90,14 @@ class TestClsWB:
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
 
         model = ov.Core().read_model(model_path)
-        insertion_parameters = ClassificationInsertionParameters(
-            embed_scaling=embed_scaling,
-            explain_method=Method.VITRECIPROCAM,
-        )
 
         explainer = Explainer(
             model=model,
             task=Task.CLASSIFICATION,
             preprocess_fn=self.preprocess_fn,  # type: ignore
             explain_mode=ExplainMode.WHITEBOX,
-            insertion_parameters=insertion_parameters,
+            explain_method=Method.VITRECIPROCAM,
+            embed_scaling=embed_scaling,
         )
 
         if target_explain_group == TargetExplainGroup.ALL:
@@ -151,17 +147,14 @@ class TestClsWB:
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
         model = ov.Core().read_model(model_path)
-        insertion_parameters = ClassificationInsertionParameters(
-            embed_scaling=embed_scaling,
-            explain_method=Method.RECIPROCAM,
-        )
 
         explainer = Explainer(
             model=model,
             task=Task.CLASSIFICATION,
             preprocess_fn=self.preprocess_fn,  # type: ignore
             explain_mode=ExplainMode.WHITEBOX,
-            insertion_parameters=insertion_parameters,
+            explain_method=Method.RECIPROCAM,
+            embed_scaling=embed_scaling,
         )
 
         if target_explain_group == TargetExplainGroup.ALL:
@@ -206,17 +199,14 @@ class TestClsWB:
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
         model = ov.Core().read_model(model_path)
-        insertion_parameters = ClassificationInsertionParameters(
-            embed_scaling=embed_scaling,
-            explain_method=Method.ACTIVATIONMAP,
-        )
 
         explainer = Explainer(
             model=model,
             task=Task.CLASSIFICATION,
             preprocess_fn=self.preprocess_fn,  # type: ignore
             explain_mode=ExplainMode.WHITEBOX,
-            insertion_parameters=insertion_parameters,
+            explain_method=Method.ACTIVATIONMAP,
+            embed_scaling=embed_scaling,
         )
 
         explanation = explainer(
