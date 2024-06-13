@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "openvino_xai"
-version = "1.0.0rc0"
+version = "1.0.0rc01"
 dependencies = [
   "openvino-dev==2023.2",
   "opencv-python",
@@ -26,7 +26,7 @@ readme = "README.md"
 license = {file = "LICENSE"}
 keywords = ["openvino-toolkit", "explainable-ai", "xai", "cnn", "transformer", "black-box", "white-box"]
 classifiers = [
-  "License :: OSI Approved :: MIT Apache Software License",
+  "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
 ]
