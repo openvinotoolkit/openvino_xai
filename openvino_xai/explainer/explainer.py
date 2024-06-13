@@ -93,44 +93,19 @@ class Explainer:
         """
         if explain_mode == ExplainMode.WHITEBOX:
             try:
-                method = WhiteBoxMethodFactory.create_method(
-                    task, 
-                    self.model, 
-                    self.preprocess_fn, 
-                    self.explain_method,
-                    self.target_layer,
-                    self.embed_scaling,
-                    **self.white_box_method_kwargs,
-                )
-                logger.info("Explaining the model in white-box mode.")
-                return method
+                return self._create_white_box_method(task)
             except Exception as e:
                 print(e)
                 raise RuntimeError("Failed to insert XAI into the model. Try to use black-box.")
         elif self.explain_mode == ExplainMode.BLACKBOX:
-            self._check_postprocess_fn()
-            method = BlackBoxMethodFactory.create_method(task, self.model, self.preprocess_fn, self.postprocess_fn)
-            logger.info("Explaining the model in black-box mode.")
-            return method
+            return self._create_black_box_method(task)
         elif self.explain_mode == ExplainMode.AUTO:
             try:
-                method = WhiteBoxMethodFactory.create_method(
-                    task, 
-                    self.model, 
-                    self.preprocess_fn, 
-                    self.explain_method,
-                    self.target_layer,
-                    self.embed_scaling,
-                    **self.white_box_method_kwargs,
-                )
-                logger.info("Explaining the model in the white-box mode.")
+                return self._create_white_box_method(task)
             except Exception as e:
                 print(e)
                 logger.info("Failed to insert XAI into the model - using black-box mode.")
-                self._check_postprocess_fn()
-                method = BlackBoxMethodFactory.create_method(task, self.model, self.preprocess_fn, self.postprocess_fn)
-                logger.info("Explaining the model in the black-box mode.")
-            return method
+                return self._create_black_box_method(task)
         else:
             raise ValueError(f"Not supported explain mode {self.explain_mode}.")
 
@@ -234,6 +209,26 @@ class Explainer:
         """Forward pass of the compiled model."""
         return self.method.model_forward(x, preprocess)
 
+    def _create_white_box_method(self, task: Task) -> MethodBase:
+        method = WhiteBoxMethodFactory.create_method(
+            task, 
+            self.model, 
+            self.preprocess_fn, 
+            self.explain_method,
+            self.target_layer,
+            self.embed_scaling,
+            **self.white_box_method_kwargs,
+        )
+        logger.info("Explaining the model in white-box mode.")
+        return method
+
+    def _create_black_box_method(self, task: Task) -> MethodBase:
+        if self.postprocess_fn is None:
+            raise ValueError("Postprocess function has to be provided for the black-box mode.")
+        method = BlackBoxMethodFactory.create_method(task, self.model, self.preprocess_fn, self.postprocess_fn)
+        logger.info("Explaining the model in black-box mode.")
+        return method
+
     def _visualize(
         self, 
         explanation: Explanation, 
@@ -267,7 +262,3 @@ class Explainer:
                 overlay_weight=overlay_weight,
             ).run()
         return explanation
-
-    def _check_postprocess_fn(self) -> None:
-        if self.postprocess_fn is None:
-            raise ValueError("Postprocess function has to be provided for the black-box mode.")
