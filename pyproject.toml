@@ -26,7 +26,7 @@ readme = "README.md"
 license = {file = "LICENSE"}
 keywords = ["openvino-toolkit", "explainable-ai", "xai", "cnn", "transformer", "black-box", "white-box"]
 classifiers = [
-  "License :: OSI Approved :: MIT Apache Software License",
+  "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
 ]
