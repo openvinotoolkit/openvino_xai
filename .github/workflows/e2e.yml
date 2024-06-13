@@ -14,7 +14,7 @@ jobs:
     uses: ./.github/workflows/pre_merge.yml
 
   E2E-Test:
-    runs-on: ubuntu-22.04
+    runs-on: [large-disk]
     needs: Sanity-Checks
     timeout-minutes: 120
     # This is what will cancel the job concurrency
