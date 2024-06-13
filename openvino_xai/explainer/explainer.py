@@ -1,18 +1,18 @@
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Callable
+from typing import Callable, List
 
 import numpy as np
 import openvino.runtime as ov
 from openvino.runtime.utils.data_helpers.wrappers import OVDict
 
 from openvino_xai import Task
+from openvino_xai.common.parameters import Method
 from openvino_xai.common.utils import IdentityPreprocessFN, logger
 from openvino_xai.explainer.explanation import Explanation
 from openvino_xai.explainer.parameters import (
     ExplainMode,
-    ExplanationParameters,
     TargetExplainGroup,
 )
 from openvino_xai.explainer.utils import get_explain_target_indices
@@ -108,18 +108,25 @@ class Explainer:
     def __call__(
         self,
         data: np.ndarray,
-        explanation_parameters: ExplanationParameters,
+        target_explain_group: TargetExplainGroup = TargetExplainGroup.CUSTOM,
+        target_explain_labels: List[int | str] | None = None,
+        label_names: List[str] | None = None,
+        scaling: bool = False,
+        resize: bool = True,
+        colormap: bool = True,
+        overlay: bool = False,
+        overlay_weight: float = 0.5,
         **kwargs,
     ) -> Explanation:
         """Explainer call that generates processed explanation result."""
         explain_target_indices = None
         if (
             isinstance(self.method, BlackBoxXAIMethod)
-            and explanation_parameters.target_explain_group == TargetExplainGroup.CUSTOM
+            and target_explain_group == TargetExplainGroup.CUSTOM
         ):
             explain_target_indices = get_explain_target_indices(
-                explanation_parameters.target_explain_labels,
-                explanation_parameters.label_names,
+                target_explain_labels,
+                label_names,
             )
 
         saliency_map = self.method.generate_saliency_map(
@@ -130,32 +137,55 @@ class Explainer:
 
         explanation = Explanation(
             saliency_map=saliency_map,
-            target_explain_group=explanation_parameters.target_explain_group,
-            target_explain_labels=explanation_parameters.target_explain_labels,
-            label_names=explanation_parameters.label_names,
+            target_explain_group=target_explain_group,
+            target_explain_labels=target_explain_labels,
+            label_names=label_names,
         )
-        return self._visualize(explanation, data, explanation_parameters)
+        return self._visualize(
+            explanation,
+            data,
+            scaling,
+            resize,
+            colormap,
+            overlay,
+            overlay_weight,
+        )
 
     def model_forward(self, x: np.ndarray, preprocess: bool = True) -> OVDict:
         """Forward pass of the compiled model."""
         return self.method.model_forward(x, preprocess)
 
     def _visualize(
-        self, explanation: Explanation, data: np.ndarray, explanation_parameters: ExplanationParameters
+        self, 
+        explanation: Explanation, 
+        data: np.ndarray, 
+        scaling: bool,
+        resize: bool,
+        colormap: bool,
+        overlay: bool,
+        overlay_weight: float,
     ) -> Explanation:
         if not isinstance(self.preprocess_fn, IdentityPreprocessFN):
             # Assume if preprocess_fn is provided - input data is original image
             explanation = Visualizer(
                 explanation=explanation,
                 original_input_image=data,
-                visualization_parameters=explanation_parameters.visualization_parameters,
+                scaling=scaling,
+                resize=resize,
+                colormap=colormap,
+                overlay=overlay,
+                overlay_weight=overlay_weight,
             ).run()
         else:
             # preprocess_fn is not provided - assume input data is processed
             explanation = Visualizer(
                 explanation=explanation,
                 output_size=data.shape[:2],  # resize to model input by default
-                visualization_parameters=explanation_parameters.visualization_parameters,
+                scaling=scaling,
+                resize=resize,
+                colormap=colormap,
+                overlay=overlay,
+                overlay_weight=overlay_weight,
             ).run()
         return explanation
 

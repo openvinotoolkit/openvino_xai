@@ -14,9 +14,7 @@ import openvino_xai as xai
 from openvino_xai.common.utils import logger
 from openvino_xai.explainer.parameters import (
     ExplainMode,
-    ExplanationParameters,
     TargetExplainGroup,
-    VisualizationParameters,
 )
 from openvino_xai.inserter.parameters import ClassificationInsertionParameters
 
@@ -61,13 +59,13 @@ def explain_auto(args):
 
     # Prepare input image and explanation parameters, can be different for each explain call
     image = cv2.imread(args.image_path)
-    explanation_parameters = ExplanationParameters(
+
+    # Generate explanation
+    explanation = explainer(
+        image,
         target_explain_group=TargetExplainGroup.CUSTOM,  # CUSTOM list of classes to explain, also ALL possible
         target_explain_labels=[11, 14],  # target classes to explain
     )
-
-    # Generate explanation
-    explanation = explainer(image, explanation_parameters)
 
     logger.info(
         f"explain_auto: Generated {len(explanation.saliency_map)} classification "
@@ -112,15 +110,15 @@ def explain_white_box(args):
     image = cv2.imread(args.image_path)
     voc_labels = ['aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car', 'cat', 'chair', 'cow', 'diningtable',
               'dog', 'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor']
-    explanation_parameters = ExplanationParameters(
+
+    # Generate explanation
+    explanation = explainer(
+        image, 
         target_explain_group=TargetExplainGroup.CUSTOM,  # CUSTOM list of classes to explain, also ALL possible
         target_explain_labels=[11, 14],  # target classes to explain, also ['dog', 'person'] is a valid input
         label_names=voc_labels,  # optional names
-        visualization_parameters=VisualizationParameters(overlay=True)
-    )
-
-    # Generate explanation
-    explanation = explainer(image, explanation_parameters)
+        overlay=True,
+        )
 
     logger.info(
         f"explain_white_box: Generated {len(explanation.saliency_map)} classification "
@@ -156,17 +154,14 @@ def explain_black_box(args):
     image = cv2.imread(args.image_path)
     voc_labels = ['aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car', 'cat', 'chair', 'cow', 'diningtable',
               'dog', 'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor']
-    explanation_parameters = ExplanationParameters(
-        target_explain_group=TargetExplainGroup.CUSTOM,  # CUSTOM list of classes to explain, also ALL possible
-        target_explain_labels=['dog', 'person'],  # target classes to explain, also [11, 14] possible
-        label_names=voc_labels,  # optional names
-        visualization_parameters=VisualizationParameters(overlay=True)
-    )
 
     # Generate explanation
     explanation = explainer(
         image,
-        explanation_parameters,
+        target_explain_group=TargetExplainGroup.CUSTOM,  # CUSTOM list of classes to explain, also ALL possible
+        target_explain_labels=['dog', 'person'],  # target classes to explain, also [11, 14] possible
+        label_names=voc_labels,  # optional names
+        overlay=True,
         num_masks=1000,  # kwargs of the RISE algo
     )
 
@@ -197,11 +192,6 @@ def explain_white_box_multiple_images(args):
         preprocess_fn=preprocess_fn,
     )
 
-    explanation_parameters = ExplanationParameters(
-        target_explain_group=TargetExplainGroup.CUSTOM,  # CUSTOM list of classes to explain, also ALL possible
-        target_explain_labels=[14],  # target classes to explain
-    )
-
     # Create list of images
     img_data_formats = (".jpg", ".jpeg", ".gif", ".bmp", ".tif", ".tiff", ".png")
     if args.image_path.lower().endswith(img_data_formats):
@@ -216,7 +206,7 @@ def explain_white_box_multiple_images(args):
 
     # Generate explanation
     images = [cv2.imread(image_path) for image_path in img_files]
-    explanation = [explainer(image, explanation_parameters) for image in images]
+    explanation = [explainer(image, target_explain_group=TargetExplainGroup.CUSTOM, target_explain_labels=[14]) for image in images]
 
     logger.info(
         f"explain_white_box_multiple_images: Generated {len(explanation)} explanations "
@@ -254,13 +244,13 @@ def explain_white_box_vit(args):
 
     # Prepare input image and explanation parameters, can be different for each explain call
     image = cv2.imread(args.image_path)
-    explanation_parameters = ExplanationParameters(
+
+    # Generate explanation
+    explanation = explainer(
+        image, 
         target_explain_group=TargetExplainGroup.CUSTOM,  # CUSTOM list of classes to explain, also ALL possible
         target_explain_labels=[0, 1, 2, 3, 4],  # target classes to explain
     )
-
-    # Generate explanation
-    explanation = explainer(image, explanation_parameters)
 
     logger.info(
         f"explain_white_box_vit: Generated {len(explanation.saliency_map)} classification "
