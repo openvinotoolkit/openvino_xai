@@ -11,8 +11,8 @@ import openvino.runtime as ov
 import pytest
 
 from openvino_xai.common.parameters import Method, Task
-from openvino_xai.explainer.explainer import Explainer
-from openvino_xai.explainer.mode import ExplainMode, TargetExplainGroup
+from openvino_xai.explainer.explainer import ExplainMode, Explainer
+from openvino_xai.explainer.explain_group import TargetExplainGroup
 from openvino_xai.explainer.utils import (
     ActivationType,
     get_postprocess_fn,
@@ -222,7 +222,8 @@ class TestImageClassificationTimm:
             raw_sal_map[-1, 0] = np.mean(np.delete(raw_sal_map[-2:, :2].flatten(), 2))
             raw_sal_map[-1, -1] = np.mean(np.delete(raw_sal_map[-2:, -2:].flatten(), 3))
             explanation.saliency_map[target_class] = raw_sal_map
-            visualizer = Visualizer(
+            visualizer = Visualizer()
+            explanation = visualizer(
                 explanation=explanation,
                 original_input_image=image,
                 scaling=True,
@@ -230,7 +231,6 @@ class TestImageClassificationTimm:
                 resize=False,
                 colormap=False,
             )
-            explanation = visualizer.run()
 
             model_output = explainer.model_forward(image)
             target_confidence = get_score(model_output["logits"], target_class, activation=ActivationType.SOFTMAX)

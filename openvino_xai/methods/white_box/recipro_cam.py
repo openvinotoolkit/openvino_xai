@@ -11,7 +11,7 @@ from openvino.runtime import opset10 as opset
 
 from openvino_xai.common.utils import IdentityPreprocessFN
 from openvino_xai.inserter.model_parser import IRParserCls
-from openvino_xai.inserter.model_type import ModelType
+from openvino_xai.inserter.model_parser import ModelType
 from openvino_xai.methods.white_box.base import WhiteBoxMethod
 
 

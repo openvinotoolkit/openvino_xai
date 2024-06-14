@@ -4,20 +4,6 @@
 from enum import Enum
 
 
-class ExplainMode(Enum):
-    """
-    Enum describes different explain modes.
-
-    Contains the following values:
-        WHITEBOX - The model is explained in white box mode, i.e. XAI branch is getting inserted into the model graph.
-        BLACKBOX - The model is explained in black box model.
-    """
-
-    WHITEBOX = "whitebox"
-    BLACKBOX = "blackbox"
-    AUTO = "auto"
-
-
 class TargetExplainGroup(Enum):
     """
     Enum describes different target explanation groups.

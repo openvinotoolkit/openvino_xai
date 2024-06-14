@@ -3,9 +3,9 @@
 """
 Interface for getting explanation.
 """
-from openvino_xai.explainer.explainer import Explainer
+from openvino_xai.explainer.explainer import ExplainMode, Explainer
 from openvino_xai.explainer.explanation import Explanation, Layout
-from openvino_xai.explainer.mode import ExplainMode, TargetExplainGroup
+from openvino_xai.explainer.explain_group import TargetExplainGroup
 from openvino_xai.explainer.visualizer import Visualizer, colormap, overlay, resize
 
 __all__ = [

@@ -1,6 +1,7 @@
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from enum import Enum
 from typing import Callable, List
 
 import numpy as np
@@ -10,13 +11,27 @@ from openvino.runtime.utils.data_helpers.wrappers import OVDict
 from openvino_xai import Task
 from openvino_xai.common.parameters import Method
 from openvino_xai.common.utils import IdentityPreprocessFN, logger
+from openvino_xai.explainer.explain_group import TargetExplainGroup
 from openvino_xai.explainer.explanation import Explanation
-from openvino_xai.explainer.mode import ExplainMode, TargetExplainGroup
 from openvino_xai.explainer.utils import get_explain_target_indices
 from openvino_xai.explainer.visualizer import Visualizer
 from openvino_xai.methods.base import MethodBase
 from openvino_xai.methods.black_box.base import BlackBoxXAIMethod
 from openvino_xai.methods.factory import BlackBoxMethodFactory, WhiteBoxMethodFactory
+
+
+class ExplainMode(Enum):
+    """
+    Enum describes different explain modes.
+
+    Contains the following values:
+        WHITEBOX - The model is explained in white box mode, i.e. XAI branch is getting inserted into the model graph.
+        BLACKBOX - The model is explained in black box model.
+    """
+
+    WHITEBOX = "whitebox"
+    BLACKBOX = "blackbox"
+    AUTO = "auto"
 
 
 class Explainer:
@@ -76,6 +91,8 @@ class Explainer:
         self.white_box_method_kwargs = kwargs
 
         self.explain_mode = explain_mode
+
+        self.visualizer = Visualizer()
 
         self.method = self.create_method(self.explain_mode, self.task)
 
@@ -235,7 +252,16 @@ class Explainer:
     ) -> Explanation:
         if not isinstance(self.preprocess_fn, IdentityPreprocessFN):
             # Assume if preprocess_fn is provided - input data is original image
-            explanation = Visualizer(
+            # explanation = Visualizer(
+            #     explanation=explanation,
+            #     original_input_image=data,
+            #     scaling=scaling,
+            #     resize=resize,
+            #     colormap=colormap,
+            #     overlay=overlay,
+            #     overlay_weight=overlay_weight,
+            # ).run()
+            explanation = self.visualizer(
                 explanation=explanation,
                 original_input_image=data,
                 scaling=scaling,
@@ -243,10 +269,19 @@ class Explainer:
                 colormap=colormap,
                 overlay=overlay,
                 overlay_weight=overlay_weight,
-            ).run()
+            )
         else:
             # preprocess_fn is not provided - assume input data is processed
-            explanation = Visualizer(
+            # explanation = Visualizer(
+            #     explanation=explanation,
+            #     output_size=data.shape[:2],  # resize to model input by default
+            #     scaling=scaling,
+            #     resize=resize,
+            #     colormap=colormap,
+            #     overlay=overlay,
+            #     overlay_weight=overlay_weight,
+            # ).run()
+            explanation = self.visualizer(
                 explanation=explanation,
                 output_size=data.shape[:2],  # resize to model input by default
                 scaling=scaling,
@@ -254,5 +289,5 @@ class Explainer:
                 colormap=colormap,
                 overlay=overlay,
                 overlay_weight=overlay_weight,
-            ).run()
+            )
         return explanation

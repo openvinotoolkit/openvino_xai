@@ -6,7 +6,7 @@ import pytest
 
 from openvino_xai.common.utils import get_min_max, scaling
 from openvino_xai.explainer.explanation import Explanation
-from openvino_xai.explainer.mode import TargetExplainGroup
+from openvino_xai.explainer.explain_group import TargetExplainGroup
 from openvino_xai.explainer.visualizer import Visualizer, colormap, overlay, resize
 
 SALIENCY_MAPS = [
@@ -109,7 +109,8 @@ class TestVisualizer:
 
         raw_sal_map_dims = len(explanation.shape)
         original_input_image = np.ones((20, 20, 3))
-        post_processor = Visualizer(
+        visualizer = Visualizer()
+        explanation = visualizer(
             explanation=explanation,
             original_input_image=original_input_image,
             scaling=scaling,
@@ -118,8 +119,7 @@ class TestVisualizer:
             overlay=overlay,
             overlay_weight=overlay_weight,
         )
-        explanation = post_processor.run()
-
+        
         assert explanation is not None
         expected_dims = raw_sal_map_dims
         if colormap or overlay:
@@ -138,7 +138,8 @@ class TestVisualizer:
             explanation = Explanation(
                 saliency_maps, target_explain_group=target_explain_group, target_explain_labels=explain_targets
             )
-            post_processor = Visualizer(
+            visualizer = Visualizer()
+            explanation_output_size = visualizer(
                 explanation=explanation,
                 output_size=(20, 20),
                 scaling=scaling,
@@ -147,7 +148,6 @@ class TestVisualizer:
                 overlay=overlay,
                 overlay_weight=overlay_weight,
             )
-            saliency_map_processed_output_size = post_processor.run()
             maps_data = explanation.saliency_map
-            maps_size = saliency_map_processed_output_size.saliency_map
+            maps_size = explanation_output_size.saliency_map
             assert np.all(maps_data["per_image_map"] == maps_size["per_image_map"])

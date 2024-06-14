@@ -45,48 +45,7 @@ def overlay(saliency_map: np.ndarray, input_image: np.ndarray, overlay_weight: f
 class Visualizer:
     """
     Visualizer implements post-processing for the saliency map in explanation result.
-
-    :param explanation: Explanation result object.
-    :type explanation: Explanation
-    :param original_input_image: Input original_input_image.
-    :type original_input_image: np.ndarray
-    :param output_size: Output size used for resize operation.
-    :type output_size: Tuple[int, int]
-    :parameter scaling: If True, scaling saliency map into [0, 255] range (filling the whole range).
-        By default, scaling is embedded into the IR model.
-        Therefore, scaling=False here by default.
-    :type scaling: bool
-    :parameter resize: If True, resize saliency map to the input image size.
-    :type resize: bool
-    :parameter colormap: If True, apply colormap to the grayscale saliency map.
-    :type colormap: bool
-    :parameter overlay: If True, generate overlay of the saliency map over the input image.
-    :type overlay: bool
-    :parameter overlay_weight: Weight of the saliency map when overlaying the input data with the saliency map.
-    :type overlay_weight: float
     """
-
-    def __init__(
-        self,
-        explanation: Explanation,
-        original_input_image: np.ndarray = None,
-        output_size: Tuple[int, int] = None,
-        scaling: bool = False,
-        resize: bool = True,
-        colormap: bool = True,
-        overlay: bool = False,
-        overlay_weight: float = 0.5,
-    ):
-        self._explanation = explanation
-        self._saliency_map_np: np.ndarray | None = None
-        self._original_input_image = original_input_image
-        self._output_size = output_size
-
-        self._scaling = scaling
-        self._resize = resize
-        self._colormap = colormap
-        self._overlay = overlay
-        self._overlay_weight = overlay_weight
 
     @property
     def layout(self) -> Layout:
@@ -96,35 +55,87 @@ class Visualizer:
     def layout(self, layout: Layout):
         self._explanation.layout = layout
 
-    def run(self) -> Explanation:
+    def __call__(
+        self,
+        explanation: Explanation,
+        original_input_image: np.ndarray = None,
+        output_size: Tuple[int, int] = None,
+        scaling: bool = False,
+        resize: bool = True,
+        colormap: bool = True,
+        overlay: bool = False,
+        overlay_weight: float = 0.5,
+    ) -> Explanation:
+        return self.visualize(
+            explanation,
+            original_input_image,
+            output_size,
+            scaling,
+            resize,
+            colormap,
+            overlay,
+            overlay_weight,
+        )
+
+    def visualize(
+        self,
+        explanation: Explanation,
+        original_input_image: np.ndarray = None,
+        output_size: Tuple[int, int] = None,
+        scaling: bool = False,
+        resize: bool = True,
+        colormap: bool = True,
+        overlay: bool = False,
+        overlay_weight: float = 0.5,
+    ) -> Explanation:
         """
         Saliency map postprocess method.
         Applies some op ordering logic, depending on VisualizationParameters.
         Returns ExplainResult object with processed saliency map, that can have one of Layout layouts.
+
+        :param explanation: Explanation result object.
+        :type explanation: Explanation
+        :param original_input_image: Input original_input_image.
+        :type original_input_image: np.ndarray
+        :param output_size: Output size used for resize operation.
+        :type output_size: Tuple[int, int]
+        :parameter scaling: If True, scaling saliency map into [0, 255] range (filling the whole range).
+            By default, scaling is embedded into the IR model.
+            Therefore, scaling=False here by default.
+        :type scaling: bool
+        :parameter resize: If True, resize saliency map to the input image size.
+        :type resize: bool
+        :parameter colormap: If True, apply colormap to the grayscale saliency map.
+        :type colormap: bool
+        :parameter overlay: If True, generate overlay of the saliency map over the input image.
+        :type overlay: bool
+        :parameter overlay_weight: Weight of the saliency map when overlaying the input data with the saliency map.
+        :type overlay_weight: float
         """
-        saliency_map_dict = self._explanation.saliency_map
+        self._explanation = explanation
+        saliency_map_dict = explanation.saliency_map
         class_idx_to_return = list(saliency_map_dict.keys())
 
         # Convert to numpy array to use vectorized scale (0 ~ 255) operation and speed up lots of classes scenario
         self._saliency_map_np = np.array(list(saliency_map_dict.values()))
 
-        if self._scaling and not self._resize and not self._overlay:
+        if scaling and not resize and not overlay:
             self._apply_scaling()
 
-        if self._overlay:
-            if self._original_input_image is None:
+        if overlay:
+            if original_input_image is None:
                 raise ValueError("Input data has to be provided for overlay.")
-            self._apply_resize()
+            self._apply_resize(original_input_image, output_size)
             self._apply_colormap()
-            self._apply_overlay()
+            self._apply_overlay(original_input_image, overlay_weight)
         else:
-            if self._resize:
-                if self._original_input_image is None and self._output_size is None:
+            if resize:
+                if original_input_image is None and output_size is None:
                     raise ValueError(
                         "Input data or output_size has to be provided for resize (for target size estimation)."
                     )
-                self._apply_resize()
-            if self._colormap:
+                self._apply_resize(original_input_image, output_size)
+            if colormap:
                 self._apply_colormap()
 
         # Convert back to dict
@@ -139,14 +150,18 @@ class Visualizer:
             )
         self._saliency_map_np = scaling(self._saliency_map_np)
 
-    def _apply_resize(self) -> None:
+    def _apply_resize(
+            self, 
+            original_input_image: np.ndarray = None,
+            output_size: Tuple[int, int] = None,
+        ) -> None:
         # TODO: support resize of colormapped images.
         if self.layout not in GRAY_LAYOUTS:
             raise ValueError(
                 f"Saliency map to resize has to be grayscale. The layout must be in {GRAY_LAYOUTS}, "
                 f"but got {self.layout}."
             )
-        output_size = self._output_size if self._output_size else self._original_input_image.shape[:2]
+        output_size = output_size if output_size else original_input_image.shape[:2]
         self._saliency_map_np = resize(self._saliency_map_np, output_size)
 
         # Scaling has to be applied after resize to keep map in range 0..255
@@ -166,9 +181,13 @@ class Visualizer:
         if self.layout == Layout.MULTIPLE_MAPS_PER_IMAGE_GRAY:
             self.layout = Layout.MULTIPLE_MAPS_PER_IMAGE_COLOR
 
-    def _apply_overlay(self) -> None:
+    def _apply_overlay(
+            self,
+            original_input_image: np.ndarray = None,
+            overlay_weight: float = 0.5,
+        ) -> None:
         assert self.layout in COLOR_MAPPED_LAYOUTS, "Color mapped saliency map are expected for overlay."
-        self._saliency_map_np = overlay(self._saliency_map_np, self._original_input_image, self._overlay_weight)
+        self._saliency_map_np = overlay(self._saliency_map_np, original_input_image, overlay_weight)
 
     def _convert_sal_map_to_dict(self, class_idx: List) -> None:
         dict_sal_map: Dict[int | str, np.ndarray] = {}

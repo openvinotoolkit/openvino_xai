@@ -11,8 +11,8 @@ import pytest
 
 from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import retrieve_otx_model
-from openvino_xai.explainer.explainer import Explainer
-from openvino_xai.explainer.mode import ExplainMode, TargetExplainGroup
+from openvino_xai.explainer.explainer import ExplainMode, Explainer
+from openvino_xai.explainer.explain_group import TargetExplainGroup
 from openvino_xai.explainer.utils import get_preprocess_fn
 from openvino_xai.methods.factory import WhiteBoxMethodFactory
 from openvino_xai.methods.white_box.det_class_probability_map import (

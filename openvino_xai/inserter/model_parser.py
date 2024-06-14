@@ -1,11 +1,17 @@
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from enum import Enum
 from typing import Callable, List
 
 import openvino.runtime as ov
 
-from openvino_xai.inserter.model_type import ModelType
+
+class ModelType(Enum):
+    """Enum representing the different model types."""
+
+    CNN = "cnn"
+    TRANSFORMER = "transformer"
 
 
 class IRParser:

@@ -10,7 +10,7 @@ import cv2
 import numpy as np
 
 from openvino_xai.common.utils import logger
-from openvino_xai.explainer.mode import TargetExplainGroup
+from openvino_xai.explainer.explain_group import TargetExplainGroup
 from openvino_xai.explainer.utils import get_explain_target_indices
 
 
