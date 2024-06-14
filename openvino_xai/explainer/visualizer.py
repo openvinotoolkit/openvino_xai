@@ -47,13 +47,6 @@ class Visualizer:
     Visualizer implements post-processing for the saliency map in explanation result.
     """
 
-    @property
-    def layout(self) -> Layout:
-        return self._explanation.layout
-
-    @layout.setter
-    def layout(self, layout: Layout):
-        self._explanation.layout = layout
 
     def __call__(
         self,
@@ -112,91 +105,102 @@ class Visualizer:
         :parameter overlay_weight: Weight of the saliency map when overlaying the input data with the saliency map.
         :type overlay_weight: float
         """
-        self._explanation = explanation
         saliency_map_dict = explanation.saliency_map
         class_idx_to_return = list(saliency_map_dict.keys())
 
         # Convert to numpy array to use vectorized scale (0 ~ 255) operation and speed up lots of classes scenario
-        self._saliency_map_np = np.array(list(saliency_map_dict.values()))
+        saliency_map_np = np.array(list(saliency_map_dict.values()))
 
         if scaling and not resize and not overlay:
-            self._apply_scaling()
+            saliency_map_np = self._apply_scaling(explanation, saliency_map_np)
 
         if overlay:
             if original_input_image is None:
                 raise ValueError("Input data has to be provided for overlay.")
-            self._apply_resize(original_input_image, output_size)
-            self._apply_colormap()
-            self._apply_overlay(original_input_image, overlay_weight)
+            saliency_map_np = self._apply_resize(explanation, saliency_map_np, original_input_image, output_size)
+            saliency_map_np = self._apply_colormap(explanation, saliency_map_np)
+            saliency_map_np = self._apply_overlay(explanation, saliency_map_np, original_input_image, overlay_weight)
         else:
             if resize:
                 if original_input_image is None and output_size is None:
                     raise ValueError(
                         "Input data or output_size has to be provided for resize (for target size estimation)."
                     )
-                self._apply_resize(original_input_image, output_size)
+                saliency_map_np = self._apply_resize(explanation, saliency_map_np, original_input_image, output_size)
             if colormap:
-                self._apply_colormap()
+                saliency_map_np = self._apply_colormap(explanation, saliency_map_np)
 
         # Convert back to dict
-        self._convert_sal_map_to_dict(class_idx_to_return)
-        return self._explanation
+        return self._update_explanation_with_processed_sal_map(explanation, saliency_map_np, class_idx_to_return)
 
-    def _apply_scaling(self) -> None:
-        if self.layout not in GRAY_LAYOUTS:
+    @staticmethod
+    def _apply_scaling(explanation: Explanation, saliency_map_np: np.ndarray) -> np.ndarray:
+        if explanation.layout not in GRAY_LAYOUTS:
             raise ValueError(
                 f"Saliency map to scale has to be grayscale. The layout must be in {GRAY_LAYOUTS}, "
-                f"but got {self.layout}."
+                f"but got {explanation.layout}."
             )
-        self._saliency_map_np = scaling(self._saliency_map_np)
+        return scaling(saliency_map_np)
 
     def _apply_resize(
-            self, 
+            self,
+            explanation: Explanation,
+            saliency_map_np: np.ndarray,
             original_input_image: np.ndarray = None,
             output_size: Tuple[int, int] = None,
-        ) -> None:
+        ) -> np.ndarray:
         # TODO: support resize of colormapped images.
-        if self.layout not in GRAY_LAYOUTS:
+        if explanation.layout not in GRAY_LAYOUTS:
             raise ValueError(
                 f"Saliency map to resize has to be grayscale. The layout must be in {GRAY_LAYOUTS}, "
-                f"but got {self.layout}."
+                f"but got {explanation.layout}."
             )
         output_size = output_size if output_size else original_input_image.shape[:2]
-        self._saliency_map_np = resize(self._saliency_map_np, output_size)
+        saliency_map_np = resize(saliency_map_np, output_size)
 
         # Scaling has to be applied after resize to keep map in range 0..255
-        self._apply_scaling()
+        return self._apply_scaling(explanation, saliency_map_np)
 
-    def _apply_colormap(self) -> None:
-        if self._saliency_map_np.dtype != np.uint8:
+    @staticmethod
+    def _apply_colormap(explanation: Explanation, saliency_map_np: np.ndarray) -> np.ndarray:
+        if saliency_map_np.dtype != np.uint8:
             raise ValueError("Colormap requires saliency map to has uint8 dtype. Enable 'scaling' flag for Visualizer.")
-        if self.layout not in GRAY_LAYOUTS:
+        if explanation.layout not in GRAY_LAYOUTS:
             raise ValueError(
                 f"Saliency map to colormap has to be grayscale. The layout must be in {GRAY_LAYOUTS}, "
-                f"but got {self.layout}."
+                f"but got {explanation.layout}."
             )
-        self._saliency_map_np = colormap(self._saliency_map_np)
-        if self.layout == Layout.ONE_MAP_PER_IMAGE_GRAY:
-            self.layout = Layout.ONE_MAP_PER_IMAGE_COLOR
-        if self.layout == Layout.MULTIPLE_MAPS_PER_IMAGE_GRAY:
-            self.layout = Layout.MULTIPLE_MAPS_PER_IMAGE_COLOR
+        saliency_map_np = colormap(saliency_map_np)
+        if explanation.layout == Layout.ONE_MAP_PER_IMAGE_GRAY:
+            explanation.layout = Layout.ONE_MAP_PER_IMAGE_COLOR
+        if explanation.layout == Layout.MULTIPLE_MAPS_PER_IMAGE_GRAY:
+            explanation.layout = Layout.MULTIPLE_MAPS_PER_IMAGE_COLOR
+        return saliency_map_np
 
+    @staticmethod
     def _apply_overlay(
-            self,
+            explanation: Explanation,
+            saliency_map_np: np.ndarray,
             original_input_image: np.ndarray = None,
             overlay_weight: float = 0.5,
-        ) -> None:
-        assert self.layout in COLOR_MAPPED_LAYOUTS, "Color mapped saliency map are expected for overlay."
-        self._saliency_map_np = overlay(self._saliency_map_np, original_input_image, overlay_weight)
+        ) -> np.ndarray:
+        assert explanation.layout in COLOR_MAPPED_LAYOUTS, "Color mapped saliency map are expected for overlay."
+        return overlay(saliency_map_np, original_input_image, overlay_weight)
 
-    def _convert_sal_map_to_dict(self, class_idx: List) -> None:
+    @staticmethod
+    def _update_explanation_with_processed_sal_map(
+            explanation: Explanation, 
+            saliency_map_np: np.ndarray, 
+            class_idx: List,
+        ) -> Explanation:
         dict_sal_map: Dict[int | str, np.ndarray] = {}
-        if self.layout in ONE_MAP_LAYOUTS:
-            dict_sal_map["per_image_map"] = self._saliency_map_np[0]
-            self._saliency_map_np = dict_sal_map
-        elif self.layout in MULTIPLE_MAP_LAYOUTS:
-            for idx, class_sal in zip(class_idx, self._saliency_map_np):
+        if explanation.layout in ONE_MAP_LAYOUTS:
+            dict_sal_map["per_image_map"] = saliency_map_np[0]
+            saliency_map_np = dict_sal_map
+        elif explanation.layout in MULTIPLE_MAP_LAYOUTS:
+            for idx, class_sal in zip(class_idx, saliency_map_np):
                 dict_sal_map[idx] = class_sal
         else:
             raise ValueError
-        self._explanation.saliency_map = dict_sal_map
+        explanation.saliency_map = dict_sal_map
+        return explanation
