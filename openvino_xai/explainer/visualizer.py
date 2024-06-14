@@ -15,7 +15,6 @@ from openvino_xai.explainer.explanation import (
     Explanation,
     Layout,
 )
-from openvino_xai.explainer.parameters import VisualizationParameters
 
 
 def resize(saliency_map: np.ndarray, output_size: Tuple[int, int]) -> np.ndarray:
@@ -53,8 +52,18 @@ class Visualizer:
     :type original_input_image: np.ndarray
     :param output_size: Output size used for resize operation.
     :type output_size: Tuple[int, int]
-    :param visualization_parameters: Parameters that define post-processing for saliency map.
-    :type visualization_parameters: VisualizationParameters
+    :parameter scaling: If True, scaling saliency map into [0, 255] range (filling the whole range).
+        By default, scaling is embedded into the IR model.
+        Therefore, scaling=False here by default.
+    :type scaling: bool
+    :parameter resize: If True, resize saliency map to the input image size.
+    :type resize: bool
+    :parameter colormap: If True, apply colormap to the grayscale saliency map.
+    :type colormap: bool
+    :parameter overlay: If True, generate overlay of the saliency map over the input image.
+    :type overlay: bool
+    :parameter overlay_weight: Weight of the saliency map when overlaying the input data with the saliency map.
+    :type overlay_weight: float
     """
 
     def __init__(
@@ -62,20 +71,22 @@ class Visualizer:
         explanation: Explanation,
         original_input_image: np.ndarray = None,
         output_size: Tuple[int, int] = None,
-        visualization_parameters: VisualizationParameters | None = None,
+        scaling: bool = False,
+        resize: bool = True,
+        colormap: bool = True,
+        overlay: bool = False,
+        overlay_weight: float = 0.5,
     ):
         self._explanation = explanation
         self._saliency_map_np: np.ndarray | None = None
         self._original_input_image = original_input_image
         self._output_size = output_size
 
-        if visualization_parameters is None:
-            visualization_parameters = VisualizationParameters(resize=True, colormap=True)
-        self._scaling = visualization_parameters.scaling
-        self._resize = visualization_parameters.resize
-        self._colormap = visualization_parameters.colormap
-        self._overlay = visualization_parameters.overlay
-        self._overlay_weight = visualization_parameters.overlay_weight
+        self._scaling = scaling
+        self._resize = resize
+        self._colormap = colormap
+        self._overlay = overlay
+        self._overlay_weight = overlay_weight
 
     @property
     def layout(self) -> Layout:

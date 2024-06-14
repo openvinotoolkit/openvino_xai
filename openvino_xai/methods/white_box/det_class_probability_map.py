@@ -35,13 +35,15 @@ class DetClassProbabilityMap(WhiteBoxMethod):
     def __init__(
         self,
         model: ov.Model,
-        target_layer: List[str],
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
+        target_layer: List[str] = None,
+        embed_scaling: bool = True,
         num_anchors: List[int] | None = None,
         saliency_map_size: Tuple[int, int] | List[int] = (23, 23),
-        embed_scaling: bool = True,
         prepare_model: bool = True,
     ):
+        if target_layer is None:
+            raise ValueError("target_layer is required for the detection.")
         super().__init__(model, preprocess_fn, embed_scaling)
         self.per_class = True
         self._target_layer = target_layer
