@@ -19,8 +19,8 @@ from openvino_xai.methods.white_box.det_class_probability_map import (
     DetClassProbabilityMap,
 )
 from openvino_xai.methods.white_box.recipro_cam import ReciproCAM, ViTReciproCAM
-from tests.integration.test_classification import DEFAULT_CLS_MODEL
-from tests.integration.test_detection import DEFAULT_DET_MODEL, MODEL_CONFIGS
+from tests.intg.test_classification import DEFAULT_CLS_MODEL
+from tests.intg.test_detection import DEFAULT_DET_MODEL, MODEL_CONFIGS
 
 DATA_DIR = Path(".data")
 VIT_MODEL = "deit-tiny"

@@ -8,8 +8,8 @@ from openvino_xai.api.api import insert_xai
 from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import has_xai, retrieve_otx_model
 from openvino_xai.inserter.parameters import DetectionInsertionParameters
-from tests.integration.test_classification import DATA_DIR, MODELS
-from tests.integration.test_detection import DEFAULT_DET_MODEL, MODEL_CONFIGS
+from tests.intg.test_classification import DATA_DIR, MODELS
+from tests.intg.test_detection import DEFAULT_DET_MODEL, MODEL_CONFIGS
 
 
 @pytest.mark.parametrize("model_name", MODELS)
