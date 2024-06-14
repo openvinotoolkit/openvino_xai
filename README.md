@@ -1,4 +1,4 @@
-# OpenVINO™ Explainable AI Toolkit
+# OpenVINO™ Explainable AI Toolkit - OpenVINO_XAI
 
 **OpenVINO™ Explainable AI (XAI) Toolkit** provides a suite of XAI algorithms for visual explanation of
 [OpenVINO™](https://github.com/openvinotoolkit/openvino) Intermediate Representation (IR) models.
@@ -9,11 +9,11 @@ OpenVINO XAI API documentation can be found [here](https://curly-couscous-ovjvm2
 
 ## Installation
 
-- Set up an isolated python environment:
+- Set up an isolated python environment for python 3.10 and higher:
 
 ```bash
 # Create virtual env.
-python3 -m venv .ovxai
+python3.10 -m venv .ovxai
 
 # Activate virtual env.
 source .ovxai/bin/activate
@@ -56,6 +56,8 @@ explanation = explainer(data, explanation_parameters)
 
 By default the model will be explained using `auto mode`.
 Under the hood of the `auto mode`: will try to run `white-box mode`, if fails => will run `black-box mode`.
+
+![Auto mode process](docs/images/auto_explain_mode.jpg)
 
 Generating saliency maps involves model inference. Explainer will perform model inference.
 To infer, `preprocess_fn` and `postprocess_fn` are requested from the user.
