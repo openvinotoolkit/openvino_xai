@@ -5,8 +5,8 @@ import numpy as np
 import pytest
 
 from openvino_xai.common.utils import get_min_max, scaling
-from openvino_xai.explainer.explanation import Explanation
 from openvino_xai.explainer.explain_group import TargetExplainGroup
+from openvino_xai.explainer.explanation import Explanation
 from openvino_xai.explainer.visualizer import Visualizer, colormap, overlay, resize
 
 SALIENCY_MAPS = [
@@ -119,7 +119,7 @@ class TestVisualizer:
             overlay=overlay,
             overlay_weight=overlay_weight,
         )
-        
+
         assert explanation is not None
         expected_dims = raw_sal_map_dims
         if colormap or overlay:

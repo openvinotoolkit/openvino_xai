@@ -47,7 +47,6 @@ class Visualizer:
     Visualizer implements post-processing for the saliency map in explanation result.
     """
 
-
     def __call__(
         self,
         explanation: Explanation,
@@ -143,12 +142,12 @@ class Visualizer:
         return scaling(saliency_map_np)
 
     def _apply_resize(
-            self,
-            explanation: Explanation,
-            saliency_map_np: np.ndarray,
-            original_input_image: np.ndarray = None,
-            output_size: Tuple[int, int] = None,
-        ) -> np.ndarray:
+        self,
+        explanation: Explanation,
+        saliency_map_np: np.ndarray,
+        original_input_image: np.ndarray = None,
+        output_size: Tuple[int, int] = None,
+    ) -> np.ndarray:
         # TODO: support resize of colormapped images.
         if explanation.layout not in GRAY_LAYOUTS:
             raise ValueError(
@@ -179,20 +178,20 @@ class Visualizer:
 
     @staticmethod
     def _apply_overlay(
-            explanation: Explanation,
-            saliency_map_np: np.ndarray,
-            original_input_image: np.ndarray = None,
-            overlay_weight: float = 0.5,
-        ) -> np.ndarray:
+        explanation: Explanation,
+        saliency_map_np: np.ndarray,
+        original_input_image: np.ndarray = None,
+        overlay_weight: float = 0.5,
+    ) -> np.ndarray:
         assert explanation.layout in COLOR_MAPPED_LAYOUTS, "Color mapped saliency map are expected for overlay."
         return overlay(saliency_map_np, original_input_image, overlay_weight)
 
     @staticmethod
     def _update_explanation_with_processed_sal_map(
-            explanation: Explanation, 
-            saliency_map_np: np.ndarray, 
-            class_idx: List,
-        ) -> Explanation:
+        explanation: Explanation,
+        saliency_map_np: np.ndarray,
+        class_idx: List,
+    ) -> Explanation:
         dict_sal_map: Dict[int | str, np.ndarray] = {}
         if explanation.layout in ONE_MAP_LAYOUTS:
             dict_sal_map["per_image_map"] = saliency_map_np[0]

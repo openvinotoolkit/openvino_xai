@@ -5,8 +5,8 @@ import os
 
 import numpy as np
 
-from openvino_xai.explainer.explanation import Explanation
 from openvino_xai.explainer.explain_group import TargetExplainGroup
+from openvino_xai.explainer.explanation import Explanation
 from tests.unit.explanation.test_explanation_utils import VOC_NAMES
 
 SALIENCY_MAPS = (np.random.rand(1, 20, 5, 5) * 255).astype(np.uint8)

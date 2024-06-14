@@ -10,8 +10,8 @@ import pytest
 from openvino_xai.api.api import insert_xai
 from openvino_xai.common.parameters import Task
 from openvino_xai.common.utils import retrieve_otx_model
-from openvino_xai.explainer.explainer import ExplainMode, Explainer
 from openvino_xai.explainer.explain_group import TargetExplainGroup
+from openvino_xai.explainer.explainer import Explainer, ExplainMode
 from openvino_xai.explainer.utils import get_postprocess_fn, get_preprocess_fn
 from tests.unit.explanation.test_explanation_utils import VOC_NAMES
 

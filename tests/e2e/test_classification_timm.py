@@ -11,8 +11,8 @@ import openvino.runtime as ov
 import pytest
 
 from openvino_xai.common.parameters import Method, Task
-from openvino_xai.explainer.explainer import ExplainMode, Explainer
 from openvino_xai.explainer.explain_group import TargetExplainGroup
+from openvino_xai.explainer.explainer import Explainer, ExplainMode
 from openvino_xai.explainer.utils import (
     ActivationType,
     get_postprocess_fn,
