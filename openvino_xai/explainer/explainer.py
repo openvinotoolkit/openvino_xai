@@ -251,16 +251,6 @@ class Explainer:
         overlay_weight: float,
     ) -> Explanation:
         if not isinstance(self.preprocess_fn, IdentityPreprocessFN):
-            # Assume if preprocess_fn is provided - input data is original image
-            # explanation = Visualizer(
-            #     explanation=explanation,
-            #     original_input_image=data,
-            #     scaling=scaling,
-            #     resize=resize,
-            #     colormap=colormap,
-            #     overlay=overlay,
-            #     overlay_weight=overlay_weight,
-            # ).run()
             explanation = self.visualizer(
                 explanation=explanation,
                 original_input_image=data,
@@ -271,16 +261,6 @@ class Explainer:
                 overlay_weight=overlay_weight,
             )
         else:
-            # preprocess_fn is not provided - assume input data is processed
-            # explanation = Visualizer(
-            #     explanation=explanation,
-            #     output_size=data.shape[:2],  # resize to model input by default
-            #     scaling=scaling,
-            #     resize=resize,
-            #     colormap=colormap,
-            #     overlay=overlay,
-            #     overlay_weight=overlay_weight,
-            # ).run()
             explanation = self.visualizer(
                 explanation=explanation,
                 output_size=data.shape[:2],  # resize to model input by default
