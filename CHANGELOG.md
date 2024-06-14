@@ -1,5 +1,20 @@
 # Change Log
 
+## [1.1.0 Unreleased]
+
+### Summary
+
+*
+
+### What's Changed
+
+*
+
+### New Contributors
+
+*
+
+
 ## [1.0.0 Unreleased]
 
 ### Summary
@@ -11,7 +26,6 @@
 
 ### What's Changed
 
-* Refactor names/folders/objects for better verbosity by @GalyaZalesskaya in https://github.com/openvinotoolkit/openvino_xai/pull/5
 * Support classification task by @negvet in https://github.com/intel-sandbox/openvino_xai/commit/dd5fd9b73fe8c12e2d741792043372bcd900a850
 * Support detection task by @negvet in https://github.com/intel-sandbox/openvino_xai/commit/84f285f2f40a8b1fc50a8cd49798aae37afd58dc
 * Support Model API as inference engine by @negvet in https://github.com/intel-sandbox/openvino_xai/commit/5f575f122dedc0461975bd58f81e730a901a69a6
@@ -69,6 +83,7 @@
 * Add unit test coverage setting by @goodsong81 in https://github.com/intel-sandbox/openvino_xai/pull/63
 * Add LICENSE and SECURITY.md by @goodsong81 in https://github.com/intel-sandbox/openvino_xai/pull/64
 * Add CHANGLOG.md by @goodsong81 in https://github.com/intel-sandbox/openvino_xai/pull/65
+* Refactor names/folders/objects for better verbosity by @GalyaZalesskaya in https://github.com/openvinotoolkit/openvino_xai/pull/5
 
 ### New Contributors
 

@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "openvino_xai"
-version = "1.0.0rc01"
+version = "1.1.0rc01"
 dependencies = [
   "openvino-dev==2023.2",
   "opencv-python",
