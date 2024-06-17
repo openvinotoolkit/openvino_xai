@@ -77,6 +77,8 @@ docker inspect "$ACTIONS_RUNNER_NAME"; RET=$?
 if [ $RET -eq 0 ]; then
     # if the named container exsiting, stop and remove it first
     docker stop "$ACTIONS_RUNNER_NAME"
+    # wait completely stopped the container
+    sleep 10
     yes | docker rm "$ACTIONS_RUNNER_NAME"
 fi
 
