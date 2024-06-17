@@ -9,8 +9,10 @@ from pathlib import Path
 from typing import Any, Tuple
 from urllib.request import urlretrieve
 
+import cv2
 import numpy as np
 import openvino.runtime as ov
+from openvino.runtime.utils.data_helpers.wrappers import OVDict
 
 logger = logging.getLogger("openvino_xai")
 handler = logging.StreamHandler()
@@ -85,6 +87,43 @@ def get_min_max(saliency_map: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     min_values = np.min(saliency_map, axis=-1)
     max_values = np.max(saliency_map, axis=-1)
     return min_values, max_values
+
+
+def preprocess_fn(x: np.ndarray) -> np.ndarray:
+    # Implementing own pre-process function based on model's implementation
+    x = cv2.resize(src=x, dsize=(224, 224))
+
+    # Scaling and normalization for timm model
+    is_timm_model = True
+    mean = (
+        np.array([123.675, 116.28, 103.53])
+        if is_timm_model
+        else np.array([0.0, 0.0, 0.0])
+    )
+    std = (
+        np.array([58.395, 57.12, 57.375])
+        if is_timm_model
+        else np.array([1.0, 1.0, 1.0])
+    )
+    x = (x - std) / mean
+
+    # Reshape to model input shape to [batch, channels, height, width].
+    x = x.transpose((2, 0, 1))
+    x = np.expand_dims(x, 0)
+    return x
+
+
+def postprocess_fn(x: OVDict):
+    # Implementing own post-process function based on model's implementation
+    # Output logits
+    x = x[0]
+    prediction_processed = softmax(x)
+    return prediction_processed
+
+def softmax(x):
+    """Compute softmax values of x."""
+    e_x = np.exp(x - np.max(x))
+    return e_x / e_x.sum()
 
 
 class IdentityPreprocessFN:

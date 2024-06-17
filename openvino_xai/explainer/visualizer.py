@@ -39,7 +39,7 @@ def overlay(saliency_map: np.ndarray, input_image: np.ndarray, overlay_weight: f
     """Applies overlay of the saliency map with the original image."""
     res = input_image * overlay_weight + saliency_map * (1 - overlay_weight)
     res[res > 255] = 255
-    return res
+    return res.astype(np.uint8)
 
 
 class Visualizer:
