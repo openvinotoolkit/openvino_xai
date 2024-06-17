@@ -95,16 +95,8 @@ def preprocess_fn(x: np.ndarray) -> np.ndarray:
 
     # Scaling and normalization for timm model
     is_timm_model = True
-    mean = (
-        np.array([123.675, 116.28, 103.53])
-        if is_timm_model
-        else np.array([0.0, 0.0, 0.0])
-    )
-    std = (
-        np.array([58.395, 57.12, 57.375])
-        if is_timm_model
-        else np.array([1.0, 1.0, 1.0])
-    )
+    mean = np.array([123.675, 116.28, 103.53]) if is_timm_model else np.array([0.0, 0.0, 0.0])
+    std = np.array([58.395, 57.12, 57.375]) if is_timm_model else np.array([1.0, 1.0, 1.0])
     x = (x - std) / mean
 
     # Reshape to model input shape to [batch, channels, height, width].
@@ -119,6 +111,7 @@ def postprocess_fn(x: OVDict):
     x = x[0]
     prediction_processed = softmax(x)
     return prediction_processed
+
 
 def softmax(x):
     """Compute softmax values of x."""
