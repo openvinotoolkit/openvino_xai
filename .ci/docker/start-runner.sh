@@ -54,7 +54,7 @@ cat << EndofMessage
         -n|--name           Specify actions-runner name to be registered to the repository
         -l|--labels         Additional label string to set the actions-runner
         -t|--tag            Specify docker image tag to create container
-        -m|--mount          Specify data path on the host machine to mount to the runner container as read-only
+        -m|--mount          Specify data path on the host machine to mount to the runner container
         -h|--help           Print this message
 EndofMessage
 exit 0
@@ -71,6 +71,14 @@ if [ "$MOUNT_PATH" != "" ]; then
 fi
 
 GITHUB_TOKEN=$1
+
+docker inspect "$ACTIONS_RUNNER_NAME"; RET=$?
+
+if [ $RET -eq 0 ]; then
+    # if the named container exsiting, stop and remove it first
+    docker stop "$ACTIONS_RUNNER_NAME"
+    yes | docker rm "$ACTIONS_RUNNER_NAME"
+fi
 
 docker run -d --rm \
     --ipc=host \
