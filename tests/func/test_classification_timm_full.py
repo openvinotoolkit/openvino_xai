@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import csv
@@ -63,7 +63,7 @@ LIMITED_DIVERSE_SET_OF_CNN_MODELS = [
     "mobilenetv2_100.ra_in1k",
     "regnety_002.pycls_in1k",
     "repvgg_a2.rvgg_in1k",
-    "repvit_m1.dist_in1k",
+    # "repvit_m1.dist_in1k",  # 404 Not Found
     "res2net50_14w_8s.in1k",
     "resmlp_12_224.fb_dino",
     "resnetaa50.a1h_in1k",
@@ -130,10 +130,7 @@ NON_SUPPORTED_BY_WB_MODELS = [
 ]
 
 
-WB_TEST_MODELS = LIMITED_DIVERSE_SET_OF_CNN_MODELS + LIMITED_DIVERSE_SET_OF_VISION_TRANSFORMER_MODELS
-
-
-BB_TEST_MODELS = WB_TEST_MODELS + NON_SUPPORTED_BY_WB_MODELS
+TEST_MODELS = LIMITED_DIVERSE_SET_OF_CNN_MODELS + LIMITED_DIVERSE_SET_OF_VISION_TRANSFORMER_MODELS + NON_SUPPORTED_BY_WB_MODELS
 
 
 class TestImageClassificationTimm:
@@ -150,9 +147,12 @@ class TestImageClassificationTimm:
         11821: 1652,  # 1652 is a cheetah class_id in the ImageNet-12k dataset
     }
 
-    @pytest.mark.parametrize("model_id", WB_TEST_MODELS)
-    def test_classification_white_box(self, model_id, dump_maps=True):
+    @pytest.mark.parametrize("model_id", TEST_MODELS)
+    def test_classification_white_box(self, model_id, dump_maps=False):
         # self.check_for_saved_map(model_id, "timm_models/maps_wb/")
+
+        if model_id in NON_SUPPORTED_BY_WB_MODELS:
+            pytest.xfail(reason="Not supported yet")
 
         output_model_dir = self.data_dir / "timm_models" / "converted_models" / model_id
         output_model_dir.mkdir(parents=True, exist_ok=True)
@@ -257,8 +257,8 @@ class TestImageClassificationTimm:
     # ulimit -a
     # ulimit -Sn 10000
     # ulimit -a
-    @pytest.mark.parametrize("model_id", BB_TEST_MODELS)
-    def test_classification_black_box(self, model_id, dump_maps=True):
+    @pytest.mark.parametrize("model_id", TEST_MODELS)
+    def test_classification_black_box(self, model_id, dump_maps=False):
         # self.check_for_saved_map(model_id, "timm_models/maps_bb/")
 
         timm_model, model_cfg = self.get_timm_model(model_id)
@@ -309,7 +309,8 @@ class TestImageClassificationTimm:
         explanation = explainer(
             image,
             explanation_parameters=explanation_parameters,
-            num_masks=2000,  # kwargs of the RISE algo
+            # num_masks=2000,  # kwargs of the RISE algo
+            num_masks=2,  # minimal iterations for feature test
         )
 
         assert explanation is not None
