@@ -36,7 +36,7 @@ pytest.importorskip("onnx")
 TEST_MODELS = timm.list_models(pretrained=True)
 
 NON_SUPPORTED_BY_WB_MODELS = {
-    "repvit_m1.dist_in1k":  "404 Not Found",
+    "repvit_m1.dist_in1k": "404 Not Found",
     "nest_tiny_jx.goog_in1k": "CNN, dynamic batch issue",
     "pit_s_224.in1k": "CNN, dynamic batch issue",
     "pvt_v2_b0.in1k": "CNN, dynamic batch issue",
@@ -63,7 +63,7 @@ NON_SUPPORTED_BY_WB_MODELS = {
 }
 
 NON_SUPPORTED_BY_BB_MODELS = {
-    "repvit_m1.dist_in1k":  "404 Not Found",
+    "repvit_m1.dist_in1k": "404 Not Found",
 }
 
 CNN_MODELS = [
@@ -179,7 +179,7 @@ class TestImageClassificationTimm:
             input_size = [1] + list(timm_model.default_cfg["input_size"])
             dummy_tensor = torch.rand(input_size)
             onnx_path = output_model_dir / "model_fp32.onnx"
-            set_dynamic_batch = (explain_method == Method.VITRECIPROCAM)
+            set_dynamic_batch = explain_method == Method.VITRECIPROCAM
             export_to_onnx(timm_model, onnx_path, dummy_tensor, set_dynamic_batch)
             self.update_report("report_wb.csv", model_id, "True")
             export_to_ir(onnx_path, output_model_dir / "model_fp32.xml")

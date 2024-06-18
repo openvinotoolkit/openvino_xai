@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
-import pytest
 import logging
 from pathlib import Path
 
+import pytest
 
 log = logging.getLogger(__name__)
 
