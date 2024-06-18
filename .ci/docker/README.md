@@ -11,10 +11,10 @@ docker build \
     --tag ci-runner/ov-xai:latest .
 ```
 
-The simplest way using its defaults
+Or, the simplest way using build script
 
 ```bash
-docker build --tag ci-runner/ov-xai:latest .
+.ci/docker$ ./build.sh lastest
 ```
 
 ## How to run a container
@@ -24,7 +24,15 @@ docker run -d --rm \
     --ipc=host \
     -e RUNNER_REPO_URL="https://github.com/openvinotoolkit/openvino_xai" \
     -e RUNNER_NAME="ci-runner-ov-xai" \
-    -e RUNNER_LABELS="hello,labels" \
+    -e RUNNER_LABELS="large-disk" \
     -e RUNNER_TOKEN= \
     ci-runner/ov-xai:latest
 ```
+
+Or, using start script
+
+```bash
+.ci/docker$ ./start-runner.sh <gh-token>
+```
+
+Use `--help` option to see all available options to the script.
