@@ -33,116 +33,116 @@ torch = pytest.importorskip("torch")
 pytest.importorskip("onnx")
 
 
-LIMITED_DIVERSE_SET_OF_CNN_MODELS = [
-    "bat_resnext26ts.ch_in1k",
-    "resnet18.a1_in1k",
-    "mobilenetv3_large_100.ra_in1k",
-    "tf_efficientnet_b0.aa_in1k",
-    "botnet26t_256.c1_in1k",
-    "convnext_base.clip_laion2b_augreg_ft_in1k",
-    "convnextv2_pico.fcmae_ft_in1k",
-    "cs3darknet_l.c2ns_in1k",
-    "darknet53.c2ns_in1k",
-    "densenet121.ra_in1k",
-    "dla34.in1k",
-    "dpn68.mx_in1k",
-    "eca_botnext26ts_256.c1_in1k",
-    "ecaresnet26t.ra2_in1k",
-    "edgenext_base.in21k_ft_in1k",
-    "efficientnet_b0.ra_in1k",
-    "ese_vovnet19b_dw.ra_in1k",
-    "fbnetv3_b.ra2_in1k",
-    "gernet_s.idstcv_in1k",
-    "hardcorenas_a.miil_green_in1k",
-    "hrnet_w18.ms_aug_in1k",
-    "inception_v3.gluon_in1k",
-    "lcnet_050.ra2_in1k",
-    "legacy_senet154.in1k",
-    "mixer_b16_224.goog_in21k",
-    "mixnet_s.ft_in1k",
-    "mobilenetv2_100.ra_in1k",
-    "regnety_002.pycls_in1k",
-    "repvgg_a2.rvgg_in1k",
-    # "repvit_m1.dist_in1k",  # 404 Not Found
-    "res2net50_14w_8s.in1k",
-    "resmlp_12_224.fb_dino",
-    "resnetaa50.a1h_in1k",
-    "resnetrs50.tf_in1k",
-    "resnext26ts.ra2_in1k",
-    "rexnet_100.nav_in1k",
-    "selecsls42b.in1k",
-    "seresnet50.a1_in1k",
-    "seresnext26d_32x4d.bt_in1k",
-    "tf_mixnet_l.in1k",
-    "tf_mobilenetv3_large_075.in1k",
-    "tinynet_a.in1k",
-    "wide_resnet50_2.racm_in1k",
-    "xception41.tf_in1k",
-    "vgg11.tv_in1k",
-    "coatnet_0_rw_224.sw_in1k",
-    "focalnet_base_lrf.ms_in1k",
-]
-
-
-LIMITED_DIVERSE_SET_OF_VISION_TRANSFORMER_MODELS = [
-    "beit_base_patch16_224.in22k_ft_in22k_in1k",  # Downloads last month 41,778
-    "beit_large_patch16_224.in22k_ft_in22k_in1k",
-    "deit_tiny_patch16_224.fb_in1k",  # Downloads last month 3,371
-    "deit_small_distilled_patch16_224.fb_in1k",
-    "deit_base_patch16_224.fb_in1k",
-    "vit_tiny_patch16_224.augreg_in21k",  # Downloads last month 15,345
-    "vit_small_patch16_224.augreg_in1k",
-    "vit_base_patch8_224.augreg2_in21k_ft_in1k",
-    "vit_base_patch16_224.augreg2_in21k_ft_in1k",  # Downloads last month 161,508
-    "vit_base_patch32_224.augreg_in1k",
-    "vit_large_patch14_clip_224.laion2b_ft_in12k_in1k",
-    "convit_tiny.fb_in1k",
-    "flexivit_small.300ep_in1k",
-]
-
-
-NON_SUPPORTED_BY_WB_MODELS = [
-    # CNN, dynamic batch issue
-    "nest_tiny_jx.goog_in1k",
-    "pit_s_224.in1k",
-    "pvt_v2_b0.in1k",
-    "sequencer2d_l.in1k",
-    "mobilevitv2_050.cvnets_in1k",
-    # Transformer, various issues
-    "convformer_b36.sail_in1k",
-    "davit_tiny.msft_in1k",
-    "poolformer_m36.sail_in1k",
-    "caformer_b36.sail_in1k",
-    "cait_m36_384.fb_dist_in1k",
-    "coat_lite_mini.in1k",
-    "crossvit_9_240.in1k",
-    "swin_tiny_patch4_window7_224.ms_in1k",
-    "swinv2_tiny_window8_256.ms_in1k",
-    "twins_svt_small.in1k",
-    "efficientformer_l1.snap_dist_in1k",
-    "gcvit_tiny.in1k",
-    "levit_128.fb_dist_in1k",
-    "maxvit_base_tf_224.in1k",
-    "mvitv2_base.fb_in1k",
-    "poolformer_m36.sail_in1k",
-    "xcit_nano_12_p8_224.fb_dist_in1k",
-    "convmixer_768_32.in1k",
-]
-
-
-TEST_MODELS = (
-    LIMITED_DIVERSE_SET_OF_CNN_MODELS + LIMITED_DIVERSE_SET_OF_VISION_TRANSFORMER_MODELS + NON_SUPPORTED_BY_WB_MODELS
-)
 TEST_MODELS = timm.list_models(pretrained=True)
+
+NON_SUPPORTED_BY_WB_MODELS = {
+    "repvit_m1.dist_in1k":  "404 Not Found",
+    "nest_tiny_jx.goog_in1k": "CNN, dynamic batch issue",
+    "pit_s_224.in1k": "CNN, dynamic batch issue",
+    "pvt_v2_b0.in1k": "CNN, dynamic batch issue",
+    "sequencer2d_l.in1k": "CNN, dynamic batch issue",
+    "mobilevitv2_050.cvnets_in1k": "CNN, dynamic batch issue",
+    "convformer_b36.sail_in1k": "Transformer, various issues",
+    "davit_tiny.msft_in1k": "Transformer, various issues",
+    "poolformer_m36.sail_in1k": "Transformer, various issues",
+    "caformer_b36.sail_in1k": "Transformer, various issues",
+    "cait_m36_384.fb_dist_in1k": "Transformer, various issues",
+    "coat_lite_mini.in1k": "Transformer, various issues",
+    "crossvit_9_240.in1k": "Transformer, various issues",
+    "swin_tiny_patch4_window7_224.ms_in1k": "Transformer, various issues",
+    "swinv2_tiny_window8_256.ms_in1k": "Transformer, various issues",
+    "twins_svt_small.in1k": "Transformer, various issues",
+    "efficientformer_l1.snap_dist_in1k": "Transformer, various issues",
+    "gcvit_tiny.in1k": "Transformer, various issues",
+    "levit_128.fb_dist_in1k": "Transformer, various issues",
+    "maxvit_base_tf_224.in1k": "Transformer, various issues",
+    "mvitv2_base.fb_in1k": "Transformer, various issues",
+    "poolformer_m36.sail_in1k": "Transformer, various issues",
+    "xcit_nano_12_p8_224.fb_dist_in1k": "Transformer, various issues",
+    "convmixer_768_32.in1k": "Transformer, various issues",
+}
+
+NON_SUPPORTED_BY_BB_MODELS = {
+    "repvit_m1.dist_in1k":  "404 Not Found",
+}
+
+CNN_MODELS = [
+    "bat_resnext",
+    "convnext",
+    "cs3darknet",
+    "cs3",
+    "darknet",
+    "densenet",
+    "dla",
+    "dpn",
+    "efficientnet",
+    "ese_vovnet",
+    "fbnet",
+    "gernet",
+    "ghostnet",
+    "hardcorenas",
+    "hrnet",
+    "inception",
+    "lcnet",
+    "legacy_",
+    "mixnet",
+    "mnasnet",
+    "mobilenet",
+    "nasnet",
+    "regnet",
+    "repvgg",
+    "res2net",
+    "res2next",
+    "resnest",
+    "resnext",
+    "rexnet",
+    "selecsls",
+    "semnasnet",
+    "senet",
+    "seresnext",
+    "spnasnet",
+    "tinynet",
+    "vgg",
+    "xception",
+    "resnet",
+]
+
+NON_CONVERTABLE_CNN_MODELS = [
+    "convnext_xxlarge",  # too big
+    "convnextv2_huge",  # too big
+    "gc_efficientnetv2_rw",  # failed to convert to OV
+    "gcresnext",  # failed to convert to OV
+    "haloregnetz",
+    "nasnetalarge",
+    "pnasnet5large",
+    "regnety_1280",
+    "regnety_2560",
+    "resnest14d",
+    "resnest26d",
+    "resnest50d",
+    "resnest101e",
+    "resnest200e",
+    "resnest269e",
+    "skresnext50_32x4d",
+    "tf_efficientnet_cc_b",
+    "gcresnet",
+    "lambda_resnet",
+    "nf_regnet",
+    "nf_resnet",
+    "resnetv2_50x",
+    "resnetv2_101x",
+    "resnetv2_152x",
+    "skresnet",
+    "tresnet_",
+]
 
 
 class TestImageClassificationTimm:
-    data_dir = Path(".data")
     fields = ["Model", "Exported to ONNX", "Exported to OV IR", "Explained", "Map size", "Map saved"]
     counter_row = ["Counters", "0", "0", "0", "-", "-"]
     report = [fields, counter_row]
-    clean_cash_converted_models = False
-    clean_cash_hf_models = False
+    clean_cache_converted_models = False
+    clean_cache_hf_models = False
     supported_num_classes = {
         1000: 293,  # 293 is a cheetah class_id in the ImageNet-1k dataset
         21841: 2441,  # 2441 is a cheetah class_id in the ImageNet-21k dataset
@@ -150,25 +150,36 @@ class TestImageClassificationTimm:
         11821: 1652,  # 1652 is a cheetah class_id in the ImageNet-12k dataset
     }
 
+    @pytest.fixture(autouse=True)
+    def setup(self, fxt_data_root):
+        self.data_dir = fxt_data_root
+
     @pytest.mark.parametrize("model_id", TEST_MODELS)
     def test_classification_white_box(self, model_id, dump_maps=False):
         # self.check_for_saved_map(model_id, "timm_models/maps_wb/")
 
-        if model_id in NON_SUPPORTED_BY_WB_MODELS:
-            pytest.xfail(reason="Not supported yet")
+        for non_supported_model in NON_SUPPORTED_BY_WB_MODELS.keys():
+            if model_id in non_supported_model:
+                pytest.xfail(reason=NON_SUPPORTED_BY_WB_MODELS[non_supported_model])
 
         output_model_dir = self.data_dir / "timm_models" / "converted_models" / model_id
         output_model_dir.mkdir(parents=True, exist_ok=True)
         ir_path = output_model_dir / "model_fp32.xml"
 
         timm_model, model_cfg = self.get_timm_model(model_id)
-
         self.update_report("report_wb.csv", model_id)
+
+        explain_method = Method.VITRECIPROCAM
+        for cnn_model in CNN_MODELS:
+            if cnn_model in model_id:
+                explain_method = Method.RECIPROCAM
+                break
+
         if not (output_model_dir / "model_fp32.xml").is_file():
             input_size = [1] + list(timm_model.default_cfg["input_size"])
             dummy_tensor = torch.rand(input_size)
             onnx_path = output_model_dir / "model_fp32.onnx"
-            set_dynamic_batch = model_id in LIMITED_DIVERSE_SET_OF_VISION_TRANSFORMER_MODELS
+            set_dynamic_batch = (explain_method == Method.VITRECIPROCAM)
             export_to_onnx(timm_model, onnx_path, dummy_tensor, set_dynamic_batch)
             self.update_report("report_wb.csv", model_id, "True")
             export_to_ir(onnx_path, output_model_dir / "model_fp32.xml")
@@ -177,13 +188,6 @@ class TestImageClassificationTimm:
             self.update_report("report_wb.csv", model_id, "True", "True")
 
         model = ov.Core().read_model(ir_path)
-
-        if model_id in LIMITED_DIVERSE_SET_OF_CNN_MODELS:
-            explain_method = Method.RECIPROCAM
-        elif model_id in LIMITED_DIVERSE_SET_OF_VISION_TRANSFORMER_MODELS:
-            explain_method = Method.VITRECIPROCAM
-        else:
-            raise ValueError
 
         insertion_parameters = ClassificationInsertionParameters(
             embed_scaling=False,
@@ -251,7 +255,7 @@ class TestImageClassificationTimm:
             file_name = model_id + "_target_" + str(target_class) + ".jpg"
             map_saved = (save_dir / file_name).is_file()
             self.update_report("report_wb.csv", model_id, "True", "True", "True", shape_str, str(map_saved))
-        self.clean_cash()
+        self.clean_cache()
 
     # sudo ln -s /usr/local/cuda-11.8/ cuda
     # pip uninstall torch torchvision
@@ -263,6 +267,10 @@ class TestImageClassificationTimm:
     @pytest.mark.parametrize("model_id", TEST_MODELS)
     def test_classification_black_box(self, model_id, dump_maps=False):
         # self.check_for_saved_map(model_id, "timm_models/maps_bb/")
+
+        for non_supported_model in NON_SUPPORTED_BY_BB_MODELS.keys():
+            if model_id in non_supported_model:
+                pytest.xfail(reason=NON_SUPPORTED_BY_BB_MODELS[non_supported_model])
 
         timm_model, model_cfg = self.get_timm_model(model_id)
 
@@ -334,7 +342,7 @@ class TestImageClassificationTimm:
             file_name = model_id + "_target_" + str(target_class) + ".jpg"
             map_saved = (save_dir / file_name).is_file()
             self.update_report("report_bb.csv", model_id, "True", "True", "True", shape_str, str(map_saved))
-        self.clean_cash()
+        self.clean_cache()
 
     def check_for_saved_map(self, model_id, directory):
         for target in self.supported_num_classes.values():
@@ -346,7 +354,7 @@ class TestImageClassificationTimm:
                 saved_map_shape = saved_map.shape
                 shape = "H=" + str(saved_map_shape[0]) + ", W=" + str(saved_map_shape[1])
                 self.update_report("report_wb.csv", model_id, "True", "True", "True", shape, str(map_saved))
-                self.clean_cash()
+                self.clean_cache()
                 pytest.skip(f"Model {model_id} is already explained.")
 
     def get_timm_model(self, model_id):
@@ -355,7 +363,7 @@ class TestImageClassificationTimm:
         model_cfg = timm_model.default_cfg
         num_classes = model_cfg["num_classes"]
         if num_classes not in self.supported_num_classes:
-            self.clean_cash()
+            self.clean_cache()
             pytest.skip(f"Number of model classes {num_classes} unknown")
         return timm_model, model_cfg
 
@@ -409,12 +417,12 @@ class TestImageClassificationTimm:
             write = csv.writer(f)
             write.writerows(self.report)
 
-    def clean_cash(self):
-        if self.clean_cash_converted_models:
+    def clean_cache(self):
+        if self.clean_cache_converted_models:
             ir_model_dir = self.data_dir / "timm_models" / "converted_models"
             if ir_model_dir.is_dir():
                 shutil.rmtree(ir_model_dir)
-        if self.clean_cash_hf_models:
+        if self.clean_cache_hf_models:
             huggingface_hub_dir = Path.home() / ".cache/huggingface/hub/"
             if huggingface_hub_dir.is_dir():
                 shutil.rmtree(huggingface_hub_dir)
