@@ -3,7 +3,6 @@
 """
 Interface for getting explanation.
 """
-from openvino_xai.explainer.explain_group import TargetExplainGroup
 from openvino_xai.explainer.explainer import Explainer, ExplainMode
 from openvino_xai.explainer.explanation import Explanation, Layout
 from openvino_xai.explainer.visualizer import Visualizer, colormap, overlay, resize
@@ -11,7 +10,6 @@ from openvino_xai.explainer.visualizer import Visualizer, colormap, overlay, res
 __all__ = [
     "Explainer",
     "ExplainMode",
-    "TargetExplainGroup",
     "Layout",
     "Explanation",
     "Visualizer",

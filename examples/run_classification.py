@@ -12,7 +12,6 @@ import openvino.runtime as ov
 
 import openvino_xai as xai
 from openvino_xai.common.utils import logger
-from openvino_xai.explainer.explain_group import TargetExplainGroup
 from openvino_xai.explainer.explainer import ExplainMode
 
 
@@ -60,8 +59,7 @@ def explain_auto(args):
     # Generate explanation
     explanation = explainer(
         image,
-        target_explain_group=TargetExplainGroup.CUSTOM,  # CUSTOM list of classes to explain, also ALL possible
-        target_explain_labels=[11, 14],  # target classes to explain
+        targets=[11, 14],  # target classes to explain
     )
 
     logger.info(
@@ -106,8 +104,7 @@ def explain_white_box(args):
     # Generate explanation
     explanation = explainer(
         image, 
-        target_explain_group=TargetExplainGroup.CUSTOM,  # CUSTOM list of classes to explain, also ALL possible
-        target_explain_labels=[11, 14],  # target classes to explain, also ['dog', 'person'] is a valid input
+        targets=[11, 14],  # target classes to explain, also ['dog', 'person'] is a valid input
         label_names=voc_labels,  # optional names
         overlay=True,
         )
@@ -150,8 +147,7 @@ def explain_black_box(args):
     # Generate explanation
     explanation = explainer(
         image,
-        target_explain_group=TargetExplainGroup.CUSTOM,  # CUSTOM list of classes to explain, also ALL possible
-        target_explain_labels=['dog', 'person'],  # target classes to explain, also [11, 14] possible
+        targets=['dog', 'person'],  # target classes to explain, also [11, 14] possible
         label_names=voc_labels,  # optional names
         overlay=True,
         num_masks=1000,  # kwargs of the RISE algo
@@ -198,7 +194,7 @@ def explain_white_box_multiple_images(args):
 
     # Generate explanation
     images = [cv2.imread(image_path) for image_path in img_files]
-    explanation = [explainer(image, target_explain_group=TargetExplainGroup.CUSTOM, target_explain_labels=[14]) for image in images]
+    explanation = [explainer(image, targets=[14]) for image in images]
 
     logger.info(
         f"explain_white_box_multiple_images: Generated {len(explanation)} explanations "
@@ -235,8 +231,7 @@ def explain_white_box_vit(args):
     # Generate explanation
     explanation = explainer(
         image, 
-        target_explain_group=TargetExplainGroup.CUSTOM,  # CUSTOM list of classes to explain, also ALL possible
-        target_explain_labels=[0, 1, 2, 3, 4],  # target classes to explain
+        targets=[0, 1, 2, 3, 4],  # target classes to explain
     )
 
     logger.info(

@@ -10,7 +10,6 @@ import pytest
 from openvino_xai.api.api import insert_xai
 from openvino_xai.common.parameters import Task
 from openvino_xai.common.utils import retrieve_otx_model
-from openvino_xai.explainer.explain_group import TargetExplainGroup
 from openvino_xai.explainer.explainer import Explainer, ExplainMode
 from openvino_xai.explainer.utils import get_postprocess_fn, get_preprocess_fn
 from tests.unit.explanation.test_explanation_utils import VOC_NAMES
@@ -36,14 +35,14 @@ class TestExplainer:
         ],
     )
     @pytest.mark.parametrize(
-        "target_explain_group",
+        "explain_all_classes",
         [
-            TargetExplainGroup.ALL,
-            TargetExplainGroup.CUSTOM,
+            True,
+            False,
         ],
     )
     @pytest.mark.parametrize("with_xai_originally", [True, False])
-    def test_explainer(self, explain_mode, target_explain_group, with_xai_originally):
+    def test_explainer(self, explain_mode, explain_all_classes, with_xai_originally):
         retrieve_otx_model(self.data_dir, MODEL_NAME)
         model_path = self.data_dir / "otx_models" / (MODEL_NAME + ".xml")
         model = ov.Core().read_model(model_path)
@@ -62,17 +61,24 @@ class TestExplainer:
             explain_mode=explain_mode,
         )
 
-        explanation = explainer(
-            self.image,
-            target_explain_group=target_explain_group,
-            target_explain_labels=[11, 14],
-            label_names=VOC_NAMES,  # optional
-            num_masks=10,
-        )
+        if explain_all_classes:
+            explanation = explainer(
+                self.image,
+                targets=-1,
+                label_names=VOC_NAMES,  # optional
+                num_masks=10,
+            )
+        else:
+            explanation = explainer(
+                self.image,
+                targets=[11, 14],
+                label_names=VOC_NAMES,  # optional
+                num_masks=10,
+            )
 
-        if target_explain_group == TargetExplainGroup.ALL:
+        if explain_all_classes:
             assert len(explanation.saliency_map) == 20
-        if target_explain_group == TargetExplainGroup.CUSTOM:
+        else:
             assert len(explanation.saliency_map) == 2
 
     def test_explainer_wo_preprocessing(self):
@@ -88,7 +94,7 @@ class TestExplainer:
         )
 
         processed_data = self.preprocess_fn(self.image)
-        explanation = explainer(processed_data, target_explain_labels=[11, 14])
+        explanation = explainer(processed_data, targets=[11, 14])
 
         assert len(explanation.saliency_map) == 2
 
@@ -102,7 +108,7 @@ class TestExplainer:
         )
 
         processed_data = self.preprocess_fn(self.image)
-        explanation = explainer(processed_data, target_explain_labels=[11, 14], num_masks=10)
+        explanation = explainer(processed_data, targets=[11, 14], num_masks=10)
 
         assert len(explanation.saliency_map) == 2
 
@@ -129,5 +135,5 @@ class TestExplainer:
             explain_mode=ExplainMode.AUTO,
             target_layer="some_wrong_name",
         )
-        explanation = explainer(self.image, target_explain_group=TargetExplainGroup.ALL, num_masks=10)
+        explanation = explainer(self.image, targets=-1, num_masks=10)
         assert len(explanation.saliency_map) == 20

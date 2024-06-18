@@ -11,7 +11,6 @@ import openvino.runtime as ov
 
 import openvino_xai as xai
 from openvino_xai.common.utils import logger
-from openvino_xai.explainer.explain_group import TargetExplainGroup
 from openvino_xai.explainer.explainer import ExplainMode
 
 
@@ -75,8 +74,7 @@ def main(argv):
     # Generate explanation
     explanation = explainer(
         image, 
-        target_explain_group=TargetExplainGroup.CUSTOM,  # CUSTOM list of classes to explain, also ALL possible
-        target_explain_labels=[0, 1, 2, 3, 4],  # target classes to explain
+        targets=[0, 1, 2, 3, 4],  # target classes to explain
     )
 
     logger.info(

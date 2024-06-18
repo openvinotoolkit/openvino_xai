@@ -11,9 +11,8 @@ from openvino.runtime.utils.data_helpers.wrappers import OVDict
 from openvino_xai import Task
 from openvino_xai.common.parameters import Method
 from openvino_xai.common.utils import IdentityPreprocessFN, logger
-from openvino_xai.explainer.explain_group import TargetExplainGroup
 from openvino_xai.explainer.explanation import Explanation
-from openvino_xai.explainer.utils import get_explain_target_indices
+from openvino_xai.explainer.utils import explain_all, get_explain_target_indices
 from openvino_xai.explainer.visualizer import Visualizer
 from openvino_xai.methods.base import MethodBase
 from openvino_xai.methods.black_box.base import BlackBoxXAIMethod
@@ -126,8 +125,7 @@ class Explainer:
     def __call__(
         self,
         data: np.ndarray,
-        target_explain_group: TargetExplainGroup = TargetExplainGroup.CUSTOM,
-        target_explain_labels: List[int | str] | None = None,
+        targets: List[int | str] | int | str,
         label_names: List[str] | None = None,
         scaling: bool = False,
         resize: bool = True,
@@ -138,8 +136,7 @@ class Explainer:
     ) -> Explanation:
         return self.explain(
             data,
-            target_explain_group,
-            target_explain_labels,
+            targets,
             label_names,
             scaling,
             resize,
@@ -152,8 +149,7 @@ class Explainer:
     def explain(
         self,
         data: np.ndarray,
-        target_explain_group: TargetExplainGroup = TargetExplainGroup.CUSTOM,
-        target_explain_labels: List[int | str] | None = None,
+        targets: List[int | str] | int | str,
         label_names: List[str] | None = None,
         scaling: bool = False,
         resize: bool = True,
@@ -167,11 +163,9 @@ class Explainer:
 
         :param data: Input image.
         :type data: np.ndarray
-        :param target_explain_group: Defines targets to explain: all, only predictions, custom list, per-image.
-        :type target_explain_group: TargetExplainGroup
-        :param target_explain_labels: List of custom labels to explain, optional. Can be list of integer indices (int),
+        :param targets: List of custom labels to explain, optional. Can be list of integer indices (int),
             or list of names (str) from label_names.
-        :type target_explain_labels: List[int | str] | None
+        :type targets: List[int | str] | int | str
         :param label_names: List of all label names.
         :type label_names: List[str] | None
         :parameter scaling: If True, scaling saliency map into [0, 255] range (filling the whole range).
@@ -187,10 +181,13 @@ class Explainer:
         :parameter overlay_weight: Weight of the saliency map when overlaying the input data with the saliency map.
         :type overlay_weight: float
         """
+        if isinstance(targets, (int, str)):
+            targets = [targets]
+        
         explain_target_indices = None
-        if isinstance(self.method, BlackBoxXAIMethod) and target_explain_group == TargetExplainGroup.CUSTOM:
+        if isinstance(self.method, BlackBoxXAIMethod) and not explain_all(targets):
             explain_target_indices = get_explain_target_indices(
-                target_explain_labels,
+                targets,
                 label_names,
             )
 
@@ -202,8 +199,7 @@ class Explainer:
 
         explanation = Explanation(
             saliency_map=saliency_map,
-            target_explain_group=target_explain_group,
-            target_explain_labels=target_explain_labels,
+            targets=targets,
             label_names=label_names,
         )
         return self._visualize(

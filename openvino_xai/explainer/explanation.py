@@ -10,8 +10,7 @@ import cv2
 import numpy as np
 
 from openvino_xai.common.utils import logger
-from openvino_xai.explainer.explain_group import TargetExplainGroup
-from openvino_xai.explainer.utils import get_explain_target_indices
+from openvino_xai.explainer.utils import explain_all, get_explain_target_indices
 
 
 class Explanation:
@@ -19,11 +18,9 @@ class Explanation:
     Explanation selects target saliency maps, holds it and its layout.
 
     :param saliency_map: Raw saliency map.
-    :param target_explain_group: Defines targets to explain: all, only predictions, custom list, per-image.
-    :type target_explain_group: TargetExplainGroup
-    :param target_explain_labels: List of custom labels to explain, optional. Can be list of integer indices (int),
+    :param targets: List of custom labels to explain, optional. Can be list of integer indices (int),
         or list of names (str) from label_names.
-    :type target_explain_labels: List[int | str] | None
+    :type targets: List[int | str] | int | str
     :param label_names: List of all label names.
     :type label_names: List[str] | None
     """
@@ -31,32 +28,22 @@ class Explanation:
     def __init__(
         self,
         saliency_map: np.ndarray,
-        target_explain_group: TargetExplainGroup,
-        target_explain_labels: List[int | str] | None = None,
+        targets: List[int | str] | int | str,
         label_names: List[str] | None = None,
     ):
+        if isinstance(targets, (int, str)):
+            targets = [targets]
+        
         self._check_saliency_map(saliency_map)
         self._saliency_map = self._format_sal_map_as_dict(saliency_map)
 
         if "per_image_map" in self._saliency_map:
             self.layout = Layout.ONE_MAP_PER_IMAGE_GRAY
-            if target_explain_group != TargetExplainGroup.IMAGE:
-                logger.warning(
-                    f"Setting target_explain_group to TargetExplainGroup.IMAGE, {target_explain_group} "
-                    f"is not supported when only single (global) saliency map per image is available."
-                )
-            self.target_explain_group = TargetExplainGroup.IMAGE
         else:
-            if target_explain_group == TargetExplainGroup.IMAGE:
-                raise ValueError(
-                    "TargetExplainGroup.IMAGE supports only single (global) saliency map per image. "
-                    "But multiple saliency maps are available."
-                )
             self.layout = Layout.MULTIPLE_MAPS_PER_IMAGE_GRAY
-            self.target_explain_group = target_explain_group
 
-        if self.target_explain_group == TargetExplainGroup.CUSTOM:
-            self._saliency_map = self._select_target_saliency_maps(target_explain_labels, label_names)
+        if not explain_all(targets) and not self.layout == Layout.ONE_MAP_PER_IMAGE_GRAY:
+            self._saliency_map = self._select_target_saliency_maps(targets, label_names)
 
         self.label_names = label_names
 
@@ -106,32 +93,25 @@ class Explanation:
 
     def _select_target_saliency_maps(
         self,
-        target_explain_labels: List[int | str] | None = None,
+        targets: List[int | str] | None = None,
         label_names: List[str] | None = None,
     ) -> Dict[int | str, np.ndarray]:
         assert self.layout == Layout.MULTIPLE_MAPS_PER_IMAGE_GRAY
         explain_target_indices = self._select_target_indices(
-            self.target_explain_group,
-            target_explain_labels,
-            label_names,
-            len(self._saliency_map),
+            targets=targets,
+            total_num_targets=len(self._saliency_map),
+            label_names=label_names,
         )
         saliency_maps_selected = {i: self._saliency_map[i] for i in explain_target_indices}
         return saliency_maps_selected
 
     @staticmethod
     def _select_target_indices(
-        target_explain_group: TargetExplainGroup,
-        target_explain_labels: List[int | str] | None = None,
+        targets: List[int | str] | int | str,
+        total_num_targets: int,
         label_names: List[str] | None = None,
-        total_num_targets: int | None = None,
     ) -> List[int] | np.ndarray:
-        explain_target_indices = get_explain_target_indices(target_explain_labels, label_names)
-
-        if target_explain_labels is None:
-            raise ValueError(f"Explain labels has to be provided for {target_explain_group}.")
-        if not total_num_targets:
-            raise ValueError("total_num_targets has to be provided.")
+        explain_target_indices = get_explain_target_indices(targets, label_names)
         if not all(0 <= target_index <= (total_num_targets - 1) for target_index in explain_target_indices):
             raise ValueError(f"All targets explanation indices have to be in range 0..{total_num_targets - 1}.")
         return explain_target_indices
