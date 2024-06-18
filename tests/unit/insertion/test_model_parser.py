@@ -5,9 +5,8 @@ import openvino.runtime as ov
 import pytest
 
 from openvino_xai.common.utils import retrieve_otx_model
-from openvino_xai.inserter.model_parser import IRParserCls
-from openvino_xai.inserter.parameters import ModelType
-from tests.intg.test_classification import DEFAULT_CLS_MODEL
+from openvino_xai.inserter.model_parser import IRParserCls, ModelType
+from tests.integration.test_classification import DEFAULT_CLS_MODEL
 
 
 class TestIRParser:

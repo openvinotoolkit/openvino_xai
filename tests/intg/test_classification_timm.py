@@ -11,13 +11,8 @@ import openvino.runtime as ov
 import pytest
 
 from openvino_xai.common.parameters import Method, Task
-from openvino_xai.explainer.explainer import Explainer
-from openvino_xai.explainer.parameters import (
-    ExplainMode,
-    ExplanationParameters,
-    TargetExplainGroup,
-    VisualizationParameters,
-)
+from openvino_xai.explainer.explain_group import TargetExplainGroup
+from openvino_xai.explainer.explainer import Explainer, ExplainMode
 from openvino_xai.explainer.utils import (
     ActivationType,
     get_postprocess_fn,
@@ -25,7 +20,6 @@ from openvino_xai.explainer.utils import (
     get_score,
 )
 from openvino_xai.explainer.visualizer import Visualizer
-from openvino_xai.inserter.parameters import ClassificationInsertionParameters
 from openvino_xai.utils.model_export import export_to_ir, export_to_onnx
 
 timm = pytest.importorskip("timm")
@@ -187,11 +181,6 @@ class TestImageClassificationTimm:
         else:
             raise ValueError
 
-        insertion_parameters = ClassificationInsertionParameters(
-            embed_scaling=False,
-            explain_method=explain_method,
-        )
-
         mean_values = [(item * 255) for item in model_cfg["mean"]]
         scale_values = [(item * 255) for item in model_cfg["std"]]
         preprocess_fn = get_preprocess_fn(
@@ -207,17 +196,19 @@ class TestImageClassificationTimm:
             task=Task.CLASSIFICATION,
             preprocess_fn=preprocess_fn,
             explain_mode=ExplainMode.WHITEBOX,  # defaults to AUTO
-            insertion_parameters=insertion_parameters,
+            explain_method=explain_method,
+            embed_scaling=False,
         )
 
         target_class = self.supported_num_classes[model_cfg["num_classes"]]
-        explanation_parameters = ExplanationParameters(
+        image = cv2.imread("tests/assets/cheetah_person.jpg")
+        explanation = explainer(
+            image,
             target_explain_group=TargetExplainGroup.CUSTOM,
             target_explain_labels=[target_class],
-            visualization_parameters=VisualizationParameters(),
+            resize=False,
+            colormap=False,
         )
-        image = cv2.imread("tests/assets/cheetah_person.jpg")
-        explanation = explainer(image, explanation_parameters)
 
         assert explanation is not None
         assert explanation.shape[-1] > 1 and explanation.shape[-2] > 1
@@ -236,13 +227,15 @@ class TestImageClassificationTimm:
             raw_sal_map[-1, 0] = np.mean(np.delete(raw_sal_map[-2:, :2].flatten(), 2))
             raw_sal_map[-1, -1] = np.mean(np.delete(raw_sal_map[-2:, -2:].flatten(), 3))
             explanation.saliency_map[target_class] = raw_sal_map
-            visualization_parameters = VisualizationParameters(scaling=True, overlay=True)
-            post_processor = Visualizer(
+            visualizer = Visualizer()
+            explanation = visualizer(
                 explanation=explanation,
                 original_input_image=image,
-                visualization_parameters=visualization_parameters,
+                scaling=True,
+                overlay=True,
+                resize=False,
+                colormap=False,
             )
-            explanation = post_processor.run()
 
             model_output = explainer.model_forward(image)
             target_confidence = get_score(model_output["logits"], target_class, activation=ActivationType.SOFTMAX)
@@ -307,13 +300,10 @@ class TestImageClassificationTimm:
 
         image = cv2.imread("tests/assets/cheetah_person.jpg")
         target_class = self.supported_num_classes[model_cfg["num_classes"]]
-        explanation_parameters = ExplanationParameters(
-            target_explain_group=TargetExplainGroup.CUSTOM,
-            target_explain_labels=[target_class],
-        )
         explanation = explainer(
             image,
-            explanation_parameters=explanation_parameters,
+            target_explain_group=TargetExplainGroup.CUSTOM,
+            target_explain_labels=[target_class],
             # num_masks=2000,  # kwargs of the RISE algo
             num_masks=2,  # minimal iterations for feature test
         )

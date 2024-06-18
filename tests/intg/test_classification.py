@@ -11,15 +11,9 @@ import pytest
 import openvino_xai.api.api as xai
 from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import has_xai, retrieve_otx_model
-from openvino_xai.explainer.explainer import Explainer
-from openvino_xai.explainer.parameters import (
-    ExplainMode,
-    ExplanationParameters,
-    TargetExplainGroup,
-    VisualizationParameters,
-)
+from openvino_xai.explainer.explain_group import TargetExplainGroup
+from openvino_xai.explainer.explainer import Explainer, ExplainMode
 from openvino_xai.explainer.utils import get_postprocess_fn, get_preprocess_fn
-from openvino_xai.inserter.parameters import ClassificationInsertionParameters
 
 MODELS = [
     "mlc_mobilenetv3_large_voc",  # verified
@@ -95,25 +89,23 @@ class TestClsWB:
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
 
         model = ov.Core().read_model(model_path)
-        insertion_parameters = ClassificationInsertionParameters(
-            embed_scaling=embed_scaling,
-            explain_method=Method.VITRECIPROCAM,
-        )
 
         explainer = Explainer(
             model=model,
             task=Task.CLASSIFICATION,
             preprocess_fn=self.preprocess_fn,  # type: ignore
             explain_mode=ExplainMode.WHITEBOX,
-            insertion_parameters=insertion_parameters,
+            explain_method=Method.VITRECIPROCAM,
+            embed_scaling=embed_scaling,
         )
 
         if target_explain_group == TargetExplainGroup.ALL:
-            explanation_parameters = ExplanationParameters(
+            explanation = explainer(
+                self.image,
                 target_explain_group=target_explain_group,
-                visualization_parameters=VisualizationParameters(),
+                resize=False,
+                colormap=False,
             )
-            explanation = explainer(self.image, explanation_parameters)
             assert explanation is not None
             assert len(explanation.saliency_map) == MODEL_NUM_CLASSES[model_name]
             if model_name in self._ref_sal_maps_vitreciprocam:
@@ -127,12 +119,13 @@ class TestClsWB:
 
         if target_explain_group == TargetExplainGroup.CUSTOM:
             target_class = 1
-            explanation_parameters = ExplanationParameters(
+            explanation = explainer(
+                self.image,
                 target_explain_group=target_explain_group,
                 target_explain_labels=[target_class],
-                visualization_parameters=VisualizationParameters(),
+                resize=False,
+                colormap=False,
             )
-            explanation = explainer(self.image, explanation_parameters)
             assert explanation is not None
             assert target_class in explanation.saliency_map
             assert len(explanation.saliency_map) == len([target_class])
@@ -153,25 +146,23 @@ class TestClsWB:
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
         model = ov.Core().read_model(model_path)
-        insertion_parameters = ClassificationInsertionParameters(
-            embed_scaling=embed_scaling,
-            explain_method=Method.RECIPROCAM,
-        )
 
         explainer = Explainer(
             model=model,
             task=Task.CLASSIFICATION,
             preprocess_fn=self.preprocess_fn,  # type: ignore
             explain_mode=ExplainMode.WHITEBOX,
-            insertion_parameters=insertion_parameters,
+            explain_method=Method.RECIPROCAM,
+            embed_scaling=embed_scaling,
         )
 
         if target_explain_group == TargetExplainGroup.ALL:
-            explanation_parameters = ExplanationParameters(
+            explanation = explainer(
+                self.image,
                 target_explain_group=target_explain_group,
-                visualization_parameters=VisualizationParameters(),
+                resize=False,
+                colormap=False,
             )
-            explanation = explainer(self.image, explanation_parameters)
             assert explanation is not None
             assert len(explanation.saliency_map) == MODEL_NUM_CLASSES[model_name]
             if model_name in self._ref_sal_maps_reciprocam:
@@ -187,12 +178,13 @@ class TestClsWB:
 
         if target_explain_group == TargetExplainGroup.CUSTOM:
             target_class = 1
-            explanation_parameters = ExplanationParameters(
+            explanation = explainer(
+                self.image,
                 target_explain_group=target_explain_group,
                 target_explain_labels=[target_class],
-                visualization_parameters=VisualizationParameters(),
+                resize=False,
+                colormap=False,
             )
-            explanation = explainer(self.image, explanation_parameters)
             assert explanation is not None
             assert target_class in explanation.saliency_map
             assert len(explanation.saliency_map) == len([target_class])
@@ -206,23 +198,21 @@ class TestClsWB:
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
         model = ov.Core().read_model(model_path)
-        insertion_parameters = ClassificationInsertionParameters(
-            embed_scaling=embed_scaling,
-            explain_method=Method.ACTIVATIONMAP,
-        )
 
         explainer = Explainer(
             model=model,
             task=Task.CLASSIFICATION,
             preprocess_fn=self.preprocess_fn,  # type: ignore
             explain_mode=ExplainMode.WHITEBOX,
-            insertion_parameters=insertion_parameters,
+            explain_method=Method.ACTIVATIONMAP,
+            embed_scaling=embed_scaling,
         )
 
-        explanation_parameters = ExplanationParameters(
-            visualization_parameters=VisualizationParameters(),
+        explanation = explainer(
+            self.image,
+            resize=False,
+            colormap=False,
         )
-        explanation = explainer(self.image, explanation_parameters)
         if model_name in self._ref_sal_maps_activationmap and embed_scaling:
             actual_sal_vals = explanation.saliency_map["per_image_map"][0, :].astype(np.int16)
             ref_sal_vals = self._ref_sal_maps_activationmap[model_name].astype(np.uint8)
@@ -240,7 +230,7 @@ class TestClsWB:
         ],
     )
     @pytest.mark.parametrize("overlay", [True, False])
-    def test_classification_postprocessing(
+    def test_classification_visualizing(
         self, target_explain_group: TargetExplainGroup | TargetExplainGroup, overlay: bool
     ):
         retrieve_otx_model(self.data_dir, DEFAULT_CLS_MODEL)
@@ -257,14 +247,15 @@ class TestClsWB:
         explain_targets = None
         if target_explain_group == TargetExplainGroup.CUSTOM:
             explain_targets = [1]
-        visualization_parameters = VisualizationParameters(overlay=overlay)
 
-        explanation_parameters = ExplanationParameters(
+        explanation = explainer(
+            self.image,
             target_explain_group=target_explain_group,
             target_explain_labels=explain_targets,  # type: ignore
-            visualization_parameters=visualization_parameters,
+            overlay=overlay,
+            resize=False,
+            colormap=False,
         )
-        explanation = explainer(self.image, explanation_parameters)
         assert explanation is not None
         if target_explain_group == TargetExplainGroup.ALL:
             assert len(explanation.saliency_map) == MODEL_NUM_CLASSES[DEFAULT_CLS_MODEL]
@@ -291,11 +282,13 @@ class TestClsWB:
             explain_mode=ExplainMode.WHITEBOX,
         )
 
-        explanation_parameters = ExplanationParameters(
+        explanation = explainer(
+            self.image,
             target_explain_group=TargetExplainGroup.ALL,
-            visualization_parameters=VisualizationParameters(scaling=True),
+            scaling=True,
+            resize=False,
+            colormap=False,
         )
-        explanation = explainer(self.image, explanation_parameters)
 
         actual_sal_vals = explanation.saliency_map[0][0, :].astype(np.int16)
         ref_sal_vals = self._ref_sal_maps_reciprocam[DEFAULT_CLS_MODEL].astype(np.uint8)
@@ -332,7 +325,7 @@ class TestClsBB:
         ],
     )
     @pytest.mark.parametrize("scaling", [True, False])
-    def test_classification_black_box_postprocessing(
+    def test_classification_black_box_visualizing(
         self,
         model_name: str,
         overlay: bool,
@@ -351,23 +344,17 @@ class TestClsBB:
             explain_mode=ExplainMode.BLACKBOX,
         )
 
-        visualization_parameters = VisualizationParameters(
-            overlay=overlay,
-        )
-
         if target_explain_group == TargetExplainGroup.CUSTOM:
             target_class = 1
-            explanation_parameters = ExplanationParameters(
-                visualization_parameters=visualization_parameters,
-                target_explain_group=target_explain_group,
-                target_explain_labels=[target_class],
-            )
-
             explanation = explainer(
                 self.image,
-                explanation_parameters,
+                target_explain_group=target_explain_group,
+                target_explain_labels=[target_class],
+                scaling=scaling,
+                overlay=overlay,
+                resize=False,
+                colormap=False,
                 num_masks=5,
-                scale_output=scaling,
             )
 
             assert explanation is not None
@@ -379,15 +366,14 @@ class TestClsBB:
                 assert explanation.saliency_map[target_class].ndim == 2
 
         if target_explain_group == TargetExplainGroup.ALL:
-            explanation_parameters = ExplanationParameters(
-                visualization_parameters=visualization_parameters,
-                target_explain_group=target_explain_group,
-            )
             explanation = explainer(
                 self.image,
-                explanation_parameters,
+                target_explain_group=target_explain_group,
+                scaling=scaling,
+                overlay=overlay,
+                resize=False,
+                colormap=False,
                 num_masks=5,
-                scale_output=scaling,
             )
 
             assert explanation is not None
@@ -423,13 +409,11 @@ class TestClsBB:
             postprocess_fn=get_postprocess_fn(),
             explain_mode=ExplainMode.BLACKBOX,
         )
-        explanation_parameters = ExplanationParameters(
-            visualization_parameters=VisualizationParameters(overlay=False),
-            target_explain_labels=[0],
-        )
         explanation = explainer(
             self.image,
-            explanation_parameters,
+            target_explain_labels=[0],
+            resize=False,
+            colormap=False,
             num_masks=5,
         )
 
