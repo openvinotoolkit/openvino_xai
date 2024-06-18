@@ -64,7 +64,7 @@ ENV_FLAGS=""
 MOUNT_FLAGS=""
 
 if [ "$MOUNT_PATH" != "" ]; then
-  echo "mount path option = $MOUNT_PATH"
+    echo "mount path option = $MOUNT_PATH"
     ENV_FLAGS="-e CI_DATA_ROOT=/home/cibot/data"
     MOUNT_FLAGS="-v $MOUNT_PATH:/home/cibot/data:ro"
     LABELS="$LABELS,dmount"
