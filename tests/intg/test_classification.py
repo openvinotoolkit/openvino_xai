@@ -55,12 +55,10 @@ MODELS_VOC = [
 
 
 DEFAULT_CLS_MODEL = "mlc_mobilenetv3_large_voc"
-DATA_DIR = Path(".data")
 
 
 class TestClsWB:
     image = cv2.imread("tests/assets/cheetah_person.jpg")
-    data_dir = Path(".data")
     _ref_sal_maps_reciprocam = {
         "mlc_mobilenetv3_large_voc": np.array([236, 237, 244, 252, 242, 225, 231], dtype=np.uint8),
         "mlc_efficient_b0_voc": np.array([53, 128, 70, 234, 227, 255, 59], dtype=np.uint8),
@@ -78,6 +76,10 @@ class TestClsWB:
         input_size=(224, 224),
         hwc_to_chw=True,
     )
+
+    @pytest.fixture(autouse=True)
+    def setup(self, fxt_data_root):
+        self.data_dir = fxt_data_root
 
     @pytest.mark.parametrize("embed_scaling", [True, False])
     @pytest.mark.parametrize(
@@ -307,7 +309,6 @@ class TestClsWB:
 
 class TestClsBB:
     image = cv2.imread("tests/assets/cheetah_person.jpg")
-    data_dir = Path(".data")
     _ref_sal_maps = {
         "mlc_mobilenetv3_large_voc": np.array([246, 241, 236, 231, 226, 221, 216, 211, 205, 197], dtype=np.uint8),
     }
@@ -316,6 +317,10 @@ class TestClsBB:
         input_size=(224, 224),
         hwc_to_chw=True,
     )
+
+    @pytest.fixture(autouse=True)
+    def setup(self, fxt_data_root):
+        self.data_dir = fxt_data_root
 
     @pytest.mark.parametrize("model_name", MODELS)
     @pytest.mark.parametrize("overlay", [True, False])

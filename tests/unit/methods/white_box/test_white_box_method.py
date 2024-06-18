@@ -23,12 +23,11 @@ class TestActivationMap:
     _ref_sal_maps = {DEFAULT_CLS_MODEL: np.array([32, 12, 34, 47, 36, 0, 42], dtype=np.int16)}
 
     @pytest.fixture(autouse=True)
-    def set_up(self) -> None:
+    def setup(self, fxt_data_root: Path) -> None:
         """Setup the test case."""
-        data_dir = Path(".data")
         self.model_name = DEFAULT_CLS_MODEL
-        retrieve_otx_model(data_dir, self.model_name)
-        model_path = data_dir / "otx_models" / (self.model_name + ".xml")
+        retrieve_otx_model(fxt_data_root, self.model_name)
+        model_path = fxt_data_root / "otx_models" / (self.model_name + ".xml")
         self.model = ov.Core().read_model(model_path)
         self.target_layer = None
 
@@ -81,12 +80,11 @@ class TestReciproCAM:
     _ref_sal_maps = {DEFAULT_CLS_MODEL: np.array([113, 71, 92, 101, 81, 56, 81], dtype=np.int16)}
 
     @pytest.fixture(autouse=True)
-    def setUp(self) -> None:
+    def setup(self, fxt_data_root: Path) -> None:
         """Setup the test case."""
-        data_dir = Path(".data")
         self.model_name = DEFAULT_CLS_MODEL
-        retrieve_otx_model(data_dir, self.model_name)
-        model_path = data_dir / "otx_models" / (self.model_name + ".xml")
+        retrieve_otx_model(fxt_data_root, self.model_name)
+        model_path = fxt_data_root / "otx_models" / (self.model_name + ".xml")
         self.model = ov.Core().read_model(model_path)
         self.target_layer = None
 
@@ -140,12 +138,11 @@ class TestViTReciproCAM:
     _ref_sal_maps = {"deit-tiny": np.array([110, 75, 47, 47, 51, 56, 62, 64, 62, 61], dtype=np.int16)}
 
     @pytest.fixture(autouse=True)
-    def setUp(self) -> None:
+    def setup(self, fxt_data_root: Path) -> None:
         """Setup the test case."""
-        data_dir = Path(".data")
         self.model_name = "deit-tiny"
-        retrieve_otx_model(data_dir, self.model_name)
-        model_path = data_dir / "otx_models" / (self.model_name + ".xml")
+        retrieve_otx_model(fxt_data_root, self.model_name)
+        model_path = fxt_data_root / "otx_models" / (self.model_name + ".xml")
         self.model = ov.Core().read_model(model_path)
         self.target_layer = None
 
@@ -210,11 +207,10 @@ class TestDetProbMapXAI:
     }
 
     @pytest.fixture(autouse=True)
-    def setUp(self) -> None:
+    def setup(self, fxt_data_root: Path) -> None:
         """Setup the test case."""
-        data_dir = Path(".data")
-        retrieve_otx_model(data_dir, DEFAULT_DET_MODEL)
-        model_path = data_dir / "otx_models" / (DEFAULT_DET_MODEL + ".xml")
+        retrieve_otx_model(fxt_data_root, DEFAULT_DET_MODEL)
+        model_path = fxt_data_root / "otx_models" / (DEFAULT_DET_MODEL + ".xml")
         self.model = ov.Core().read_model(model_path)
         self.target_layer = [
             "/bbox_head/atss_cls_1/Conv/WithoutBiases",

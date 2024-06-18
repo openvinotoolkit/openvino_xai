@@ -76,13 +76,16 @@ class TestDetWB:
     """
 
     image = cv2.imread("tests/assets/blood.jpg")
-    data_dir = Path(".data")
     _ref_sal_maps_reciprocam = {
         "det_mobilenetv2_atss_bccd": np.array([222, 243, 232, 229, 221, 217, 237, 246, 252, 255], dtype=np.uint8),
         "det_mobilenetv2_ssd_bccd": np.array([83, 93, 61, 48, 110, 109, 78, 128, 158, 111], dtype=np.uint8),
         "det_yolox_bccd": np.array([17, 13, 15, 60, 94, 52, 61, 47, 8, 40], dtype=np.uint8),
     }
     _sal_map_size = (23, 23)
+
+    @pytest.fixture(autouse=True)
+    def setup(self, fxt_data_root):
+        self.data_dir = fxt_data_root
 
     @pytest.mark.parametrize("model_name", MODELS)
     @pytest.mark.parametrize("embed_scaling", [True, False])

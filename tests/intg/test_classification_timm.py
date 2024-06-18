@@ -136,18 +136,21 @@ TEST_MODELS = (
 
 
 class TestImageClassificationTimm:
-    data_dir = Path(".data")
     fields = ["Model", "Exported to ONNX", "Exported to OV IR", "Explained", "Map size", "Map saved"]
     counter_row = ["Counters", "0", "0", "0", "-", "-"]
     report = [fields, counter_row]
-    clean_cash_converted_models = False
-    clean_cash_hf_models = False
+    clean_cache_converted_models = False
+    clean_cache_hf_models = False
     supported_num_classes = {
         1000: 293,  # 293 is a cheetah class_id in the ImageNet-1k dataset
         21841: 2441,  # 2441 is a cheetah class_id in the ImageNet-21k dataset
         21843: 2441,  # 2441 is a cheetah class_id in the ImageNet-21k dataset
         11821: 1652,  # 1652 is a cheetah class_id in the ImageNet-12k dataset
     }
+
+    @pytest.fixture(autouse=True)
+    def setup(self, fxt_data_root):
+        self.data_dir = fxt_data_root
 
     @pytest.mark.parametrize("model_id", TEST_MODELS)
     def test_classification_white_box(self, model_id, dump_maps=False):
@@ -250,7 +253,7 @@ class TestImageClassificationTimm:
             file_name = model_id + "_target_" + str(target_class) + ".jpg"
             map_saved = (save_dir / file_name).is_file()
             self.update_report("report_wb.csv", model_id, "True", "True", "True", shape_str, str(map_saved))
-        self.clean_cash()
+        self.clean_cache()
 
     # sudo ln -s /usr/local/cuda-11.8/ cuda
     # pip uninstall torch torchvision
@@ -333,7 +336,7 @@ class TestImageClassificationTimm:
             file_name = model_id + "_target_" + str(target_class) + ".jpg"
             map_saved = (save_dir / file_name).is_file()
             self.update_report("report_bb.csv", model_id, "True", "True", "True", shape_str, str(map_saved))
-        self.clean_cash()
+        self.clean_cache()
 
     def check_for_saved_map(self, model_id, directory):
         for target in self.supported_num_classes.values():
@@ -345,7 +348,7 @@ class TestImageClassificationTimm:
                 saved_map_shape = saved_map.shape
                 shape = "H=" + str(saved_map_shape[0]) + ", W=" + str(saved_map_shape[1])
                 self.update_report("report_wb.csv", model_id, "True", "True", "True", shape, str(map_saved))
-                self.clean_cash()
+                self.clean_cache()
                 pytest.skip(f"Model {model_id} is already explained.")
 
     def get_timm_model(self, model_id):
@@ -354,7 +357,7 @@ class TestImageClassificationTimm:
         model_cfg = timm_model.default_cfg
         num_classes = model_cfg["num_classes"]
         if num_classes not in self.supported_num_classes:
-            self.clean_cash()
+            self.clean_cache()
             pytest.skip(f"Number of model classes {num_classes} unknown")
         return timm_model, model_cfg
 
@@ -408,12 +411,12 @@ class TestImageClassificationTimm:
             write = csv.writer(f)
             write.writerows(self.report)
 
-    def clean_cash(self):
-        if self.clean_cash_converted_models:
+    def clean_cache(self):
+        if self.clean_cache_converted_models:
             ir_model_dir = self.data_dir / "timm_models" / "converted_models"
             if ir_model_dir.is_dir():
                 shutil.rmtree(ir_model_dir)
-        if self.clean_cash_hf_models:
+        if self.clean_cache_hf_models:
             huggingface_hub_dir = Path.home() / ".cache/huggingface/hub/"
             if huggingface_hub_dir.is_dir():
                 shutil.rmtree(huggingface_hub_dir)
