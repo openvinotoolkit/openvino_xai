@@ -136,9 +136,7 @@ class TestClsWB:
             True,
         ],
     )
-    def test_reciprocam(
-        self, model_name: str, embed_scaling: bool, explain_all_classes: bool
-    ):
+    def test_reciprocam(self, model_name: str, embed_scaling: bool, explain_all_classes: bool):
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
         model = ov.Core().read_model(model_path)
@@ -226,9 +224,7 @@ class TestClsWB:
         ],
     )
     @pytest.mark.parametrize("overlay", [True, False])
-    def test_classification_visualizing(
-        self, explain_all_classes: bool, overlay: bool
-    ):
+    def test_classification_visualizing(self, explain_all_classes: bool, overlay: bool):
         retrieve_otx_model(self.data_dir, DEFAULT_CLS_MODEL)
         model_path = self.data_dir / "otx_models" / (DEFAULT_CLS_MODEL + ".xml")
         model = ov.Core().read_model(model_path)
@@ -242,7 +238,7 @@ class TestClsWB:
 
         explain_targets = -1
         if not explain_all_classes:
-            explain_targets = [1]
+            explain_targets = [1]  # type: ignore
 
         explanation = explainer(
             self.image,
@@ -255,7 +251,7 @@ class TestClsWB:
         if explain_all_classes:
             assert len(explanation.saliency_map) == MODEL_NUM_CLASSES[DEFAULT_CLS_MODEL]
         if not explain_all_classes:
-            assert len(explanation.saliency_map) == len(explain_targets)
+            assert len(explanation.saliency_map) == len(explain_targets)  # type: ignore
             assert 1 in explanation.saliency_map
         if overlay:
             assert explanation.shape == (354, 500, 3)

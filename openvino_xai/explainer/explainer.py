@@ -183,7 +183,7 @@ class Explainer:
         """
         if isinstance(targets, (int, str)):
             targets = [targets]
-        
+
         explain_target_indices = None
         if isinstance(self.method, BlackBoxXAIMethod) and not explain_all(targets):
             explain_target_indices = get_explain_target_indices(

@@ -9,7 +9,6 @@ from typing import Dict, List
 import cv2
 import numpy as np
 
-from openvino_xai.common.utils import logger
 from openvino_xai.explainer.utils import explain_all, get_explain_target_indices
 
 
@@ -33,7 +32,7 @@ class Explanation:
     ):
         if isinstance(targets, (int, str)):
             targets = [targets]
-        
+
         self._check_saliency_map(saliency_map)
         self._saliency_map = self._format_sal_map_as_dict(saliency_map)
 
@@ -93,7 +92,7 @@ class Explanation:
 
     def _select_target_saliency_maps(
         self,
-        targets: List[int | str] | None = None,
+        targets: List[int | str],
         label_names: List[str] | None = None,
     ) -> Dict[int | str, np.ndarray]:
         assert self.layout == Layout.MULTIPLE_MAPS_PER_IMAGE_GRAY
@@ -107,7 +106,7 @@ class Explanation:
 
     @staticmethod
     def _select_target_indices(
-        targets: List[int | str] | int | str,
+        targets: List[int | str],
         total_num_targets: int,
         label_names: List[str] | None = None,
     ) -> List[int] | np.ndarray:

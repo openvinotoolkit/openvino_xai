@@ -102,9 +102,7 @@ class TestVisualizer:
         # if saliency_maps.ndim == 3:
         #     target_explain_group = TargetExplainGroup.IMAGE
         #     explain_targets = None
-        explanation = Explanation(
-            saliency_maps, targets=explain_targets
-        )
+        explanation = Explanation(saliency_maps, targets=explain_targets)
 
         raw_sal_map_dims = len(explanation.shape)
         original_input_image = np.ones((20, 20, 3))
@@ -134,9 +132,7 @@ class TestVisualizer:
                 assert map_.shape[:2] == original_input_image.shape[:2]
 
         if saliency_maps.ndim == 3 and not overlay:
-            explanation = Explanation(
-                saliency_maps, targets=-1
-            )
+            explanation = Explanation(saliency_maps, targets=-1)
             visualizer = Visualizer()
             explanation_output_size = visualizer(
                 explanation=explanation,
