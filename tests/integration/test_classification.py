@@ -11,7 +11,6 @@ import pytest
 import openvino_xai.api.api as xai
 from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import has_xai, retrieve_otx_model
-from openvino_xai.explainer.explain_group import TargetExplainGroup
 from openvino_xai.explainer.explainer import Explainer, ExplainMode
 from openvino_xai.explainer.utils import get_postprocess_fn, get_preprocess_fn
 
@@ -75,13 +74,13 @@ class TestClsWB:
 
     @pytest.mark.parametrize("embed_scaling", [True, False])
     @pytest.mark.parametrize(
-        "target_explain_group",
+        "explain_all_classes",
         [
-            TargetExplainGroup.ALL,
-            TargetExplainGroup.CUSTOM,
+            False,
+            True,
         ],
     )
-    def test_vitreciprocam(self, embed_scaling: bool, target_explain_group: TargetExplainGroup | TargetExplainGroup):
+    def test_vitreciprocam(self, embed_scaling: bool, explain_all_classes: bool):
         model_name = "deit-tiny"
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
@@ -97,10 +96,10 @@ class TestClsWB:
             embed_scaling=embed_scaling,
         )
 
-        if target_explain_group == TargetExplainGroup.ALL:
+        if explain_all_classes:
             explanation = explainer(
                 self.image,
-                target_explain_group=target_explain_group,
+                targets=-1,
                 resize=False,
                 colormap=False,
             )
@@ -115,12 +114,11 @@ class TestClsWB:
                 else:
                     assert np.sum(np.abs(actual_sal_vals - ref_sal_vals)) > 100
 
-        if target_explain_group == TargetExplainGroup.CUSTOM:
+        if not explain_all_classes:
             target_class = 1
             explanation = explainer(
                 self.image,
-                target_explain_group=target_explain_group,
-                target_explain_labels=[target_class],
+                targets=[target_class],
                 resize=False,
                 colormap=False,
             )
@@ -132,15 +130,13 @@ class TestClsWB:
     @pytest.mark.parametrize("model_name", MODELS)
     @pytest.mark.parametrize("embed_scaling", [True, False])
     @pytest.mark.parametrize(
-        "target_explain_group",
+        "explain_all_classes",
         [
-            TargetExplainGroup.ALL,
-            TargetExplainGroup.CUSTOM,
+            False,
+            True,
         ],
     )
-    def test_reciprocam(
-        self, model_name: str, embed_scaling: bool, target_explain_group: TargetExplainGroup | TargetExplainGroup
-    ):
+    def test_reciprocam(self, model_name: str, embed_scaling: bool, explain_all_classes: bool):
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
         model = ov.Core().read_model(model_path)
@@ -154,10 +150,10 @@ class TestClsWB:
             embed_scaling=embed_scaling,
         )
 
-        if target_explain_group == TargetExplainGroup.ALL:
+        if explain_all_classes:
             explanation = explainer(
                 self.image,
-                target_explain_group=target_explain_group,
+                targets=-1,
                 resize=False,
                 colormap=False,
             )
@@ -174,12 +170,11 @@ class TestClsWB:
                         pytest.skip("model already has fixed xai head - this test cannot change it.")
                     assert np.sum(np.abs(actual_sal_vals - ref_sal_vals)) > 100
 
-        if target_explain_group == TargetExplainGroup.CUSTOM:
+        if not explain_all_classes:
             target_class = 1
             explanation = explainer(
                 self.image,
-                target_explain_group=target_explain_group,
-                target_explain_labels=[target_class],
+                targets=[target_class],
                 resize=False,
                 colormap=False,
             )
@@ -208,6 +203,7 @@ class TestClsWB:
 
         explanation = explainer(
             self.image,
+            targets=-1,
             resize=False,
             colormap=False,
         )
@@ -221,16 +217,14 @@ class TestClsWB:
         assert explanation.saliency_map["per_image_map"].ndim == 2
 
     @pytest.mark.parametrize(
-        "target_explain_group",
+        "explain_all_classes",
         [
-            TargetExplainGroup.ALL,
-            TargetExplainGroup.CUSTOM,
+            True,
+            False,
         ],
     )
     @pytest.mark.parametrize("overlay", [True, False])
-    def test_classification_visualizing(
-        self, target_explain_group: TargetExplainGroup | TargetExplainGroup, overlay: bool
-    ):
+    def test_classification_visualizing(self, explain_all_classes: bool, overlay: bool):
         retrieve_otx_model(self.data_dir, DEFAULT_CLS_MODEL)
         model_path = self.data_dir / "otx_models" / (DEFAULT_CLS_MODEL + ".xml")
         model = ov.Core().read_model(model_path)
@@ -242,23 +236,22 @@ class TestClsWB:
             explain_mode=ExplainMode.WHITEBOX,
         )
 
-        explain_targets = None
-        if target_explain_group == TargetExplainGroup.CUSTOM:
-            explain_targets = [1]
+        explain_targets = -1
+        if not explain_all_classes:
+            explain_targets = [1]  # type: ignore
 
         explanation = explainer(
             self.image,
-            target_explain_group=target_explain_group,
-            target_explain_labels=explain_targets,  # type: ignore
+            targets=explain_targets,  # type: ignore
             overlay=overlay,
             resize=False,
             colormap=False,
         )
         assert explanation is not None
-        if target_explain_group == TargetExplainGroup.ALL:
+        if explain_all_classes:
             assert len(explanation.saliency_map) == MODEL_NUM_CLASSES[DEFAULT_CLS_MODEL]
-        if target_explain_group == TargetExplainGroup.CUSTOM:
-            assert len(explanation.saliency_map) == len(explain_targets)
+        if not explain_all_classes:
+            assert len(explanation.saliency_map) == len(explain_targets)  # type: ignore
             assert 1 in explanation.saliency_map
         if overlay:
             assert explanation.shape == (354, 500, 3)
@@ -282,7 +275,7 @@ class TestClsWB:
 
         explanation = explainer(
             self.image,
-            target_explain_group=TargetExplainGroup.ALL,
+            targets=-1,
             scaling=True,
             resize=False,
             colormap=False,
@@ -313,10 +306,10 @@ class TestClsBB:
     @pytest.mark.parametrize("model_name", MODELS)
     @pytest.mark.parametrize("overlay", [True, False])
     @pytest.mark.parametrize(
-        "target_explain_group",
+        "explain_all_classes",
         [
-            TargetExplainGroup.ALL,
-            TargetExplainGroup.CUSTOM,
+            True,
+            False,
         ],
     )
     @pytest.mark.parametrize("scaling", [True, False])
@@ -324,7 +317,7 @@ class TestClsBB:
         self,
         model_name: str,
         overlay: bool,
-        target_explain_group: TargetExplainGroup | TargetExplainGroup,
+        explain_all_classes: bool,
         scaling: bool,
     ):
         retrieve_otx_model(self.data_dir, model_name)
@@ -339,12 +332,11 @@ class TestClsBB:
             explain_mode=ExplainMode.BLACKBOX,
         )
 
-        if target_explain_group == TargetExplainGroup.CUSTOM:
+        if not explain_all_classes:
             target_class = 1
             explanation = explainer(
                 self.image,
-                target_explain_group=target_explain_group,
-                target_explain_labels=[target_class],
+                targets=[target_class],
                 scaling=scaling,
                 overlay=overlay,
                 resize=False,
@@ -360,10 +352,10 @@ class TestClsBB:
             else:
                 assert explanation.saliency_map[target_class].ndim == 2
 
-        if target_explain_group == TargetExplainGroup.ALL:
+        if explain_all_classes:
             explanation = explainer(
                 self.image,
-                target_explain_group=target_explain_group,
+                targets=-1,
                 scaling=scaling,
                 overlay=overlay,
                 resize=False,
@@ -406,7 +398,7 @@ class TestClsBB:
         )
         explanation = explainer(
             self.image,
-            target_explain_labels=[0],
+            targets=[0],
             resize=False,
             colormap=False,
             num_masks=5,

@@ -11,7 +11,6 @@ import openvino.runtime as ov
 import pytest
 
 from openvino_xai.common.parameters import Method, Task
-from openvino_xai.explainer.explain_group import TargetExplainGroup
 from openvino_xai.explainer.explainer import Explainer, ExplainMode
 from openvino_xai.explainer.utils import (
     ActivationType,
@@ -199,8 +198,7 @@ class TestImageClassificationTimm:
         image = cv2.imread("tests/assets/cheetah_person.jpg")
         explanation = explainer(
             image,
-            target_explain_group=TargetExplainGroup.CUSTOM,
-            target_explain_labels=[target_class],
+            targets=[target_class],
             resize=False,
             colormap=False,
         )
@@ -297,8 +295,7 @@ class TestImageClassificationTimm:
         target_class = self.supported_num_classes[model_cfg["num_classes"]]
         explanation = explainer(
             image,
-            target_explain_group=TargetExplainGroup.CUSTOM,
-            target_explain_labels=[target_class],
+            targets=[target_class],
             num_masks=2000,  # kwargs of the RISE algo
         )
 
