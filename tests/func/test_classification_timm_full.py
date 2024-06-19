@@ -57,8 +57,7 @@ NON_SUPPORTED_BY_WB_MODELS = {
     "convmixer": "Transformer, Cannot find output backbone_node in auto mode, please provide target_layer.",
 }
 
-NON_SUPPORTED_BY_BB_MODELS = {
-}
+NON_SUPPORTED_BY_BB_MODELS = {}
 
 CNN_MODELS = [
     "bat_resnext",
