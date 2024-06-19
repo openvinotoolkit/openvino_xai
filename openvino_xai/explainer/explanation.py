@@ -9,7 +9,7 @@ from typing import Dict, List
 import cv2
 import numpy as np
 
-from openvino_xai.explainer.utils import explain_all, get_explain_target_indices
+from openvino_xai.explainer.utils import explains_all, get_explain_target_indices
 
 
 class Explanation:
@@ -41,7 +41,7 @@ class Explanation:
         else:
             self.layout = Layout.MULTIPLE_MAPS_PER_IMAGE_GRAY
 
-        if not explain_all(targets) and not self.layout == Layout.ONE_MAP_PER_IMAGE_GRAY:
+        if not explains_all(targets) and not self.layout == Layout.ONE_MAP_PER_IMAGE_GRAY:
             self._saliency_map = self._select_target_saliency_maps(targets, label_names)
 
         self.label_names = label_names

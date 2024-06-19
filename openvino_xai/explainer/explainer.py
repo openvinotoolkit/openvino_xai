@@ -12,7 +12,7 @@ from openvino_xai import Task
 from openvino_xai.common.parameters import Method
 from openvino_xai.common.utils import IdentityPreprocessFN, logger
 from openvino_xai.explainer.explanation import Explanation
-from openvino_xai.explainer.utils import explain_all, get_explain_target_indices
+from openvino_xai.explainer.utils import explains_all, get_explain_target_indices
 from openvino_xai.explainer.visualizer import Visualizer
 from openvino_xai.methods.base import MethodBase
 from openvino_xai.methods.black_box.base import BlackBoxXAIMethod
@@ -185,7 +185,7 @@ class Explainer:
             targets = [targets]
 
         explain_target_indices = None
-        if isinstance(self.method, BlackBoxXAIMethod) and not explain_all(targets):
+        if isinstance(self.method, BlackBoxXAIMethod) and not explains_all(targets):
             explain_target_indices = get_explain_target_indices(
                 targets,
                 label_names,

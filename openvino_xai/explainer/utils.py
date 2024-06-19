@@ -43,7 +43,7 @@ def get_explain_target_indices(
     return target_indices
 
 
-def explain_all(targets: List[int | str] | int | str):
+def explains_all(targets: List[int | str] | int | str):
     """
     Defines reserved conditions for explaining all classes/labels.
     Introduced under the assumption that it is not gonna be frequently used.
