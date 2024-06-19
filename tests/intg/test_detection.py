@@ -11,7 +11,6 @@ import pytest
 
 from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import retrieve_otx_model
-from openvino_xai.explainer.explain_group import TargetExplainGroup
 from openvino_xai.explainer.explainer import Explainer, ExplainMode
 from openvino_xai.explainer.utils import get_preprocess_fn
 from openvino_xai.methods.factory import WhiteBoxMethodFactory
@@ -58,9 +57,9 @@ MODELS = list(MODEL_CONFIGS.keys())
 
 DEFAULT_DET_MODEL = "det_mobilenetv2_atss_bccd"
 
-TARGET_EXPLAIN_GROUPS = [
-    TargetExplainGroup.ALL,
-    TargetExplainGroup.CUSTOM,
+EXPLAIN_ALL_CLASSES = [
+    True,
+    False,
 ]
 
 
@@ -83,8 +82,8 @@ class TestDetWB:
 
     @pytest.mark.parametrize("model_name", MODELS)
     @pytest.mark.parametrize("embed_scaling", [True, False])
-    @pytest.mark.parametrize("target_explain_group", TARGET_EXPLAIN_GROUPS)
-    def test_detclassprobabilitymap(self, model_name, embed_scaling, target_explain_group):
+    @pytest.mark.parametrize("explain_all_classes", EXPLAIN_ALL_CLASSES)
+    def test_detclassprobabilitymap(self, model_name, embed_scaling, explain_all_classes):
         retrieve_otx_model(self.data_dir, model_name)
         model_path = self.data_dir / "otx_models" / (model_name + ".xml")
         model = ov.Core().read_model(model_path)
@@ -106,17 +105,16 @@ class TestDetWB:
             saliency_map_size=self._sal_map_size,
         )
 
-        target_class_list = [1] if target_explain_group == TargetExplainGroup.CUSTOM else None
+        target_class_list = [1] if not explain_all_classes else -1
         explanation = explainer(
             self.image,
-            target_explain_group=target_explain_group,
-            target_explain_labels=target_class_list,
+            targets=target_class_list,
             resize=False,
             colormap=False,
         )
         assert explanation is not None
 
-        if target_explain_group == TargetExplainGroup.ALL:
+        if explain_all_classes:
             assert len(explanation.saliency_map) == MODEL_CONFIGS[model_name].num_classes
             assert explanation.saliency_map[0].shape == self._sal_map_size
 
@@ -128,18 +126,18 @@ class TestDetWB:
             else:
                 assert np.sum(np.abs(actual_sal_vals - ref_sal_vals)) > 100
 
-        if target_explain_group == TargetExplainGroup.CUSTOM:
+        if not explain_all_classes:
             target_class = target_class_list[0]
             assert target_class in explanation.saliency_map
             assert len(explanation.saliency_map) == len(target_class_list)
             assert explanation.saliency_map[target_class].ndim == 2
             assert explanation.saliency_map[target_class].shape == self._sal_map_size
 
-    @pytest.mark.parametrize("target_explain_group", TARGET_EXPLAIN_GROUPS)
-    def test_detection_visualizing(self, target_explain_group):
+    @pytest.mark.parametrize("explain_all_classes", EXPLAIN_ALL_CLASSES)
+    def test_detection_visualizing(self, explain_all_classes):
         model = self.get_default_model()
 
-        target_class_list = [1] if target_explain_group == TargetExplainGroup.CUSTOM else None
+        target_class_list = [1] if not explain_all_classes else -1
 
         preprocess_fn = get_preprocess_fn(
             input_size=MODEL_CONFIGS[DEFAULT_DET_MODEL].input_size,
@@ -159,15 +157,14 @@ class TestDetWB:
 
         explanation = explainer(
             self.image,
-            target_explain_group=target_explain_group,
-            target_explain_labels=target_class_list,
+            targets=target_class_list,
             overlay=True,
         )
         assert explanation is not None
         assert explanation.shape == (480, 640, 3)
-        if target_explain_group == TargetExplainGroup.ALL:
+        if explain_all_classes:
             assert len(explanation.saliency_map) == MODEL_CONFIGS[DEFAULT_DET_MODEL].num_classes
-        if target_explain_group == TargetExplainGroup.CUSTOM:
+        if not explain_all_classes:
             target_class = target_class_list[0]
             assert len(explanation.saliency_map) == len(target_class_list)
             assert target_class in explanation.saliency_map
@@ -193,7 +190,7 @@ class TestDetWB:
 
         explanation = explainer(
             self.image,
-            target_explain_group=TargetExplainGroup.ALL,
+            targets=-1,
             scaling=True,
             resize=False,
             colormap=False,

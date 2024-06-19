@@ -10,37 +10,51 @@ from openvino.runtime.utils.data_helpers.wrappers import OVDict
 
 
 def get_explain_target_indices(
-    target_explain_labels: List[int | str],
+    targets: List[int | str],
     label_names: List[str] | None = None,
 ) -> List[int]:
     """
     Returns indices to be explained.
 
-    :param target_explain_labels: List of custom labels to explain, optional. Can be list of integer indices (int),
+    :param targets: List of custom labels to explain, optional. Can be list of integer indices (int),
         or list of names (str) from label_names.
-    :type target_explain_labels: List[int | str]
+    :type targets: List[int | str]
     :param label_names: List of all label names.
     :type label_names: List[str] | None
     """
-    if isinstance(target_explain_labels[0], int):
-        return target_explain_labels  # type: ignore
+    if isinstance(targets[0], int):
+        return targets  # type: ignore
 
-    if not isinstance(target_explain_labels[0], str):
-        raise ValueError(f"Explain labels expected to be int or str, but got {type(target_explain_labels[0])}")
+    if not isinstance(targets[0], str):
+        raise ValueError(f"Explain labels expected to be int or str, but got {type(targets[0])}")
 
     if not label_names:
-        raise ValueError("Label names should be provided when target_explain_labels contain string names.")
+        raise ValueError("Label names should be provided when targets contain string names.")
 
-    # Assuming len(target_explain_labels) << len(label_names)
-    target_explain_indices = []
+    # Assuming len(targets) << len(label_names)
+    target_indices = []
     for label_index, label in enumerate(label_names):
-        if label in target_explain_labels:
-            target_explain_indices.append(label_index)
+        if label in targets:
+            target_indices.append(label_index)
 
-    if len(target_explain_labels) != len(target_explain_indices):
+    if len(targets) != len(target_indices):
         raise ValueError("No all label names found in label_names. Check spelling.")
 
-    return target_explain_indices
+    return target_indices
+
+
+def explains_all(targets: List[int | str] | int | str):
+    """
+    Defines reserved conditions for explaining all classes/labels.
+    Introduced under the assumption that it is not gonna be frequently used.
+    """
+    if isinstance(targets, int) and targets == -1:
+        return True
+    if isinstance(targets, list) and len(targets) == 1 and targets[0] == -1:
+        return True
+    if isinstance(targets, str) and targets == "-1":
+        return True
+    return False
 
 
 def preprocess_fn(
