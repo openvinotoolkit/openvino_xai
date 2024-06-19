@@ -30,7 +30,6 @@ pytest.importorskip("onnx")
 TEST_MODELS = timm.list_models(pretrained=True)
 
 NON_SUPPORTED_BY_WB_MODELS = {
-    "repvit_m1.dist_in1k": "404 Not Found",
     "nest_tiny_jx.goog_in1k": "CNN, dynamic batch issue",
     "pit_s_224.in1k": "CNN, dynamic batch issue",
     "pvt_v2_b0.in1k": "CNN, dynamic batch issue",
@@ -59,7 +58,6 @@ NON_SUPPORTED_BY_WB_MODELS = {
 }
 
 NON_SUPPORTED_BY_BB_MODELS = {
-    "repvit_m1.dist_in1k": "404 Not Found",
 }
 
 CNN_MODELS = [
@@ -104,32 +102,39 @@ CNN_MODELS = [
 ]
 
 SKIPPED_MODELS = {
-    "convnext_xxlarge",  # too big
-    "convnextv2_huge",  # too big
-    "gc_efficientnetv2_rw",  # failed to convert to OV
-    "gcresnext",  # failed to convert to OV
-    "haloregnetz",
-    "nasnetalarge",
-    "pnasnet5large",
-    "regnety_1280",
-    "regnety_2560",
-    "resnest14d",
-    "resnest26d",
-    "resnest50d",
-    "resnest101e",
-    "resnest200e",
-    "resnest269e",
-    "skresnext50_32x4d",
-    "tf_efficientnet_cc_b",
-    "gcresnet",
-    "lambda_resnet",
-    "nf_regnet",
-    "nf_resnet",
-    "resnetv2_50x",
-    "resnetv2_101x",
-    "resnetv2_152x",
-    "skresnet",
-    "tresnet_",
+    "_nfnet_": "RuntimeError: Exception from src/inference/src/cpp/core.cpp:90:",
+    "deit_huge": "RuntimeError: The serialized model is larger than the 2GiB limit imposed by the protobuf library.",
+    "halo": "torch.onnx.errors.SymbolicValueError: Unsupported: ONNX export of operator Unfold, input size not accessible.",
+    "convnext_xxlarge": "RuntimeError: The serialized model is larger than the 2GiB limit imposed by the protobuf library.",
+    "resnetv2": "RuntimeError: Exception from src/inference/src/cpp/core.cpp:90:",
+    "regnety_1280": "RuntimeError: The serialized model is larger than the 2GiB limit imposed by the protobuf library.",
+    "repvit": "urllib.error.HTTPError: HTTP Error 404: Not Found",
+    "volo_": "torch.onnx.errors.UnsupportedOperatorError: Exporting the operator 'aten::col2im' to ONNX opset version 14 is not supported.",
+    # "convnextv2_huge",  # too big
+    # "gc_efficientnetv2_rw",  # failed to convert to OV
+    # "gcresnext",  # failed to convert to OV
+    # "haloregnetz",
+    # "nasnetalarge",
+    # "pnasnet5large",
+    # "regnety_1280",
+    # "regnety_2560",
+    # "resnest14d",
+    # "resnest26d",
+    # "resnest50d",
+    # "resnest101e",
+    # "resnest200e",
+    # "resnest269e",
+    # "skresnext50_32x4d",
+    # "tf_efficientnet_cc_b",
+    # "gcresnet",
+    # "lambda_resnet",
+    # "nf_regnet",
+    # "nf_resnet",
+    # "resnetv2_50x",
+    # "resnetv2_101x",
+    # "resnetv2_152x",
+    # "skresnet",
+    # "tresnet_",
 }
 
 
@@ -154,8 +159,12 @@ class TestImageClassificationTimm:
     def test_classification_white_box(self, model_id, dump_maps=False):
         # self.check_for_saved_map(model_id, "timm_models/maps_wb/")
 
+        for skipped_model in SKIPPED_MODELS.keys():
+            if skipped_model in model_id:
+                pytest.skip(reason=SKIPPED_MODELS[skipped_model])
+
         for non_supported_model in NON_SUPPORTED_BY_WB_MODELS.keys():
-            if model_id in non_supported_model:
+            if non_supported_model in model_id:
                 pytest.xfail(reason=NON_SUPPORTED_BY_WB_MODELS[non_supported_model])
 
         output_model_dir = self.data_dir / "timm_models" / "converted_models" / model_id
@@ -252,19 +261,16 @@ class TestImageClassificationTimm:
             self.update_report("report_wb.csv", model_id, "True", "True", "True", shape_str, str(map_saved))
         self.clean_cache()
 
-    # sudo ln -s /usr/local/cuda-11.8/ cuda
-    # pip uninstall torch torchvision
-    # pip3 install --pre torch torchvision --index-url https://download.pytorch.org/whl/nightly/cu118
-    #
-    # ulimit -a
-    # ulimit -Sn 10000
-    # ulimit -a
     @pytest.mark.parametrize("model_id", TEST_MODELS)
     def test_classification_black_box(self, model_id, dump_maps=False):
         # self.check_for_saved_map(model_id, "timm_models/maps_bb/")
 
+        for skipped_model in SKIPPED_MODELS.keys():
+            if skipped_model in model_id:
+                pytest.skip(reason=SKIPPED_MODELS[skipped_model])
+
         for non_supported_model in NON_SUPPORTED_BY_BB_MODELS.keys():
-            if model_id in non_supported_model:
+            if non_supported_model in model_id:
                 pytest.xfail(reason=NON_SUPPORTED_BY_BB_MODELS[non_supported_model])
 
         timm_model, model_cfg = self.get_timm_model(model_id)
