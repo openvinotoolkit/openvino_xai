@@ -19,12 +19,28 @@ def pytest_addoption(parser: pytest.Parser):
         default=".data",
         help="Data root directory.",
     )
+    parser.addoption(
+        "--output-root",
+        action="store",
+        default=".data",
+        help="Output root directory.",
+    )
 
 
 @pytest.fixture(scope="session")
 def fxt_data_root(request: pytest.FixtureRequest) -> Path:
     """Data root directory path."""
-    data_root = Path(request.config.getoption("--data-root")).expanduser().absolute()
+    data_root = Path(request.config.getoption("--data-root")).absolute().expanduser()
     msg = f"{data_root = }"
     log.info(msg)
     return data_root
+
+
+@pytest.fixture(scope="session")
+def fxt_output_root(request: pytest.FixtureRequest) -> Path:
+    """Output root directory path."""
+    output_root = Path(request.config.getoption("--output-root")).absolute().expanduser()
+    output_root.mkdir(parents=True, exist_ok=True)
+    msg = f"{output_root = }"
+    log.info(msg)
+    return output_root

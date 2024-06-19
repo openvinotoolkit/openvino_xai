@@ -16,7 +16,7 @@ jobs:
   Functional-Test:
     runs-on: [large-disk]
     needs: Sanity-Checks
-    timeout-minutes: 360
+    timeout-minutes: 600
     # This is what will cancel the job concurrency
     concurrency:
       group: ${{ github.workflow }}-Functional-${{ github.ref }}

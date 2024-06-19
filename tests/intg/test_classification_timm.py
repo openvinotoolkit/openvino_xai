@@ -142,8 +142,9 @@ class TestImageClassificationTimm:
     }
 
     @pytest.fixture(autouse=True)
-    def setup(self, fxt_data_root):
+    def setup(self, fxt_data_root, fxt_output_root):
         self.data_dir = fxt_data_root
+        self.output_dir = fxt_output_root
 
     @pytest.mark.parametrize("model_id", TEST_MODELS)
     def test_classification_white_box(self, model_id, dump_maps=False):
@@ -152,14 +153,14 @@ class TestImageClassificationTimm:
         if model_id in NON_SUPPORTED_BY_WB_MODELS:
             pytest.xfail(reason="Not supported yet")
 
-        output_model_dir = self.data_dir / "timm_models" / "converted_models" / model_id
-        output_model_dir.mkdir(parents=True, exist_ok=True)
-        ir_path = output_model_dir / "model_fp32.xml"
-
         timm_model, model_cfg = self.get_timm_model(model_id)
-
         self.update_report("report_wb.csv", model_id)
-        if not (output_model_dir / "model_fp32.xml").is_file():
+
+        ir_path = self.data_dir / "timm_models" / "converted_models" / model_id / "model_fp32.xml"
+        if not ir_path.is_file():
+            output_model_dir = self.output_dir / "timm_models" / "converted_models" / model_id
+            output_model_dir.mkdir(parents=True, exist_ok=True)
+            ir_path = output_model_dir / "model_fp32.xml"
             input_size = [1] + list(timm_model.default_cfg["input_size"])
             dummy_tensor = torch.rand(input_size)
             onnx_path = output_model_dir / "model_fp32.onnx"
@@ -239,7 +240,7 @@ class TestImageClassificationTimm:
             target_confidence = get_score(model_output["logits"], target_class, activation=ActivationType.SOFTMAX)
             self.put_confidence_into_map_overlay(explanation, target_confidence, target_class)
 
-            save_dir = self.data_dir / "timm_models" / "maps_wb"
+            save_dir = self.output_dir / "timm_models" / "maps_wb"
             explanation.save(save_dir, model_id)
             file_name = model_id + "_target_" + str(target_class) + ".jpg"
             map_saved = (save_dir / file_name).is_file()
@@ -258,14 +259,13 @@ class TestImageClassificationTimm:
         # self.check_for_saved_map(model_id, "timm_models/maps_bb/")
 
         timm_model, model_cfg = self.get_timm_model(model_id)
-
         self.update_report("report_bb.csv", model_id)
 
-        output_model_dir = self.data_dir / "timm_models" / "converted_models" / model_id
-        output_model_dir.mkdir(parents=True, exist_ok=True)
-        onnx_path = output_model_dir / "model_fp32.onnx"
-
-        if not (output_model_dir / "model_fp32.onnx").is_file():
+        onnx_path = self.data_dir / "timm_models" / "converted_models" / model_id / "model_fp32.onnx"
+        if not onnx_path.is_file():
+            output_model_dir = self.output_dir / "timm_models" / "converted_models" / model_id
+            output_model_dir.mkdir(parents=True, exist_ok=True)
+            onnx_path = output_model_dir / "model_fp32.onnx"
             input_size = [1] + list(timm_model.default_cfg["input_size"])
             dummy_tensor = torch.rand(input_size)
             onnx_path = output_model_dir / "model_fp32.onnx"
@@ -318,7 +318,7 @@ class TestImageClassificationTimm:
             target_confidence = get_score(model_output["logits"], target_class, activation=ActivationType.SOFTMAX)
             self.put_confidence_into_map_overlay(explanation, target_confidence, target_class)
 
-            save_dir = self.data_dir / "timm_models" / "maps_bb"
+            save_dir = self.output_dir / "timm_models" / "maps_bb"
             explanation.save(save_dir, model_id)
             file_name = model_id + "_target_" + str(target_class) + ".jpg"
             map_saved = (save_dir / file_name).is_file()
@@ -328,7 +328,7 @@ class TestImageClassificationTimm:
     def check_for_saved_map(self, model_id, directory):
         for target in self.supported_num_classes.values():
             map_name = model_id + "_target_" + str(target) + ".jpg"
-            map_path = self.data_dir / directory / map_name
+            map_path = self.output_dir / directory / map_name
             map_saved = map_path.is_file()
             if map_saved:
                 saved_map = cv2.imread(map_path._str)
@@ -394,17 +394,18 @@ class TestImageClassificationTimm:
             self.report[1][1] = str(bool_flags[:, 0].sum())
             self.report[1][2] = str(bool_flags[:, 1].sum())
             self.report[1][3] = str(bool_flags[:, 2].sum())
-        with open(self.data_dir / "timm_models" / report_name, "w") as f:
+        with open(self.output_dir / f"timm_{report_name}", "w") as f:
             write = csv.writer(f)
             write.writerows(self.report)
 
     def clean_cache(self):
         if self.clean_cache_converted_models:
-            ir_model_dir = self.data_dir / "timm_models" / "converted_models"
+            ir_model_dir = self.output_dir / "timm_models" / "converted_models"
             if ir_model_dir.is_dir():
                 shutil.rmtree(ir_model_dir)
         if self.clean_cache_hf_models:
-            huggingface_hub_dir = Path.home() / ".cache/huggingface/hub/"
+            cache_dir = os.environ.get("XDG_CACHE_HOME", "~/.cache")
+            huggingface_hub_dir = Path(cache_dir) / "huggingface/hub/"
             if huggingface_hub_dir.is_dir():
                 shutil.rmtree(huggingface_hub_dir)
 
