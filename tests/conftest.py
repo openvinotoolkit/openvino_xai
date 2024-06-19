@@ -19,12 +19,6 @@ def pytest_addoption(parser: pytest.Parser):
         default=".data",
         help="Data root directory.",
     )
-    parser.addoption(
-        "--cache-root",
-        action="store",
-        default="~/.cache",
-        help="Cache root directory.",
-    )
 
 
 @pytest.fixture(scope="session")
@@ -34,15 +28,3 @@ def fxt_data_root(request: pytest.FixtureRequest) -> Path:
     msg = f"{data_root = }"
     log.info(msg)
     return data_root
-
-
-@pytest.fixture(scope="session", autouse=True)
-def fxt_cache_root(request: pytest.FixtureRequest) -> Path:
-    """Cache root directory path."""
-    cache_root = Path(request.config.getoption("--cache-root")).expanduser().absolute()
-    os.environ["XDG_CACHE_HOME"] = cache_root.as_posix()
-    os.environ["HF_HOME"] = cache_root.as_posix()
-    msg = f"{cache_root = }"
-    print(msg)
-    log.info(msg)
-    return cache_root
