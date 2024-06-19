@@ -110,6 +110,7 @@ SKIPPED_MODELS = {
     "regnety_1280": "RuntimeError: The serialized model is larger than the 2GiB limit imposed by the protobuf library.",
     "repvit": "urllib.error.HTTPError: HTTP Error 404: Not Found",
     "volo_": "torch.onnx.errors.UnsupportedOperatorError: Exporting the operator 'aten::col2im' to ONNX opset version 14 is not supported.",
+    "tf_efficientnet_cc": "torch.onnx.errors.SymbolicValueError: Unsupported: ONNX export of convolution for kernel of unknown shape.",
     # "convnextv2_huge",  # too big
     # "gc_efficientnetv2_rw",  # failed to convert to OV
     # "gcresnext",  # failed to convert to OV
