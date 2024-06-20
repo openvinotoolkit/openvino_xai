@@ -146,3 +146,33 @@ def get_score(x: np.ndarray, index: int, activation: ActivationType = Activation
         assert x.shape[0] == 1
         return x[0, index]
     return x[index]
+
+
+def format_to_hwc(image: np.ndarray) -> np.ndarray:
+    """Format image to HWC."""
+    ori_ndim = image.ndim
+    if image.ndim == 4:
+        image = np.squeeze(image, axis=0)
+
+    dim0, dim1, dim2 = image.shape
+    if dim0 < dim1 and dim0 < dim2:
+        image = image.transpose((1, 2, 0))
+
+    if ori_ndim:
+        return np.expand_dims(image, axis=0)
+    return image
+
+
+def infer_size_from_image(image: np.ndarray) -> Tuple[int, int]:
+    """Estimate image size."""
+    image = format_to_hwc(image)
+
+    if image.ndim == 2:
+        return image.shape
+    elif image.ndim == 3:
+        h, w, _ = image.shape
+    elif image.ndim == 4:
+        _, h, w, _ = image.shape
+    else:
+        raise ValueError(f"Supports only two, three, and four dimensional image, but got {image.ndim}.")
+    return h, w

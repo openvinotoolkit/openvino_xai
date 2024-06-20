@@ -15,6 +15,7 @@ from openvino_xai.explainer.explanation import (
     Explanation,
     Layout,
 )
+from openvino_xai.explainer.utils import format_to_hwc, infer_size_from_image
 
 
 def resize(saliency_map: np.ndarray, output_size: Tuple[int, int]) -> np.ndarray:
@@ -104,6 +105,9 @@ class Visualizer:
         :parameter overlay_weight: Weight of the saliency map when overlaying the input data with the saliency map.
         :type overlay_weight: float
         """
+        if original_input_image is not None:
+            original_input_image = format_to_hwc(original_input_image)
+
         saliency_map_dict = explanation.saliency_map
         class_idx_to_return = list(saliency_map_dict.keys())
 
@@ -118,7 +122,9 @@ class Visualizer:
                 raise ValueError("Input data has to be provided for overlay.")
             saliency_map_np = self._apply_resize(explanation, saliency_map_np, original_input_image, output_size)
             saliency_map_np = self._apply_colormap(explanation, saliency_map_np)
-            saliency_map_np = self._apply_overlay(explanation, saliency_map_np, original_input_image, overlay_weight)
+            saliency_map_np = self._apply_overlay(
+                explanation, saliency_map_np, original_input_image, output_size, overlay_weight
+            )
         else:
             if resize:
                 if original_input_image is None and output_size is None:
@@ -154,7 +160,7 @@ class Visualizer:
                 f"Saliency map to resize has to be grayscale. The layout must be in {GRAY_LAYOUTS}, "
                 f"but got {explanation.layout}."
             )
-        output_size = output_size if output_size else original_input_image.shape[:2]
+        output_size = output_size if output_size else infer_size_from_image(original_input_image)
         saliency_map_np = resize(saliency_map_np, output_size)
 
         # Scaling has to be applied after resize to keep map in range 0..255
@@ -181,9 +187,14 @@ class Visualizer:
         explanation: Explanation,
         saliency_map_np: np.ndarray,
         original_input_image: np.ndarray = None,
+        output_size: Tuple[int, int] = None,
         overlay_weight: float = 0.5,
     ) -> np.ndarray:
-        assert explanation.layout in COLOR_MAPPED_LAYOUTS, "Color mapped saliency map are expected for overlay."
+        if explanation.layout not in COLOR_MAPPED_LAYOUTS:
+            raise RuntimeError("Color mapped saliency map are expected for overlay.")
+        if output_size:
+            original_input_image = cv2.resize(original_input_image[0], output_size[::-1])
+            original_input_image = original_input_image[None, ...]
         return overlay(saliency_map_np, original_input_image, overlay_weight)
 
     @staticmethod

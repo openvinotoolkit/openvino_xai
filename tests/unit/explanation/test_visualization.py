@@ -99,9 +99,6 @@ class TestVisualizer:
         else:
             explain_targets = [0]
 
-        # if saliency_maps.ndim == 3:
-        #     target_explain_group = TargetExplainGroup.IMAGE
-        #     explain_targets = None
         explanation = Explanation(saliency_maps, targets=explain_targets)
 
         raw_sal_map_dims = len(explanation.shape)

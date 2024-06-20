@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from enum import Enum
-from typing import Callable, List
+from typing import Callable, List, Tuple
 
 import numpy as np
 import openvino.runtime as ov
@@ -12,7 +12,11 @@ from openvino_xai import Task
 from openvino_xai.common.parameters import Method
 from openvino_xai.common.utils import IdentityPreprocessFN, logger
 from openvino_xai.explainer.explanation import Explanation
-from openvino_xai.explainer.utils import explains_all, get_explain_target_indices
+from openvino_xai.explainer.utils import (
+    explains_all,
+    get_explain_target_indices,
+    infer_size_from_image,
+)
 from openvino_xai.explainer.visualizer import Visualizer
 from openvino_xai.methods.base import MethodBase
 from openvino_xai.methods.black_box.base import BlackBoxXAIMethod
@@ -127,6 +131,7 @@ class Explainer:
         data: np.ndarray,
         targets: List[int | str] | int | str,
         label_names: List[str] | None = None,
+        output_size: Tuple[int, int] | None = None,
         scaling: bool = False,
         resize: bool = True,
         colormap: bool = True,
@@ -138,6 +143,7 @@ class Explainer:
             data,
             targets,
             label_names,
+            output_size,
             scaling,
             resize,
             colormap,
@@ -151,6 +157,7 @@ class Explainer:
         data: np.ndarray,
         targets: List[int | str] | int | str,
         label_names: List[str] | None = None,
+        output_size: Tuple[int, int] | None = None,
         scaling: bool = False,
         resize: bool = True,
         colormap: bool = True,
@@ -168,6 +175,8 @@ class Explainer:
         :type targets: List[int | str] | int | str
         :param label_names: List of all label names.
         :type label_names: List[str] | None
+        :param output_size: Output size used for resize operation.
+        :type output_size:
         :parameter scaling: If True, scaling saliency map into [0, 255] range (filling the whole range).
             By default, scaling is embedded into the IR model.
             Therefore, scaling=False here by default.
@@ -205,6 +214,7 @@ class Explainer:
         return self._visualize(
             explanation,
             data,
+            output_size,
             scaling,
             resize,
             colormap,
@@ -240,30 +250,24 @@ class Explainer:
         self,
         explanation: Explanation,
         data: np.ndarray,
+        output_size: Tuple[int, int],
         scaling: bool,
         resize: bool,
         colormap: bool,
         overlay: bool,
         overlay_weight: float,
     ) -> Explanation:
-        if not isinstance(self.preprocess_fn, IdentityPreprocessFN):
-            explanation = self.visualizer(
-                explanation=explanation,
-                original_input_image=data,
-                scaling=scaling,
-                resize=resize,
-                colormap=colormap,
-                overlay=overlay,
-                overlay_weight=overlay_weight,
-            )
-        else:
-            explanation = self.visualizer(
-                explanation=explanation,
-                output_size=data.shape[:2],  # resize to model input by default
-                scaling=scaling,
-                resize=resize,
-                colormap=colormap,
-                overlay=overlay,
-                overlay_weight=overlay_weight,
-            )
+        if output_size is None:
+            output_size = infer_size_from_image(data)  # resize to model input by default
+
+        explanation = self.visualizer(
+            explanation=explanation,
+            original_input_image=data,
+            output_size=output_size,
+            scaling=scaling,
+            resize=resize,
+            colormap=colormap,
+            overlay=overlay,
+            overlay_weight=overlay_weight,
+        )
         return explanation
