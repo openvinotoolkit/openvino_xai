@@ -19,7 +19,7 @@ class Explanation:
     :param saliency_map: Raw saliency map.
     :param targets: List of custom labels to explain, optional. Can be list of integer indices (int),
         or list of names (str) from label_names.
-    :type targets: List[int | str] | int | str
+    :type targets: np.ndarray | List[int | str] | int | str
     :param label_names: List of all label names.
     :type label_names: List[str] | None
     """
@@ -27,7 +27,7 @@ class Explanation:
     def __init__(
         self,
         saliency_map: np.ndarray,
-        targets: List[int | str] | int | str,
+        targets: np.ndarray | List[int | str] | int | str,
         label_names: List[str] | None = None,
     ):
         if isinstance(targets, (int, str)):
@@ -92,7 +92,7 @@ class Explanation:
 
     def _select_target_saliency_maps(
         self,
-        targets: List[int | str],
+        targets: np.ndarray | List[int | str],
         label_names: List[str] | None = None,
     ) -> Dict[int | str, np.ndarray]:
         assert self.layout == Layout.MULTIPLE_MAPS_PER_IMAGE_GRAY
@@ -106,7 +106,7 @@ class Explanation:
 
     @staticmethod
     def _select_target_indices(
-        targets: List[int | str],
+        targets: np.ndarray | List[int | str],
         total_num_targets: int,
         label_names: List[str] | None = None,
     ) -> List[int] | np.ndarray:

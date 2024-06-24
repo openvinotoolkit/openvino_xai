@@ -129,7 +129,7 @@ class Explainer:
     def __call__(
         self,
         data: np.ndarray,
-        targets: List[int | str] | int | str,
+        targets: np.ndarray | List[int | str] | int | str,
         label_names: List[str] | None = None,
         output_size: Tuple[int, int] | None = None,
         scaling: bool = False,
@@ -155,7 +155,7 @@ class Explainer:
     def explain(
         self,
         data: np.ndarray,
-        targets: List[int | str] | int | str,
+        targets: np.ndarray | List[int | str] | int | str,
         label_names: List[str] | None = None,
         output_size: Tuple[int, int] | None = None,
         scaling: bool = False,
@@ -172,7 +172,7 @@ class Explainer:
         :type data: np.ndarray
         :param targets: List of custom labels to explain, optional. Can be list of integer indices (int),
             or list of names (str) from label_names.
-        :type targets: List[int | str] | int | str
+        :type targets: np.ndarray | List[int | str] | int | str
         :param label_names: List of all label names.
         :type label_names: List[str] | None
         :param output_size: Output size used for resize operation.

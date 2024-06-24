@@ -10,7 +10,7 @@ from openvino.runtime.utils.data_helpers.wrappers import OVDict
 
 
 def get_explain_target_indices(
-    targets: List[int | str],
+    targets: np.ndarray | List[int | str],
     label_names: List[str] | None = None,
 ) -> List[int]:
     """
@@ -18,10 +18,15 @@ def get_explain_target_indices(
 
     :param targets: List of custom labels to explain, optional. Can be list of integer indices (int),
         or list of names (str) from label_names.
-    :type targets: List[int | str]
+    :type targets: np.ndarray | List[int | str]
     :param label_names: List of all label names.
     :type label_names: List[str] | None
     """
+    if isinstance(targets, np.ndarray):
+        if targets.ndim != 1:
+            raise ValueError(f"Expected 1d numpy array, but got {targets.ndim}.")
+        return list(targets)
+
     if isinstance(targets[0], int):
         return targets  # type: ignore
 
