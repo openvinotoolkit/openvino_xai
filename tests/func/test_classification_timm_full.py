@@ -29,41 +29,11 @@ pytest.importorskip("onnx")
 
 TEST_MODELS = timm.list_models(pretrained=True)
 
-NON_SUPPORTED_BY_WB_MODELS = {
-    "nest_tiny_jx.goog_in1k": "CNN, dynamic batch issue",
-    "pit_s_224.in1k": "CNN, dynamic batch issue",
-    "pvt_v2_b0.in1k": "CNN, dynamic batch issue",
-    "sequencer2d_l.in1k": "CNN, dynamic batch issue",
-    "mobilevitv2_050.cvnets_in1k": "CNN, dynamic batch issue",
-    "convformer": "Transformer, Cannot find output backbone_node in auto mode, please provide target_layer.",
-    "davit": "Transformer, Only two outputs of the between block Add node supported, but got 1.",
-    "poolformer_m36.sail_in1k": "Transformer, various issues",
-    "caformer": "Transformer, One (and only one) of the nodes has to be Add type. But got MVN and Multiply.",
-    "cait": "Transformer, Cannot create an empty Constant. Please provide valid data.",
-    "coat_lite": "Transformer, One (and only one) of the nodes has to be Add type. But got StridedSlice and StridedSlice.",
-    "coat_": "Transformer, Only two outputs of the between block Add node supported, but got 1.",
-    "coatn": "Transformer, Cannot find output backbone_node in auto mode, please provide target_layer.",
-    "crossvit": "Transformer, One (and only one) of the nodes has to be Add type. But got StridedSlice and StridedSlice.",
-    "swin_tiny_patch4_window7_224.ms_in1k": "Transformer, various issues",
-    "swinv2_tiny_window8_256.ms_in1k": "Transformer, various issues",
-    "twins_svt_small.in1k": "Transformer, various issues",
-    "efficientformer_l1.snap_dist_in1k": "Transformer, various issues",
-    "gcvit_tiny.in1k": "Transformer, various issues",
-    "levit_128.fb_dist_in1k": "Transformer, various issues",
-    "maxvit_base_tf_224.in1k": "Transformer, various issues",
-    "mvitv2_base.fb_in1k": "Transformer, various issues",
-    "poolformer_m36.sail_in1k": "Transformer, various issues",
-    "xcit_nano_12_p8_224.fb_dist_in1k": "Transformer, various issues",
-    "convmixer": "Transformer, Cannot find output backbone_node in auto mode, please provide target_layer.",
-}
-
-NON_SUPPORTED_BY_BB_MODELS = {}
-
 CNN_MODELS = [
     "bat_resnext",
     "convnext",
-    "cs3darknet",
     "cs3",
+    "cs3darknet",
     "darknet",
     "densenet",
     "dla",
@@ -87,6 +57,7 @@ CNN_MODELS = [
     "res2net",
     "res2next",
     "resnest",
+    "resnet",
     "resnext",
     "rexnet",
     "selecsls",
@@ -95,46 +66,88 @@ CNN_MODELS = [
     "seresnext",
     "spnasnet",
     "tinynet",
+    "tresnet",
     "vgg",
     "xception",
-    "resnet",
 ]
 
-SKIPPED_MODELS = {
-    # "_nfnet_": "RuntimeError: Exception from src/inference/src/cpp/core.cpp:90:",
-    # "deit_huge": "RuntimeError: The serialized model is larger than the 2GiB limit imposed by the protobuf library.",
-    # "halo": "torch.onnx.errors.SymbolicValueError: Unsupported: ONNX export of operator Unfold, input size not accessible.",
-    # "convnext_xxlarge": "RuntimeError: The serialized model is larger than the 2GiB limit imposed by the protobuf library.",
-    # "resnetv2": "RuntimeError: Exception from src/inference/src/cpp/core.cpp:90:",
-    # "regnety_1280": "RuntimeError: The serialized model is larger than the 2GiB limit imposed by the protobuf library.",
-    # "repvit": "urllib.error.HTTPError: HTTP Error 404: Not Found",
-    # "volo_": "torch.onnx.errors.UnsupportedOperatorError: Exporting the operator 'aten::col2im' to ONNX opset version 14 is not supported.",
-    # "tf_efficientnet_cc": "torch.onnx.errors.SymbolicValueError: Unsupported: ONNX export of convolution for kernel of unknown shape.",
-    # "convnextv2_huge",  # too big
-    # "gc_efficientnetv2_rw",  # failed to convert to OV
-    # "gcresnext",  # failed to convert to OV
-    # "haloregnetz",
-    # "nasnetalarge",
-    # "pnasnet5large",
-    # "regnety_1280",
-    # "regnety_2560",
-    # "resnest14d",
-    # "resnest26d",
-    # "resnest50d",
-    # "resnest101e",
-    # "resnest200e",
-    # "resnest269e",
-    # "skresnext50_32x4d",
-    # "tf_efficientnet_cc_b",
-    # "gcresnet",
-    # "lambda_resnet",
-    # "nf_regnet",
-    # "nf_resnet",
-    # "resnetv2_50x",
-    # "resnetv2_101x",
-    # "resnetv2_152x",
-    # "skresnet",
-    # "tresnet_",
+SUPPORTED_BUT_FAILED_BY_BB_MODELS = {}
+
+NOT_SUPPORTED_BY_BB_MODELS = {
+    "_nfnet_": "RuntimeError: Exception from src/inference/src/cpp/core.cpp:90: Training mode of BatchNormalization is not supported.",
+    "convnext_xxlarge": "RuntimeError: The serialized model is larger than the 2GiB limit imposed by the protobuf library.",
+    "convnextv2_huge": "RuntimeError: The serialized model is larger than the 2GiB limit imposed by the protobuf library.",
+    "deit3_huge": "RuntimeError: The serialized model is larger than the 2GiB limit imposed by the protobuf library.",
+    "dm_nfnet": "openvino._pyopenvino.GeneralFailure: Check 'false' failed at src/frontends/onnx/frontend/src/frontend.cpp:144",
+    "eca_nfnet": "openvino._pyopenvino.GeneralFailure: Check 'false' failed at src/frontends/onnx/frontend/src/frontend.cpp:144",
+    "eva_giant": "RuntimeError: The serialized model is larger than the 2GiB limit imposed by the protobuf library.",
+    "halo": "torch.onnx.errors.SymbolicValueError: Unsupported: ONNX export of operator Unfold, input size not accessible.",
+    "nf_regnet": "RuntimeError: Exception from src/inference/src/cpp/core.cpp:90: Training mode of BatchNormalization is not supported.",
+    "nf_resnet": "RuntimeError: Exception from src/inference/src/cpp/core.cpp:90: Training mode of BatchNormalization is not supported.",
+    "nfnet_l0": "RuntimeError: Exception from src/inference/src/cpp/core.cpp:90: Training mode of BatchNormalization is not supported.",
+    "regnety_1280": "RuntimeError: The serialized model is larger than the 2GiB limit imposed by the protobuf library.",
+    "regnety_2560": "RuntimeError: The serialized model is larger than the 2GiB limit imposed by the protobuf library.",
+    "repvit": "urllib.error.HTTPError: HTTP Error 404: Not Found",
+    "resnetv2": "RuntimeError: Exception from src/inference/src/cpp/core.cpp:90: Training mode of BatchNormalization is not supported.",
+    "tf_efficientnet_cc": "torch.onnx.errors.SymbolicValueError: Unsupported: ONNX export of convolution for kernel of unknown shape.",
+    "vit_base_r50_s16_224.orig_in21k": "RuntimeError: Error(s) in loading state_dict for VisionTransformer",
+    "vit_gigantic_patch16_224_ijepa.in22k": "RuntimeError: shape '[1, 13, 13, -1]' is invalid for input of size 274560",
+    "vit_huge_patch14_224.orig_in21k": "RuntimeError: Error(s) in loading state_dict for VisionTransformer",
+    "vit_large_patch32_224.orig_in21k": "RuntimeError: Error(s) in loading state_dict for VisionTransformer",
+    "vit_large_r50_s32": "RuntimeError: Exception from src/inference/src/cpp/core.cpp:90: Training mode of BatchNormalization is not supported.",
+    "vit_small_r26_s32": "RuntimeError: Exception from src/inference/src/cpp/core.cpp:90: Training mode of BatchNormalization is not supported.",
+    "vit_tiny_r_s16": "RuntimeError: Exception from src/inference/src/cpp/core.cpp:90: Training mode of BatchNormalization is not supported.",
+    "volo_": "torch.onnx.errors.UnsupportedOperatorError: Exporting the operator 'aten::col2im' to ONNX opset version 14 is not supported.",
+}
+
+SUPPORTED_BUT_FAILED_BY_WB_MODELS = {
+    "convformer": "Cannot find output backbone_node in auto mode, please provide target_layer.",
+    "swin": "Only two outputs of the between block Add node supported, but got 1. Try to use black-box.",
+}
+
+NOT_SUPPORTED_BY_WB_MODELS = {
+    **NOT_SUPPORTED_BY_BB_MODELS,
+    # Killed on WB
+    "beit_large_patch16_512": "Failed to allocate 94652825600 bytes of memory",
+    "eva02_base_patch14_448": "OOM Killed",
+    "mobilevit_": "Segmentation fault",
+    "mobilevit_xxs": "Segmentation fault",
+    "mvitv2_base.fb_in1k": "Segmentation fault",
+    "mvitv2_large": "OOM Killed",
+    "mvitv2_small": "Segmentation fault",
+    "mvitv2_tiny": "Segmentation fault",
+    "pit_": "Segmentation fault",
+    "pvt_": "Segmentation fault",
+    "tf_efficientnet_l2.ns_jft_in1k": "OOM Killed",
+    "xcit_large": "Failed to allocate 81581875200 bytes of memory",
+    "xcit_medium_24_p8_384": "OOM Killed",
+    # Not expected to work for now
+    "botnet26t_256": "Only two outputs of the between block Add node supported, but got 1",
+    "caformer": "One (and only one) of the nodes has to be Add type. But got MVN and Multiply.",
+    "cait_": "Cannot create an empty Constant. Please provide valid data.",
+    "coat_": "Only two outputs of the between block Add node supported, but got 1.",
+    "coatn": "Cannot find output backbone_node in auto mode, please provide target_layer.",
+    "convmixer": "Cannot find output backbone_node in auto mode, please provide target_layer.",
+    "crossvit": "One (and only one) of the nodes has to be Add type. But got StridedSlice and StridedSlice.",
+    "davit": "Only two outputs of the between block Add node supported, but got 1.",
+    "edgenext": "Only two outputs of the between block Add node supported, but got 1",
+    "efficientformer": "Cannot find output backbone_node in auto mode.",
+    "focalnet": "Cannot find output backbone_node in auto mode, please provide target_layer.",
+    "gcvit": "Cannot find output backbone_node in auto mode, please provide target_layer.",
+    "levit_": "Cannot find output backbone_node in auto mode, please provide target_layer.",
+    "maxvit": "Cannot find output backbone_node in auto mode, please provide target_layer.",
+    "maxxvit": "Cannot find output backbone_node in auto mode, please provide target_layer.",
+    "mobilevitv2": "Cannot find output backbone_node in auto mode, please provide target_layer.",
+    "nest_": "Cannot find output backbone_node in auto mode, please provide target_layer.",
+    "poolformer": "Cannot find output backbone_node in auto mode, please provide target_layer.",
+    "sebotnet": "Only two outputs of the between block Add node supported, but got 1.",
+    "sequencer2d": "Cannot find output backbone_node in auto mode, please provide target_layer.",
+    "tnt_s_patch16_224": "Only two outputs of the between block Add node supported, but got 1.",
+    "tresnet": "Batch shape of the output should be dynamic, but it is static.",
+    "twins": "One (and only one) of the nodes has to be Add type. But got ShapeOf and Transpose.",
+    "visformer": "Cannot find output backbone_node in auto mode, please provide target_layer",
+    "vit_relpos_base_patch32_plus_rpn_256": "Check 'TRShape::merge_into(output_shape, in_copy)' failed",
+    "vit_relpos_medium_patch16_rpn_224": "ValueError in openvino_xai/methods/white_box/recipro_cam.py:215",
 }
 
 
@@ -160,13 +173,13 @@ class TestImageClassificationTimm:
     def test_classification_white_box(self, model_id, dump_maps=False):
         # self.check_for_saved_map(model_id, "timm_models/maps_wb/")
 
-        for skipped_model in SKIPPED_MODELS.keys():
+        for skipped_model in NOT_SUPPORTED_BY_WB_MODELS.keys():
             if skipped_model in model_id:
-                pytest.skip(reason=SKIPPED_MODELS[skipped_model])
+                pytest.skip(reason=NOT_SUPPORTED_BY_WB_MODELS[skipped_model])
 
-        for non_supported_model in NON_SUPPORTED_BY_WB_MODELS.keys():
-            if non_supported_model in model_id:
-                pytest.xfail(reason=NON_SUPPORTED_BY_WB_MODELS[non_supported_model])
+        for failed_model in SUPPORTED_BUT_FAILED_BY_WB_MODELS.keys():
+            if failed_model in model_id:
+                pytest.xfail(reason=SUPPORTED_BUT_FAILED_BY_WB_MODELS[failed_model])
 
         explain_method = Method.VITRECIPROCAM
         for cnn_model in CNN_MODELS:
@@ -265,13 +278,13 @@ class TestImageClassificationTimm:
     def test_classification_black_box(self, model_id, dump_maps=False):
         # self.check_for_saved_map(model_id, "timm_models/maps_bb/")
 
-        for skipped_model in SKIPPED_MODELS.keys():
+        for skipped_model in NOT_SUPPORTED_BY_BB_MODELS.keys():
             if skipped_model in model_id:
-                pytest.skip(reason=SKIPPED_MODELS[skipped_model])
+                pytest.skip(reason=NOT_SUPPORTED_BY_BB_MODELS[skipped_model])
 
-        for non_supported_model in NON_SUPPORTED_BY_BB_MODELS.keys():
-            if non_supported_model in model_id:
-                pytest.xfail(reason=NON_SUPPORTED_BY_BB_MODELS[non_supported_model])
+        for failed_model in SUPPORTED_BUT_FAILED_BY_BB_MODELS.keys():
+            if failed_model in model_id:
+                pytest.xfail(reason=SUPPORTED_BUT_FAILED_BY_BB_MODELS[failed_model])
 
         timm_model, model_cfg = self.get_timm_model(model_id)
         self.update_report("report_bb.csv", model_id)
