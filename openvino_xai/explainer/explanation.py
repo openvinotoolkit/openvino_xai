@@ -119,7 +119,8 @@ class Explanation:
         """Dumps saliency map."""
         os.makedirs(dir_path, exist_ok=True)
         save_name = name if name else ""
-        for i, (cls_idx, map_to_save) in enumerate(self._saliency_map.items()):
+        for cls_idx, map_to_save in self._saliency_map.items():
+            map_to_save = cv2.cvtColor(map_to_save, code=cv2.COLOR_RGB2BGR)
             if isinstance(cls_idx, str):
                 cv2.imwrite(os.path.join(dir_path, f"{save_name}.jpg"), img=map_to_save)
                 return

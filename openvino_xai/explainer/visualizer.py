@@ -32,7 +32,9 @@ def colormap(saliency_map: np.ndarray, colormap_type: int = cv2.COLORMAP_JET) ->
     # Note: inefficient operation. Is there a way to vectorize it?
     color_mapped_saliency_map = []
     for class_map in saliency_map:
-        color_mapped_saliency_map.append(cv2.applyColorMap(class_map, colormap_type))
+        colormapped = cv2.applyColorMap(class_map, colormap_type)  # OpenCV: RGB order
+        colormapped_rgb = cv2.cvtColor(colormapped, code=cv2.COLOR_BGR2RGB)
+        color_mapped_saliency_map.append(colormapped_rgb)
     return np.array(color_mapped_saliency_map)
 
 
