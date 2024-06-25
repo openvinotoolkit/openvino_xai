@@ -19,12 +19,15 @@ MODEL_NAME = "mlc_mobilenetv3_large_voc"
 
 class TestExplainer:
     image = cv2.imread("tests/assets/cheetah_person.jpg")
-    data_dir = Path(".data")
     preprocess_fn = get_preprocess_fn(
         change_channel_order=True,
         input_size=(224, 224),
         hwc_to_chw=True,
     )
+
+    @pytest.fixture(autouse=True)
+    def setup(self, fxt_data_root):
+        self.data_dir = fxt_data_root
 
     @pytest.mark.parametrize(
         "explain_mode",

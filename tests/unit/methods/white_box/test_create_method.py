@@ -15,10 +15,9 @@ from openvino_xai.methods.white_box.det_class_probability_map import (
     DetClassProbabilityMap,
 )
 from openvino_xai.methods.white_box.recipro_cam import ReciproCAM, ViTReciproCAM
-from tests.integration.test_classification import DEFAULT_CLS_MODEL
-from tests.integration.test_detection import DEFAULT_DET_MODEL, MODEL_CONFIGS
+from tests.intg.test_classification import DEFAULT_CLS_MODEL
+from tests.intg.test_detection import DEFAULT_DET_MODEL, MODEL_CONFIGS
 
-DATA_DIR = Path(".data")
 VIT_MODEL = "deit-tiny"
 
 PREPROCESS_FN = get_preprocess_fn(
@@ -28,9 +27,9 @@ PREPROCESS_FN = get_preprocess_fn(
 )
 
 
-def test_create_wb_cls_cnn_method():
-    retrieve_otx_model(DATA_DIR, DEFAULT_CLS_MODEL)
-    model_path = DATA_DIR / "otx_models" / (DEFAULT_CLS_MODEL + ".xml")
+def test_create_wb_cls_cnn_method(fxt_data_root: Path):
+    retrieve_otx_model(fxt_data_root, DEFAULT_CLS_MODEL)
+    model_path = fxt_data_root / "otx_models" / (DEFAULT_CLS_MODEL + ".xml")
 
     model_cnn = ov.Core().read_model(model_path)
     insertion_parameters = None
@@ -66,9 +65,9 @@ def test_create_wb_cls_cnn_method():
     assert str(exc_info.value) == "Requested explanation method abc is not implemented."
 
 
-def test_create_wb_cls_vit_method():
-    retrieve_otx_model(DATA_DIR, VIT_MODEL)
-    model_path = DATA_DIR / "otx_models" / (VIT_MODEL + ".xml")
+def test_create_wb_cls_vit_method(fxt_data_root: Path):
+    retrieve_otx_model(fxt_data_root, VIT_MODEL)
+    model_path = fxt_data_root / "otx_models" / (VIT_MODEL + ".xml")
     model_vit = ov.Core().read_model(model_path)
     explain_method = WhiteBoxMethodFactory.create_method(
         Task.CLASSIFICATION, model_vit, PREPROCESS_FN, explain_method=Method.VITRECIPROCAM
@@ -76,9 +75,9 @@ def test_create_wb_cls_vit_method():
     assert isinstance(explain_method, ViTReciproCAM)
 
 
-def test_create_wb_det_cnn_method():
-    retrieve_otx_model(DATA_DIR, DEFAULT_DET_MODEL)
-    model_path = DATA_DIR / "otx_models" / (DEFAULT_DET_MODEL + ".xml")
+def test_create_wb_det_cnn_method(fxt_data_root: Path):
+    retrieve_otx_model(fxt_data_root, DEFAULT_DET_MODEL)
+    model_path = fxt_data_root / "otx_models" / (DEFAULT_DET_MODEL + ".xml")
     model = ov.Core().read_model(model_path)
 
     sal_map_size = (23, 23)

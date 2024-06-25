@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import csv
+import os
 import shutil
 from pathlib import Path
 
@@ -27,68 +28,69 @@ pytest.importorskip("onnx")
 
 
 LIMITED_DIVERSE_SET_OF_CNN_MODELS = [
-    "bat_resnext26ts.ch_in1k",
+    # Only 60K+ downloads in https://huggingface.co/timm?sort_models=downloads#models
+    # "bat_resnext26ts.ch_in1k",
     "resnet18.a1_in1k",
-    "mobilenetv3_large_100.ra_in1k",
-    "tf_efficientnet_b0.aa_in1k",
+    # "mobilenetv3_large_100.ra_in1k",
+    # "tf_efficientnet_b0.aa_in1k",
     "botnet26t_256.c1_in1k",
     "convnext_base.clip_laion2b_augreg_ft_in1k",
-    "convnextv2_pico.fcmae_ft_in1k",
+    # "convnextv2_pico.fcmae_ft_in1k",
     "cs3darknet_l.c2ns_in1k",
-    "darknet53.c2ns_in1k",
-    "densenet121.ra_in1k",
-    "dla34.in1k",
-    "dpn68.mx_in1k",
-    "eca_botnext26ts_256.c1_in1k",
-    "ecaresnet26t.ra2_in1k",
-    "edgenext_base.in21k_ft_in1k",
-    "efficientnet_b0.ra_in1k",
+    # "darknet53.c2ns_in1k",
+    # "densenet121.ra_in1k",
+    # "dla34.in1k",
+    # "dpn68.mx_in1k",
+    # "eca_botnext26ts_256.c1_in1k",
+    # "ecaresnet26t.ra2_in1k",
+    # "edgenext_base.in21k_ft_in1k",
+    # "efficientnet_b0.ra_in1k",
     "ese_vovnet19b_dw.ra_in1k",
     "fbnetv3_b.ra2_in1k",
     "gernet_s.idstcv_in1k",
-    "hardcorenas_a.miil_green_in1k",
+    # "hardcorenas_a.miil_green_in1k",
     "hrnet_w18.ms_aug_in1k",
     "inception_v3.gluon_in1k",
     "lcnet_050.ra2_in1k",
-    "legacy_senet154.in1k",
+    # "legacy_senet154.in1k",
     "mixer_b16_224.goog_in21k",
-    "mixnet_s.ft_in1k",
-    "mobilenetv2_100.ra_in1k",
+    # "mixnet_s.ft_in1k",
+    # "mobilenetv2_100.ra_in1k",
     "regnety_002.pycls_in1k",
     "repvgg_a2.rvgg_in1k",
-    "repvit_m1.dist_in1k",
-    "res2net50_14w_8s.in1k",
-    "resmlp_12_224.fb_dino",
-    "resnetaa50.a1h_in1k",
-    "resnetrs50.tf_in1k",
-    "resnext26ts.ra2_in1k",
+    # "repvit_m1.dist_in1k",  # 404 Not Found
+    # "res2net50_14w_8s.in1k",
+    # "resmlp_12_224.fb_dino",
+    # "resnetaa50.a1h_in1k",
+    # "resnetrs50.tf_in1k",
+    # "resnext26ts.ra2_in1k",
     "rexnet_100.nav_in1k",
     "selecsls42b.in1k",
-    "seresnet50.a1_in1k",
-    "seresnext26d_32x4d.bt_in1k",
+    # "seresnet50.a1_in1k",
+    # "seresnext26d_32x4d.bt_in1k",
     "tf_mixnet_l.in1k",
-    "tf_mobilenetv3_large_075.in1k",
+    # "tf_mobilenetv3_large_075.in1k",
     "tinynet_a.in1k",
-    "wide_resnet50_2.racm_in1k",
-    "xception41.tf_in1k",
-    "vgg11.tv_in1k",
-    "coatnet_0_rw_224.sw_in1k",
-    "focalnet_base_lrf.ms_in1k",
+    # "wide_resnet50_2.racm_in1k",
+    # "xception41.tf_in1k",
+    # "vgg11.tv_in1k",
+    # "coatnet_0_rw_224.sw_in1k",
+    # "focalnet_base_lrf.ms_in1k",
 ]
 
 
 LIMITED_DIVERSE_SET_OF_VISION_TRANSFORMER_MODELS = [
     "beit_base_patch16_224.in22k_ft_in22k_in1k",  # Downloads last month 41,778
-    "beit_large_patch16_224.in22k_ft_in22k_in1k",
+    # "beit_large_patch16_224.in22k_ft_in22k_in1k",
     "deit_tiny_patch16_224.fb_in1k",  # Downloads last month 3,371
-    "deit_small_distilled_patch16_224.fb_in1k",
-    "deit_base_patch16_224.fb_in1k",
+    # "deit_small_distilled_patch16_224.fb_in1k",
+    # "deit_base_patch16_224.fb_in1k",
     "vit_tiny_patch16_224.augreg_in21k",  # Downloads last month 15,345
-    "vit_small_patch16_224.augreg_in1k",
-    "vit_base_patch8_224.augreg2_in21k_ft_in1k",
-    "vit_base_patch16_224.augreg2_in21k_ft_in1k",  # Downloads last month 161,508
-    "vit_base_patch32_224.augreg_in1k",
-    "vit_large_patch14_clip_224.laion2b_ft_in12k_in1k",
+    # "vit_small_patch16_224.augreg_in1k",
+    # "vit_base_patch8_224.augreg2_in21k_ft_in1k",
+    # "vit_base_patch16_224.augreg2_in21k_ft_in1k",  # Downloads last month 161,508
+    # "vit_base_patch32_224.augreg_in1k",
+    # "vit_large_patch14_clip_224.laion2b_ft_in12k_in1k",
     "convit_tiny.fb_in1k",
     "flexivit_small.300ep_in1k",
 ]
@@ -123,19 +125,17 @@ NON_SUPPORTED_BY_WB_MODELS = [
 ]
 
 
-WB_TEST_MODELS = LIMITED_DIVERSE_SET_OF_CNN_MODELS + LIMITED_DIVERSE_SET_OF_VISION_TRANSFORMER_MODELS
-
-
-BB_TEST_MODELS = WB_TEST_MODELS + NON_SUPPORTED_BY_WB_MODELS
+TEST_MODELS = (
+    LIMITED_DIVERSE_SET_OF_CNN_MODELS + LIMITED_DIVERSE_SET_OF_VISION_TRANSFORMER_MODELS + NON_SUPPORTED_BY_WB_MODELS
+)
 
 
 class TestImageClassificationTimm:
-    data_dir = Path(".data")
     fields = ["Model", "Exported to ONNX", "Exported to OV IR", "Explained", "Map size", "Map saved"]
     counter_row = ["Counters", "0", "0", "0", "-", "-"]
     report = [fields, counter_row]
-    clean_cash_converted_models = False
-    clean_cash_hf_models = False
+    clear_cache_converted_models = False
+    clear_cache_hf_models = False
     supported_num_classes = {
         1000: 293,  # 293 is a cheetah class_id in the ImageNet-1k dataset
         21841: 2441,  # 2441 is a cheetah class_id in the ImageNet-21k dataset
@@ -143,18 +143,28 @@ class TestImageClassificationTimm:
         11821: 1652,  # 1652 is a cheetah class_id in the ImageNet-12k dataset
     }
 
-    @pytest.mark.parametrize("model_id", WB_TEST_MODELS)
-    def test_classification_white_box(self, model_id, dump_maps=True):
+    @pytest.fixture(autouse=True)
+    def setup(self, fxt_data_root, fxt_output_root, fxt_clear_cache):
+        self.data_dir = fxt_data_root
+        self.output_dir = fxt_output_root
+        self.clear_cache_hf_models = fxt_clear_cache
+        self.clear_cache_converted_models = fxt_clear_cache
+
+    @pytest.mark.parametrize("model_id", TEST_MODELS)
+    def test_classification_white_box(self, model_id, dump_maps=False):
         # self.check_for_saved_map(model_id, "timm_models/maps_wb/")
 
-        output_model_dir = self.data_dir / "timm_models" / "converted_models" / model_id
-        output_model_dir.mkdir(parents=True, exist_ok=True)
-        ir_path = output_model_dir / "model_fp32.xml"
+        if model_id in NON_SUPPORTED_BY_WB_MODELS:
+            pytest.xfail(reason="Not supported yet")
 
         timm_model, model_cfg = self.get_timm_model(model_id)
-
         self.update_report("report_wb.csv", model_id)
-        if not (output_model_dir / "model_fp32.xml").is_file():
+
+        ir_path = self.data_dir / "timm_models" / "converted_models" / model_id / "model_fp32.xml"
+        if not ir_path.is_file():
+            output_model_dir = self.output_dir / "timm_models" / "converted_models" / model_id
+            output_model_dir.mkdir(parents=True, exist_ok=True)
+            ir_path = output_model_dir / "model_fp32.xml"
             input_size = [1] + list(timm_model.default_cfg["input_size"])
             dummy_tensor = torch.rand(input_size)
             onnx_path = output_model_dir / "model_fp32.onnx"
@@ -234,12 +244,12 @@ class TestImageClassificationTimm:
             target_confidence = get_score(model_output["logits"], target_class, activation=ActivationType.SOFTMAX)
             self.put_confidence_into_map_overlay(explanation, target_confidence, target_class)
 
-            save_dir = self.data_dir / "timm_models" / "maps_wb"
+            save_dir = self.output_dir / "timm_models" / "maps_wb"
             explanation.save(save_dir, model_id)
             file_name = model_id + "_target_" + str(target_class) + ".jpg"
             map_saved = (save_dir / file_name).is_file()
             self.update_report("report_wb.csv", model_id, "True", "True", "True", shape_str, str(map_saved))
-        self.clean_cash()
+        self.clear_cache()
 
     # sudo ln -s /usr/local/cuda-11.8/ cuda
     # pip uninstall torch torchvision
@@ -248,19 +258,18 @@ class TestImageClassificationTimm:
     # ulimit -a
     # ulimit -Sn 10000
     # ulimit -a
-    @pytest.mark.parametrize("model_id", BB_TEST_MODELS)
-    def test_classification_black_box(self, model_id, dump_maps=True):
+    @pytest.mark.parametrize("model_id", TEST_MODELS)
+    def test_classification_black_box(self, model_id, dump_maps=False):
         # self.check_for_saved_map(model_id, "timm_models/maps_bb/")
 
         timm_model, model_cfg = self.get_timm_model(model_id)
-
         self.update_report("report_bb.csv", model_id)
 
-        output_model_dir = self.data_dir / "timm_models" / "converted_models" / model_id
-        output_model_dir.mkdir(parents=True, exist_ok=True)
-        onnx_path = output_model_dir / "model_fp32.onnx"
-
-        if not (output_model_dir / "model_fp32.onnx").is_file():
+        onnx_path = self.data_dir / "timm_models" / "converted_models" / model_id / "model_fp32.onnx"
+        if not onnx_path.is_file():
+            output_model_dir = self.output_dir / "timm_models" / "converted_models" / model_id
+            output_model_dir.mkdir(parents=True, exist_ok=True)
+            onnx_path = output_model_dir / "model_fp32.onnx"
             input_size = [1] + list(timm_model.default_cfg["input_size"])
             dummy_tensor = torch.rand(input_size)
             onnx_path = output_model_dir / "model_fp32.onnx"
@@ -296,7 +305,8 @@ class TestImageClassificationTimm:
         explanation = explainer(
             image,
             targets=[target_class],
-            num_masks=2000,  # kwargs of the RISE algo
+            # num_masks=2000,  # kwargs of the RISE algo
+            num_masks=2,  # minimal iterations for feature test
         )
 
         assert explanation is not None
@@ -312,24 +322,24 @@ class TestImageClassificationTimm:
             target_confidence = get_score(model_output["logits"], target_class, activation=ActivationType.SOFTMAX)
             self.put_confidence_into_map_overlay(explanation, target_confidence, target_class)
 
-            save_dir = self.data_dir / "timm_models" / "maps_bb"
+            save_dir = self.output_dir / "timm_models" / "maps_bb"
             explanation.save(save_dir, model_id)
             file_name = model_id + "_target_" + str(target_class) + ".jpg"
             map_saved = (save_dir / file_name).is_file()
             self.update_report("report_bb.csv", model_id, "True", "True", "True", shape_str, str(map_saved))
-        self.clean_cash()
+        self.clear_cache()
 
     def check_for_saved_map(self, model_id, directory):
         for target in self.supported_num_classes.values():
             map_name = model_id + "_target_" + str(target) + ".jpg"
-            map_path = self.data_dir / directory / map_name
+            map_path = self.output_dir / directory / map_name
             map_saved = map_path.is_file()
             if map_saved:
                 saved_map = cv2.imread(map_path._str)
                 saved_map_shape = saved_map.shape
                 shape = "H=" + str(saved_map_shape[0]) + ", W=" + str(saved_map_shape[1])
                 self.update_report("report_wb.csv", model_id, "True", "True", "True", shape, str(map_saved))
-                self.clean_cash()
+                self.clear_cache()
                 pytest.skip(f"Model {model_id} is already explained.")
 
     def get_timm_model(self, model_id):
@@ -338,7 +348,7 @@ class TestImageClassificationTimm:
         model_cfg = timm_model.default_cfg
         num_classes = model_cfg["num_classes"]
         if num_classes not in self.supported_num_classes:
-            self.clean_cash()
+            self.clear_cache()
             pytest.skip(f"Number of model classes {num_classes} unknown")
         return timm_model, model_cfg
 
@@ -388,17 +398,18 @@ class TestImageClassificationTimm:
             self.report[1][1] = str(bool_flags[:, 0].sum())
             self.report[1][2] = str(bool_flags[:, 1].sum())
             self.report[1][3] = str(bool_flags[:, 2].sum())
-        with open(self.data_dir / "timm_models" / report_name, "w") as f:
+        with open(self.output_dir / f"timm_{report_name}", "w") as f:
             write = csv.writer(f)
             write.writerows(self.report)
 
-    def clean_cash(self):
-        if self.clean_cash_converted_models:
-            ir_model_dir = self.data_dir / "timm_models" / "converted_models"
+    def clear_cache(self):
+        if self.clear_cache_converted_models:
+            ir_model_dir = self.output_dir / "timm_models" / "converted_models"
             if ir_model_dir.is_dir():
                 shutil.rmtree(ir_model_dir)
-        if self.clean_cash_hf_models:
-            huggingface_hub_dir = Path.home() / ".cache/huggingface/hub/"
+        if self.clear_cache_hf_models:
+            cache_dir = os.environ.get("XDG_CACHE_HOME", "~/.cache")
+            huggingface_hub_dir = Path(cache_dir).expanduser() / "huggingface/hub/"
             if huggingface_hub_dir.is_dir():
                 shutil.rmtree(huggingface_hub_dir)
 

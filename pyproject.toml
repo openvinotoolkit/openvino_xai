@@ -36,6 +36,7 @@ dev = [
   "pytest",
   "pytest-cov",
   "pytest-csv",
+  "pytest-xdist",
   "pre-commit==3.7.0",
   "addict",
 ]

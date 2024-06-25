@@ -108,16 +108,14 @@ class Explainer:
             try:
                 return self._create_white_box_method(task)
             except Exception as e:
-                print(e)
-                raise RuntimeError("Failed to insert XAI into the model. Try to use black-box.")
+                raise RuntimeError(f"Failed to insert XAI into the model -> {e} Try to use black-box.")
         elif self.explain_mode == ExplainMode.BLACKBOX:
             return self._create_black_box_method(task)
         elif self.explain_mode == ExplainMode.AUTO:
             try:
                 return self._create_white_box_method(task)
             except Exception as e:
-                print(e)
-                logger.info("Failed to insert XAI into the model - using black-box mode.")
+                logger.info(f"Failed to insert XAI into the model -> {e} Using black-box mode.")
                 return self._create_black_box_method(task)
         else:
             raise ValueError(f"Not supported explain mode {self.explain_mode}.")

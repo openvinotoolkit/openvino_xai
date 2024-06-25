@@ -8,15 +8,13 @@ import openvino.runtime as ov
 from openvino_xai.api.api import insert_xai
 from openvino_xai.common.parameters import Task
 from openvino_xai.common.utils import has_xai, retrieve_otx_model
-from tests.integration.test_classification import DEFAULT_CLS_MODEL
-
-DARA_DIR = Path(".data")
+from tests.intg.test_classification import DEFAULT_CLS_MODEL
 
 
-def test_has_xai():
+def test_has_xai(fxt_data_root: Path):
     model_without_xai = DEFAULT_CLS_MODEL
-    retrieve_otx_model(DARA_DIR, model_without_xai)
-    model_path = DARA_DIR / "otx_models" / (model_without_xai + ".xml")
+    retrieve_otx_model(fxt_data_root, model_without_xai)
+    model_path = fxt_data_root / "otx_models" / (model_without_xai + ".xml")
     model = ov.Core().read_model(model_path)
 
     assert not has_xai(model)
