@@ -9,7 +9,7 @@ from typing import Dict, List
 import cv2
 import numpy as np
 
-from openvino_xai.explainer.utils import explains_all, get_explain_target_indices
+from openvino_xai.explainer.utils import convert_targets_to_numpy, explains_all, get_explain_target_indices
 
 
 class Explanation:
@@ -30,8 +30,7 @@ class Explanation:
         targets: np.ndarray | List[int | str] | int | str,
         label_names: List[str] | None = None,
     ):
-        if isinstance(targets, (int, str)):
-            targets = [targets]
+        targets = convert_targets_to_numpy(targets)
 
         self._check_saliency_map(saliency_map)
         self._saliency_map = self._format_sal_map_as_dict(saliency_map)

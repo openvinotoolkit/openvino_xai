@@ -39,12 +39,12 @@ LABELS_STR = ["bicycle", "bottle"]
 
 def test_get_explain_target_indices_int():
     explain_target_indices = get_explain_target_indices(LABELS_INT, VOC_NAMES)
-    assert explain_target_indices == LABELS_INT
+    assert np.all(explain_target_indices == LABELS_INT)
 
 
 def test_get_explain_target_indices_int_wo_names():
     explain_target_indices = get_explain_target_indices(LABELS_INT)
-    assert explain_target_indices == LABELS_INT
+    assert np.all(explain_target_indices == LABELS_INT)
 
 
 def test_get_explain_target_indices_str():

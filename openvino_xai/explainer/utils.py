@@ -9,6 +9,13 @@ import numpy as np
 from openvino.runtime.utils.data_helpers.wrappers import OVDict
 
 
+def convert_targets_to_numpy(targets):
+    targets = np.asarray(targets)
+    if targets.ndim > 1:
+        raise ValueError(f"targets expected to be at most 1-dimentional, but got {targets.ndim}.")
+    return np.atleast_1d(targets)
+
+
 def get_explain_target_indices(
     targets: np.ndarray | List[int | str],
     label_names: List[str] | None = None,
@@ -22,12 +29,9 @@ def get_explain_target_indices(
     :param label_names: List of all label names.
     :type label_names: List[str] | None
     """
-    if isinstance(targets, np.ndarray):
-        if targets.ndim != 1:
-            raise ValueError(f"Expected 1d numpy array, but got {targets.ndim}.")
-        return list(targets)
+    targets = convert_targets_to_numpy(targets)
 
-    if isinstance(targets[0], int):
+    if not isinstance(targets[0], str) and np.issubdtype(targets[0], np.integer):
         return targets  # type: ignore
 
     if not isinstance(targets[0], str):
@@ -55,7 +59,7 @@ def explains_all(targets: List[int | str] | int | str):
     """
     if isinstance(targets, int) and targets == -1:
         return True
-    if isinstance(targets, list) and len(targets) == 1 and targets[0] == -1:
+    if isinstance(targets, (np.ndarray, list)) and len(targets) == 1 and targets[0] == -1:
         return True
     if isinstance(targets, str) and targets == "-1":
         return True

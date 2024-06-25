@@ -13,6 +13,7 @@ from openvino_xai.common.parameters import Method
 from openvino_xai.common.utils import IdentityPreprocessFN, logger
 from openvino_xai.explainer.explanation import Explanation
 from openvino_xai.explainer.utils import (
+    convert_targets_to_numpy,
     explains_all,
     get_explain_target_indices,
     infer_size_from_image,
@@ -190,8 +191,7 @@ class Explainer:
         :parameter overlay_weight: Weight of the saliency map when overlaying the input data with the saliency map.
         :type overlay_weight: float
         """
-        if isinstance(targets, (int, str)):
-            targets = [targets]
+        targets = convert_targets_to_numpy(targets)
 
         explain_target_indices = None
         if isinstance(self.method, BlackBoxXAIMethod) and not explains_all(targets):
