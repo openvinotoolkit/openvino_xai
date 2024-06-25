@@ -47,7 +47,7 @@ class Explanation:
 
     @property
     def saliency_map(self) -> Dict[int | str, np.ndarray]:
-        """Saliency map as a dict {map_id: np.ndarray}."""
+        """Saliency map as a dict {target_id: np.ndarray}."""
         return self._saliency_map
 
     @saliency_map.setter
@@ -56,9 +56,15 @@ class Explanation:
 
     @property
     def shape(self):
+        """Shape of the saliency map."""
         idx = next(iter(self._saliency_map))
         shape = self._saliency_map[idx].shape
         return shape
+
+    @property
+    def targets(self):
+        """Explained targets."""
+        return list(self._saliency_map.keys())
 
     @staticmethod
     def _check_saliency_map(saliency_map: np.ndarray):
