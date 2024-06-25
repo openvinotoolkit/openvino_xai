@@ -36,7 +36,6 @@ class TestActivationMap:
         """Test ActivationMap is created properly."""
         xai_method = ActivationMap(self.model, self.target_layer, prepare_model=False)
 
-        assert xai_method.model_ori == self.model
         assert isinstance(xai_method.model_ori, ov.Model)
         assert xai_method.embed_scaling
         assert not xai_method.per_class
@@ -53,8 +52,8 @@ class TestActivationMap:
         assert len(xai_output_node.get_output_partial_shape(0)) == 3
         assert tuple(xai_output_node.get_output_partial_shape(0))[1:] == (7, 7)
 
-        model_ori_outputs = self.model.outputs
-        model_ori_params = self.model.get_parameters()
+        model_ori_outputs = activationmap_method.model_ori.outputs
+        model_ori_params = activationmap_method.model_ori.get_parameters()
         model_xai = ov.Model([*model_ori_outputs, xai_output_node.output(0)], model_ori_params)
 
         compiled_model = ov.Core().compile_model(model_xai, "CPU")
@@ -95,7 +94,6 @@ class TestReciproCAM:
 
         reciprocam_xai_method = ReciproCAM(self.model, self.target_layer, prepare_model=False)
 
-        assert reciprocam_xai_method.model_ori == self.model
         assert isinstance(reciprocam_xai_method.model_ori, ov.Model)
         assert reciprocam_xai_method.embed_scaling
         assert reciprocam_xai_method.per_class
@@ -112,8 +110,8 @@ class TestReciproCAM:
         assert len(xai_output_node.shape) == 4
         assert tuple(xai_output_node.shape)[2:] == (7, 7)
 
-        model_ori_outputs = self.model.outputs
-        model_ori_params = self.model.get_parameters()
+        model_ori_outputs = reciprocam_xai_method.model_ori.outputs
+        model_ori_params = reciprocam_xai_method.model_ori.get_parameters()
         model_xai = ov.Model([*model_ori_outputs, xai_output_node.output(0)], model_ori_params)
 
         compiled_model = ov.Core().compile_model(model_xai, "CPU")
@@ -154,7 +152,6 @@ class TestViTReciproCAM:
 
         reciprocam_xai_method = ViTReciproCAM(self.model, self.target_layer, prepare_model=False)
 
-        assert reciprocam_xai_method.model_ori == self.model
         assert isinstance(reciprocam_xai_method.model_ori, ov.Model)
         assert reciprocam_xai_method.embed_scaling
         assert reciprocam_xai_method.per_class
@@ -174,8 +171,8 @@ class TestViTReciproCAM:
         assert len(xai_output_node.shape) == 4
         assert tuple(xai_output_node.shape)[2:] == (14, 14)
 
-        model_ori_outputs = self.model.outputs
-        model_ori_params = self.model.get_parameters()
+        model_ori_outputs = reciprocam_xai_method.model_ori.outputs
+        model_ori_params = reciprocam_xai_method.model_ori.get_parameters()
         model_xai = ov.Model([*model_ori_outputs, xai_output_node.output(0)], model_ori_params)
 
         compiled_model = ov.Core().compile_model(model_xai, "CPU")
@@ -234,7 +231,6 @@ class TestDetProbMapXAI:
             prepare_model=False,
         )
 
-        assert detection_xai_method.model_ori == self.model
         assert isinstance(detection_xai_method.model_ori, ov.Model)
         assert detection_xai_method.embed_scaling
         assert detection_xai_method.per_class
@@ -258,8 +254,8 @@ class TestDetProbMapXAI:
         assert len(xai_output_node.shape) == 4
         assert tuple(xai_output_node.shape)[2:] == (23, 23)
 
-        model_ori_outputs = self.model.outputs
-        model_ori_params = self.model.get_parameters()
+        model_ori_outputs = detection_xai_method.model_ori.outputs
+        model_ori_params = detection_xai_method.model_ori.get_parameters()
         model_xai = ov.Model([*model_ori_outputs, xai_output_node.output(0)], model_ori_params)
 
         compiled_model = ov.Core().compile_model(model_xai, "CPU")
