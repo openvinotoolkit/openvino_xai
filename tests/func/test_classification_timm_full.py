@@ -155,8 +155,8 @@ class TestImageClassificationTimm:
     fields = ["Model", "Exported to ONNX", "Exported to OV IR", "Explained", "Map size", "Map saved"]
     counter_row = ["Counters", "0", "0", "0", "-", "-"]
     report = [fields, counter_row]
-    clean_cache_converted_models = False
-    clean_cache_hf_models = False
+    clear_cache_converted_models = False
+    clear_cache_hf_models = False
     supported_num_classes = {
         1000: 293,  # 293 is a cheetah class_id in the ImageNet-1k dataset
         21841: 2441,  # 2441 is a cheetah class_id in the ImageNet-21k dataset
@@ -165,9 +165,11 @@ class TestImageClassificationTimm:
     }
 
     @pytest.fixture(autouse=True)
-    def setup(self, fxt_data_root, fxt_output_root):
+    def setup(self, fxt_data_root, fxt_output_root, fxt_clear_cache):
         self.data_dir = fxt_data_root
         self.output_dir = fxt_output_root
+        self.clear_cache_hf_models = fxt_clear_cache
+        self.clear_cache_converted_models = fxt_clear_cache
 
     @pytest.mark.parametrize("model_id", TEST_MODELS)
     def test_classification_white_box(self, model_id, dump_maps=False):
@@ -272,7 +274,7 @@ class TestImageClassificationTimm:
             file_name = model_id + "_target_" + str(target_class) + ".jpg"
             map_saved = (save_dir / file_name).is_file()
             self.update_report("report_wb.csv", model_id, "True", "True", "True", shape_str, str(map_saved))
-        self.clean_cache()
+        self.clear_cache()
 
     @pytest.mark.parametrize("model_id", TEST_MODELS)
     def test_classification_black_box(self, model_id, dump_maps=False):
@@ -351,7 +353,7 @@ class TestImageClassificationTimm:
             file_name = model_id + "_target_" + str(target_class) + ".jpg"
             map_saved = (save_dir / file_name).is_file()
             self.update_report("report_bb.csv", model_id, "True", "True", "True", shape_str, str(map_saved))
-        self.clean_cache()
+        self.clear_cache()
 
     def check_for_saved_map(self, model_id, directory):
         for target in self.supported_num_classes.values():
@@ -363,7 +365,7 @@ class TestImageClassificationTimm:
                 saved_map_shape = saved_map.shape
                 shape = "H=" + str(saved_map_shape[0]) + ", W=" + str(saved_map_shape[1])
                 self.update_report("report_wb.csv", model_id, "True", "True", "True", shape, str(map_saved))
-                self.clean_cache()
+                self.clear_cache()
                 pytest.skip(f"Model {model_id} is already explained.")
 
     def get_timm_model(self, model_id):
@@ -372,7 +374,7 @@ class TestImageClassificationTimm:
         model_cfg = timm_model.default_cfg
         num_classes = model_cfg["num_classes"]
         if num_classes not in self.supported_num_classes:
-            self.clean_cache()
+            self.clear_cache()
             pytest.skip(f"Number of model classes {num_classes} unknown")
         return timm_model, model_cfg
 
@@ -426,12 +428,12 @@ class TestImageClassificationTimm:
             write = csv.writer(f)
             write.writerows(self.report)
 
-    def clean_cache(self):
-        if self.clean_cache_converted_models:
+    def clear_cache(self):
+        if self.clear_cache_converted_models:
             ir_model_dir = self.output_dir / "timm_models" / "converted_models"
             if ir_model_dir.is_dir():
                 shutil.rmtree(ir_model_dir)
-        if self.clean_cache_hf_models:
+        if self.clear_cache_hf_models:
             cache_dir = os.environ.get("XDG_CACHE_HOME", "~/.cache")
             huggingface_hub_dir = Path(cache_dir) / "huggingface/hub/"
             if huggingface_hub_dir.is_dir():

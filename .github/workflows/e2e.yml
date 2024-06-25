@@ -14,7 +14,7 @@ jobs:
     uses: ./.github/workflows/pre_merge.yml
 
   Functional-Test:
-    runs-on: [large-disk]
+    runs-on: ubuntu-22.04
     needs: Sanity-Checks
     timeout-minutes: 600
     # This is what will cancel the job concurrency
@@ -33,7 +33,7 @@ jobs:
       - name: Run Functional Test
         env:
           XDG_CACHE_HOME: /home/cibot/data
-        run: tox -vv -e val-py310 -- tests/func --csv=.tox/val-py310/func-test.csv -v -n 1 --data-root /home/cibot/data --max-worker-restart 100 -k black_box
+        run: tox -vv -e val-py310 -- tests/func --csv=.tox/val-py310/func-test.csv -v -n 1 --data-root /home/cibot/data --max-worker-restart 100 --clear-cache
       - name: Upload artifacts
         uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
         with:
