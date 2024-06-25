@@ -39,6 +39,7 @@ def fxt_data_root(request: pytest.FixtureRequest) -> Path:
     data_root = Path(request.config.getoption("--data-root")).absolute().expanduser()
     msg = f"{data_root = }"
     log.info(msg)
+    print(msg)
     return data_root
 
 
@@ -49,6 +50,7 @@ def fxt_output_root(request: pytest.FixtureRequest) -> Path:
     output_root.mkdir(parents=True, exist_ok=True)
     msg = f"{output_root = }"
     log.info(msg)
+    print(msg)
     return output_root
 
 
@@ -58,4 +60,5 @@ def fxt_clear_cache(request: pytest.FixtureRequest) -> Path:
     clear_cache = bool(request.config.getoption("--clear-cache"))
     msg = f"{clear_cache = }"
     log.info(msg)
+    print(msg)
     return clear_cache
