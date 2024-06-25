@@ -36,7 +36,7 @@ def pytest_addoption(parser: pytest.Parser):
 @pytest.fixture(scope="session")
 def fxt_data_root(request: pytest.FixtureRequest) -> Path:
     """Data root directory path."""
-    data_root = Path(request.config.getoption("--data-root")).absolute().expanduser()
+    data_root = Path(request.config.getoption("--data-root"))
     msg = f"{data_root = }"
     log.info(msg)
     print(msg)
@@ -46,7 +46,7 @@ def fxt_data_root(request: pytest.FixtureRequest) -> Path:
 @pytest.fixture(scope="session")
 def fxt_output_root(request: pytest.FixtureRequest) -> Path:
     """Output root directory path."""
-    output_root = Path(request.config.getoption("--output-root")).absolute().expanduser()
+    output_root = Path(request.config.getoption("--output-root"))
     output_root.mkdir(parents=True, exist_ok=True)
     msg = f"{output_root = }"
     log.info(msg)

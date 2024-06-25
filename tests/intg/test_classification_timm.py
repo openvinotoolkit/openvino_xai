@@ -403,18 +403,14 @@ class TestImageClassificationTimm:
 
     def clear_cache(self):
         if self.clear_cache_converted_models:
-            ir_model_dir = self.output_dir.absolute().expanduser() / "timm_models" / "converted_models"
-            print(f"Clear {ir_model_dir}")
+            ir_model_dir = self.output_dir / "timm_models" / "converted_models"
             if ir_model_dir.is_dir():
                 shutil.rmtree(ir_model_dir)
-                print("Success")
         if self.clear_cache_hf_models:
             cache_dir = os.environ.get("XDG_CACHE_HOME", "~/.cache")
-            huggingface_hub_dir = Path(cache_dir).absolute().expanduser() / "huggingface/hub/"
-            print(f"Clear {huggingface_hub_dir}")
+            huggingface_hub_dir = Path(cache_dir).expanduser() / "huggingface/hub/"
             if huggingface_hub_dir.is_dir():
                 shutil.rmtree(huggingface_hub_dir)
-                print("Success")
 
     @staticmethod
     def count(bool_string):
