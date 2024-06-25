@@ -134,7 +134,8 @@ class Explanation:
                     target_name = self.label_names[cls_idx]
                 else:
                     target_name = str(cls_idx)
-            cv2.imwrite(os.path.join(dir_path, f"{save_name}_target_{target_name}.jpg"), img=map_to_save)
+            image_name = f"{save_name}_target_{target_name}.jpg" if save_name else f"target_{target_name}.jpg"
+            cv2.imwrite(os.path.join(dir_path, image_name), img=map_to_save)
 
 
 class Layout(Enum):
