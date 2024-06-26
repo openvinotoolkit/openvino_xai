@@ -45,6 +45,11 @@ class TestExplanation:
         assert os.path.isfile(save_path / "test_map_target_aeroplane.jpg")
         assert os.path.isfile(save_path / "test_map_target_bird.jpg")
 
+        explanation = self._get_explanation()
+        explanation.save(save_path)
+        assert os.path.isfile(save_path / "target_aeroplane.jpg")
+        assert os.path.isfile(save_path / "target_bird.jpg")
+
         explanation = self._get_explanation(label_names=None)
         explanation.save(save_path, "test_map")
         assert os.path.isfile(save_path / "test_map_target_0.jpg")
