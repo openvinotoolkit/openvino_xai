@@ -38,7 +38,9 @@ def colormap(saliency_map: np.ndarray, colormap_type: int = cv2.COLORMAP_JET) ->
     return np.array(color_mapped_saliency_map)
 
 
-def overlay(saliency_map: np.ndarray, input_image: np.ndarray, overlay_weight: float = 0.5, cast_to_uint8: bool = True) -> np.ndarray:
+def overlay(
+    saliency_map: np.ndarray, input_image: np.ndarray, overlay_weight: float = 0.5, cast_to_uint8: bool = True
+) -> np.ndarray:
     """Applies overlay of the saliency map with the original image."""
     res = input_image * overlay_weight + saliency_map * (1 - overlay_weight)
     res[res > 255] = 255

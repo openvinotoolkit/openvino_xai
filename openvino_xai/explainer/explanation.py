@@ -9,7 +9,11 @@ from typing import Dict, List
 import cv2
 import numpy as np
 
-from openvino_xai.explainer.utils import convert_targets_to_numpy, explains_all, get_explain_target_indices
+from openvino_xai.explainer.utils import (
+    convert_targets_to_numpy,
+    explains_all,
+    get_explain_target_indices,
+)
 
 
 class Explanation:

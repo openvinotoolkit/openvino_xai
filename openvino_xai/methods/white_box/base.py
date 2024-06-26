@@ -1,8 +1,8 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from abc import abstractmethod
 import copy
+from abc import abstractmethod
 from typing import Callable
 from venv import logger
 
