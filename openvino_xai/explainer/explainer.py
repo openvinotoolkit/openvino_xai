@@ -131,6 +131,7 @@ class Explainer:
         self,
         data: np.ndarray,
         targets: np.ndarray | List[int | str] | int | str,
+        original_input_image: np.ndarray | None = None,
         label_names: List[str] | None = None,
         output_size: Tuple[int, int] | None = None,
         scaling: bool = False,
@@ -143,6 +144,7 @@ class Explainer:
         return self.explain(
             data,
             targets,
+            original_input_image,
             label_names,
             output_size,
             scaling,
@@ -157,6 +159,7 @@ class Explainer:
         self,
         data: np.ndarray,
         targets: np.ndarray | List[int | str] | int | str,
+        original_input_image: np.ndarray | None = None,
         label_names: List[str] | None = None,
         output_size: Tuple[int, int] | None = None,
         scaling: bool = False,
@@ -212,6 +215,7 @@ class Explainer:
             label_names=label_names,
         )
         return self._visualize(
+            original_input_image,
             explanation,
             data,
             output_size,
@@ -248,9 +252,10 @@ class Explainer:
 
     def _visualize(
         self,
+        original_input_image: np.ndarray | None,
         explanation: Explanation,
         data: np.ndarray,
-        output_size: Tuple[int, int],
+        output_size: Tuple[int, int] | None,
         scaling: bool,
         resize: bool,
         colormap: bool,
@@ -258,11 +263,12 @@ class Explainer:
         overlay_weight: float,
     ) -> Explanation:
         if output_size is None:
-            output_size = infer_size_from_image(data)  # resize to model input by default
+            reference_image = data if original_input_image is None else original_input_image
+            output_size = infer_size_from_image(reference_image)
 
         explanation = self.visualizer(
             explanation=explanation,
-            original_input_image=data,
+            original_input_image=data if original_input_image is None else original_input_image,
             output_size=output_size,
             scaling=scaling,
             resize=resize,

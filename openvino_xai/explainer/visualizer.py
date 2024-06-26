@@ -55,7 +55,7 @@ class Visualizer:
     def __call__(
         self,
         explanation: Explanation,
-        original_input_image: np.ndarray = None,
+        original_input_image: np.ndarray | None = None,
         output_size: Tuple[int, int] = None,
         scaling: bool = False,
         resize: bool = True,
@@ -77,7 +77,7 @@ class Visualizer:
     def visualize(
         self,
         explanation: Explanation,
-        original_input_image: np.ndarray = None,
+        original_input_image: np.ndarray | None = None,
         output_size: Tuple[int, int] = None,
         scaling: bool = False,
         resize: bool = True,
