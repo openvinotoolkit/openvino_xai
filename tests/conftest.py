@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -17,13 +18,12 @@ def pytest_addoption(parser: pytest.Parser):
         "--data-root",
         action="store",
         default=".data",
-        help="Data root directory.",
+        help="Data root directory. Defaults to '.data'",
     )
     parser.addoption(
         "--output-root",
         action="store",
-        default=".data",
-        help="Output root directory.",
+        help="Output root directory. Defaults to temp dir.",
     )
     parser.addoption(
         "--clear-cache",
@@ -44,9 +44,15 @@ def fxt_data_root(request: pytest.FixtureRequest) -> Path:
 
 
 @pytest.fixture(scope="session")
-def fxt_output_root(request: pytest.FixtureRequest) -> Path:
-    """Output root directory path."""
-    output_root = Path(request.config.getoption("--output-root"))
+def fxt_output_root(
+    request: pytest.FixtureRequest,
+    tmp_path_factory: pytest.TempPathFactory,
+) -> Path:
+    """Output root."""
+    output_root = request.config.getoption("--output-root")
+    if output_root is None:
+        output_root = tmp_path_factory.mktemp("openvino_xai")
+    output_root = Path(output_root)
     output_root.mkdir(parents=True, exist_ok=True)
     msg = f"{output_root = }"
     log.info(msg)
