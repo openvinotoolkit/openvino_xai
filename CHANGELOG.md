@@ -88,6 +88,12 @@
 * Add full timm functional tests by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/20
 * Add performance tests @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/31
 
+### Known Issues
+
+* OpenVINO IR branch insertion not working for models converted directly from torch models in https://github.com/openvinotoolkit/openvino_xai/issues/26
+* Runtime error from ONNX / OpenVINO IR models while conversion or inference for XAI in https://github.com/openvinotoolkit/openvino_xai/issues/29
+* Models not supported by white box XAI methods in https://github.com/openvinotoolkit/openvino_xai/issues/30
+
 ### New Contributors
 
 * @negvet made their first contribution in https://github.com/intel-sandbox/openvino_xai/commit/dd5fd9b73fe8c12e2d741792043372bcd900a850
