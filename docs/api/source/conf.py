@@ -11,8 +11,8 @@ import sys
 
 sys.path.insert(0, os.path.abspath("../../.."))
 
-project = 'OpenVINO-XAI'
-copyright = '2023, Intel(R) Corporation'
+project = 'OpenVINO XAI'
+copyright = '2024, Intel(R) Corporation'
 author = 'Intel(R) Corporation'
 
 # -- General configuration ---------------------------------------------------

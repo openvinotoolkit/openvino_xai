@@ -50,7 +50,7 @@ val = [
 
 [project.urls]
 Homepage = "https://github.com/openvinotoolkit/openvino_xai"
-Documentation = "https://curly-couscous-ovjvm29.pages.github.io/"
+Documentation = "https://openvinotoolkit.github.io/openvino_xai/"
 Repository = "https://github.com/openvinotoolkit/openvino_xai.git"
 
 [tool.setuptools.packages.find]

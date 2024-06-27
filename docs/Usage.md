@@ -6,7 +6,7 @@ which is useful for analyzing model's performance.
 
 Current tutorial is primarily for classification CNNs.
 
-OpenVINO XAI API documentation can be found [here](https://curly-couscous-ovjvm29.pages.github.io/).
+OpenVINO XAI API documentation can be found [here](https://openvinotoolkit.github.io/openvino_xai/).
 
 Content:
 

@@ -5,7 +5,7 @@
 
 ## Documentation
 
-OpenVINO XAI API documentation can be found [here](https://curly-couscous-ovjvm29.pages.github.io/).
+OpenVINO XAI API documentation can be found [here](https://openvinotoolkit.github.io/openvino_xai/).
 
 ## Installation
 
@@ -132,7 +132,7 @@ Currently, we support only CNN-based architectures in white-box mode,
 transformers will be supported in the upcoming weeks.
 
 For more details (statistic, model list, samples of generated saliency maps) see
-[#11](https://github.com/intel-sandbox/openvino_xai/pull/11).
+[#20](https://github.com/openvinotoolkit/openvino_xai/pull/20).
 
 ### Black-box (slow, model-agnostic)
 
@@ -142,4 +142,4 @@ We benchmarked black-box explanation (using RISE explain method) using 528 CNN m
 Black-box explainer support all types of models that output logits (e.g. CNNs, transformers, etc.).
 
 For more details (statistic, model list, samples of generated saliency maps) see
-[#23](https://github.com/intel-sandbox/openvino_xai/pull/23).
+[#20](https://github.com/openvinotoolkit/openvino_xai/pull/20).
