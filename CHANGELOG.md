@@ -1,28 +1,14 @@
 # Change Log
 
-## [1.1.0 Unreleased]
+## [1.0.0]
 
 ### Summary
 
-*
-
-### What's Changed
-
-*
-
-### New Contributors
-
-*
-
-
-## [1.0.0 Unreleased]
-
-### Summary
-
-* Support of generation of classification and detection par-class and per-image saliency maps
+* Support generation of classification and detection paj-class and per-image saliency maps
 * Enable white-box (ReciproCAM) and black-box (RISE) eXplainable AI algorithms
-* Suppor of CNN and transformer-based architectures (validation on diverse set of timm models)
+* Support CNN and transformer-based architectures (validation on diverse set of timm models)
 * Enable Explainer (stateful object) as the main interface for XAI algorithms
+* Expose `insert_xai` functional API to support XAI head insertion for OpenVINO IR models
 
 ### What's Changed
 
@@ -83,7 +69,24 @@
 * Add unit test coverage setting by @goodsong81 in https://github.com/intel-sandbox/openvino_xai/pull/63
 * Add LICENSE and SECURITY.md by @goodsong81 in https://github.com/intel-sandbox/openvino_xai/pull/64
 * Add CHANGLOG.md by @goodsong81 in https://github.com/intel-sandbox/openvino_xai/pull/65
+* Update project title and repo links by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/1
+* Add pre-merge GitHub Actions workflow by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/2
+* Add security code scan workflow by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/4
+* Add daily E2E test workflow by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/6
 * Refactor names/folders/objects for better verbosity by @GalyaZalesskaya in https://github.com/openvinotoolkit/openvino_xai/pull/5
+* Fix daily workflow by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/8
+* Support XAI Method Abstract Interface by @negvet in https://github.com/openvinotoolkit/openvino_xai/pull/7
+* Update version to 1.0.0rc0 by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/10
+* Move insert_xai into separate functional api module by @negvet in https://github.com/openvinotoolkit/openvino_xai/pull/11
+* Add fuzzing test by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/13
+* Support CodeQL for security code scan by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/14
+* Route e2e test to "large-disk" labeled ci-runner by @yunchu in https://github.com/openvinotoolkit/openvino_xai/pull/17
+* Flatten parameter objects by @negvet in https://github.com/openvinotoolkit/openvino_xai/pull/16
+* Add mount option for ci script by @yunchu in https://github.com/openvinotoolkit/openvino_xai/pull/21
+* Remove target explain group by @negvet in https://github.com/openvinotoolkit/openvino_xai/pull/25
+* Add third-party-programs.txt by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/27
+* Add full timm functional tests by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/20
+* Add performance tests @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/31
 
 ### New Contributors
 
@@ -91,3 +94,4 @@
 * @GalyaZalesskaya made their first contribution in https://github.com/intel-sandbox/openvino_xai/pull/1
 * @sovrasov made their first contribution in https://github.com/intel-sandbox/openvino_xai/pull/10
 * @goodsong81 made their first contribution in https://github.com/intel-sandbox/openvino_xai/pull/59
+* @yunchu made their first contribution in https://github.com/openvinotoolkit/openvino_xai/pull/17
