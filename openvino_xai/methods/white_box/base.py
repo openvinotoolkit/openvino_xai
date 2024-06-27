@@ -1,6 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import copy
 from abc import abstractmethod
 from typing import Callable
 from venv import logger
@@ -38,7 +39,7 @@ class WhiteBoxMethod(MethodBase):
         embed_scaling: bool = True,
     ):
         super().__init__(preprocess_fn=preprocess_fn)
-        self._model_ori = model
+        self._model_ori = copy.deepcopy(model)
         self.preprocess_fn = preprocess_fn
         self.embed_scaling = embed_scaling
 

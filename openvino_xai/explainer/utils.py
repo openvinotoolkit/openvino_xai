@@ -9,8 +9,15 @@ import numpy as np
 from openvino.runtime.utils.data_helpers.wrappers import OVDict
 
 
+def convert_targets_to_numpy(targets):
+    targets = np.asarray(targets)
+    if targets.ndim > 1:
+        raise ValueError(f"targets expected to be at most 1-dimentional, but got {targets.ndim}.")
+    return np.atleast_1d(targets)
+
+
 def get_explain_target_indices(
-    targets: List[int | str],
+    targets: np.ndarray | List[int | str],
     label_names: List[str] | None = None,
 ) -> List[int]:
     """
@@ -18,11 +25,13 @@ def get_explain_target_indices(
 
     :param targets: List of custom labels to explain, optional. Can be list of integer indices (int),
         or list of names (str) from label_names.
-    :type targets: List[int | str]
+    :type targets: np.ndarray | List[int | str]
     :param label_names: List of all label names.
     :type label_names: List[str] | None
     """
-    if isinstance(targets[0], int):
+    targets = convert_targets_to_numpy(targets)
+
+    if not isinstance(targets[0], str) and np.issubdtype(targets[0], np.integer):
         return targets  # type: ignore
 
     if not isinstance(targets[0], str):
@@ -50,7 +59,7 @@ def explains_all(targets: List[int | str] | int | str):
     """
     if isinstance(targets, int) and targets == -1:
         return True
-    if isinstance(targets, list) and len(targets) == 1 and targets[0] == -1:
+    if isinstance(targets, (np.ndarray, list)) and len(targets) == 1 and targets[0] == -1:
         return True
     if isinstance(targets, str) and targets == "-1":
         return True
@@ -146,3 +155,33 @@ def get_score(x: np.ndarray, index: int, activation: ActivationType = Activation
         assert x.shape[0] == 1
         return x[0, index]
     return x[index]
+
+
+def format_to_hwc(image: np.ndarray) -> np.ndarray:
+    """Format image to HWC."""
+    ori_ndim = image.ndim
+    if image.ndim == 4:
+        image = np.squeeze(image, axis=0)
+
+    dim0, dim1, dim2 = image.shape
+    if dim0 < dim1 and dim0 < dim2:
+        image = image.transpose((1, 2, 0))
+
+    if ori_ndim:
+        return np.expand_dims(image, axis=0)
+    return image
+
+
+def infer_size_from_image(image: np.ndarray) -> Tuple[int, int]:
+    """Estimate image size."""
+    image = format_to_hwc(image)
+
+    if image.ndim == 2:
+        return image.shape
+    elif image.ndim == 3:
+        h, w, _ = image.shape
+    elif image.ndim == 4:
+        _, h, w, _ = image.shape
+    else:
+        raise ValueError(f"Supports only two, three, and four dimensional image, but got {image.ndim}.")
+    return h, w

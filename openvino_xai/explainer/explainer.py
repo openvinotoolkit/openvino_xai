@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from enum import Enum
-from typing import Callable, List
+from typing import Callable, List, Tuple
 
 import numpy as np
 import openvino.runtime as ov
@@ -12,7 +12,12 @@ from openvino_xai import Task
 from openvino_xai.common.parameters import Method
 from openvino_xai.common.utils import IdentityPreprocessFN, logger
 from openvino_xai.explainer.explanation import Explanation
-from openvino_xai.explainer.utils import explains_all, get_explain_target_indices
+from openvino_xai.explainer.utils import (
+    convert_targets_to_numpy,
+    explains_all,
+    get_explain_target_indices,
+    infer_size_from_image,
+)
 from openvino_xai.explainer.visualizer import Visualizer
 from openvino_xai.methods.base import MethodBase
 from openvino_xai.methods.black_box.base import BlackBoxXAIMethod
@@ -123,8 +128,10 @@ class Explainer:
     def __call__(
         self,
         data: np.ndarray,
-        targets: List[int | str] | int | str,
+        targets: np.ndarray | List[int | str] | int | str,
+        original_input_image: np.ndarray | None = None,
         label_names: List[str] | None = None,
+        output_size: Tuple[int, int] | None = None,
         scaling: bool = False,
         resize: bool = True,
         colormap: bool = True,
@@ -135,7 +142,9 @@ class Explainer:
         return self.explain(
             data,
             targets,
+            original_input_image,
             label_names,
+            output_size,
             scaling,
             resize,
             colormap,
@@ -147,8 +156,10 @@ class Explainer:
     def explain(
         self,
         data: np.ndarray,
-        targets: List[int | str] | int | str,
+        targets: np.ndarray | List[int | str] | int | str,
+        original_input_image: np.ndarray | None = None,
         label_names: List[str] | None = None,
+        output_size: Tuple[int, int] | None = None,
         scaling: bool = False,
         resize: bool = True,
         colormap: bool = True,
@@ -163,9 +174,11 @@ class Explainer:
         :type data: np.ndarray
         :param targets: List of custom labels to explain, optional. Can be list of integer indices (int),
             or list of names (str) from label_names.
-        :type targets: List[int | str] | int | str
+        :type targets: np.ndarray | List[int | str] | int | str
         :param label_names: List of all label names.
         :type label_names: List[str] | None
+        :param output_size: Output size used for resize operation.
+        :type output_size:
         :parameter scaling: If True, scaling saliency map into [0, 255] range (filling the whole range).
             By default, scaling is embedded into the IR model.
             Therefore, scaling=False here by default.
@@ -179,8 +192,7 @@ class Explainer:
         :parameter overlay_weight: Weight of the saliency map when overlaying the input data with the saliency map.
         :type overlay_weight: float
         """
-        if isinstance(targets, (int, str)):
-            targets = [targets]
+        targets = convert_targets_to_numpy(targets)
 
         explain_target_indices = None
         if isinstance(self.method, BlackBoxXAIMethod) and not explains_all(targets):
@@ -201,8 +213,10 @@ class Explainer:
             label_names=label_names,
         )
         return self._visualize(
+            original_input_image,
             explanation,
             data,
+            output_size,
             scaling,
             resize,
             colormap,
@@ -236,32 +250,28 @@ class Explainer:
 
     def _visualize(
         self,
+        original_input_image: np.ndarray | None,
         explanation: Explanation,
         data: np.ndarray,
+        output_size: Tuple[int, int] | None,
         scaling: bool,
         resize: bool,
         colormap: bool,
         overlay: bool,
         overlay_weight: float,
     ) -> Explanation:
-        if not isinstance(self.preprocess_fn, IdentityPreprocessFN):
-            explanation = self.visualizer(
-                explanation=explanation,
-                original_input_image=data,
-                scaling=scaling,
-                resize=resize,
-                colormap=colormap,
-                overlay=overlay,
-                overlay_weight=overlay_weight,
-            )
-        else:
-            explanation = self.visualizer(
-                explanation=explanation,
-                output_size=data.shape[:2],  # resize to model input by default
-                scaling=scaling,
-                resize=resize,
-                colormap=colormap,
-                overlay=overlay,
-                overlay_weight=overlay_weight,
-            )
+        if output_size is None:
+            reference_image = data if original_input_image is None else original_input_image
+            output_size = infer_size_from_image(reference_image)
+
+        explanation = self.visualizer(
+            explanation=explanation,
+            original_input_image=data if original_input_image is None else original_input_image,
+            output_size=output_size,
+            scaling=scaling,
+            resize=resize,
+            colormap=colormap,
+            overlay=overlay,
+            overlay_weight=overlay_weight,
+        )
         return explanation
