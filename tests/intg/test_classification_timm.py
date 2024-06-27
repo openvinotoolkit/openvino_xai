@@ -155,7 +155,7 @@ class TestImageClassificationTimm:
         # self.check_for_saved_map(model_id, "timm_models/maps_wb/")
 
         if model_id in NON_SUPPORTED_BY_WB_MODELS:
-            pytest.xfail(reason="Not supported yet")
+            pytest.skip(reason="Not supported yet")
 
         timm_model, model_cfg = self.get_timm_model(model_id)
         self.update_report("report_wb.csv", model_id)
@@ -251,13 +251,6 @@ class TestImageClassificationTimm:
             self.update_report("report_wb.csv", model_id, "True", "True", "True", shape_str, str(map_saved))
         self.clear_cache()
 
-    # sudo ln -s /usr/local/cuda-11.8/ cuda
-    # pip uninstall torch torchvision
-    # pip3 install --pre torch torchvision --index-url https://download.pytorch.org/whl/nightly/cu118
-    #
-    # ulimit -a
-    # ulimit -Sn 10000
-    # ulimit -a
     @pytest.mark.parametrize("model_id", TEST_MODELS)
     def test_classification_black_box(self, model_id, dump_maps=False):
         # self.check_for_saved_map(model_id, "timm_models/maps_bb/")
