@@ -23,6 +23,8 @@ class RISE(BlackBoxXAIMethod):
     :param preprocess_fn: Preprocessing function, identity function by default
         (assume input images are already preprocessed by user).
     :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
+    :param device_name: Device type name.
+    :type device_name: str
     :param prepare_model: Loading (compiling) the model prior to inference.
     :type prepare_model: bool
     """
@@ -32,9 +34,10 @@ class RISE(BlackBoxXAIMethod):
         model: ov.Model,
         postprocess_fn: Callable[[OVDict], np.ndarray],
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
+        device_name: str = "CPU",
         prepare_model: bool = True,
     ):
-        super().__init__(model=model, preprocess_fn=preprocess_fn)
+        super().__init__(model=model, preprocess_fn=preprocess_fn, device_name=device_name)
         self.postprocess_fn = postprocess_fn
 
         if prepare_model:

@@ -62,6 +62,8 @@ class Explainer:
     :type target_layer: str | List[str]
     :parameter embed_scaling: If set to True, saliency map scale (0 ~ 255) operation is embedded in the model.
     :type embed_scaling: bool
+    :param device_name: Device type name.
+    :type device_name: str
     """
 
     def __init__(
@@ -74,6 +76,7 @@ class Explainer:
         explain_method: Method | None = None,
         target_layer: str | List[str] | None = None,
         embed_scaling: bool | None = True,
+        device_name: str = "CPU",
         **kwargs,
     ) -> None:
         self.model = model
@@ -91,6 +94,7 @@ class Explainer:
 
         self.target_layer = target_layer
         self.embed_scaling = embed_scaling
+        self.device_name = device_name
         self.explain_method = explain_method
         self.white_box_method_kwargs = kwargs
 
@@ -230,12 +234,13 @@ class Explainer:
 
     def _create_white_box_method(self, task: Task) -> MethodBase:
         method = WhiteBoxMethodFactory.create_method(
-            task,
-            self.model,
-            self.preprocess_fn,
-            self.explain_method,
-            self.target_layer,
-            self.embed_scaling,
+            task=task,
+            model=self.model,
+            preprocess_fn=self.preprocess_fn,
+            explain_method=self.explain_method,
+            target_layer=self.target_layer,
+            embed_scaling=self.embed_scaling,
+            device_name=self.device_name,
             **self.white_box_method_kwargs,
         )
         logger.info("Explaining the model in white-box mode.")
@@ -244,7 +249,13 @@ class Explainer:
     def _create_black_box_method(self, task: Task) -> MethodBase:
         if self.postprocess_fn is None:
             raise ValueError("Postprocess function has to be provided for the black-box mode.")
-        method = BlackBoxMethodFactory.create_method(task, self.model, self.preprocess_fn, self.postprocess_fn)
+        method = BlackBoxMethodFactory.create_method(
+            task=task,
+            model=self.model,
+            postprocess_fn=self.postprocess_fn,
+            preprocess_fn=self.preprocess_fn,
+            device_name=self.device_name,
+        )
         logger.info("Explaining the model in black-box mode.")
         return method
 
