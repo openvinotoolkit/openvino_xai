@@ -103,7 +103,7 @@ explanation.saliency_map: Dict[int: np.ndarray]  # key - class id, value - proce
 explanation.save("output_path", "name")
 ```
 
-See more usage scenarios in [Usage.md](.docs/Usage.md) and [examples](./examples).
+See more usage scenarios in [user-guide.md](docs/source/user-guide.md) and [examples](./examples).
 
 ### Running example scripts
 

@@ -1,4 +1,4 @@
-# OpenVINO™ Explainable AI Toolkit Usage Guide
+# OpenVINO™ Explainable AI Toolkit User Guide
 
 **OpenVINO™ Explainable AI (XAI) Toolkit** provides a suite of XAI algorithms for visual explanation of OpenVINO™ Intermediate Representation (IR) models.
 Model explanation helps to identify the parts of the input that are responsible for the model's prediction,

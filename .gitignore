@@ -13,6 +13,7 @@ __pycache__
 
 # Distribution / packaging
 build/
+_build/
 dist/
 *egg-info
 .eggs/

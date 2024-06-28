@@ -47,6 +47,18 @@ val = [
   "py-cpuinfo",
   "openpyxl",
 ]
+doc = [
+  "furo",
+  "myst-parser",
+  "pydata-sphinx-theme",
+  "sphinx",
+  "sphinx-autoapi",
+  "sphinx-copybutton",
+  "sphinx-design",
+  "sphinx-panels",
+  "sphinx-tabs",
+  "sphinxemoji",
+]
 
 [project.urls]
 Homepage = "https://github.com/openvinotoolkit/openvino_xai"
