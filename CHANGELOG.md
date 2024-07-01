@@ -4,7 +4,7 @@
 
 ### Summary
 
-* Support generation of classification and detection paj-class and per-image saliency maps
+* Support generation of classification and detection per-class and per-image saliency maps
 * Enable white-box (ReciproCAM) and black-box (RISE) eXplainable AI algorithms
 * Support CNN and transformer-based architectures (validation on diverse set of timm models)
 * Enable Explainer (stateful object) as the main interface for XAI algorithms
