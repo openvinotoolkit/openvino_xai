@@ -36,11 +36,3 @@ To access/modify implemented XAI methods, use openvino_xai.methods
 
 .. automodule:: openvino_xai.methods
     :members:
-
-Insertion
----------
-
-To insert XAI branch into the model, use openvino_xai.insertion (used only for white-box mode)
-
-.. automodule:: openvino_xai.inserter
-    :members:
