@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.abspath("../../"))
 
 # -- Project information ----------------------------------------------------- #
 
-project = "OpenVINO™ Explainable AI Toolkit"
+project = "OpenVINO™ XAI"
 copyright = "2024, Intel(R) Corporation"
 author = "Intel(R) Corporation"
 release = "1.0.0"
@@ -43,21 +43,22 @@ exclude_patterns = ["build", "Thumbs.db", ".DS_Store"]
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "pydata_sphinx_theme"
-html_static_path = ["_static"]
-html_theme_options = {
-    "navbar_center": [],
-    "navbar_end": ["search-field.html", "theme-switcher.html", "navbar-icon-links.html"],
-    "search_bar_text": "Search",
-    "icon_links": [
-        {
-            "name": "GitHub",
-            "url": "https://github.com/openvinotoolkit/openvino_xai",
-            "icon": "_static/logos/github_icon.png",
-            "type": "local",
-        },
-    ],
-}
+html_theme = 'sphinx_rtd_theme'
+#html_theme = "pydata_sphinx_theme"
+#html_static_path = ["_static"]
+#html_theme_options = {
+#    #"navbar_center": [],
+#    #"navbar_end": ["search-field.html", "theme-switcher.html", "navbar-icon-links.html"],
+#    #"search_bar_text": "Search",
+#    "icon_links": [
+#        {
+#            "name": "GitHub",
+#            "url": "https://github.com/openvinotoolkit/openvino_xai",
+#            "icon": "_static/logos/github_icon.png",
+#            "type": "local",
+#        },
+#    ],
+#}
 html_css_files = [
     "css/custom.css",
 ]
