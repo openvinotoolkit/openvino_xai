@@ -48,6 +48,7 @@ class WhiteBoxMethodFactory(MethodFactory):
         explain_method: Method | None = None,
         target_layer: str | List[str] | None = None,
         embed_scaling: bool | None = True,
+        device_name: str = "CPU",
         **kwargs,
     ) -> MethodBase:
         if task == Task.CLASSIFICATION:
@@ -57,6 +58,7 @@ class WhiteBoxMethodFactory(MethodFactory):
                 explain_method,
                 target_layer,  # type: ignore
                 embed_scaling,
+                device_name,
                 **kwargs,
             )
         if task == Task.DETECTION:
@@ -66,6 +68,7 @@ class WhiteBoxMethodFactory(MethodFactory):
                 explain_method,
                 target_layer,  # type: ignore
                 embed_scaling,
+                device_name,
                 **kwargs,
             )
         raise ValueError(f"Model type {task} is not supported in white-box mode.")
@@ -77,6 +80,7 @@ class WhiteBoxMethodFactory(MethodFactory):
         explain_method: Method | None = None,
         target_layer: str | None = None,
         embed_scaling: bool | None = True,
+        device_name: str = "CPU",
         **kwargs,
     ) -> WhiteBoxMethod:
         """Generates instance of the classification white-box method class.
@@ -92,6 +96,8 @@ class WhiteBoxMethodFactory(MethodFactory):
         :type target_layer: str | List[str]
         :parameter embed_scaling: If set to True, saliency map scale (0 ~ 255) operation is embedded in the model.
         :type embed_scaling: bool
+        :param device_name: Device type name.
+        :type device_name: str
         """
 
         if target_layer is None:
@@ -106,6 +112,7 @@ class WhiteBoxMethodFactory(MethodFactory):
                 preprocess_fn,
                 target_layer,
                 embed_scaling,
+                device_name,
                 **kwargs,
             )
         if explain_method == Method.VITRECIPROCAM:
@@ -115,6 +122,7 @@ class WhiteBoxMethodFactory(MethodFactory):
                 preprocess_fn,
                 target_layer,
                 embed_scaling,
+                device_name,
                 **kwargs,
             )
         if explain_method == Method.ACTIVATIONMAP:
@@ -124,6 +132,7 @@ class WhiteBoxMethodFactory(MethodFactory):
                 preprocess_fn,
                 target_layer,
                 embed_scaling,
+                device_name,
                 **kwargs,
             )
         raise ValueError(f"Requested explanation method {explain_method} is not implemented.")
@@ -135,6 +144,7 @@ class WhiteBoxMethodFactory(MethodFactory):
         explain_method: Method | None = None,
         target_layer: List[str] | None = None,
         embed_scaling: bool = True,
+        device_name: str = "CPU",
         **kwargs,
     ) -> WhiteBoxMethod:
         """Generates instance of the detection white-box method class.
@@ -161,6 +171,7 @@ class WhiteBoxMethodFactory(MethodFactory):
                 preprocess_fn=preprocess_fn,
                 target_layer=target_layer,
                 embed_scaling=embed_scaling,
+                device_name=device_name,
                 **kwargs,
             )
         raise ValueError(f"Requested explanation method {explain_method} is not implemented.")
@@ -170,16 +181,17 @@ class BlackBoxMethodFactory(MethodFactory):
     @classmethod
     def create_method(
         cls,
-        task,
-        model,
-        preprocess_fn,
-        postprocess_fn,
+        task: Task,
+        model: ov.Model,
+        postprocess_fn: Callable[[OVDict], np.ndarray],
+        preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
+        device_name: str = "CPU",
         **kwargs,
     ) -> MethodBase:
         if task == Task.CLASSIFICATION:
-            return cls.create_classification_method(model, postprocess_fn, preprocess_fn, **kwargs)
+            return cls.create_classification_method(model, postprocess_fn, preprocess_fn, device_name, **kwargs)
         if task == Task.DETECTION:
-            return cls.create_detection_method(model, preprocess_fn, preprocess_fn, **kwargs)
+            return cls.create_detection_method(model, postprocess_fn, preprocess_fn, device_name, **kwargs)
         raise ValueError(f"Model type {task} is not supported in black-box mode.")
 
     @staticmethod
@@ -187,6 +199,7 @@ class BlackBoxMethodFactory(MethodFactory):
         model: ov.Model,
         postprocess_fn: Callable[[OVDict], np.ndarray],
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
+        device_name: str = "CPU",
         **kwargs,
     ) -> BlackBoxXAIMethod:
         """Generates instance of the classification black-box method class.
@@ -198,8 +211,10 @@ class BlackBoxMethodFactory(MethodFactory):
         :param preprocess_fn: Preprocessing function, identity function by default
             (assume input images are already preprocessed by user).
         :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
+        :param device_name: Device type name.
+        :type device_name: str
         """
-        return RISE(model, postprocess_fn, preprocess_fn, **kwargs)
+        return RISE(model, postprocess_fn, preprocess_fn, device_name, **kwargs)
 
     @staticmethod
     def create_detection_method(*args, **kwargs) -> BlackBoxXAIMethod:

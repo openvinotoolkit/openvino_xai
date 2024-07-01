@@ -27,6 +27,8 @@ class FeatureMapPerturbationBase(WhiteBoxMethod):
     :type target_layer: str
     :param embed_scaling: Whether to scale output or not.
     :type embed_scaling: bool
+    :param device_name: Device type name.
+    :type device_name: str
     """
 
     def __init__(
@@ -35,8 +37,9 @@ class FeatureMapPerturbationBase(WhiteBoxMethod):
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         target_layer: str | None = None,
         embed_scaling: bool = True,
+        device_name: str = "CPU",
     ):
-        super().__init__(model, preprocess_fn, embed_scaling)
+        super().__init__(model=model, preprocess_fn=preprocess_fn, embed_scaling=embed_scaling, device_name=device_name)
         self.per_class = True
         self._target_layer = target_layer
 
@@ -69,6 +72,8 @@ class ReciproCAM(FeatureMapPerturbationBase):
     :type target_layer: str
     :param embed_scaling: Whether to scale output or not.
     :type embed_scaling: bool
+    :param device_name: Device type name.
+    :type device_name: str
     :param prepare_model: Loading (compiling) the model prior to inference.
     :type prepare_model: bool
     """
@@ -79,9 +84,16 @@ class ReciproCAM(FeatureMapPerturbationBase):
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         target_layer: str | None = None,
         embed_scaling: bool = True,
+        device_name: str = "CPU",
         prepare_model: bool = True,
     ):
-        super().__init__(model, preprocess_fn, target_layer, embed_scaling)
+        super().__init__(
+            model=model,
+            preprocess_fn=preprocess_fn,
+            target_layer=target_layer,
+            embed_scaling=embed_scaling,
+            device_name=device_name,
+        )
         self.model_type = ModelType.CNN
 
         if prepare_model:
@@ -145,6 +157,8 @@ class ViTReciproCAM(FeatureMapPerturbationBase):
     :type target_layer: str
     :param embed_scaling: Whether to scale output or not.
     :type embed_scaling: bool
+    :param device_name: Device type name.
+    :type device_name: str
     :param use_gaussian: Whether to use Gaussian for mask generation or not.
     :type use_gaussian: bool
     :param cls_token: Whether to use cls token for mosaic prediction or not.
@@ -163,13 +177,20 @@ class ViTReciproCAM(FeatureMapPerturbationBase):
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         target_layer: str | None = None,
         embed_scaling: bool = True,
+        device_name: str = "CPU",
         use_gaussian: bool = True,
         cls_token: bool = True,
         final_norm: bool = True,
         k: int = 1,
         prepare_model: bool = True,
     ):
-        super().__init__(model, preprocess_fn, target_layer, embed_scaling)
+        super().__init__(
+            model=model,
+            preprocess_fn=preprocess_fn,
+            target_layer=target_layer,
+            embed_scaling=embed_scaling,
+            device_name=device_name,
+        )
         self.model_type = ModelType.TRANSFORMER
         self._use_gaussian = use_gaussian
         self._cls_token = cls_token

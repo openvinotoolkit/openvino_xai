@@ -17,17 +17,19 @@ class DetClassProbabilityMap(WhiteBoxMethod):
 
     :param model: OpenVINO model.
     :type model: ov.Model
-    :parameter target_layer: Target layer (node) name after which the XAI branch will be inserted.
-    :type target_layer: str
     :param preprocess_fn: Preprocessing function, identity function by default
         (assume input images are already preprocessed by user).
     :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
+    :parameter target_layer: Target layer (node) name after which the XAI branch will be inserted.
+    :type target_layer: str
+    :param embed_scaling: Whether to scale output or not.
+    :type embed_scaling: bool
+    :param device_name: Device type name.
+    :type device_name: str
     :parameter num_anchors: Number of anchors per scale.
     :type num_anchors: List[int]
     :parameter saliency_map_size: Size of the output saliency map.
     :type saliency_map_size: Tuple[int, int] | List[int]
-    :param embed_scaling: Whether to scale output or not.
-    :type embed_scaling: bool
     :param prepare_model: Loading (compiling) the model prior to inference.
     :type prepare_model: bool
     """
@@ -38,13 +40,14 @@ class DetClassProbabilityMap(WhiteBoxMethod):
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         target_layer: List[str] = None,
         embed_scaling: bool = True,
+        device_name: str = "CPU",
         num_anchors: List[int] | None = None,
         saliency_map_size: Tuple[int, int] | List[int] = (23, 23),
         prepare_model: bool = True,
     ):
         if target_layer is None:
             raise ValueError("target_layer is required for the detection.")
-        super().__init__(model, preprocess_fn, embed_scaling)
+        super().__init__(model=model, preprocess_fn=preprocess_fn, embed_scaling=embed_scaling, device_name=device_name)
         self.per_class = True
         self._target_layer = target_layer
         self._num_anchors = (

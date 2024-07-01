@@ -18,10 +18,12 @@ class MethodBase(ABC):
         self,
         model: ov.Model = None,
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
+        device_name: str = "CPU",
     ):
         self._model = model
         self._model_compiled = None
         self.preprocess_fn = preprocess_fn
+        self._device_name = device_name
 
     @property
     def model_compiled(self) -> ov.ie_api.CompiledModel | None:
@@ -44,5 +46,5 @@ class MethodBase(ABC):
         """Saliency map generation."""
 
     def load_model(self) -> None:
-        # TODO: support other devices?
-        self._model_compiled = ov.Core().compile_model(self._model, "CPU")
+        core = ov.Core()
+        self._model_compiled = core.compile_model(model=self._model, device_name=self._device_name)
