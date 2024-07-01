@@ -132,7 +132,7 @@ class RISE(BlackBoxXAIMethod):
 
     @staticmethod
     def _get_scored_mask(raw_scores: np.ndarray, mask: np.ndarray, target_classes: List[int] | None) -> np.ndarray:
-        if target_classes:
+        if target_classes is not None:
             return np.take(raw_scores, target_classes).reshape(-1, 1, 1) * mask
         else:
             return raw_scores.reshape(-1, 1, 1) * mask

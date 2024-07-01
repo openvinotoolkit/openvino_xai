@@ -4,6 +4,7 @@
 from pathlib import Path
 
 import cv2
+import numpy as np
 import openvino.runtime as ov
 import pytest
 
@@ -140,3 +141,90 @@ class TestExplainer:
         )
         explanation = explainer(self.image, targets=-1, num_masks=10)
         assert len(explanation.saliency_map) == 20
+
+    def test_two_explainers_with_same_model(self):
+        retrieve_otx_model(self.data_dir, MODEL_NAME)
+        model_path = self.data_dir / "otx_models" / (MODEL_NAME + ".xml")
+        model = ov.Core().read_model(model_path)
+
+        explainer = Explainer(
+            model=model,
+            task=Task.CLASSIFICATION,
+        )
+
+        explainer = Explainer(
+            model=model,
+            task=Task.CLASSIFICATION,
+        )
+
+    @pytest.mark.parametrize(
+        "targets",
+        [
+            -1,
+            3,
+            [3],
+            [1, 3],
+            np.uint(1),
+            np.int16(1),
+            np.int64(1),
+            np.array([1]),
+            np.array([1, 2]),
+        ],
+    )
+    def test_different_target_format(self, targets):
+        retrieve_otx_model(self.data_dir, MODEL_NAME)
+        model_path = self.data_dir / "otx_models" / (MODEL_NAME + ".xml")
+        model = ov.Core().read_model(model_path)
+
+        explainer = Explainer(
+            model=model,
+            task=Task.CLASSIFICATION,
+            preprocess_fn=self.preprocess_fn,
+        )
+
+        explanation = explainer(
+            self.image,
+            targets=targets,
+        )
+        if isinstance(targets, int) and targets == -1:
+            assert len(explanation.targets) == 20
+        else:
+            assert len(explanation.targets) == len(np.atleast_1d(np.asarray(targets)))
+
+    def test_overlay_with_resize(self):
+        retrieve_otx_model(self.data_dir, MODEL_NAME)
+        model_path = self.data_dir / "otx_models" / (MODEL_NAME + ".xml")
+        model = ov.Core().read_model(model_path)
+
+        explainer = Explainer(
+            model=model,
+            task=Task.CLASSIFICATION,
+            preprocess_fn=self.preprocess_fn,
+        )
+
+        explanation = explainer(
+            self.image,
+            targets=0,
+            overlay=True,
+            output_size=(50, 70),
+        )
+        assert explanation.saliency_map[0].shape == (50, 70, 3)
+
+    def test_overlay_with_original_image(self):
+        retrieve_otx_model(self.data_dir, MODEL_NAME)
+        model_path = self.data_dir / "otx_models" / (MODEL_NAME + ".xml")
+        model = ov.Core().read_model(model_path)
+
+        explainer = Explainer(
+            model=model,
+            task=Task.CLASSIFICATION,
+            preprocess_fn=self.preprocess_fn,
+        )
+
+        explanation = explainer(
+            self.image,
+            original_input_image=cv2.resize(src=self.image, dsize=(120, 100)),
+            targets=0,
+            overlay=True,
+        )
+        assert explanation.saliency_map[0].shape == (100, 120, 3)

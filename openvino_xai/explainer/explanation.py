@@ -9,7 +9,11 @@ from typing import Dict, List
 import cv2
 import numpy as np
 
-from openvino_xai.explainer.utils import explains_all, get_explain_target_indices
+from openvino_xai.explainer.utils import (
+    convert_targets_to_numpy,
+    explains_all,
+    get_explain_target_indices,
+)
 
 
 class Explanation:
@@ -19,7 +23,7 @@ class Explanation:
     :param saliency_map: Raw saliency map.
     :param targets: List of custom labels to explain, optional. Can be list of integer indices (int),
         or list of names (str) from label_names.
-    :type targets: List[int | str] | int | str
+    :type targets: np.ndarray | List[int | str] | int | str
     :param label_names: List of all label names.
     :type label_names: List[str] | None
     """
@@ -27,11 +31,10 @@ class Explanation:
     def __init__(
         self,
         saliency_map: np.ndarray,
-        targets: List[int | str] | int | str,
+        targets: np.ndarray | List[int | str] | int | str,
         label_names: List[str] | None = None,
     ):
-        if isinstance(targets, (int, str)):
-            targets = [targets]
+        targets = convert_targets_to_numpy(targets)
 
         self._check_saliency_map(saliency_map)
         self._saliency_map = self._format_sal_map_as_dict(saliency_map)
@@ -48,7 +51,7 @@ class Explanation:
 
     @property
     def saliency_map(self) -> Dict[int | str, np.ndarray]:
-        """Saliency map as a dict {map_id: np.ndarray}."""
+        """Saliency map as a dict {target_id: np.ndarray}."""
         return self._saliency_map
 
     @saliency_map.setter
@@ -57,9 +60,15 @@ class Explanation:
 
     @property
     def shape(self):
+        """Shape of the saliency map."""
         idx = next(iter(self._saliency_map))
         shape = self._saliency_map[idx].shape
         return shape
+
+    @property
+    def targets(self):
+        """Explained targets."""
+        return list(self._saliency_map.keys())
 
     @staticmethod
     def _check_saliency_map(saliency_map: np.ndarray):
@@ -92,7 +101,7 @@ class Explanation:
 
     def _select_target_saliency_maps(
         self,
-        targets: List[int | str],
+        targets: np.ndarray | List[int | str],
         label_names: List[str] | None = None,
     ) -> Dict[int | str, np.ndarray]:
         assert self.layout == Layout.MULTIPLE_MAPS_PER_IMAGE_GRAY
@@ -106,7 +115,7 @@ class Explanation:
 
     @staticmethod
     def _select_target_indices(
-        targets: List[int | str],
+        targets: np.ndarray | List[int | str],
         total_num_targets: int,
         label_names: List[str] | None = None,
     ) -> List[int] | np.ndarray:
@@ -119,7 +128,8 @@ class Explanation:
         """Dumps saliency map."""
         os.makedirs(dir_path, exist_ok=True)
         save_name = name if name else ""
-        for i, (cls_idx, map_to_save) in enumerate(self._saliency_map.items()):
+        for cls_idx, map_to_save in self._saliency_map.items():
+            map_to_save = cv2.cvtColor(map_to_save, code=cv2.COLOR_RGB2BGR)
             if isinstance(cls_idx, str):
                 cv2.imwrite(os.path.join(dir_path, f"{save_name}.jpg"), img=map_to_save)
                 return
@@ -128,7 +138,8 @@ class Explanation:
                     target_name = self.label_names[cls_idx]
                 else:
                     target_name = str(cls_idx)
-            cv2.imwrite(os.path.join(dir_path, f"{save_name}_target_{target_name}.jpg"), img=map_to_save)
+            image_name = f"{save_name}_target_{target_name}.jpg" if save_name else f"target_{target_name}.jpg"
+            cv2.imwrite(os.path.join(dir_path, image_name), img=map_to_save)
 
 
 class Layout(Enum):
