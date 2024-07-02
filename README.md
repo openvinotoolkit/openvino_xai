@@ -18,17 +18,20 @@
 ![OpenVINO XAI Concept](docs/images/ovxai-concept.svg)
 
 **OpenVINO™ Explainable AI (XAI) Toolkit** provides a suite of XAI algorithms for visual explanation of
-[OpenVINO™](https://github.com/openvinotoolkit/openvino) Intermediate Representation (IR) models.
+[**OpenVINO™**](https://github.com/openvinotoolkit/openvino) Intermediate Representation (IR) models.
 
-Given OpenVINO models and input images, OpenVINO XAI generates **saliency maps**
-which highlights regions of the interest in the inputs from the model perspective
-to help users understand the reason why the complex AI models output such outputs.
+Given **OpenVINO** models and input images, **OpenVINO XAI** generates **saliency maps**
+which highlights regions of the interest in the inputs from the models' perspective
+to help users understand the reason why the complex AI models output such responses.
 
 ---
 
 ## Installation
 
-- Set up an isolated python environment for python 3.10 and higher:
+> **_NOTE:_**  OpenVINO XAI works on Python 3.10 or higher
+
+<details>
+<summary>Set up environment</summary>
 
 ```bash
 # Create virtual env.
@@ -37,26 +40,42 @@ python3.10 -m venv .ovxai
 # Activate virtual env.
 source .ovxai/bin/activate
 ```
+</details>
 
-- Package installation:
+Install from PyPI package
 
 ```bash
-# Package mode (for normal use):
-pip install .
+# Base package (for normal use):
+pip install openvino_xai
+
+# Dev package (for development):
+pip install openvino_xai[dev]
+```
+
+<details>
+<summary>Install from source</summary>
+
+```bash
+# Clone the source repository
+git clone https://github.com/openvinotoolkit/openvino_xai.git
+cd openvino_xai
 
 # Editable mode (for development):
 pip install -e .[dev]
 ```
+</details>
 
-- Verification:
+<details>
+<summary>Verify installation</summary>
 
 ```bash
 # Run tests
-pytest -v -s ./tests/
+pytest -v -s ./tests/unit
 
 # Run code quality checks
 pre-commit run --all-files
 ```
+</details>
 
 ---
 
