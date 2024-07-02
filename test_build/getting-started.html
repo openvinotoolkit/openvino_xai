@@ -1,0 +1,763 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>OpenVINO™ Explainable AI Toolkit - OpenVINO XAI &#8212; OpenVINO™ XAI 1.0.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/tabs.css?v=a5c4661c" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=87e54e7c" />
+    <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=7865297d" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="_static/documentation_options.js?v=8d563738"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'getting-started';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="OpenVINO™ Explainable AI Toolkit User Guide" href="user-guide.html" />
+    <link rel="prev" title="Welcome to OpenVINO™ Explainable AI Toolkit’s documentation!" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">OpenVINO™ XAI 1.0.0 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="user-guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api-manual.html">
+    API Manual
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="coding-guide.html">
+    Coding Guide
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/openvinotoolkit/openvino_xai" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="_static/logos/github_icon.png" class="icon-link-image" alt="GitHub"/></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="user-guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api-manual.html">
+    API Manual
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="coding-guide.html">
+    Coding Guide
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/openvinotoolkit/openvino_xai" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="_static/logos/github_icon.png" class="icon-link-image" alt="GitHub"/></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<h3><a href="index.html">Table of Contents</a></h3>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#quick-start">Quick Start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#features">Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#updates">Updates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#license">License</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#issues-discussions">Issues / Discussions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#disclaimer">Disclaimer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#contributing">Contributing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="user-guide.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-manual.html">API Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coding-guide.html">Coding Guide</a></li>
+</ul>
+</div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">OpenVINO™...</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div align="center">
+<section id="openvino-explainable-ai-toolkit-openvino-xai">
+<h1>OpenVINO™ Explainable AI Toolkit - OpenVINO XAI<a class="headerlink" href="#openvino-explainable-ai-toolkit-openvino-xai" title="Link to this heading">#</a></h1>
+<hr class="docutils" />
+<p><a class="reference internal" href="#installation"><span class="std std-ref">Install</span></a> •
+<a class="reference internal" href="#quick-start"><span class="xref myst">Quick start</span></a> •
+<a class="reference internal" href="#features"><span class="std std-ref">Features</span></a> •
+<a class="reference internal" href="#updates"><span class="std std-ref">Updates</span></a> •
+<a class="reference internal" href="#license"><span class="std std-ref">License</span></a> •
+<a class="reference external" href="https://openvinotoolkit.github.io/openvino_xai/">Documentation</a></p>
+<hr class="docutils" />
+</div>
+<p><img alt="OpenVINO XAI Concept" src="_images/ovxai-concept.svg" /></p>
+<p><strong>OpenVINO™ Explainable AI (XAI) Toolkit</strong> provides a suite of XAI algorithms for visual explanation of
+<a class="reference external" href="https://github.com/openvinotoolkit/openvino"><strong>OpenVINO™</strong></a> Intermediate Representation (IR) models.</p>
+<p>Given <strong>OpenVINO</strong> models and input images, <strong>OpenVINO XAI</strong> generates <strong>saliency maps</strong>
+which highlights regions of the interest in the inputs from the models’ perspective
+to help users understand the reason why the complex AI models output such responses.</p>
+<hr class="docutils" />
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
+<blockquote>
+<div><p><strong><em>NOTE:</em></strong>  OpenVINO XAI works on Python 3.10 or higher</p>
+</div></blockquote>
+<details>
+<summary>Set up environment</summary>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create virtual env.</span>
+python3.10<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.ovxai
+
+<span class="c1"># Activate virtual env.</span>
+<span class="nb">source</span><span class="w"> </span>.ovxai/bin/activate
+</pre></div>
+</div>
+</details>
+<p>Install from PyPI package</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Base package (for normal use):</span>
+pip<span class="w"> </span>install<span class="w"> </span>openvino_xai
+
+<span class="c1"># Dev package (for development):</span>
+pip<span class="w"> </span>install<span class="w"> </span>openvino_xai<span class="o">[</span>dev<span class="o">]</span>
+</pre></div>
+</div>
+<details>
+<summary>Install from source</summary>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Clone the source repository</span>
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/openvinotoolkit/openvino_xai.git
+<span class="nb">cd</span><span class="w"> </span>openvino_xai
+
+<span class="c1"># Editable mode (for development):</span>
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="o">[</span>dev<span class="o">]</span>
+</pre></div>
+</div>
+</details>
+<details>
+<summary>Verify installation</summary>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Run tests</span>
+pytest<span class="w"> </span>-v<span class="w"> </span>-s<span class="w"> </span>./tests/unit
+
+<span class="c1"># Run code quality checks</span>
+pre-commit<span class="w"> </span>run<span class="w"> </span>--all-files
+</pre></div>
+</div>
+</details>
+</section>
+<hr class="docutils" />
+<section id="quick-start">
+<h2>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading">#</a></h2>
+<p>To explain <a class="reference external" href="https://github.com/openvinotoolkit/openvino">OpenVINO™</a> Intermediate Representation (IR) you only need
+preprocessing function (and sometimes postprocessing).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">explainer</span> <span class="o">=</span> <span class="n">xai</span><span class="o">.</span><span class="n">Explainer</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">,</span>
+    <span class="n">preprocess_fn</span><span class="o">=</span><span class="n">preprocess_fn</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">explanation_parameters</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>By default the model will be explained using <code class="docutils literal notranslate"><span class="pre">auto</span> <span class="pre">mode</span></code>.
+Under the hood of the <code class="docutils literal notranslate"><span class="pre">auto</span> <span class="pre">mode</span></code>: will try to run <code class="docutils literal notranslate"><span class="pre">white-box</span> <span class="pre">mode</span></code>, if fails =&gt; will run <code class="docutils literal notranslate"><span class="pre">black-box</span> <span class="pre">mode</span></code>.</p>
+<p><img alt="Auto mode process" src="_images/auto_explain_mode.jpg" /></p>
+<p>Generating saliency maps involves model inference. Explainer will perform model inference.
+To infer, <code class="docutils literal notranslate"><span class="pre">preprocess_fn</span></code> and <code class="docutils literal notranslate"><span class="pre">postprocess_fn</span></code> are requested from the user.
+<code class="docutils literal notranslate"><span class="pre">preprocess_fn</span></code> is always required, <code class="docutils literal notranslate"><span class="pre">postprocess_fn</span></code> is required only for black-box.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
+
+<span class="kn">import</span> <span class="nn">openvino_xai</span> <span class="k">as</span> <span class="nn">xai</span>
+<span class="kn">from</span> <span class="nn">openvino_xai.explainer.explanation_parameters</span> <span class="kn">import</span> <span class="n">ExplanationParameters</span>
+
+
+<span class="k">def</span> <span class="nf">preprocess_fn</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="c1"># Implementing own pre-process function based on model&#39;s implementation</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">dsize</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">))</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">x</span>
+
+
+<span class="c1"># Creating model</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ov</span><span class="o">.</span><span class="n">Core</span><span class="p">()</span><span class="o">.</span><span class="n">read_model</span><span class="p">(</span><span class="s2">&quot;path/to/model.xml&quot;</span><span class="p">)</span>  <span class="c1"># type: ov.Model</span>
+
+<span class="c1"># Explainer object will prepare and load the model once in the beginning</span>
+<span class="n">explainer</span> <span class="o">=</span> <span class="n">xai</span><span class="o">.</span><span class="n">Explainer</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">,</span>
+    <span class="n">preprocess_fn</span><span class="o">=</span><span class="n">preprocess_fn</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Generate and process saliency maps (as many as required, sequentially)</span>
+<span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="s2">&quot;path/to/image.jpg&quot;</span><span class="p">)</span>
+<span class="n">explanation_parameters</span> <span class="o">=</span> <span class="n">ExplanationParameters</span><span class="p">(</span>
+    <span class="n">target_explain_labels</span><span class="o">=</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">],</span>  <span class="c1"># indices or string labels to explain</span>
+<span class="p">)</span>
+<span class="n">explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">explanation_parameters</span><span class="p">)</span>
+
+<span class="n">explanation</span><span class="p">:</span> <span class="n">Explanation</span>
+<span class="n">explanation</span><span class="o">.</span><span class="n">saliency_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span>  <span class="c1"># key - class id, value - processed saliency map e.g. 354x500x3</span>
+
+<span class="c1"># Saving saliency maps</span>
+<span class="n">explanation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;output_path&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>See more usage scenarios in the <a class="reference internal" href="user-guide.html"><span class="std std-doc">user guide</span></a> and <a class="reference internal" href="#./examples"><span class="xref myst">examples</span></a>.</p>
+<section id="running-example-scripts">
+<h3>Running example scripts<a class="headerlink" href="#running-example-scripts" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Retrieve OTX models by running tests</span>
+<span class="c1"># Models are downloaded and stored in .data/otx_models</span>
+<span class="n">pytest</span> <span class="n">tests</span><span class="o">/</span><span class="n">test_classification</span><span class="o">.</span><span class="n">py</span>
+
+<span class="c1"># Run a bunch of classification examples</span>
+<span class="c1"># All outputs will be stored in the corresponding output directory</span>
+<span class="n">python</span> <span class="n">examples</span><span class="o">/</span><span class="n">run_classification</span><span class="o">.</span><span class="n">py</span> <span class="o">.</span><span class="n">data</span><span class="o">/</span><span class="n">otx_models</span><span class="o">/</span><span class="n">mlc_mobilenetv3_large_voc</span><span class="o">.</span><span class="n">xml</span> \
+<span class="n">tests</span><span class="o">/</span><span class="n">assets</span><span class="o">/</span><span class="n">cheetah_person</span><span class="o">.</span><span class="n">jpg</span> <span class="o">--</span><span class="n">output</span> <span class="n">output</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="features">
+<h2>Features<a class="headerlink" href="#features" title="Link to this heading">#</a></h2>
+<section id="scope-of-explained-models">
+<h3>Scope of explained models<a class="headerlink" href="#scope-of-explained-models" title="Link to this heading">#</a></h3>
+<p>Models from <a class="reference external" href="https://github.com/huggingface/pytorch-image-models">Pytorch Image Models (timm)</a> are used
+for classification benchmark.</p>
+</section>
+<section id="white-box-fast-model-dependent">
+<h3>White-box (fast, model-dependent)<a class="headerlink" href="#white-box-fast-model-dependent" title="Link to this heading">#</a></h3>
+<section id="classification">
+<h4>Classification<a class="headerlink" href="#classification" title="Link to this heading">#</a></h4>
+<p>We benchmarked white-box explanation (using ReciproCAM explain method) using 528 models.
+Currently, we support only CNN-based architectures in white-box mode,
+transformers will be supported in the upcoming weeks.</p>
+<p>For more details (statistic, model list, samples of generated saliency maps) see
+<a class="reference external" href="https://github.com/openvinotoolkit/openvino_xai/pull/20">#20</a>.</p>
+</section>
+</section>
+<section id="black-box-slow-model-agnostic">
+<h3>Black-box (slow, model-agnostic)<a class="headerlink" href="#black-box-slow-model-agnostic" title="Link to this heading">#</a></h3>
+<section id="id1">
+<h4>Classification<a class="headerlink" href="#id1" title="Link to this heading">#</a></h4>
+<p>We benchmarked black-box explanation (using RISE explain method) using 528 CNN models and 115 transformer-based models.
+Black-box explainer support all types of models that output logits (e.g. CNNs, transformers, etc.).</p>
+<p>For more details (statistic, model list, samples of generated saliency maps) see
+<a class="reference external" href="https://github.com/openvinotoolkit/openvino_xai/pull/20">#20</a>.</p>
+</section>
+</section>
+</section>
+<hr class="docutils" />
+<section id="updates">
+<h2>Updates<a class="headerlink" href="#updates" title="Link to this heading">#</a></h2>
+<section id="v1-0-0">
+<h3>v1.0.0<a class="headerlink" href="#v1-0-0" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Support generation of classification and detection per-class and per-image saliency maps</p></li>
+<li><p>Enable white-box (ReciproCAM) and black-box (RISE) eXplainable AI algorithms</p></li>
+<li><p>Support CNN and transformer-based architectures (validation on diverse set of timm models)</p></li>
+<li><p>Enable Explainer (stateful object) as the main interface for XAI algorithms</p></li>
+<li><p>Expose <code class="docutils literal notranslate"><span class="pre">insert_xai</span></code> functional API to support XAI head insertion for OpenVINO IR models</p></li>
+</ul>
+</section>
+<section id="release-history">
+<h3>Release History<a class="headerlink" href="#release-history" title="Link to this heading">#</a></h3>
+<p>Please refer to the <a class="reference internal" href="#CHANGELOG.md"><span class="xref myst">change logs</span></a> for the full release history.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="license">
+<h2>License<a class="headerlink" href="#license" title="Link to this heading">#</a></h2>
+<p>OpenVINO™ Toolkit is licensed under <a class="reference internal" href="#license"><span class="std std-ref">Apache License Version 2.0</span></a>.
+By contributing to the project, you agree to the license and copyright terms therein and release your contribution under these terms.</p>
+</section>
+<hr class="docutils" />
+<section id="issues-discussions">
+<h2>Issues / Discussions<a class="headerlink" href="#issues-discussions" title="Link to this heading">#</a></h2>
+<p>Please use the <a class="reference external" href="https://github.com/openvinotoolkit/openvino_xai/issues/new">Issues tab</a> for bug reports, feature requests, or any questions.</p>
+</section>
+<hr class="docutils" />
+<section id="disclaimer">
+<h2>Disclaimer<a class="headerlink" href="#disclaimer" title="Link to this heading">#</a></h2>
+<p>Intel is committed to respecting human rights and avoiding complicity in human rights abuses.
+See Intel’s <a class="reference external" href="https://www.intel.com/content/www/us/en/policy/policy-human-rights.html">Global Human Rights Principles</a>.
+Intel’s products and software are intended only to be used in applications that do not cause or contribute to a violation of an internationally recognized human right.</p>
+</section>
+<hr class="docutils" />
+<section id="contributing">
+<h2>Contributing<a class="headerlink" href="#contributing" title="Link to this heading">#</a></h2>
+<p>For those who would like to contribute to the library, please refer to the <a class="reference internal" href="#CONTRIBUTING.md"><span class="xref myst">contribution guide</span></a> for details.</p>
+<p>Thank you! We appreciate your support!</p>
+<a href="https://github.com/openvinotoolkit/openvino_xai/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=openvinotoolkit/openvino_xai" />
+</a>
+<hr class="docutils" />
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Welcome to OpenVINO™ Explainable AI Toolkit’s documentation!</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="user-guide.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">OpenVINO™ Explainable AI Toolkit User Guide</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start">Quick Start</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#running-example-scripts">Running example scripts</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#features">Features</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#scope-of-explained-models">Scope of explained models</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#white-box-fast-model-dependent">White-box (fast, model-dependent)</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#classification">Classification</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#black-box-slow-model-agnostic">Black-box (slow, model-agnostic)</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Classification</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#updates">Updates</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#v1-0-0">v1.0.0</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#release-history">Release History</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#license">License</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#issues-discussions">Issues / Discussions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#disclaimer">Disclaimer</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contributing">Contributing</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/getting-started.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024, Intel(R) Corporation.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.3.7.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.4.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
