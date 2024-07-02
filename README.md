@@ -4,11 +4,11 @@
 
 ---
 
-[Install](#installation)
-[Quick start](#quick-start)
-[Features](#features)
-[Updates](#updates)
-[License](#license)
+[Install](#installation) •
+[Quick start](#quick-start) •
+[Features](#features) •
+[Updates](#updates) •
+[License](#license) •
 [Documentation](https://openvinotoolkit.github.io/openvino_xai/)
 
 ---
@@ -19,6 +19,12 @@
 
 **OpenVINO™ Explainable AI (XAI) Toolkit** provides a suite of XAI algorithms for visual explanation of
 [OpenVINO™](https://github.com/openvinotoolkit/openvino) Intermediate Representation (IR) models.
+
+Given OpenVINO models and input images, OpenVINO XAI generates **saliency maps**
+which highlights regions of the interest in the inputs from the model perspective
+to help users understand the reason why the complex AI models output such outputs.
+
+---
 
 ## Installation
 
@@ -51,6 +57,8 @@ pytest -v -s ./tests/
 # Run code quality checks
 pre-commit run --all-files
 ```
+
+---
 
 ## Quick Start
 
@@ -129,6 +137,8 @@ pytest tests/test_classification.py
 python examples/run_classification.py .data/otx_models/mlc_mobilenetv3_large_voc.xml \
 tests/assets/cheetah_person.jpg --output output
 ```
+
+---
 
 ## Features
 
