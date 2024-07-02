@@ -1,13 +1,24 @@
+<div align="center">
+
 # OpenVINO™ Explainable AI Toolkit - OpenVINO XAI
+
+---
+
+[Install](#installation)
+[Quick start](#quick-start)
+[Features](#features)
+[Updates](#updates)
+[License](#license)
+[Documentation](https://openvinotoolkit.github.io/openvino_xai/)
+
+---
+
+</div>
 
 ![OpenVINO XAI Concept](docs/images/ovxai-concept.svg)
 
 **OpenVINO™ Explainable AI (XAI) Toolkit** provides a suite of XAI algorithms for visual explanation of
 [OpenVINO™](https://github.com/openvinotoolkit/openvino) Intermediate Representation (IR) models.
-
-## Documentation
-
-OpenVINO XAI API documentation can be found [here](https://openvinotoolkit.github.io/openvino_xai/).
 
 ## Installation
 
@@ -41,8 +52,7 @@ pytest -v -s ./tests/
 pre-commit run --all-files
 ```
 
-
-## Usage
+## Quick Start
 
 To explain [OpenVINO™](https://github.com/openvinotoolkit/openvino) Intermediate Representation (IR) you only need
 preprocessing function (and sometimes postprocessing).
@@ -105,7 +115,7 @@ explanation.saliency_map: Dict[int: np.ndarray]  # key - class id, value - proce
 explanation.save("output_path", "name")
 ```
 
-See more usage scenarios in [user-guide.md](docs/source/user-guide.md) and [examples](./examples).
+See more usage scenarios in the [user guide](docs/source/user-guide.md) and [examples](./examples).
 
 ### Running example scripts
 
@@ -120,7 +130,9 @@ python examples/run_classification.py .data/otx_models/mlc_mobilenetv3_large_voc
 tests/assets/cheetah_person.jpg --output output
 ```
 
-## Scope of explained models
+## Features
+
+### Scope of explained models
 
 Models from [Pytorch Image Models (timm)](https://github.com/huggingface/pytorch-image-models) are used
 for classification benchmark.
@@ -145,3 +157,54 @@ Black-box explainer support all types of models that output logits (e.g. CNNs, t
 
 For more details (statistic, model list, samples of generated saliency maps) see
 [#20](https://github.com/openvinotoolkit/openvino_xai/pull/20).
+
+---
+
+## Updates
+
+### v1.0.0
+
+* Support generation of classification and detection per-class and per-image saliency maps
+* Enable white-box (ReciproCAM) and black-box (RISE) eXplainable AI algorithms
+* Support CNN and transformer-based architectures (validation on diverse set of timm models)
+* Enable Explainer (stateful object) as the main interface for XAI algorithms
+* Expose `insert_xai` functional API to support XAI head insertion for OpenVINO IR models
+
+### Release History
+
+Please refer to the [CHANGELOG.md](CHANGELOG.md)
+
+---
+
+## License
+
+OpenVINO™ Toolkit is licensed under [Apache License Version 2.0](LICENSE).
+By contributing to the project, you agree to the license and copyright terms therein and release your contribution under these terms.
+
+---
+
+## Issues / Discussions
+
+Please use [Issues](https://github.com/openvinotoolkit/openvino_xai/issues/new) tab for your bug reporting, feature request, or any questions.
+
+---
+
+## Disclaimer
+
+Intel is committed to respecting human rights and avoiding complicity in human rights abuses.
+See Intel's [Global Human Rights Principles](https://www.intel.com/content/www/us/en/policy/policy-human-rights.html).
+Intel's products and software are intended only to be used in applications that do not cause or contribute to a violation of an internationally recognized human right.
+
+---
+
+## Contributing
+
+For those who would like to contribute to the library, see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
+Thank you! We appreciate your support!
+
+<a href="https://github.com/openvinotoolkit/openvino_xai/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=openvinotoolkit/openvino_xai" />
+</a>
+
+---
