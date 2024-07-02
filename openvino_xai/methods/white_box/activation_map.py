@@ -25,6 +25,8 @@ class ActivationMap(WhiteBoxMethod):
     :type target_layer: str
     :param embed_scaling: Whether to scale output or not.
     :type embed_scaling: bool
+    :param device_name: Device type name.
+    :type device_name: str
     :param prepare_model: Loading (compiling) the model prior to inference.
     :type prepare_model: bool
     """
@@ -35,9 +37,10 @@ class ActivationMap(WhiteBoxMethod):
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         target_layer: str | None = None,
         embed_scaling: bool = True,
+        device_name: str = "CPU",
         prepare_model: bool = True,
     ):
-        super().__init__(model, preprocess_fn, embed_scaling)
+        super().__init__(model=model, preprocess_fn=preprocess_fn, embed_scaling=embed_scaling, device_name=device_name)
         self.per_class = False
         self.model_type = ModelType.CNN
         self._target_layer = target_layer

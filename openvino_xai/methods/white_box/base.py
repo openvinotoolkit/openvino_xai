@@ -1,6 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import copy
 from abc import abstractmethod
 from typing import Callable
 from venv import logger
@@ -29,6 +30,8 @@ class WhiteBoxMethod(MethodBase):
     :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
     :param embed_scaling: Whether to scale output or not.
     :type embed_scaling: bool
+    :param device_name: Device type name.
+    :type device_name: str
     """
 
     def __init__(
@@ -36,9 +39,10 @@ class WhiteBoxMethod(MethodBase):
         model: ov.Model,
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         embed_scaling: bool = True,
+        device_name: str = "CPU",
     ):
-        super().__init__(preprocess_fn=preprocess_fn)
-        self._model_ori = model
+        super().__init__(preprocess_fn=preprocess_fn, device_name=device_name)
+        self._model_ori = copy.deepcopy(model)
         self.preprocess_fn = preprocess_fn
         self.embed_scaling = embed_scaling
 
