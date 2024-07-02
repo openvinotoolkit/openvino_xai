@@ -1,0 +1,80 @@
+name: Build Docs
+
+on:
+  workflow_dispatch: # run on request (no need for PR)
+  push:
+    branches:
+      - develop
+      - releases/*
+
+# Declare default permissions as read only.
+permissions: read-all
+
+jobs:
+  Build-Docs:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
+      - name: Set up Python
+        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5.1.0
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: python -m pip install .[doc]
+      - name: Build docs
+        working-directory: ./docs
+        run: make html
+      - name: Set up gh-pages branch
+        run: |
+          existed_in_remote=$(git ls-remote --heads origin gh-pages)
+          if [[ -z ${existed_in_remote} ]]; then
+            echo "Creating gh-pages branch"
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            git checkout --orphan gh-pages
+            git reset --hard
+            touch .nojekyll
+            git add .nojekyll
+            git commit -m "Initializing gh-pages branch"
+            git push origin gh-pages
+            echo "Created gh-pages branch"
+          else
+            echo "Branch gh-pages already exists"
+          fi
+      - name: Commit docs to gh-pages branch
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git fetch
+          git checkout gh-pages
+          mkdir -p /tmp/docs_build
+          cp -r docs/build/html/* /tmp/docs_build/
+          if [[ ${{github.event_name}} == 'workflow_dispatch' ]]; then
+            echo RELEASE_VERSION="test_build" >> $GITHUB_ENV
+          else
+            echo RELEASE_VERSION=${GITHUB_REF#refs/*/} >> $GITHUB_ENV
+          fi
+          rm -rf ${{ env.RELEASE_VERSION }}
+          mkdir -p ${{ env.RELEASE_VERSION }}
+          cp -r /tmp/docs_build/* ./${{ env.RELEASE_VERSION }}
+          rm -rf /tmp/docs_build
+          echo '<html><head><meta http-equiv="refresh" content="0; url=stable/" /></head></html>' > index.html
+          git add index.html ${{ env.RELEASE_VERSION }}
+          if [[ ${{ env.RELEASE_VERSION }} == 'develop' ]]; then
+            ln -sfn ${{ env.RELEASE_VERSION }} latest
+            git add ./latest
+          elif [[ ${{ env.RELEASE_VERSION }} =~ ^releases/* ]]; then
+            ln -sfn ${{ env.RELEASE_VERSION }} stable
+            git add ./stable
+          fi
+          git commit -m "Update documentation" -a || true
+      - name: Publish docs to github.io
+        uses: ad-m/github-push-action@fcea09907c44d7a7a3331c9c04080d55d87c95fe # master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: gh-pages
