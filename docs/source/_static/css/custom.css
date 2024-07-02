@@ -140,3 +140,5 @@ nav.bd-links p.bd-links__title {
 .video {
   text-align: center;
 }
+
+.markdown-body img { background-color: transparent !important }

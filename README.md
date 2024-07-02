@@ -1,5 +1,7 @@
 # OpenVINO™ Explainable AI Toolkit - OpenVINO XAI
 
+![OpenVINO XAI Concept](docs/images/ovxai-concept.svg)
+
 **OpenVINO™ Explainable AI (XAI) Toolkit** provides a suite of XAI algorithms for visual explanation of
 [OpenVINO™](https://github.com/openvinotoolkit/openvino) Intermediate Representation (IR) models.
 
