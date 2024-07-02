@@ -13,9 +13,11 @@ __pycache__
 
 # Distribution / packaging
 build/
+_build/
 dist/
 *egg-info
 .eggs/
+generated
 
 # Default model directory
 otx_models/

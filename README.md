@@ -1,19 +1,21 @@
-# OpenVINO™ Explainable AI Toolkit
+# OpenVINO™ Explainable AI Toolkit - OpenVINO XAI
+
+![OpenVINO XAI Concept](docs/images/ovxai-concept.svg)
 
 **OpenVINO™ Explainable AI (XAI) Toolkit** provides a suite of XAI algorithms for visual explanation of
 [OpenVINO™](https://github.com/openvinotoolkit/openvino) Intermediate Representation (IR) models.
 
 ## Documentation
 
-OpenVINO XAI API documentation can be found [here](https://curly-couscous-ovjvm29.pages.github.io/).
+OpenVINO XAI API documentation can be found [here](https://openvinotoolkit.github.io/openvino_xai/).
 
 ## Installation
 
-- Set up an isolated python environment:
+- Set up an isolated python environment for python 3.10 and higher:
 
 ```bash
 # Create virtual env.
-python3 -m venv .ovxai
+python3.10 -m venv .ovxai
 
 # Activate virtual env.
 source .ovxai/bin/activate
@@ -56,6 +58,8 @@ explanation = explainer(data, explanation_parameters)
 
 By default the model will be explained using `auto mode`.
 Under the hood of the `auto mode`: will try to run `white-box mode`, if fails => will run `black-box mode`.
+
+![Auto mode process](docs/images/auto_explain_mode.jpg)
 
 Generating saliency maps involves model inference. Explainer will perform model inference.
 To infer, `preprocess_fn` and `postprocess_fn` are requested from the user.
@@ -101,7 +105,7 @@ explanation.saliency_map: Dict[int: np.ndarray]  # key - class id, value - proce
 explanation.save("output_path", "name")
 ```
 
-See more usage scenarios in [Usage.md](.docs/Usage.md) and [examples](./examples).
+See more usage scenarios in [user-guide.md](docs/source/user-guide.md) and [examples](./examples).
 
 ### Running example scripts
 
@@ -130,7 +134,7 @@ Currently, we support only CNN-based architectures in white-box mode,
 transformers will be supported in the upcoming weeks.
 
 For more details (statistic, model list, samples of generated saliency maps) see
-[#11](https://github.com/intel-sandbox/openvino_xai/pull/11).
+[#20](https://github.com/openvinotoolkit/openvino_xai/pull/20).
 
 ### Black-box (slow, model-agnostic)
 
@@ -140,4 +144,4 @@ We benchmarked black-box explanation (using RISE explain method) using 528 CNN m
 Black-box explainer support all types of models that output logits (e.g. CNNs, transformers, etc.).
 
 For more details (statistic, model list, samples of generated saliency maps) see
-[#23](https://github.com/intel-sandbox/openvino_xai/pull/23).
+[#20](https://github.com/openvinotoolkit/openvino_xai/pull/20).
