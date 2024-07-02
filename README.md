@@ -201,7 +201,7 @@ For more details (statistic, model list, samples of generated saliency maps) see
 
 ### Release History
 
-Please refer to the [CHANGELOG.md](CHANGELOG.md)
+Please refer to the [change logs](CHANGELOG.md) for the full release history.
 
 ---
 
@@ -214,7 +214,7 @@ By contributing to the project, you agree to the license and copyright terms the
 
 ## Issues / Discussions
 
-Please use [Issues](https://github.com/openvinotoolkit/openvino_xai/issues/new) tab for your bug reporting, feature request, or any questions.
+Please use the [Issues tab](https://github.com/openvinotoolkit/openvino_xai/issues/new) for bug reports, feature requests, or any questions.
 
 ---
 
@@ -228,7 +228,7 @@ Intel's products and software are intended only to be used in applications that 
 
 ## Contributing
 
-For those who would like to contribute to the library, see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+For those who would like to contribute to the library, please refer to the [contribution guide](CONTRIBUTING.md) for details.
 
 Thank you! We appreciate your support!
 
