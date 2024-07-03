@@ -60,7 +60,7 @@ At the moment, *Image Classification* and *Object Detection* tasks are supported
 
 Most of CNNs and Transformer models from [Pytorch Image Models (timm)](https://github.com/huggingface/pytorch-image-models) are supported and validated.
 
-Please refer to the following kwnon issues for unsupported models.
+Please refer to the following known issues for unsupported models.
 
 * [Runtime error from ONNX / OpenVINO IR models while conversion or inference for XAI (#29)](https://github.com/openvinotoolkit/openvino_xai/issues/29)
 * [Models not supported by white box XAI methods (#30)](https://github.com/openvinotoolkit/openvino_xai/issues/30)
