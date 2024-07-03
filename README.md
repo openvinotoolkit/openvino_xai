@@ -126,24 +126,11 @@ pre-commit run --all-files
 
 ### Hello, OpenVINO XAI!
 
-To explain [OpenVINO™](https://github.com/openvinotoolkit/openvino) Intermediate Representation (IR) you only need
-preprocessing function (and sometimes postprocessing).
+Let's imagine the case that our OpenVINO IR model is up and running on a inference pipeline.
+While watching the outputs, we may want to analyze the model's behavior for debugging or understanding purposes.
 
-```python
-explainer = xai.Explainer(
-    model,
-    task=xai.Task.CLASSIFICATION,
-    preprocess_fn=preprocess_fn,
-)
-explanation = explainer(data, explanation_parameters)
-```
-
-By default the model will be explained using `auto mode`.
-Under the hood of the `auto mode`: will try to run `White-Box mode`, if fails => will run `Black-Box mode`.
-
-Generating saliency maps involves model inference. Explainer will perform model inference.
-To infer, `preprocess_fn` and `postprocess_fn` are requested from the user.
-`preprocess_fn` is always required, `postprocess_fn` is required only for Black-Box.
+By using the **OpenVINO XAI** `Explainer`, we can visualize why the model outputs such responses.
+In this examples, we are trying to know the reason why the model outputs a "cheetah" label for given input image.
 
 ```python
 import cv2
@@ -151,9 +138,8 @@ import numpy as np
 import openvino.runtime as ov
 import openvino_xai as xai
 
-
 # Load the model
-ov_model: ov.Model = ov.Core().read_model("path/to/model.xml")
+ov_model: ov.Model = ov.Core().read_model("mobilenet_v3.xml")
 
 # Load the image to be analized
 image: np.ndarray = cv2.imread("tests/assets/cheetah_person.jpg")
@@ -173,9 +159,6 @@ explanation: xai.Explanation = explainer(
     overlay=True,  # saliency map overlay over the input image, defaults to False
 )
 
-explanation: Explanation
-explanation.saliency_map: Dict[int: np.ndarray]  # key - class id, value - processed saliency map e.g. 354x500x3
-
 # Save saliency maps to output directory
 explanation.save(dir_path="./output")
 ```
@@ -184,18 +167,21 @@ Original image | Explained image
 ---------------|----------------
 ![Oringinal images](tests/assets/cheetah_person.jpg) | ![Explained image](docs/source/_static/xai-cheetah.png)
 
+We can see that model model is focusing on the body or skin area of the animals to tell if this image contains actual cheetahs.
+
 ### More advanced use-cases
 
 Users could tweak the basic use-case according to their purpose, which include but not limited to:
 
 * Select XAI mode (White-Box or Black-Box) or even specific method which are automatically decided by default
-* Provide custom model pre/post processing functions
+* Provide custom model pre/post processing functions like resize and normalizations which the model expects
 * Customize output image visualization options
+* Explain multiple class targets and images
 
 Please find more options and scenarios in the following links:
 
 * [OpenVINO XAI User Guide](docs/source/user-guide.md)
-* [OpenVINO Notebook - XAI Deep Dive]()
+* (TBD) [OpenVINO Notebook - XAI Deep Dive]()
 
 ### Playing with the examples
 
