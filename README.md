@@ -178,12 +178,25 @@ explanation.save("output_path", "name")
 ```
 ![OpenVINO XAI Concept](docs/source/_static/xai-cheetah.png)
 
-See more usage scenarios in the [user guide](docs/source/user-guide.md) and [examples](./examples).
+### More advanced use-cases
+
+Users could tweak the basic use-case according to their purpose, which include but not limited to:
+
+* Select XAI mode (White-Box or Black-Box) or even specific method which are automatically decided by default
+* Provide custom model pre/post processing functions
+* Customize output image visualization options
+
+Please find more options and scenarios in the following links:
+
+* [OpenVINO XAI User Guide](docs/source/user-guide.md)
+* [OpenVINO Notebook - XAI Deep Dive]()
 
 ### Running example scripts
 
-```python
-# Retrieve OTX models by running tests
+Please look around the runnable [example scripts](./examples) and play with them to get used to the `Exaplainer` APIs.
+
+```bash
+# Prepare models by running tests (need "pip install openvino_xai[dev]" extra option)
 # Models are downloaded and stored in .data/otx_models
 pytest tests/test_classification.py
 
