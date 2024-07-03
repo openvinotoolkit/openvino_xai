@@ -54,7 +54,7 @@ html_theme_options = {
         {
             "name": "GitHub",
             "url": "https://github.com/openvinotoolkit/openvino_xai",
-            "icon": "_static/logos/github_icon.png",
+            "icon": "_static/github_icon.png",
             "type": "local",
         },
     ],
@@ -65,7 +65,7 @@ html_sidebars = {
    ],
 }
 html_css_files = [
-    "css/custom.css",
+    "custom.css",
 ]
 
 

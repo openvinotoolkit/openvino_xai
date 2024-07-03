@@ -15,7 +15,7 @@
 
 </div>
 
-![OpenVINO XAI Concept](docs/images/ovxai-concept.svg)
+![OpenVINO XAI Concept](docs/source/_static/ovxai-concept.svg)
 
 **OpenVINO™ Explainable AI (XAI) Toolkit** provides a suite of XAI algorithms for visual explanation of
 [**OpenVINO™**](https://github.com/openvinotoolkit/openvino) Intermediate Representation (IR) models.
@@ -96,8 +96,6 @@ explanation = explainer(data, explanation_parameters)
 By default the model will be explained using `auto mode`.
 Under the hood of the `auto mode`: will try to run `white-box mode`, if fails => will run `black-box mode`.
 
-![Auto mode process](docs/images/auto_explain_mode.jpg)
-
 Generating saliency maps involves model inference. Explainer will perform model inference.
 To infer, `preprocess_fn` and `postprocess_fn` are requested from the user.
 `preprocess_fn` is always required, `postprocess_fn` is required only for black-box.
@@ -141,6 +139,7 @@ explanation.saliency_map: Dict[int: np.ndarray]  # key - class id, value - proce
 # Saving saliency maps
 explanation.save("output_path", "name")
 ```
+![OpenVINO XAI Concept](docs/source/_static/xai-cheetah.png)
 
 See more usage scenarios in the [user guide](docs/source/user-guide.md) and [examples](./examples).
 
