@@ -155,7 +155,7 @@ explainer = xai.Explainer(
 # Generate saliency map for the label of interest
 explanation: xai.Explanation = explainer(
     data=image,
-    targets=293,  # (cheetah), accepts single or list of targets
+    targets=293,  # (cheetah), accepts single int or list of targets (ints or strings)
     overlay=True,  # saliency map overlay over the input image, defaults to False
 )
 
