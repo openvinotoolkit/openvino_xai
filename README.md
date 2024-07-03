@@ -131,7 +131,7 @@ Let's imagine the case that our OpenVINO IR model is up and running on a inferen
 While watching the outputs, we may want to analyze the model's behavior for debugging or understanding purposes.
 
 By using the **OpenVINO XAI** `Explainer`, we can visualize why the model gives such responses.
-In this examples, we are trying to know the reason why the model outputs a `cheetah` label for the given input image.
+In this example, we are trying to know the reason why the model outputs a `cheetah` label for the given input image.
 
 ```python
 import cv2
@@ -142,7 +142,7 @@ import openvino_xai as xai
 # Load the model
 ov_model: ov.Model = ov.Core().read_model("mobilenet_v3.xml")
 
-# Load the image to be analized
+# Load the image to be analyzed
 image: np.ndarray = cv2.imread("tests/assets/cheetah_person.jpg")
 image = cv2.resize(image, dsize=(224, 224))
 image = np.expand_dims(image, 0)
