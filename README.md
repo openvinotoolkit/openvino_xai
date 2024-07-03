@@ -124,7 +124,7 @@ pre-commit run --all-files
 
 ## Quick Start
 
-### Hello, OpenVINO XAI!
+### Hello, OpenVINO XAI
 
 Let's imagine the case that our OpenVINO IR model is up and running on a inference pipeline.
 While watching the outputs, we may want to analyze the model's behavior for debugging or understanding purposes.
@@ -181,7 +181,8 @@ Users could tweak the basic use-case according to their purpose, which include b
 Please find more options and scenarios in the following links:
 
 * [OpenVINO XAI User Guide](docs/source/user-guide.md)
-* (TBD) [OpenVINO Notebook - XAI Deep Dive]()
+* (TBD) [OpenVINO Notebook - XAI Basic](n/a)
+* (TBD) [OpenVINO Notebook - XAI Deep Dive](n/a)
 
 ### Playing with the examples
 
