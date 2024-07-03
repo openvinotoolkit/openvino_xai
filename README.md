@@ -130,7 +130,7 @@ Let's imagine the case that our OpenVINO IR model is up and running on a inferen
 While watching the outputs, we may want to analyze the model's behavior for debugging or understanding purposes.
 
 By using the **OpenVINO XAI** `Explainer`, we can visualize why the model outputs such responses.
-In this examples, we are trying to know the reason why the model outputs a "cheetah" label for given input image.
+In this examples, we are trying to know the reason why the model outputs a `cheetah` label for the given input image.
 
 ```python
 import cv2
