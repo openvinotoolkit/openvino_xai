@@ -118,6 +118,8 @@ pre-commit run --all-files
 
 ## Quick Start
 
+### Hello, OpenVINO XAI!
+
 To explain [OpenVINO™](https://github.com/openvinotoolkit/openvino) Intermediate Representation (IR) you only need
 preprocessing function (and sometimes postprocessing).
 
@@ -141,42 +143,40 @@ To infer, `preprocess_fn` and `postprocess_fn` are requested from the user.
 import cv2
 import numpy as np
 import openvino.runtime as ov
-
 import openvino_xai as xai
-from openvino_xai.explainer.explanation_parameters import ExplanationParameters
 
 
-def preprocess_fn(x: np.ndarray) -> np.ndarray:
-    # Implementing own pre-process function based on model's implementation
-    x = cv2.resize(src=x, dsize=(224, 224))
-    x = np.expand_dims(x, 0)
-    return x
+# Load the model
+ov_model: ov.Model = ov.Core().read_model("path/to/model.xml")
 
+# Load the image to be analized
+image: np.ndarray = cv2.imread("tests/assets/cheetah_person.jpg")
+image = cv2.resize(image, dsize=(224, 224))
+image = np.expand_dims(image, 0)
 
-# Creating model
-model = ov.Core().read_model("path/to/model.xml")  # type: ov.Model
-
-# Explainer object will prepare and load the model once in the beginning
+# Create the Explainer object
 explainer = xai.Explainer(
-    model,
+    model=ov_model,
     task=xai.Task.CLASSIFICATION,
-    preprocess_fn=preprocess_fn,
 )
 
-# Generate and process saliency maps (as many as required, sequentially)
-image = cv2.imread("path/to/image.jpg")
-explanation_parameters = ExplanationParameters(
-    target_explain_labels=[11, 14],  # indices or string labels to explain
+# Generate saliency map for the label of interest
+explanation: xai.Explanation = explainer(
+    data=image,
+    targets=293,  # (cheetah), accepts single or list of targets
+    overlay=True,  # saliency map overlay over the input image, defaults to False
 )
-explanation = explainer(image, explanation_parameters)
 
 explanation: Explanation
 explanation.saliency_map: Dict[int: np.ndarray]  # key - class id, value - processed saliency map e.g. 354x500x3
 
-# Saving saliency maps
-explanation.save("output_path", "name")
+# Save saliency maps to output directory
+explanation.save(dir_path="./output")
 ```
-![OpenVINO XAI Concept](docs/source/_static/xai-cheetah.png)
+
+Original image | Explained image
+---------------|----------------
+![Oringinal images](tests/assets/cheetah_person.jpg) | ![Explained image](docs/source/_static/xai-cheetah.png)
 
 ### More advanced use-cases
 
@@ -191,9 +191,9 @@ Please find more options and scenarios in the following links:
 * [OpenVINO XAI User Guide](docs/source/user-guide.md)
 * [OpenVINO Notebook - XAI Deep Dive]()
 
-### Running example scripts
+### Playing with the examples
 
-Please look around the runnable [example scripts](./examples) and play with them to get used to the `Exaplainer` APIs.
+Please look around the runnable [example scripts](./examples) and play with them to get used to the `Explainer` APIs.
 
 ```bash
 # Prepare models by running tests (need "pip install openvino_xai[dev]" extra option)
