@@ -200,9 +200,17 @@ tests/assets/cheetah_person.jpg --output output
 
 ---
 
-## Issues / Discussions
+## Contributing
+
+For those who would like to contribute to the library, please refer to the [contribution guide](CONTRIBUTING.md) for details.
 
 Please let us know via the [Issues tab](https://github.com/openvinotoolkit/openvino_xai/issues/new) if you have any issues, feature requests, or questions.
+
+Thank you! We appreciate your support!
+
+<a href="https://github.com/openvinotoolkit/openvino_xai/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=openvinotoolkit/openvino_xai" />
+</a>
 
 ---
 
@@ -218,17 +226,5 @@ By contributing to the project, you agree to the license and copyright terms the
 Intel is committed to respecting human rights and avoiding complicity in human rights abuses.
 See Intel's [Global Human Rights Principles](https://www.intel.com/content/www/us/en/policy/policy-human-rights.html).
 Intel's products and software are intended only to be used in applications that do not cause or contribute to a violation of an internationally recognized human right.
-
----
-
-## Contributing
-
-For those who would like to contribute to the library, please refer to the [contribution guide](CONTRIBUTING.md) for details.
-
-Thank you! We appreciate your support!
-
-<a href="https://github.com/openvinotoolkit/openvino_xai/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=openvinotoolkit/openvino_xai" />
-</a>
 
 ---
