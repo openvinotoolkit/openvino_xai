@@ -37,8 +37,8 @@ to help users understand the reason why the complex AI models output such respon
 
 * Support generation of classification and detection per-class and per-image saliency maps
 * Enable White-Box ([ReciproCAM](https://arxiv.org/abs/2209.14074)) and Black-Box ([RISE](https://arxiv.org/abs/1806.07421v3)) eXplainable AI algorithms
-* Support CNNs and Transformer-based architectures (validation on diverse set of timm models)
-* Enable Explainer (stateful object) as the main interface for XAI algorithms
+* Support CNNs and Transformer-based architectures (validation on diverse set of [timm](https://github.com/huggingface/pytorch-image-models) models)
+* Enable `Explainer` (stateful object) as the main interface for XAI algorithms
 * Expose `insert_xai` functional API to support XAI head insertion for OpenVINO IR models
 
 Please refer to the [change logs](CHANGELOG.md) for the full release history.
@@ -60,7 +60,7 @@ At the moment, *Image Classification* and *Object Detection* tasks are supported
 
 Most of CNNs and Transformer models from [Pytorch Image Models (timm)](https://github.com/huggingface/pytorch-image-models) are supported and validated.
 
-Please refer to the following kwnon issues for unsupported models.
+Please refer to the following known issues for unsupported models.
 
 * [Runtime error from ONNX / OpenVINO IR models while conversion or inference for XAI (#29)](https://github.com/openvinotoolkit/openvino_xai/issues/29)
 * [Models not supported by white box XAI methods (#30)](https://github.com/openvinotoolkit/openvino_xai/issues/30)
@@ -129,8 +129,8 @@ pre-commit run --all-files
 Let's imagine the case that our OpenVINO IR model is up and running on a inference pipeline.
 While watching the outputs, we may want to analyze the model's behavior for debugging or understanding purposes.
 
-By using the **OpenVINO XAI** `Explainer`, we can visualize why the model outputs such responses.
-In this examples, we are trying to know the reason why the model outputs a "cheetah" label for given input image.
+By using the **OpenVINO XAI** `Explainer`, we can visualize why the model gives such responses.
+In this examples, we are trying to know the reason why the model outputs a `cheetah` label for the given input image.
 
 ```python
 import cv2
@@ -155,7 +155,7 @@ explainer = xai.Explainer(
 # Generate saliency map for the label of interest
 explanation: xai.Explanation = explainer(
     data=image,
-    targets=293,  # (cheetah), accepts single or list of targets
+    targets=293,  # (cheetah), accepts single int or list of targets (ints or strings)
     overlay=True,  # saliency map overlay over the input image, defaults to False
 )
 
@@ -176,7 +176,8 @@ Users could tweak the basic use-case according to their purpose, which include b
 * Select XAI mode (White-Box or Black-Box) or even specific method which are automatically decided by default
 * Provide custom model pre/post processing functions like resize and normalizations which the model expects
 * Customize output image visualization options
-* Explain multiple class targets and images
+* Explain multiple class targets, passing them as label indexes or as actual label names
+* Explain multiple images
 
 Please find more options and scenarios in the following links:
 
