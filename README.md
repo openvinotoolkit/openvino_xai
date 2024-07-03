@@ -4,12 +4,11 @@
 
 ---
 
+[Features](#features) •
 [Install](#installation) •
 [Quick start](#quick-start) •
-[Features](#features) •
-[Updates](#updates) •
 [License](#license) •
-[Documentation](https://openvinotoolkit.github.io/openvino_xai/)
+[Docs](https://openvinotoolkit.github.io/openvino_xai/)
 
 ---
 
@@ -23,6 +22,43 @@
 Given **OpenVINO** models and input images, **OpenVINO XAI** generates **saliency maps**
 which highlights regions of the interest in the inputs from the models' perspective
 to help users understand the reason why the complex AI models output such responses.
+
+---
+
+## Features
+
+### What's new in v1.0.0
+
+* Support generation of classification and detection per-class and per-image saliency maps
+* Enable white-box (ReciproCAM) and black-box (RISE) eXplainable AI algorithms
+* Support CNN and transformer-based architectures (validation on diverse set of timm models)
+* Enable Explainer (stateful object) as the main interface for XAI algorithms
+* Expose `insert_xai` functional API to support XAI head insertion for OpenVINO IR models
+
+Please refer to the [change logs](CHANGELOG.md) for the full release history.
+
+### Supported XAI methods
+
+At the moment, *Image Classification* and *Object Detection* tasks are supported for the *Computer Vision* domain.
+*Black-Box* (model agnostic but slow) methods and *White-Box* (model specific but fast) methods are supported:
+
+| Domain          | Task                 | Type      | Algorithm           | Links |
+|-----------------|----------------------|-----------|---------------------|-------|
+| Comptuer Vision | Image Classification | Black-Box | RISE                | [arxiv](https://arxiv.org/abs/1806.07421v3) / [src](openvino_xai/methods/black_box/rise.py) |
+|                 |                      | White-Box | ReciproCAM          | [arxiv](https://arxiv.org/abs/2209.14074) / [src](openvino_xai/methods/white_box/recipro_cam.py) |
+|                 |                      |           | VITReciproCAM       | [arxiv](https://arxiv.org/abs/2310.02588) / [src](openvino_xai/methods/white_box/recipro_cam.py) |
+|                 |                      |           | ActivationMap       | experimental / [src](openvino_xai/methods/white_box/activation_map.py) |
+|                 | Object Detection     |           | ClassProbabilityMap | experimental / [src](openvino_xai/methods/white_box/det_class_probability_map.py) |
+
+### Supported explainable models
+
+Most of CNNs and Transformer models from [Pytorch Image Models (timm)](https://github.com/huggingface/pytorch-image-models) are supported and validated.
+
+Please refer to the following kwnon issues for unsupported models.
+* [Runtime error from ONNX / OpenVINO IR models while conversion or inference for XAI (#29)](https://github.com/openvinotoolkit/openvino_xai/issues/29)
+* [Models not supported by white box XAI methods (#30)](https://github.com/openvinotoolkit/openvino_xai/issues/30)
+
+> **_NOTE:_**  GenAI / LLMs would be also supported incrementally in the upcoming releases.
 
 ---
 
@@ -155,52 +191,6 @@ pytest tests/test_classification.py
 python examples/run_classification.py .data/otx_models/mlc_mobilenetv3_large_voc.xml \
 tests/assets/cheetah_person.jpg --output output
 ```
-
----
-
-## Features
-
-### Scope of explained models
-
-Models from [Pytorch Image Models (timm)](https://github.com/huggingface/pytorch-image-models) are used
-for classification benchmark.
-
-### White-box (fast, model-dependent)
-
-#### Classification
-
-We benchmarked white-box explanation (using ReciproCAM explain method) using 528 models.
-Currently, we support only CNN-based architectures in white-box mode,
-transformers will be supported in the upcoming weeks.
-
-For more details (statistic, model list, samples of generated saliency maps) see
-[#20](https://github.com/openvinotoolkit/openvino_xai/pull/20).
-
-### Black-box (slow, model-agnostic)
-
-#### Classification
-
-We benchmarked black-box explanation (using RISE explain method) using 528 CNN models and 115 transformer-based models.
-Black-box explainer support all types of models that output logits (e.g. CNNs, transformers, etc.).
-
-For more details (statistic, model list, samples of generated saliency maps) see
-[#20](https://github.com/openvinotoolkit/openvino_xai/pull/20).
-
----
-
-## Updates
-
-### v1.0.0
-
-* Support generation of classification and detection per-class and per-image saliency maps
-* Enable white-box (ReciproCAM) and black-box (RISE) eXplainable AI algorithms
-* Support CNN and transformer-based architectures (validation on diverse set of timm models)
-* Enable Explainer (stateful object) as the main interface for XAI algorithms
-* Expose `insert_xai` functional API to support XAI head insertion for OpenVINO IR models
-
-### Release History
-
-Please refer to the [change logs](CHANGELOG.md) for the full release history.
 
 ---
 
