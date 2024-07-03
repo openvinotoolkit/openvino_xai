@@ -8,7 +8,7 @@
 [Install](#installation) •
 [Quick Start](#quick-start) •
 [License](#license) •
-[Documentation](https://openvinotoolkit.github.io/openvino_xai/)
+[Documentation](https://openvinotoolkit.github.io/openvino_xai/releases/1.0.0)
 
 ![Python](https://img.shields.io/badge/python-3.10%2B-green)
 [![OpenVINO](https://img.shields.io/badge/openvino-2024.2-purple)](https://pypi.org/project/openvino/)
