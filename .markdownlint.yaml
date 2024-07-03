@@ -33,6 +33,9 @@ MD040: false
 # Some md files have comments or links at the top of the files.
 MD041: false # First line in file should be a top level header
 
+# Cases like "> **_NOTE:_**"
+MD049: false # Bold AND Italic
+
 #===============================================================================
 # Exclude rules for pragmatic reasons.
 
