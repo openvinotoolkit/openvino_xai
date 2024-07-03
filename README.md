@@ -6,9 +6,9 @@
 
 [Features](#features) •
 [Install](#installation) •
-[Quick start](#quick-start) •
+[Quick Start](#quick-start) •
 [License](#license) •
-[Docs](https://openvinotoolkit.github.io/openvino_xai/)
+[Documentation](https://openvinotoolkit.github.io/openvino_xai/)
 
 ---
 
@@ -31,7 +31,7 @@ to help users understand the reason why the complex AI models output such respon
 
 * Support generation of classification and detection per-class and per-image saliency maps
 * Enable white-box (ReciproCAM) and black-box (RISE) eXplainable AI algorithms
-* Support CNN and transformer-based architectures (validation on diverse set of timm models)
+* Support CNNs and Transformer-based architectures (validation on diverse set of timm models)
 * Enable Explainer (stateful object) as the main interface for XAI algorithms
 * Expose `insert_xai` functional API to support XAI head insertion for OpenVINO IR models
 
@@ -55,6 +55,7 @@ At the moment, *Image Classification* and *Object Detection* tasks are supported
 Most of CNNs and Transformer models from [Pytorch Image Models (timm)](https://github.com/huggingface/pytorch-image-models) are supported and validated.
 
 Please refer to the following kwnon issues for unsupported models.
+
 * [Runtime error from ONNX / OpenVINO IR models while conversion or inference for XAI (#29)](https://github.com/openvinotoolkit/openvino_xai/issues/29)
 * [Models not supported by white box XAI methods (#30)](https://github.com/openvinotoolkit/openvino_xai/issues/30)
 

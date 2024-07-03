@@ -2,7 +2,7 @@
 
 ## Code style
 
-Changes to OpenVINO XAI Python code should conform to [Python Style Guide](./docs/styleguide/PyGuide.md)
+Changes to OpenVINO XAI Python code should conform to [Python Coding Style Guide](./docs/source/coding-guide.md)
 
 Basic code style and static checks are enforced using a `pre-commit` Github action.
 The exact checks that are run are described in the corresponding [config file](./.pre-commit-config.yaml).
