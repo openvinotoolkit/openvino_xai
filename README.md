@@ -167,7 +167,7 @@ Original image | Explained image
 ---------------|----------------
 ![Oringinal images](tests/assets/cheetah_person.jpg) | ![Explained image](docs/source/_static/xai-cheetah.png)
 
-We can see that model model is focusing on the body or skin area of the animals to tell if this image contains actual cheetahs.
+We can see that model is focusing on the body or skin area of the animals to tell if this image contains actual cheetahs.
 
 ### More advanced use-cases
 
@@ -200,16 +200,16 @@ tests/assets/cheetah_person.jpg --output output
 
 ---
 
+## Issues / Discussions
+
+Please let us know via the [Issues tab](https://github.com/openvinotoolkit/openvino_xai/issues/new) if you have any issues, feature requests, or questions.
+
+---
+
 ## License
 
 OpenVINO™ Toolkit is licensed under [Apache License Version 2.0](LICENSE).
 By contributing to the project, you agree to the license and copyright terms therein and release your contribution under these terms.
-
----
-
-## Issues / Discussions
-
-Please use the [Issues tab](https://github.com/openvinotoolkit/openvino_xai/issues/new) for bug reports, feature requests, or any questions.
 
 ---
 
