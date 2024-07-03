@@ -176,7 +176,8 @@ Users could tweak the basic use-case according to their purpose, which include b
 * Select XAI mode (White-Box or Black-Box) or even specific method which are automatically decided by default
 * Provide custom model pre/post processing functions like resize and normalizations which the model expects
 * Customize output image visualization options
-* Explain multiple class targets and images
+* Explain multiple class targets, passing them as label indexes or as actual label names
+* Explain multiple images
 
 Please find more options and scenarios in the following links:
 
