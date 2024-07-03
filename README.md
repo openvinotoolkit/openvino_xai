@@ -12,6 +12,7 @@
 
 ![Python](https://img.shields.io/badge/python-3.10%2B-green)
 [![OpenVINO](https://img.shields.io/badge/openvino-2024.2-purple)](https://pypi.org/project/openvino/)
+[![codecov](https://codecov.io/gh/openvinotoolkit/openvino_xai/graph/badge.svg?token=NR0Z0CWDK9)](https://codecov.io/gh/openvinotoolkit/openvino_xai)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![PyPI](https://img.shields.io/pypi/v/openvino_xai)](https://pypi.org/project/openvino_xai)
 [![Downloads](https://static.pepy.tech/badge/openvino_xai)](https://pepy.tech/project/openvino_xai)
