@@ -10,6 +10,12 @@
 [License](#license) •
 [Documentation](https://openvinotoolkit.github.io/openvino_xai/)
 
+![Python](https://img.shields.io/badge/python-3.10%2B-green)
+[![OpenVINO](https://img.shields.io/badge/openvino-2024.2-purple)](https://pypi.org/project/openvino/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![PyPI](https://img.shields.io/pypi/v/openvino_xai)](https://pypi.org/project/openvino_xai)
+[![Downloads](https://static.pepy.tech/badge/openvino_xai)](https://pepy.tech/project/openvino_xai)
+
 ---
 
 </div>
@@ -30,7 +36,7 @@ to help users understand the reason why the complex AI models output such respon
 ### What's new in v1.0.0
 
 * Support generation of classification and detection per-class and per-image saliency maps
-* Enable white-box (ReciproCAM) and black-box (RISE) eXplainable AI algorithms
+* Enable White-Box ([ReciproCAM](https://arxiv.org/abs/2209.14074)) and Black-Box ([RISE](https://arxiv.org/abs/1806.07421v3)) eXplainable AI algorithms
 * Support CNNs and Transformer-based architectures (validation on diverse set of timm models)
 * Enable Explainer (stateful object) as the main interface for XAI algorithms
 * Expose `insert_xai` functional API to support XAI head insertion for OpenVINO IR models
@@ -133,11 +139,11 @@ explanation = explainer(data, explanation_parameters)
 ```
 
 By default the model will be explained using `auto mode`.
-Under the hood of the `auto mode`: will try to run `white-box mode`, if fails => will run `black-box mode`.
+Under the hood of the `auto mode`: will try to run `White-Box mode`, if fails => will run `Black-Box mode`.
 
 Generating saliency maps involves model inference. Explainer will perform model inference.
 To infer, `preprocess_fn` and `postprocess_fn` are requested from the user.
-`preprocess_fn` is always required, `postprocess_fn` is required only for black-box.
+`preprocess_fn` is always required, `postprocess_fn` is required only for Black-Box.
 
 ```python
 import cv2
