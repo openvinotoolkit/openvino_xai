@@ -340,6 +340,7 @@ document.write(`
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">User Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#openvino-xai-architecture">OpenVINO XAI Architecture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#explainer-interface-to-xai-algorithms">Explainer - interface to XAI algorithms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#basic-usage-auto-mode">Basic usage: Auto mode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#white-box-mode">White-Box mode</a></li>
@@ -412,6 +413,7 @@ which is useful for analyzing model’s performance.</p>
 <p>OpenVINO XAI API documentation can be found <a class="reference external" href="https://openvinotoolkit.github.io/openvino_xai/">here</a>.</p>
 <p>Content:</p>
 <ul class="simple">
+<li><p>Architecture</p></li>
 <li><p>Explainer</p></li>
 <li><p>Basic usage: Auto mode</p></li>
 <li><p>White-Box mode</p></li>
@@ -419,6 +421,10 @@ which is useful for analyzing model’s performance.</p>
 <li><p>XAI insertion</p></li>
 <li><p>Example scripts</p></li>
 </ul>
+<section id="openvino-xai-architecture">
+<h2>OpenVINO XAI Architecture<a class="headerlink" href="#openvino-xai-architecture" title="Link to this heading">#</a></h2>
+<p><img alt="OpenVINO XAI Architecture" src="_images/ovxai-architecture.svg" /></p>
+</section>
 <section id="explainer-interface-to-xai-algorithms">
 <h2>Explainer - interface to XAI algorithms<a class="headerlink" href="#explainer-interface-to-xai-algorithms" title="Link to this heading">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">openvino_xai</span> <span class="k">as</span> <span class="nn">xai</span>
@@ -686,6 +692,7 @@ Alternative approach is to use OVXAI just to insert XAI branch into the model an
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#openvino-xai-architecture">OpenVINO XAI Architecture</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#explainer-interface-to-xai-algorithms">Explainer - interface to XAI algorithms</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-usage-auto-mode">Basic usage: Auto mode</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#white-box-mode">White-Box mode</a></li>

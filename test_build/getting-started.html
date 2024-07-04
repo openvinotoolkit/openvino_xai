@@ -411,9 +411,10 @@ document.write(`
 <a class="reference internal" href="#installation"><span class="std std-ref">Install</span></a> •
 <a class="reference internal" href="#quick-start"><span class="xref myst">Quick Start</span></a> •
 <a class="reference internal" href="#license"><span class="std std-ref">License</span></a> •
-<a class="reference external" href="https://openvinotoolkit.github.io/openvino_xai/">Documentation</a></p>
+<a class="reference external" href="https://openvinotoolkit.github.io/openvino_xai/releases/1.0.0">Documentation</a></p>
 <p><img alt="Python" src="https://img.shields.io/badge/python-3.10%2B-green" />
 <a class="reference external" href="https://pypi.org/project/openvino/"><img alt="OpenVINO" src="https://img.shields.io/badge/openvino-2024.2-purple" /></a>
+<a class="reference external" href="https://codecov.io/gh/openvinotoolkit/openvino_xai"><img alt="codecov" src="https://codecov.io/gh/openvinotoolkit/openvino_xai/graph/badge.svg?token=NR0Z0CWDK9" /></a>
 <a class="reference external" href="https://opensource.org/licenses/Apache-2.0"><img alt="License" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" /></a>
 <a class="reference external" href="https://pypi.org/project/openvino_xai"><img alt="PyPI" src="https://img.shields.io/pypi/v/openvino_xai" /></a>
 <a class="reference external" href="https://pepy.tech/project/openvino_xai"><img alt="Downloads" src="https://static.pepy.tech/badge/openvino_xai" /></a></p>
@@ -433,8 +434,9 @@ to help users understand the reason why the complex AI models output such respon
 <ul class="simple">
 <li><p>Support generation of classification and detection per-class and per-image saliency maps</p></li>
 <li><p>Enable White-Box (<a class="reference external" href="https://arxiv.org/abs/2209.14074">ReciproCAM</a>) and Black-Box (<a class="reference external" href="https://arxiv.org/abs/1806.07421v3">RISE</a>) eXplainable AI algorithms</p></li>
-<li><p>Support CNNs and Transformer-based architectures (validation on diverse set of timm models)</p></li>
-<li><p>Enable Explainer (stateful object) as the main interface for XAI algorithms</p></li>
+<li><p>Support CNNs and Transformer-based architectures (validation on diverse set of <a class="reference external" href="https://github.com/huggingface/pytorch-image-models">timm</a> models)</p></li>
+<li><p>Enable <code class="docutils literal notranslate"><span class="pre">Explainer</span></code> (stateful object) as the main interface for XAI algorithms</p></li>
+<li><p>Support <code class="docutils literal notranslate"><span class="pre">AUTO</span></code> mode by default to detect the best XAI method for given models</p></li>
 <li><p>Expose <code class="docutils literal notranslate"><span class="pre">insert_xai</span></code> functional API to support XAI head insertion for OpenVINO IR models</p></li>
 </ul>
 <p>Please refer to the <a class="reference internal" href="#CHANGELOG.md"><span class="xref myst">change logs</span></a> for the full release history.</p>
@@ -490,7 +492,7 @@ to help users understand the reason why the complex AI models output such respon
 <section id="supported-explainable-models">
 <h3>Supported explainable models<a class="headerlink" href="#supported-explainable-models" title="Link to this heading">#</a></h3>
 <p>Most of CNNs and Transformer models from <a class="reference external" href="https://github.com/huggingface/pytorch-image-models">Pytorch Image Models (timm)</a> are supported and validated.</p>
-<p>Please refer to the following kwnon issues for unsupported models.</p>
+<p>Please refer to the following known issues for unsupported models.</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://github.com/openvinotoolkit/openvino_xai/issues/29">Runtime error from ONNX / OpenVINO IR models while conversion or inference for XAI (#29)</a></p></li>
 <li><p><a class="reference external" href="https://github.com/openvinotoolkit/openvino_xai/issues/30">Models not supported by white box XAI methods (#30)</a></p></li>
@@ -553,8 +555,8 @@ pre-commit<span class="w"> </span>run<span class="w"> </span>--all-files
 <h3>Hello, OpenVINO XAI<a class="headerlink" href="#hello-openvino-xai" title="Link to this heading">#</a></h3>
 <p>Let’s imagine the case that our OpenVINO IR model is up and running on a inference pipeline.
 While watching the outputs, we may want to analyze the model’s behavior for debugging or understanding purposes.</p>
-<p>By using the <strong>OpenVINO XAI</strong> <code class="docutils literal notranslate"><span class="pre">Explainer</span></code>, we can visualize why the model outputs such responses.
-In this examples, we are trying to know the reason why the model outputs a “cheetah” label for given input image.</p>
+<p>By using the <strong>OpenVINO XAI</strong> <code class="docutils literal notranslate"><span class="pre">Explainer</span></code>, we can visualize why the model gives such responses.
+In this example, we are trying to know the reason why the model outputs a <code class="docutils literal notranslate"><span class="pre">cheetah</span></code> label for the given input image.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
@@ -563,7 +565,7 @@ In this examples, we are trying to know the reason why the model outputs a “ch
 <span class="c1"># Load the model</span>
 <span class="n">ov_model</span><span class="p">:</span> <span class="n">ov</span><span class="o">.</span><span class="n">Model</span> <span class="o">=</span> <span class="n">ov</span><span class="o">.</span><span class="n">Core</span><span class="p">()</span><span class="o">.</span><span class="n">read_model</span><span class="p">(</span><span class="s2">&quot;mobilenet_v3.xml&quot;</span><span class="p">)</span>
 
-<span class="c1"># Load the image to be analized</span>
+<span class="c1"># Load the image to be analyzed</span>
 <span class="n">image</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="s2">&quot;tests/assets/cheetah_person.jpg&quot;</span><span class="p">)</span>
 <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">dsize</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">))</span>
 <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
@@ -577,7 +579,7 @@ In this examples, we are trying to know the reason why the model outputs a “ch
 <span class="c1"># Generate saliency map for the label of interest</span>
 <span class="n">explanation</span><span class="p">:</span> <span class="n">xai</span><span class="o">.</span><span class="n">Explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span>
     <span class="n">data</span><span class="o">=</span><span class="n">image</span><span class="p">,</span>
-    <span class="n">targets</span><span class="o">=</span><span class="mi">293</span><span class="p">,</span>  <span class="c1"># (cheetah), accepts single or list of targets</span>
+    <span class="n">targets</span><span class="o">=</span><span class="mi">293</span><span class="p">,</span>  <span class="c1"># (cheetah), accepts label indices or actual label names</span>
     <span class="n">overlay</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># saliency map overlay over the input image, defaults to False</span>
 <span class="p">)</span>
 
@@ -607,7 +609,8 @@ In this examples, we are trying to know the reason why the model outputs a “ch
 <li><p>Select XAI mode (White-Box or Black-Box) or even specific method which are automatically decided by default</p></li>
 <li><p>Provide custom model pre/post processing functions like resize and normalizations which the model expects</p></li>
 <li><p>Customize output image visualization options</p></li>
-<li><p>Explain multiple class targets and images</p></li>
+<li><p>Explain multiple class targets, passing them as label indices or as actual label names</p></li>
+<li><p>Explain multiple images</p></li>
 </ul>
 <p>Please find more options and scenarios in the following links:</p>
 <ul class="simple">
