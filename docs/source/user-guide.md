@@ -10,6 +10,7 @@ OpenVINO XAI API documentation can be found [here](https://openvinotoolkit.githu
 
 Content:
 
+- Architecture
 - Explainer
 - Basic usage: Auto mode
 - White-Box mode
@@ -17,6 +18,10 @@ Content:
 - XAI insertion
 - Example scripts
 
+
+## OpenVINO XAI Architecture
+
+![OpenVINO XAI Architecture](_static/ovxai-architecture.svg)
 
 ## Explainer - interface to XAI algorithms
 
