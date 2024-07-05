@@ -179,7 +179,7 @@ Users could tweak the basic use-case according to their purpose, which include b
 * Provide custom model pre/post processing functions like resize and normalizations which the model expects
 * Customize output image visualization options
 * Explain multiple class targets, passing them as label indices or as actual label names
-* Explain multiple images
+* Call explainer multiple times to explain multiple images or to use different targets
 
 Please find more options and scenarios in the following links:
 
