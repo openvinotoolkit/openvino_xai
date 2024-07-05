@@ -2,7 +2,7 @@ OpenVINO-XAI Python API
 =======================
 
 API
-------
+---
 
 To use functional APIs, use openvino_xai.api
 
@@ -29,8 +29,8 @@ To explain the model (getting saliency maps), use openvino_xai.explanation
 .. automodule:: openvino_xai.explainer
     :members:
 
-Algorithms
-----------
+Methods
+--------
 
 To access/modify implemented XAI methods, use openvino_xai.methods
 

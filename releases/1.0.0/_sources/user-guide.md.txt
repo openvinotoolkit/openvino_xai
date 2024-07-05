@@ -10,6 +10,7 @@ OpenVINO XAI API documentation can be found [here](https://openvinotoolkit.githu
 
 Content:
 
+- Architecture
 - Explainer
 - Basic usage: Auto mode
 - White-Box mode
@@ -17,6 +18,10 @@ Content:
 - XAI insertion
 - Example scripts
 
+
+## OpenVINO XAI Architecture
+
+![OpenVINO XAI Architecture](_static/ovxai-architecture.svg)
 
 ## Explainer - interface to XAI algorithms
 
@@ -35,6 +40,9 @@ explanation = explainer(data, explanation_parameters)
 ## Basic usage: Auto mode
 
 Under the hood of the auto mode: will try to run white-box mode, if fails => will run black-box mode.
+
+![Auto mode process](_static/auto_explain_mode.jpg)
+
 See more details about white_box and black-box modes below.
 
 Generating saliency maps involves model inference. Explainer will perform model inference.
@@ -239,7 +247,7 @@ model_xai = xai.insert_xai(
 
 ## Example scripts
 
-More usage scenarios are available in [examples](./../examples).
+More usage scenarios are available in [examples](../../examples).
 
 ```python
 # Retrieve models by running tests
