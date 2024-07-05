@@ -52,10 +52,10 @@ At the moment, *Image Classification* and *Object Detection* tasks are supported
 
 | Domain          | Task                 | Type      | Algorithm           | Links |
 |-----------------|----------------------|-----------|---------------------|-------|
-| Comptuer Vision | Image Classification | Black-Box | RISE                | [arxiv](https://arxiv.org/abs/1806.07421v3) / [src](openvino_xai/methods/black_box/rise.py) |
-|                 |                      | White-Box | ReciproCAM          | [arxiv](https://arxiv.org/abs/2209.14074) / [src](openvino_xai/methods/white_box/recipro_cam.py) |
+| Computer Vision | Image Classification | White-Box | ReciproCAM          | [arxiv](https://arxiv.org/abs/2209.14074) / [src](openvino_xai/methods/white_box/recipro_cam.py) |
 |                 |                      |           | VITReciproCAM       | [arxiv](https://arxiv.org/abs/2310.02588) / [src](openvino_xai/methods/white_box/recipro_cam.py) |
 |                 |                      |           | ActivationMap       | experimental / [src](openvino_xai/methods/white_box/activation_map.py) |
+|                   |                    | Black-Box | RISE                | [arxiv](https://arxiv.org/abs/1806.07421v3) / [src](openvino_xai/methods/black_box/rise.py) |
 |                 | Object Detection     |           | ClassProbabilityMap | experimental / [src](openvino_xai/methods/white_box/det_class_probability_map.py) |
 
 ### Supported explainable models
@@ -157,7 +157,7 @@ explainer = xai.Explainer(
 # Generate saliency map for the label of interest
 explanation: xai.Explanation = explainer(
     data=image,
-    targets=293,  # (cheetah), accepts label indices or actual label names
+    targets=293,  # (cheetah), accepts label indices or actual label names if label_names provided
     overlay=True,  # saliency map overlay over the input image, defaults to False
 )
 
@@ -179,7 +179,7 @@ Users could tweak the basic use-case according to their purpose, which include b
 * Provide custom model pre/post processing functions like resize and normalizations which the model expects
 * Customize output image visualization options
 * Explain multiple class targets, passing them as label indices or as actual label names
-* Explain multiple images
+* Call explainer multiple times to explain multiple images or to use different targets
 
 Please find more options and scenarios in the following links:
 
