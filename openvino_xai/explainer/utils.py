@@ -157,30 +157,31 @@ def get_score(x: np.ndarray, index: int, activation: ActivationType = Activation
     return x[index]
 
 
-def format_to_hwc(image: np.ndarray) -> np.ndarray:
-    """Format image to HWC."""
-    ori_ndim = image.ndim
-    if image.ndim == 4:
-        image = np.squeeze(image, axis=0)
-
-    dim0, dim1, dim2 = image.shape
-    if dim0 < dim1 and dim0 < dim2:
-        image = image.transpose((1, 2, 0))
-
-    if ori_ndim:
-        return np.expand_dims(image, axis=0)
+def format_to_bhwc(image: np.ndarray) -> np.ndarray:
+    """Format image to BHWC from ndim=3 or ndim=4."""
+    if image.ndim == 3:
+        image = np.expand_dims(image, axis=0)
+    if not is_bhwc_layout(image):
+        # bchw layout -> bhwc
+        image = image.transpose((0, 2, 3, 1))
     return image
+
+
+def is_bhwc_layout(image: np.array) -> bool:
+    """Check whether layout of image is BHWC."""
+    _, dim0, dim1, dim2 = image.shape
+    if dim0 > dim2 and dim1 > dim2:  # bhwc layout
+        return True
+    return False
 
 
 def infer_size_from_image(image: np.ndarray) -> Tuple[int, int]:
     """Estimate image size."""
-    image = format_to_hwc(image)
-
     if image.ndim == 2:
         return image.shape
-    elif image.ndim == 3:
-        h, w, _ = image.shape
-    elif image.ndim == 4:
+
+    image = format_to_bhwc(image)
+    if image.ndim == 4:
         _, h, w, _ = image.shape
     else:
         raise ValueError(f"Supports only two, three, and four dimensional image, but got {image.ndim}.")
