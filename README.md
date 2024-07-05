@@ -55,15 +55,16 @@ At the moment, *Image Classification* and *Object Detection* tasks are supported
 | Computer Vision | Image Classification | White-Box | ReciproCAM          | [arxiv](https://arxiv.org/abs/2209.14074) / [src](openvino_xai/methods/white_box/recipro_cam.py) |
 |                 |                      |           | VITReciproCAM       | [arxiv](https://arxiv.org/abs/2310.02588) / [src](openvino_xai/methods/white_box/recipro_cam.py) |
 |                 |                      |           | ActivationMap       | experimental / [src](openvino_xai/methods/white_box/activation_map.py) |
-|                   |                    | Black-Box | RISE                | [arxiv](https://arxiv.org/abs/1806.07421v3) / [src](openvino_xai/methods/black_box/rise.py) |
-|                 | Object Detection     |           | ClassProbabilityMap | experimental / [src](openvino_xai/methods/white_box/det_class_probability_map.py) |
+|                 |                      | Black-Box | RISE                | [arxiv](https://arxiv.org/abs/1806.07421v3) / [src](openvino_xai/methods/black_box/rise.py) |
+|                 | Object Detection     | White-Box | ClassProbabilityMap | experimental / [src](openvino_xai/methods/white_box/det_class_probability_map.py) |
 
 ### Supported explainable models
 
 Most of CNNs and Transformer models from [Pytorch Image Models (timm)](https://github.com/huggingface/pytorch-image-models) are supported and validated.
 
-Please refer to the following known issues for unsupported models.
+Please refer to the following known issues for unsupported models and reasons.
 
+* [OpenVINO IR branch insertion not working for models converted directly from torch models with OVC (#26)](https://github.com/openvinotoolkit/openvino_xai/issues/26)
 * [Runtime error from ONNX / OpenVINO IR models while conversion or inference for XAI (#29)](https://github.com/openvinotoolkit/openvino_xai/issues/29)
 * [Models not supported by white box XAI methods (#30)](https://github.com/openvinotoolkit/openvino_xai/issues/30)
 
@@ -180,6 +181,7 @@ Users could tweak the basic use-case according to their purpose, which include b
 * Customize output image visualization options
 * Explain multiple class targets, passing them as label indices or as actual label names
 * Call explainer multiple times to explain multiple images or to use different targets
+* Using `insert_xai` API, insert XAI head to your OpenVINO IR model and get additional saliency map output in the same inference pipeline
 
 Please find more options and scenarios in the following links:
 
