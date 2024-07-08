@@ -91,7 +91,7 @@ def explain_white_box(args):
         explain_mode=ExplainMode.WHITEBOX,  # defaults to AUTO
         explain_method=xai.Method.RECIPROCAM,  # ReciproCAM is the default XAI method for CNNs
         # target_layer="last_conv_node_name",  # target_layer - node after which XAI branch will be inserted
-        target_layer="/backbone/conv/conv.2/Div",  # OTX mnet_v3
+        # target_layer="/backbone/conv/conv.2/Div",  # OTX mnet_v3
         # target_layer="/backbone/features/final_block/activate/Mul",  # OTX effnet
         embed_scaling=True, # True by default.  If set to True, saliency map scale (0 ~ 255) operation is embedded in the model
     )
@@ -103,7 +103,7 @@ def explain_white_box(args):
 
     # Generate explanation
     explanation = explainer(
-        image, 
+        image,
         targets=[11, 14],  # target classes to explain, also ['dog', 'person'] is a valid input
         label_names=voc_labels,  # optional names
         overlay=True,
@@ -230,7 +230,7 @@ def explain_white_box_vit(args):
 
     # Generate explanation
     explanation = explainer(
-        image, 
+        image,
         targets=[0, 1, 2, 3, 4],  # target classes to explain
     )
 

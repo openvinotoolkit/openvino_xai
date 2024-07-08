@@ -1,6 +1,7 @@
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import subprocess
 from pathlib import Path
 
 import cv2
@@ -412,3 +413,22 @@ class TestClsBB:
         actual_sal_vals = explanation.saliency_map[0][0, :10].astype(np.int16)
         ref_sal_vals = self._ref_sal_maps[DEFAULT_CLS_MODEL].astype(np.uint8)
         assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
+
+
+class TestExample:
+    """Test sanity of examples/run_classification.py."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self, fxt_data_root):
+        self.data_dir = fxt_data_root
+
+    def test_default_model(self):
+        retrieve_otx_model(self.data_dir, DEFAULT_CLS_MODEL)
+        model_path = self.data_dir / "otx_models" / (DEFAULT_CLS_MODEL + ".xml")
+        cmd = [
+            "python",
+            "examples/run_classification.py",
+            model_path,
+            "tests/assets/cheetah_person.jpg",
+        ]
+        subprocess.run(cmd, check=True)  # noqa: S603, PLW1510

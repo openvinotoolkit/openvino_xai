@@ -73,8 +73,8 @@ def main(argv):
 
     # Generate explanation
     explanation = explainer(
-        image, 
-        targets=[0, 1, 2, 3, 4],  # target classes to explain
+        image,
+        targets=[0, 1, 2],  # target classes to explain
     )
 
     logger.info(
