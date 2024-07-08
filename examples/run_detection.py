@@ -24,8 +24,8 @@ def get_argument_parser():
 
 def preprocess_fn(x: np.ndarray) -> np.ndarray:
     # TODO: make sure it is correct
-    x = cv2.resize(src=x, dsize=(416, 416))  # OTX YOLOX
-    # x = cv2.resize(src=x, dsize=(992, 736))  # OTX ATSS
+    # x = cv2.resize(src=x, dsize=(416, 416))  # OTX YOLOX
+    x = cv2.resize(src=x, dsize=(992, 736))  # OTX ATSS
     x = x.transpose((2, 0, 1))
     x = np.expand_dims(x, 0)
     return x
@@ -45,18 +45,18 @@ def main(argv):
     model = ov.Core().read_model(args.model_path)
 
     # OTX YOLOX
-    cls_head_output_node_names = [
-        "/bbox_head/multi_level_conv_cls.0/Conv/WithoutBiases",
-        "/bbox_head/multi_level_conv_cls.1/Conv/WithoutBiases",
-        "/bbox_head/multi_level_conv_cls.2/Conv/WithoutBiases",
-    ]
-    # # OTX ATSS
     # cls_head_output_node_names = [
-    #     "/bbox_head/atss_cls_1/Conv/WithoutBiases",
-    #     "/bbox_head/atss_cls_2/Conv/WithoutBiases",
-    #     "/bbox_head/atss_cls_3/Conv/WithoutBiases",
-    #     "/bbox_head/atss_cls_4/Conv/WithoutBiases",
+    #     "/bbox_head/multi_level_conv_cls.0/Conv/WithoutBiases",
+    #     "/bbox_head/multi_level_conv_cls.1/Conv/WithoutBiases",
+    #     "/bbox_head/multi_level_conv_cls.2/Conv/WithoutBiases",
     # ]
+    # OTX ATSS
+    cls_head_output_node_names = [
+        "/bbox_head/atss_cls_1/Conv/WithoutBiases",
+        "/bbox_head/atss_cls_2/Conv/WithoutBiases",
+        "/bbox_head/atss_cls_3/Conv/WithoutBiases",
+        "/bbox_head/atss_cls_4/Conv/WithoutBiases",
+    ]
 
     # Create explainer object
     explainer = xai.Explainer(

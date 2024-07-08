@@ -7,6 +7,7 @@ import addict
 import cv2
 import numpy as np
 import openvino.runtime as ov
+import subprocess
 import pytest
 
 from openvino_xai.common.parameters import Method, Task
@@ -231,3 +232,24 @@ class TestDetWB:
         model_path = self.data_dir / "otx_models" / (DEFAULT_DET_MODEL + ".xml")
         model = ov.Core().read_model(model_path)
         return model
+
+
+class TestExample:
+    """Test sanity of examples/run_classification.py."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self, fxt_data_root):
+        self.data_dir = fxt_data_root
+
+    def test_default_model(self):
+        retrieve_otx_model(self.data_dir, DEFAULT_DET_MODEL)
+        model_path = self.data_dir / "otx_models" / (DEFAULT_DET_MODEL + ".xml")
+        #retrieve_otx_model(self.data_dir, "det_yolox_bccd.xml")
+        #model_path = self.data_dir / "otx_models" / "det_yolox_bccd.xml"
+        cmd = [
+            "python",
+            "examples/run_detection.py",
+            model_path,
+            "tests/assets/blood.jpg",
+        ]
+        subprocess.run(cmd, check=True)  # noqa: S603, PLW1510
