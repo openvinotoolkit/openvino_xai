@@ -88,6 +88,10 @@
 * Add third-party-programs.txt by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/27
 * Add full timm functional tests by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/20
 * Add performance tests @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/31
+* Extend some explainer/visualizer capabilities and Fix pre-release bugs by @negvet in https://github.com/openvinotoolkit/openvino_xai/pull/28
+* Support device by @negvet in https://github.com/openvinotoolkit/openvino_xai/pull/32
+* Fixes for deep dive notebook by @GalyaZalesskaya in https://github.com/openvinotoolkit/openvino_xai/pull/35
+* Refine README.md as self-contained Getting Started by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/34
 
 ### Known Issues
 
