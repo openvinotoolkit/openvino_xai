@@ -1,13 +1,13 @@
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import subprocess
 from pathlib import Path
 
 import addict
 import cv2
 import numpy as np
 import openvino.runtime as ov
-import subprocess
 import pytest
 
 from openvino_xai.common.parameters import Method, Task
@@ -235,7 +235,7 @@ class TestDetWB:
 
 
 class TestExample:
-    """Test sanity of examples/run_classification.py."""
+    """Test sanity of examples/run_detection.py."""
 
     @pytest.fixture(autouse=True)
     def setup(self, fxt_data_root):
@@ -244,8 +244,6 @@ class TestExample:
     def test_default_model(self):
         retrieve_otx_model(self.data_dir, DEFAULT_DET_MODEL)
         model_path = self.data_dir / "otx_models" / (DEFAULT_DET_MODEL + ".xml")
-        #retrieve_otx_model(self.data_dir, "det_yolox_bccd.xml")
-        #model_path = self.data_dir / "otx_models" / "det_yolox_bccd.xml"
         cmd = [
             "python",
             "examples/run_detection.py",

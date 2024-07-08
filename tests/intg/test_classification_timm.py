@@ -323,22 +323,29 @@ class TestImageClassificationTimm:
             self.update_report("report_bb.csv", model_id, "True", "True", "True", shape_str, str(map_saved))
         self.clear_cache()
 
-    @pytest.mark.parametrize("model_id", [
-        "resnet18.a1_in1k",
-        "vit_tiny_patch16_224.augreg_in21k",  # Downloads last month 15,345
-    ])
+    @pytest.mark.parametrize(
+        "model_id",
+        [
+            "resnet18.a1_in1k",
+            "vit_tiny_patch16_224.augreg_in21k",  # Downloads last month 15,345
+        ],
+    )
     # @pytest.mark.parametrize("model_id", TEST_MODELS)
     def test_ovc_ir_insertion(self, model_id):
         if model_id in NON_SUPPORTED_BY_WB_MODELS:
             pytest.skip(reason="Not supported yet")
 
         if "convit_tiny.fb_in1k" in model_id:
-            pytest.skip(reason="RuntimeError: Couldn't get TorchScript module by tracing.")  # Torch -> OV conversion error
+            pytest.skip(
+                reason="RuntimeError: Couldn't get TorchScript module by tracing."
+            )  # Torch -> OV conversion error
 
         timm_model, model_cfg = self.get_timm_model(model_id)
         input_size = list(timm_model.default_cfg["input_size"])
         dummy_tensor = torch.rand([1] + input_size)
-        model = openvino.convert_model(timm_model, example_input=dummy_tensor, input=(ov.PartialShape([-1] + input_size),))
+        model = openvino.convert_model(
+            timm_model, example_input=dummy_tensor, input=(ov.PartialShape([-1] + input_size),)
+        )
 
         if model_id in LIMITED_DIVERSE_SET_OF_CNN_MODELS:
             explain_method = Method.RECIPROCAM
