@@ -95,7 +95,6 @@
 
 ### Known Issues
 
-* OpenVINO IR branch insertion not working for models converted directly from torch models in https://github.com/openvinotoolkit/openvino_xai/issues/26
 * Runtime error from ONNX / OpenVINO IR models while conversion or inference for XAI in https://github.com/openvinotoolkit/openvino_xai/issues/29
 * Models not supported by white box XAI methods in https://github.com/openvinotoolkit/openvino_xai/issues/30
 

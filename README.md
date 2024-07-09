@@ -64,9 +64,12 @@ Most of CNNs and Transformer models from [Pytorch Image Models (timm)](https://g
 
 Please refer to the following known issues for unsupported models and reasons.
 
-* [OpenVINO IR branch insertion not working for models converted directly from torch models with OVC (#26)](https://github.com/openvinotoolkit/openvino_xai/issues/26)
 * [Runtime error from ONNX / OpenVINO IR models while conversion or inference for XAI (#29)](https://github.com/openvinotoolkit/openvino_xai/issues/29)
 * [Models not supported by white box XAI methods (#30)](https://github.com/openvinotoolkit/openvino_xai/issues/30)
+
+> **_WARNING:_**  OpenVINO XAI is fully validated on OpenVINO 2024.2.0. Following issue might be observed if used with older versions of OpenVINO.
+> * [OpenVINO IR branch insertion not working for models converted directly from torch models with OVC (#26)](https://github.com/openvinotoolkit/openvino_xai/issues/26)
+> A simple workaround is to convert Torch models to ONNX models and then convert to OpenVINO models to feed to OpenVINO XAI. Please refer to [the code example](openvino_xai/utils/model_export.py).
 
 > **_NOTE:_**  GenAI / LLMs would be also supported incrementally in the upcoming releases.
 
