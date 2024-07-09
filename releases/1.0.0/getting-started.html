@@ -426,6 +426,21 @@ document.write(`
 <p>Given <strong>OpenVINO</strong> models and input images, <strong>OpenVINO XAI</strong> generates <strong>saliency maps</strong>
 which highlights regions of the interest in the inputs from the models’ perspective
 to help users understand the reason why the complex AI models output such responses.</p>
+<p>Using this package, you can augment the model analysis &amp; explanation feature
+on top of the existing OpenVINO inference pipeline with a few lines of code.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">openvino_xai</span> <span class="k">as</span> <span class="nn">xai</span>
+
+<span class="n">explainer</span> <span class="o">=</span> <span class="n">xai</span><span class="o">.</span><span class="n">Explainer</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">ov_model</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">)</span>
+
+<span class="c1"># Existing inference pipeline</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">image</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">images</span><span class="p">):</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">infer</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">ov_model</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">)</span>
+
+    <span class="c1"># Model analysis</span>
+    <span class="n">explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">image</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span>
+    <span class="n">explanation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">dir_path</span><span class="o">=</span><span class="s2">&quot;./xai&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+</pre></div>
+</div>
 <hr class="docutils" />
 <section id="features">
 <h2>Features<a class="headerlink" href="#features" title="Link to this heading">#</a></h2>
@@ -494,10 +509,16 @@ to help users understand the reason why the complex AI models output such respon
 <p>Most of CNNs and Transformer models from <a class="reference external" href="https://github.com/huggingface/pytorch-image-models">Pytorch Image Models (timm)</a> are supported and validated.</p>
 <p>Please refer to the following known issues for unsupported models and reasons.</p>
 <ul class="simple">
-<li><p><a class="reference external" href="https://github.com/openvinotoolkit/openvino_xai/issues/26">OpenVINO IR branch insertion not working for models converted directly from torch models with OVC (#26)</a></p></li>
 <li><p><a class="reference external" href="https://github.com/openvinotoolkit/openvino_xai/issues/29">Runtime error from ONNX / OpenVINO IR models while conversion or inference for XAI (#29)</a></p></li>
 <li><p><a class="reference external" href="https://github.com/openvinotoolkit/openvino_xai/issues/30">Models not supported by white box XAI methods (#30)</a></p></li>
 </ul>
+<blockquote>
+<div><p><strong><em>WARNING:</em></strong>  OpenVINO XAI is fully validated on OpenVINO 2024.2.0. Following issue might be observed if older version of OpenVINO is used.</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/openvinotoolkit/openvino_xai/issues/26">OpenVINO IR branch insertion not working for models converted directly from torch models with OVC (#26)</a>
+A simple workaround is to convert Torch models to ONNX models and then convert to OpenVINO models to feed to OpenVINO XAI. Please refer to <a class="reference internal" href="#openvino_xai/utils/model_export.py"><span class="xref myst">the code example</span></a>.</p></li>
+</ul>
+</div></blockquote>
 <blockquote>
 <div><p><strong><em>NOTE:</em></strong>  GenAI / LLMs would be also supported incrementally in the upcoming releases.</p>
 </div></blockquote>
