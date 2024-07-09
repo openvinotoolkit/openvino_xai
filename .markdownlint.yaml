@@ -18,8 +18,14 @@ MD013: false
 # This is not useful for some files such as `CHANGELOG.md`
 MD024: false # Multiple headers with the same content
 
+# no-blanks-blockquote Blank line inside blockquote
+MD028: false
+
 # blanks-around-fences - Fenced code blocks should be surrounded by blank lines
 MD031: false
+
+# blanks-around-lists Lists should be surrounded by blank lines
+MD032: false
 
 # I find it necessary to use '<br/>' to force line breaks.
 MD033: false # Inline HTML
