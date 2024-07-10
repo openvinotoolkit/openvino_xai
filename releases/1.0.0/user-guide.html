@@ -413,20 +413,35 @@ which is useful for analyzing model’s performance.</p>
 <p>OpenVINO XAI API documentation can be found <a class="reference external" href="https://openvinotoolkit.github.io/openvino_xai/">here</a>.</p>
 <p>Content:</p>
 <ul class="simple">
-<li><p>Architecture</p></li>
-<li><p>Explainer</p></li>
-<li><p>Basic usage: Auto mode</p></li>
-<li><p>White-Box mode</p></li>
-<li><p>Black-Box mode</p></li>
-<li><p>XAI insertion</p></li>
-<li><p>Example scripts</p></li>
+<li><p><a class="reference internal" href="#openvino-explainable-ai-toolkit-user-guide"><span class="xref myst">OpenVINO™ Explainable AI Toolkit User Guide</span></a></p>
+<ul>
+<li><p><a class="reference internal" href="#openvino-xai-architecture"><span class="xref myst">OpenVINO XAI Architecture</span></a></p></li>
+<li><p><a class="reference internal" href="#explainer---interface-to-xai-algorithms"><span class="xref myst">Explainer - interface to XAI algorithms</span></a></p></li>
+<li><p><a class="reference internal" href="#basic-usage-auto-mode"><span class="xref myst">Basic usage: Auto mode</span></a></p>
+<ul>
+<li><p><a class="reference internal" href="#running-without-preprocess_fn"><span class="xref myst">Running without <code class="docutils literal notranslate"><span class="pre">preprocess_fn</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="#specifying-preprocess_fn"><span class="xref myst">Specifying <code class="docutils literal notranslate"><span class="pre">preprocess_fn</span></code></span></a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#white-box-mode"><span class="xref myst">White-Box mode</span></a></p></li>
+<li><p><a class="reference internal" href="#black-box-mode"><span class="xref myst">Black-Box mode</span></a></p></li>
+<li><p><a class="reference internal" href="#xai-insertion-white-box-usage"><span class="xref myst">XAI insertion (white-box usage)</span></a></p></li>
+<li><p><a class="reference internal" href="#example-scripts"><span class="xref myst">Example scripts</span></a></p></li>
+</ul>
+</li>
 </ul>
 <section id="openvino-xai-architecture">
 <h2>OpenVINO XAI Architecture<a class="headerlink" href="#openvino-xai-architecture" title="Link to this heading">#</a></h2>
 <p><img alt="OpenVINO XAI Architecture" src="_images/ovxai-architecture.svg" /></p>
+<p>OpenVINO XAI provides the API to explain models, using two types of methods:</p>
+<ul class="simple">
+<li><p><strong>White-box</strong> - treats the model as a white box, making inner modifications and adding an extra XAI branch. This results in additional output from the model and relatively fast explanations.</p></li>
+<li><p><strong>Black-box</strong> - treats the model as a black box, working on a wide range of models. However, it requires many more inference runs.</p></li>
+</ul>
 </section>
 <section id="explainer-interface-to-xai-algorithms">
 <h2>Explainer - interface to XAI algorithms<a class="headerlink" href="#explainer-interface-to-xai-algorithms" title="Link to this heading">#</a></h2>
+<p>In a nutshell, the explanation call looks like this:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">openvino_xai</span> <span class="k">as</span> <span class="nn">xai</span>
 
 <span class="n">explainer</span> <span class="o">=</span> <span class="n">xai</span><span class="o">.</span><span class="n">Explainer</span><span class="p">(</span>
@@ -440,190 +455,225 @@ which is useful for analyzing model’s performance.</p>
 </section>
 <section id="basic-usage-auto-mode">
 <h2>Basic usage: Auto mode<a class="headerlink" href="#basic-usage-auto-mode" title="Link to this heading">#</a></h2>
-<p>Under the hood of the auto mode: will try to run white-box mode, if fails =&gt; will run black-box mode.</p>
+<p>The easiest way to run the explainer is in Auto mode. Under the hood, Auto mode will try to run in <code class="docutils literal notranslate"><span class="pre">White-Box</span></code> mode first. If it fails, it will run in <code class="docutils literal notranslate"><span class="pre">Black-Box</span></code> mode.</p>
+<p>Learn more details about <a class="reference internal" href="#white-box-mode"><span class="xref myst">White-Box</span></a> and <a class="reference internal" href="#black-box-mode"><span class="xref myst">Black-Box</span></a> modes below.</p>
 <p><img alt="Auto mode process" src="_images/auto_explain_mode.jpg" /></p>
-<p>See more details about white_box and black-box modes below.</p>
-<p>Generating saliency maps involves model inference. Explainer will perform model inference.
-To infer, <code class="docutils literal notranslate"><span class="pre">preprocess_fn</span></code> and <code class="docutils literal notranslate"><span class="pre">postprocess_fn</span></code> are requested from the user, depending on the usage mode.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
-
-<span class="kn">import</span> <span class="nn">openvino_xai</span> <span class="k">as</span> <span class="nn">xai</span>
-<span class="kn">from</span> <span class="nn">openvino_xai.explainer.explanation_parameters</span> <span class="kn">import</span> <span class="n">ExplanationParameters</span>
-
-
-<span class="k">def</span> <span class="nf">preprocess_fn</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-    <span class="c1"># Implementing own pre-process function based on model&#39;s implementation</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">dsize</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">))</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">x</span>
-
-
-<span class="c1"># Creating model</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">ov</span><span class="o">.</span><span class="n">Core</span><span class="p">()</span><span class="o">.</span><span class="n">read_model</span><span class="p">(</span><span class="s2">&quot;path/to/model.xml&quot;</span><span class="p">)</span>  <span class="c1"># type: ov.Model</span>
-
-<span class="c1"># Explainer object will prepare and load the model once in the beginning</span>
-<span class="n">explainer</span> <span class="o">=</span> <span class="n">xai</span><span class="o">.</span><span class="n">Explainer</span><span class="p">(</span>
-    <span class="n">model</span><span class="p">,</span>
-    <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">,</span>
-    <span class="n">preprocess_fn</span><span class="o">=</span><span class="n">preprocess_fn</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="c1"># Generate and process saliency maps (as many as required, sequentially)</span>
-<span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="s2">&quot;path/to/image.jpg&quot;</span><span class="p">)</span>
-<span class="n">explanation_parameters</span> <span class="o">=</span> <span class="n">ExplanationParameters</span><span class="p">(</span>
-    <span class="n">target_explain_labels</span><span class="o">=</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">],</span>  <span class="c1"># indices or string labels to explain</span>
-<span class="p">)</span>
-<span class="n">explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">explanation_parameters</span><span class="p">)</span>
-
-<span class="c1"># Saving saliency maps</span>
-<span class="n">explanation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;output_path&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</section>
-<section id="white-box-mode">
-<h2>White-Box mode<a class="headerlink" href="#white-box-mode" title="Link to this heading">#</a></h2>
-<p>White-box mode is a two-step process that includes OV model update and further inference of the updated model.</p>
-<p>Updated model has additional XAI branch inserted. XAI branch generates saliency maps during model inference. Saliency maps extend the list of model outputs, i.e. saliency maps are generated along with the original model outputs. Depending on the white-box algorithm, computational overhead of inserted XAI branch may vary, but it is usually relatively modest.</p>
-<p><code class="docutils literal notranslate"><span class="pre">preprocess_fn</span></code> is required to be provided by the user for the white-box mode.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
-
-<span class="kn">import</span> <span class="nn">openvino_xai</span> <span class="k">as</span> <span class="nn">xai</span>
-<span class="kn">from</span> <span class="nn">openvino_xai.explainer.parameters</span> <span class="kn">import</span> <span class="n">ExplainMode</span><span class="p">,</span> <span class="n">ExplanationParameters</span><span class="p">,</span> <span class="n">TargetExplainGroup</span><span class="p">,</span> <span class="n">VisualizationParameters</span>
-<span class="kn">from</span> <span class="nn">openvino_xai.inserter.parameters</span> <span class="kn">import</span> <span class="n">ClassificationInsertionParameters</span>
-
-
-<span class="k">def</span> <span class="nf">preprocess_fn</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-    <span class="c1"># Implementing own pre-process function based on model&#39;s implementation</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">dsize</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">))</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">x</span>
-
-
-<span class="c1"># Creating model</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">ov</span><span class="o">.</span><span class="n">Core</span><span class="p">()</span><span class="o">.</span><span class="n">read_model</span><span class="p">(</span><span class="s2">&quot;path/to/model.xml&quot;</span><span class="p">)</span>  <span class="c1"># type: ov.Model</span>
-
-<span class="c1"># Optional - create insertion parameters</span>
-<span class="n">insertion_parameters</span> <span class="o">=</span> <span class="n">ClassificationInsertionParameters</span><span class="p">(</span>
-    <span class="c1"># target_layer=&quot;last_conv_node_name&quot;,  # target_layer - node after which XAI branch will be inserted</span>
-    <span class="n">embed_scaling</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># True by default.  If set to True, saliency map scale (0 ~ 255) operation is embedded in the model</span>
-    <span class="n">explain_method</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Method</span><span class="o">.</span><span class="n">RECIPROCAM</span><span class="p">,</span>  <span class="c1"># ReciproCAM is the default XAI method for CNNs</span>
-<span class="p">)</span>
-
-<span class="c1"># Explainer object will prepare and load the model once in the beginning</span>
-<span class="n">explainer</span> <span class="o">=</span> <span class="n">xai</span><span class="o">.</span><span class="n">Explainer</span><span class="p">(</span>
-    <span class="n">model</span><span class="p">,</span>
-    <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">,</span>
-    <span class="n">preprocess_fn</span><span class="o">=</span><span class="n">preprocess_fn</span><span class="p">,</span>
-    <span class="n">explain_mode</span><span class="o">=</span><span class="n">ExplainMode</span><span class="o">.</span><span class="n">WHITEBOX</span><span class="p">,</span>
-    <span class="n">insertion_parameters</span><span class="o">=</span><span class="n">insertion_parameters</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="c1"># Generate and process saliency maps (as many as required, sequentially)</span>
-<span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="s2">&quot;path/to/image.jpg&quot;</span><span class="p">)</span>
-<span class="n">voc_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;aeroplane&#39;</span><span class="p">,</span> <span class="s1">&#39;bicycle&#39;</span><span class="p">,</span> <span class="s1">&#39;bird&#39;</span><span class="p">,</span> <span class="s1">&#39;boat&#39;</span><span class="p">,</span> <span class="s1">&#39;bottle&#39;</span><span class="p">,</span> <span class="s1">&#39;bus&#39;</span><span class="p">,</span> <span class="s1">&#39;car&#39;</span><span class="p">,</span> <span class="s1">&#39;cat&#39;</span><span class="p">,</span> <span class="s1">&#39;chair&#39;</span><span class="p">,</span> <span class="s1">&#39;cow&#39;</span><span class="p">,</span> <span class="s1">&#39;diningtable&#39;</span><span class="p">,</span>
-              <span class="s1">&#39;dog&#39;</span><span class="p">,</span> <span class="s1">&#39;horse&#39;</span><span class="p">,</span> <span class="s1">&#39;motorbike&#39;</span><span class="p">,</span> <span class="s1">&#39;person&#39;</span><span class="p">,</span> <span class="s1">&#39;pottedplant&#39;</span><span class="p">,</span> <span class="s1">&#39;sheep&#39;</span><span class="p">,</span> <span class="s1">&#39;sofa&#39;</span><span class="p">,</span> <span class="s1">&#39;train&#39;</span><span class="p">,</span> <span class="s1">&#39;tvmonitor&#39;</span><span class="p">]</span>
-<span class="n">explanation_parameters</span> <span class="o">=</span> <span class="n">ExplanationParameters</span><span class="p">(</span>
-    <span class="n">target_explain_group</span><span class="o">=</span><span class="n">TargetExplainGroup</span><span class="o">.</span><span class="n">CUSTOM</span><span class="p">,</span>
-    <span class="n">target_explain_labels</span><span class="o">=</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">],</span>  <span class="c1"># target classes to explain, also [&#39;dog&#39;, &#39;person&#39;] is a valid input</span>
-    <span class="n">label_names</span><span class="o">=</span><span class="n">voc_labels</span><span class="p">,</span>
-    <span class="n">visualization_parameters</span><span class="o">=</span><span class="n">VisualizationParameters</span><span class="p">(</span><span class="n">overlay</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>  <span class="c1"># by default, saliency map overlay over image</span>
-<span class="p">)</span>
-<span class="n">explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">explanation_parameters</span><span class="p">)</span>
-
-<span class="c1"># Saving saliency maps</span>
-<span class="n">explanation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;output_path&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</section>
-<section id="black-box-mode">
-<h2>Black-Box mode<a class="headerlink" href="#black-box-mode" title="Link to this heading">#</a></h2>
-<p>Black-box mode does not update the model (treating model as a black-box).
-Black-box approaches are based on the perturbation of the input data and measurement of the model’s output change.
-The process is repeated many times, which requires hundreds or thousands of forward passes
-and introduces significant computational overhead.</p>
-<p><code class="docutils literal notranslate"><span class="pre">preprocess_fn</span></code> and <code class="docutils literal notranslate"><span class="pre">postprocess_fn</span></code> are required to be provided by the user for the black-box mode.</p>
+<p>Generating saliency maps involves model inference. Explainer will perform model inference but to do it, it requires <code class="docutils literal notranslate"><span class="pre">preprocess_fn</span></code> and <code class="docutils literal notranslate"><span class="pre">postprocess_fn</span></code>.</p>
+<section id="running-without-preprocess-fn">
+<h3>Running without <code class="docutils literal notranslate"><span class="pre">preprocess_fn</span></code><a class="headerlink" href="#running-without-preprocess-fn" title="Link to this heading">#</a></h3>
+<p>Here’s the example how we can avoid passing <code class="docutils literal notranslate"><span class="pre">preprocess_fn</span></code> by preprocessing data beforehand (like resizing and adding a batch dimension).</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
 <span class="kn">from</span> <span class="nn">openvino.runtime.utils.data_helpers.wrappers</span> <span class="kn">import</span> <span class="n">OVDict</span>
 
 <span class="kn">import</span> <span class="nn">openvino_xai</span> <span class="k">as</span> <span class="nn">xai</span>
-<span class="kn">from</span> <span class="nn">openvino_xai.explainer.explanation_parameters</span> <span class="kn">import</span> <span class="n">ExplainMode</span><span class="p">,</span> <span class="n">ExplanationParameters</span>
-
-
-<span class="k">def</span> <span class="nf">preprocess_fn</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-    <span class="c1"># Implementing own pre-process function based on model&#39;s implementation</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">dsize</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">))</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">x</span>
 
 
 <span class="k">def</span> <span class="nf">postprocess_fn</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">OVDict</span><span class="p">):</span>
-    <span class="c1"># Implementing own post-process function based on model&#39;s implementation</span>
-    <span class="c1"># Output logits</span>
+    <span class="c1"># Implementing our own post-process function based on the model&#39;s implementation</span>
+    <span class="c1"># Return &quot;logits&quot; model output</span>
     <span class="k">return</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;logits&quot;</span><span class="p">]</span>
 
-
-<span class="c1"># Creating model</span>
+<span class="c1"># Create ov.Model</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">ov</span><span class="o">.</span><span class="n">Core</span><span class="p">()</span><span class="o">.</span><span class="n">read_model</span><span class="p">(</span><span class="s2">&quot;path/to/model.xml&quot;</span><span class="p">)</span>  <span class="c1"># type: ov.Model</span>
 
 <span class="c1"># Explainer object will prepare and load the model once in the beginning</span>
 <span class="n">explainer</span> <span class="o">=</span> <span class="n">xai</span><span class="o">.</span><span class="n">Explainer</span><span class="p">(</span>
     <span class="n">model</span><span class="p">,</span>
     <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">,</span>
-    <span class="n">preprocess_fn</span><span class="o">=</span><span class="n">preprocess_fn</span><span class="p">,</span>
     <span class="n">postprocess_fn</span><span class="o">=</span><span class="n">postprocess_fn</span><span class="p">,</span>
-    <span class="n">explain_mode</span><span class="o">=</span><span class="n">ExplainMode</span><span class="o">.</span><span class="n">BLACKBOX</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="c1"># Generate and process saliency maps (as many as required, sequentially)</span>
 <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="s2">&quot;path/to/image.jpg&quot;</span><span class="p">)</span>
-<span class="n">explanation_parameters</span> <span class="o">=</span> <span class="n">ExplanationParameters</span><span class="p">(</span>
-    <span class="n">target_explain_labels</span><span class="o">=</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">],</span>  <span class="c1"># indices or string labels to explain</span>
-<span class="p">)</span>
+
+<span class="c1"># Pre-process the image as the model requires (resizing and adding a batch dimension)</span>
+<span class="n">preprocessed_image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">image</span><span class="p">,</span> <span class="n">dsize</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">))</span>
+<span class="n">preprocessed_image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">preprocessed_image</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># Run explanation</span>
 <span class="n">explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span>
-    <span class="n">image</span><span class="p">,</span>
-    <span class="n">explanation_parameters</span><span class="p">,</span>
-    <span class="n">num_masks</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>  <span class="c1"># kwargs of the RISE algo</span>
+    <span class="n">preprocessed_image</span><span class="p">,</span>
+    <span class="n">target_explain_labels</span><span class="o">=</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">],</span>  <span class="c1"># indices or string labels to explain</span>
+    <span class="n">overlay</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># False by default</span>
+    <span class="n">original_input_image</span><span class="o">=</span><span class="n">image</span><span class="p">,</span>  <span class="c1"># to apply overlay on the original image instead of the preprocessed one that was used for the explainer</span>
 <span class="p">)</span>
 
-<span class="c1"># Saving saliency maps</span>
+<span class="c1"># Save saliency maps</span>
 <span class="n">explanation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;output_path&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="specifying-preprocess-fn">
+<h3>Specifying <code class="docutils literal notranslate"><span class="pre">preprocess_fn</span></code><a class="headerlink" href="#specifying-preprocess-fn" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
+<span class="kn">from</span> <span class="nn">openvino.runtime.utils.data_helpers.wrappers</span> <span class="kn">import</span> <span class="n">OVDict</span>
+
+<span class="kn">import</span> <span class="nn">openvino_xai</span> <span class="k">as</span> <span class="nn">xai</span>
+
+
+<span class="k">def</span> <span class="nf">preprocess_fn</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="c1"># Implementing our own pre-process function based on the model&#39;s implementation</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">dsize</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">))</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">x</span>
+
+<span class="k">def</span> <span class="nf">postprocess_fn</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">OVDict</span><span class="p">):</span>
+    <span class="c1"># Implementing our own post-process function based on the model&#39;s implementation</span>
+    <span class="c1"># Return &quot;logits&quot; model output</span>
+    <span class="k">return</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;logits&quot;</span><span class="p">]</span>
+
+<span class="c1"># Create ov.Model</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ov</span><span class="o">.</span><span class="n">Core</span><span class="p">()</span><span class="o">.</span><span class="n">read_model</span><span class="p">(</span><span class="s2">&quot;path/to/model.xml&quot;</span><span class="p">)</span>  <span class="c1"># type: ov.Model</span>
+
+<span class="c1"># The Explainer object will prepare and load the model once in the beginning</span>
+<span class="n">explainer</span> <span class="o">=</span> <span class="n">xai</span><span class="o">.</span><span class="n">Explainer</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">,</span>
+    <span class="n">preprocess_fn</span><span class="o">=</span><span class="n">preprocess_fn</span><span class="p">,</span>
+    <span class="n">postprocess_fn</span><span class="o">=</span><span class="n">postprocess_fn</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Generate and process saliency maps (as many as required, sequentially)</span>
+<span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="s2">&quot;path/to/image.jpg&quot;</span><span class="p">)</span>
+
+<span class="c1"># Run explanation</span>
+<span class="n">explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span>
+    <span class="n">image</span><span class="p">,</span>
+    <span class="n">target_explain_labels</span><span class="o">=</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">],</span>  <span class="c1"># indices or string labels to explain</span>
+<span class="p">)</span>
+
+<span class="c1"># Save saliency maps</span>
+<span class="n">explanation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;output_path&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="white-box-mode">
+<h2>White-Box mode<a class="headerlink" href="#white-box-mode" title="Link to this heading">#</a></h2>
+<p>White-box mode involves two steps: updating the OV model and then running the updated model.</p>
+<p>The updated model has an extra XAI branch resulting in an additional <code class="docutils literal notranslate"><span class="pre">saliency_map</span></code> output. This XAI branch creates saliency maps during the model’s inference. The computational load from the XAI branch varies depending on the white-box algorithm, but it’s usually quite small.</p>
+<p>You need to pass either <code class="docutils literal notranslate"><span class="pre">preprocess_fn</span></code> or already preprocessed images to run the explainer in white-box mode.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
+
+<span class="kn">import</span> <span class="nn">openvino_xai</span> <span class="k">as</span> <span class="nn">xai</span>
+<span class="kn">from</span> <span class="nn">openvino_xai.explainer</span> <span class="kn">import</span> <span class="n">ExplainMode</span>
+
+
+<span class="k">def</span> <span class="nf">preprocess_fn</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="c1"># Implementing own pre-process function based on the model&#39;s implementation</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">dsize</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">))</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">x</span>
+
+<span class="c1"># Create ov.Model</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ov</span><span class="o">.</span><span class="n">Core</span><span class="p">()</span><span class="o">.</span><span class="n">read_model</span><span class="p">(</span><span class="s2">&quot;path/to/model.xml&quot;</span><span class="p">)</span>  <span class="c1"># type: ov.Model</span>
+
+<span class="c1"># The Explainer object will prepare and load the model once at the beginning</span>
+<span class="n">explainer</span> <span class="o">=</span> <span class="n">xai</span><span class="o">.</span><span class="n">Explainer</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">,</span>
+    <span class="n">preprocess_fn</span><span class="o">=</span><span class="n">preprocess_fn</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Generate and process saliency maps (as many as required, sequentially)</span>
+<span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="s2">&quot;path/to/image.jpg&quot;</span><span class="p">)</span>
+
+<span class="n">voc_labels</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;aeroplane&#39;</span><span class="p">,</span> <span class="s1">&#39;bicycle&#39;</span><span class="p">,</span> <span class="s1">&#39;bird&#39;</span><span class="p">,</span> <span class="s1">&#39;boat&#39;</span><span class="p">,</span> <span class="s1">&#39;bottle&#39;</span><span class="p">,</span> <span class="s1">&#39;bus&#39;</span><span class="p">,</span> <span class="s1">&#39;car&#39;</span><span class="p">,</span> <span class="s1">&#39;cat&#39;</span><span class="p">,</span> <span class="s1">&#39;chair&#39;</span><span class="p">,</span> <span class="s1">&#39;cow&#39;</span><span class="p">,</span> <span class="s1">&#39;diningtable&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;dog&#39;</span><span class="p">,</span> <span class="s1">&#39;horse&#39;</span><span class="p">,</span> <span class="s1">&#39;motorbike&#39;</span><span class="p">,</span> <span class="s1">&#39;person&#39;</span><span class="p">,</span> <span class="s1">&#39;pottedplant&#39;</span><span class="p">,</span> <span class="s1">&#39;sheep&#39;</span><span class="p">,</span> <span class="s1">&#39;sofa&#39;</span><span class="p">,</span> <span class="s1">&#39;train&#39;</span><span class="p">,</span> <span class="s1">&#39;tvmonitor&#39;</span>
+<span class="p">]</span>
+
+<span class="c1"># Run explanation</span>
+<span class="n">explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span>
+    <span class="n">image</span><span class="p">,</span>
+    <span class="n">explain_mode</span><span class="o">=</span><span class="n">ExplainMode</span><span class="o">.</span><span class="n">WHITEBOX</span><span class="p">,</span>
+    <span class="c1"># target_layer=&quot;last_conv_node_name&quot;,  # target_layer - node after which the XAI branch will be inserted, usually the last convolutional layer in the backbone</span>
+    <span class="n">embed_scaling</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># True by default. If set to True, the saliency map scale (0 ~ 255) operation is embedded in the model</span>
+    <span class="n">explain_method</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Method</span><span class="o">.</span><span class="n">RECIPROCAM</span><span class="p">,</span>  <span class="c1"># ReciproCAM is the default XAI method for CNNs</span>
+    <span class="n">label_names</span><span class="o">=</span><span class="n">voc_labels</span><span class="p">,</span>
+    <span class="n">target_explain_labels</span><span class="o">=</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">],</span>  <span class="c1"># target classes to explain, also [&#39;dog&#39;, &#39;person&#39;] is a valid input, since label_names are provided</span>
+    <span class="n">overlay</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># False by default </span>
+<span class="p">)</span>
+
+<span class="c1"># Save saliency maps</span>
+<span class="n">explanation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;output_path&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="black-box-mode">
+<h2>Black-Box mode<a class="headerlink" href="#black-box-mode" title="Link to this heading">#</a></h2>
+<p>Black-box mode does not update the model (treating the model as a black box).
+Black-box approaches are based on the perturbation of the input data and measurement of the model’s output change.</p>
+<p>The process is repeated many times, requiring hundreds or thousands of forward passes and introducing <strong>significant computational overhead</strong>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">preprocess_fn</span></code> (or preprocessed images) and <code class="docutils literal notranslate"><span class="pre">postprocess_fn</span></code> are required to be provided by the user for black-box mode.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
+
+<span class="kn">import</span> <span class="nn">openvino_xai</span> <span class="k">as</span> <span class="nn">xai</span>
+<span class="kn">from</span> <span class="nn">openvino_xai.explainer</span> <span class="kn">import</span> <span class="n">ExplainMode</span>
+
+
+<span class="k">def</span> <span class="nf">preprocess_fn</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="c1"># Implementing our own pre-process function based on the model&#39;s implementation</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">dsize</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">))</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">x</span>
+
+<span class="c1"># Create ov.Model</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ov</span><span class="o">.</span><span class="n">Core</span><span class="p">()</span><span class="o">.</span><span class="n">read_model</span><span class="p">(</span><span class="s2">&quot;path/to/model.xml&quot;</span><span class="p">)</span>  <span class="c1"># type: ov.Model</span>
+
+<span class="c1"># The Explainer object will prepare and load the model once at the beginning</span>
+<span class="n">explainer</span> <span class="o">=</span> <span class="n">xai</span><span class="o">.</span><span class="n">Explainer</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">,</span>
+    <span class="n">preprocess_fn</span><span class="o">=</span><span class="n">preprocess_fn</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Generate and process saliency maps (as many as required, sequentially)</span>
+<span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="s2">&quot;path/to/image.jpg&quot;</span><span class="p">)</span>
+
+<span class="c1"># Run explanation</span>
+<span class="n">explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span>
+    <span class="n">image</span><span class="p">,</span>
+    <span class="n">explain_mode</span><span class="o">=</span><span class="n">ExplainMode</span><span class="o">.</span><span class="n">BLACKBOX</span><span class="p">,</span>
+    <span class="n">target_explain_labels</span><span class="o">=</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">],</span>  <span class="c1"># target classes to explain</span>
+    <span class="c1"># target_explain_labels=-1,  # explain all classes</span>
+    <span class="n">overlay</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># False by default </span>
+    <span class="n">num_masks</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>  <span class="c1"># kwargs for the RISE algorithm</span>
+<span class="p">)</span>
+
+<span class="c1"># Save saliency maps</span>
+<span class="n">explanation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;output_path&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">)</span>
+
 </pre></div>
 </div>
 </section>
 <section id="xai-insertion-white-box-usage">
 <h2>XAI insertion (white-box usage)<a class="headerlink" href="#xai-insertion-white-box-usage" title="Link to this heading">#</a></h2>
-<p>As mentioned above, saliency map generation requires model inference.
-In the above use cases, OVXAI performs model inference using provided processing functions.
-Alternative approach is to use OVXAI just to insert XAI branch into the model and infer it in the original pipeline.</p>
+<p>As mentioned above, saliency map generation requires model inference. In the above use cases, OpenVINO XAI performs model inference using provided processing functions. An alternative approach is to use XAI to insert the XAI branch into the model and infer it in the original pipeline.</p>
 <p><code class="docutils literal notranslate"><span class="pre">insert_xai()</span></code> API is used for insertion.</p>
-<p>Note: original model outputs are not affected and the model should be inferable by the original inference pipeline.</p>
+<p><strong>Note</strong>: The original model outputs are not affected, and the model should be inferable by the original inference pipeline.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
-
 <span class="kn">import</span> <span class="nn">openvino_xai</span> <span class="k">as</span> <span class="nn">xai</span>
-<span class="kn">from</span> <span class="nn">openvino_xai.inserter.parameters</span> <span class="kn">import</span> <span class="n">ClassificationInsertionParameters</span>
 
 
-<span class="c1"># Creating model</span>
+<span class="c1"># Create an ov.Model</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">ov</span><span class="o">.</span><span class="n">Core</span><span class="p">()</span><span class="o">.</span><span class="n">read_model</span><span class="p">(</span><span class="s2">&quot;path/to/model.xml&quot;</span><span class="p">)</span>  <span class="c1"># type: ov.Model</span>
 
-<span class="c1"># Optional - create insertion parameters</span>
-<span class="n">insertion_parameters</span> <span class="o">=</span> <span class="n">ClassificationInsertionParameters</span><span class="p">(</span>
-    <span class="c1"># target_layer=&quot;last_conv_node_name&quot;,  # target_layer - node after which XAI branch will be inserted</span>
-    <span class="n">embed_scaling</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># True by default.  If set to True, saliency map scale (0 ~ 255) operation is embedded in the model</span>
-    <span class="n">explain_method</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Method</span><span class="o">.</span><span class="n">RECIPROCAM</span><span class="p">,</span>  <span class="c1"># ReciproCAM is the default XAI method for CNNs</span>
-<span class="p">)</span>
-
-<span class="c1"># Inserting XAI branch into the model graph</span>
+<span class="c1"># Insert XAI branch into the model graph</span>
 <span class="n">model_xai</span> <span class="o">=</span> <span class="n">xai</span><span class="o">.</span><span class="n">insert_xai</span><span class="p">(</span>
     <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
     <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">,</span>
-    <span class="n">insertion_parameters</span><span class="o">=</span><span class="n">insertion_parameters</span><span class="p">,</span>
+    <span class="c1"># target_layer=&quot;last_conv_node_name&quot;,  # target_layer - the node after which the XAI branch will be inserted, usually the last convolutional layer in the backbone</span>
+    <span class="n">embed_scaling</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># True by default. If set to True, the saliency map scale (0 ~ 255) operation is embedded in the model</span>
+    <span class="n">explain_method</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Method</span><span class="o">.</span><span class="n">RECIPROCAM</span><span class="p">,</span>  <span class="c1"># ReciproCAM is the default XAI method for CNNs</span>
 <span class="p">)</span>  <span class="c1"># type: ov.Model</span>
 
 <span class="c1"># ***** Downstream task: user&#39;s code that infers model_xai and picks &#39;saliency_map&#39; output *****</span>
@@ -632,14 +682,14 @@ Alternative approach is to use OVXAI just to insert XAI branch into the model an
 </section>
 <section id="example-scripts">
 <h2>Example scripts<a class="headerlink" href="#example-scripts" title="Link to this heading">#</a></h2>
-<p>More usage scenarios are available in <a class="reference internal" href="#../../examples"><span class="xref myst">examples</span></a>.</p>
+<p>More usage scenarios that can be used with your own models and images as arguments are available in <a class="reference internal" href="#../../examples"><span class="xref myst">examples</span></a>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Retrieve models by running tests</span>
 <span class="c1"># Models are downloaded and stored in .data/otx_models</span>
 <span class="n">pytest</span> <span class="n">tests</span><span class="o">/</span><span class="n">test_classification</span><span class="o">.</span><span class="n">py</span>
 
 <span class="c1"># Run a bunch of classification examples</span>
 <span class="c1"># All outputs will be stored in the corresponding output directory</span>
-<span class="n">python</span> <span class="n">examples</span><span class="o">/</span><span class="n">run_classification</span><span class="o">.</span><span class="n">py</span> <span class="o">.</span><span class="n">data</span><span class="o">/</span><span class="n">otx_models</span><span class="o">/</span><span class="n">mlc_mobilenetv3_large_voc</span><span class="o">.</span><span class="n">xml</span> \
+<span class="n">python</span> <span class="n">examples</span><span class="o">/</span><span class="n">run_classification</span><span class="o">.</span><span class="n">py</span> <span class="o">.</span><span class="n">data</span><span class="o">/</span><span class="n">otx_models</span><span class="o">/</span><span class="n">mlc_mobilenetv3_large_voc</span><span class="o">.</span><span class="n">xml</span> 
 <span class="n">tests</span><span class="o">/</span><span class="n">assets</span><span class="o">/</span><span class="n">cheetah_person</span><span class="o">.</span><span class="n">jpg</span> <span class="o">--</span><span class="n">output</span> <span class="n">output</span>
 </pre></div>
 </div>
@@ -694,7 +744,11 @@ Alternative approach is to use OVXAI just to insert XAI branch into the model an
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#openvino-xai-architecture">OpenVINO XAI Architecture</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#explainer-interface-to-xai-algorithms">Explainer - interface to XAI algorithms</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-usage-auto-mode">Basic usage: Auto mode</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-usage-auto-mode">Basic usage: Auto mode</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#running-without-preprocess-fn">Running without <code class="docutils literal notranslate"><span class="pre">preprocess_fn</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#specifying-preprocess-fn">Specifying <code class="docutils literal notranslate"><span class="pre">preprocess_fn</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#white-box-mode">White-Box mode</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#black-box-mode">Black-Box mode</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#xai-insertion-white-box-usage">XAI insertion (white-box usage)</a></li>
