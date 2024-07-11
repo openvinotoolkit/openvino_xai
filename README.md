@@ -206,8 +206,8 @@ Users could tweak the basic use-case according to their purpose, which include b
 Please find more options and scenarios in the following links:
 
 * [OpenVINO XAI User Guide](docs/source/user-guide.md)
-* (TBD) [OpenVINO Notebook - XAI Basic](n/a)
-* (TBD) [OpenVINO Notebook - XAI Deep Dive](n/a)
+* [OpenVINO Notebook - XAI Basic](https://github.com/openvinotoolkit/openvino_notebooks/blob/latest/notebooks/explainable-ai-1-basic/explainable-ai-1-basic.ipynb)
+* [OpenVINO Notebook - XAI Deep Dive](https://github.com/openvinotoolkit/openvino_notebooks/blob/latest/notebooks/explainable-ai-2-deep-dive/explainable-ai-2-deep-dive.ipynb)
 
 ### Playing with the examples
 
