@@ -8,7 +8,7 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-import openvino.runtime as ov
+import openvino as ov
 import pytest
 
 from openvino_xai.common.parameters import Method, Task
@@ -152,9 +152,6 @@ NOT_SUPPORTED_BY_WB_MODELS = {
 
 
 class TestImageClassificationTimm:
-    fields = ["Model", "Exported to ONNX", "Exported to OV IR", "Explained", "Map size", "Map saved"]
-    counter_row = ["Counters", "0", "0", "0", "-", "-"]
-    report = [fields, counter_row]
     clear_cache_converted_models = False
     clear_cache_hf_models = False
     supported_num_classes = {
@@ -173,7 +170,6 @@ class TestImageClassificationTimm:
 
     @pytest.mark.parametrize("model_id", TEST_MODELS)
     def test_classification_white_box(self, model_id, dump_maps=False):
-        # self.check_for_saved_map(model_id, "timm_models/maps_wb/")
 
         for skipped_model in NOT_SUPPORTED_BY_WB_MODELS.keys():
             if skipped_model in model_id:
@@ -190,7 +186,6 @@ class TestImageClassificationTimm:
                 break
 
         timm_model, model_cfg = self.get_timm_model(model_id)
-        self.update_report("report_wb.csv", model_id)
 
         ir_path = self.data_dir / "timm_models" / "converted_models" / model_id / "model_fp32.xml"
         if not ir_path.is_file():
@@ -202,11 +197,7 @@ class TestImageClassificationTimm:
             onnx_path = output_model_dir / "model_fp32.onnx"
             set_dynamic_batch = explain_method == Method.VITRECIPROCAM
             export_to_onnx(timm_model, onnx_path, dummy_tensor, set_dynamic_batch)
-            self.update_report("report_wb.csv", model_id, "True")
             export_to_ir(onnx_path, output_model_dir / "model_fp32.xml")
-            self.update_report("report_wb.csv", model_id, "True", "True")
-        else:
-            self.update_report("report_wb.csv", model_id, "True", "True")
 
         model = ov.Core().read_model(ir_path)
 
@@ -241,44 +232,10 @@ class TestImageClassificationTimm:
         assert explanation is not None
         assert explanation.shape[-1] > 1 and explanation.shape[-2] > 1
         print(f"{model_id}: Generated classification saliency maps with shape {explanation.shape}.")
-        self.update_report("report_wb.csv", model_id, "True", "True", "True")
-        raw_shape = explanation.shape
-        shape_str = "H=" + str(raw_shape[0]) + ", W=" + str(raw_shape[1])
-        self.update_report("report_wb.csv", model_id, "True", "True", "True", shape_str)
-
-        if dump_maps:
-            # timm workaround to remove outlier activations at corners
-            # TODO: find a root cause
-            raw_sal_map = explanation.saliency_map[target_class]
-            raw_sal_map[0, 0] = np.mean(np.delete(raw_sal_map[:2, :2].flatten(), 0))
-            raw_sal_map[0, -1] = np.mean(np.delete(raw_sal_map[:2, -2:].flatten(), 1))
-            raw_sal_map[-1, 0] = np.mean(np.delete(raw_sal_map[-2:, :2].flatten(), 2))
-            raw_sal_map[-1, -1] = np.mean(np.delete(raw_sal_map[-2:, -2:].flatten(), 3))
-            explanation.saliency_map[target_class] = raw_sal_map
-            visualizer = Visualizer()
-            explanation = visualizer(
-                explanation=explanation,
-                original_input_image=image,
-                scaling=True,
-                overlay=True,
-                resize=False,
-                colormap=False,
-            )
-
-            model_output = explainer.model_forward(image)
-            target_confidence = get_score(model_output["logits"], target_class, activation=ActivationType.SOFTMAX)
-            self.put_confidence_into_map_overlay(explanation, target_confidence, target_class)
-
-            save_dir = self.output_dir / "timm_models" / "maps_wb"
-            explanation.save(save_dir, model_id)
-            file_name = model_id + "_target_" + str(target_class) + ".jpg"
-            map_saved = (save_dir / file_name).is_file()
-            self.update_report("report_wb.csv", model_id, "True", "True", "True", shape_str, str(map_saved))
         self.clear_cache()
 
     @pytest.mark.parametrize("model_id", TEST_MODELS)
     def test_classification_black_box(self, model_id, dump_maps=False):
-        # self.check_for_saved_map(model_id, "timm_models/maps_bb/")
 
         for skipped_model in NOT_SUPPORTED_BY_BB_MODELS.keys():
             if skipped_model in model_id:
@@ -289,7 +246,6 @@ class TestImageClassificationTimm:
                 pytest.xfail(reason=SUPPORTED_BUT_FAILED_BY_BB_MODELS[failed_model])
 
         timm_model, model_cfg = self.get_timm_model(model_id)
-        self.update_report("report_bb.csv", model_id)
 
         onnx_path = self.data_dir / "timm_models" / "converted_models" / model_id / "model_fp32.onnx"
         if not onnx_path.is_file():
@@ -300,9 +256,6 @@ class TestImageClassificationTimm:
             dummy_tensor = torch.rand(input_size)
             onnx_path = output_model_dir / "model_fp32.onnx"
             export_to_onnx(timm_model, onnx_path, dummy_tensor, False)
-            self.update_report("report_bb.csv", model_id, "True", "True")
-        else:
-            self.update_report("report_bb.csv", model_id, "True", "True")
 
         model = ov.Core().read_model(onnx_path)
 
@@ -338,35 +291,7 @@ class TestImageClassificationTimm:
         assert explanation is not None
         assert explanation.shape[-1] > 1 and explanation.shape[-2] > 1
         print(f"{model_id}: Generated classification saliency maps with shape {explanation.shape}.")
-        self.update_report("report_bb.csv", model_id, "True", "True", "True")
-        shape = explanation.shape
-        shape_str = "H=" + str(shape[0]) + ", W=" + str(shape[1])
-        self.update_report("report_bb.csv", model_id, "True", "True", "True", shape_str)
-
-        if dump_maps:
-            model_output = explainer.model_forward(image)
-            target_confidence = get_score(model_output["logits"], target_class, activation=ActivationType.SOFTMAX)
-            self.put_confidence_into_map_overlay(explanation, target_confidence, target_class)
-
-            save_dir = self.output_dir / "timm_models" / "maps_bb"
-            explanation.save(save_dir, model_id)
-            file_name = model_id + "_target_" + str(target_class) + ".jpg"
-            map_saved = (save_dir / file_name).is_file()
-            self.update_report("report_bb.csv", model_id, "True", "True", "True", shape_str, str(map_saved))
         self.clear_cache()
-
-    def check_for_saved_map(self, model_id, directory):
-        for target in self.supported_num_classes.values():
-            map_name = model_id + "_target_" + str(target) + ".jpg"
-            map_path = self.output_dir / directory / map_name
-            map_saved = map_path.is_file()
-            if map_saved:
-                saved_map = cv2.imread(map_path._str)
-                saved_map_shape = saved_map.shape
-                shape = "H=" + str(saved_map_shape[0]) + ", W=" + str(saved_map_shape[1])
-                self.update_report("report_wb.csv", model_id, "True", "True", "True", shape, str(map_saved))
-                self.clear_cache()
-                pytest.skip(f"Model {model_id} is already explained.")
 
     def get_timm_model(self, model_id):
         timm_model = timm.create_model(model_id, in_chans=3, pretrained=True, checkpoint_path="")
@@ -378,56 +303,6 @@ class TestImageClassificationTimm:
             pytest.skip(f"Number of model classes {num_classes} unknown")
         return timm_model, model_cfg
 
-    @staticmethod
-    def put_confidence_into_map_overlay(explanation, target_confidence, target_class):
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        org = (50, 50)
-        fontScale = 1
-        if target_confidence > 0.5:
-            color = (0, 255, 0)
-        else:
-            color = (0, 0, 255)
-        thickness = 2
-        map_ = cv2.putText(
-            explanation.saliency_map[target_class],
-            f"{target_confidence:.2f}",
-            org,
-            font,
-            fontScale,
-            color,
-            thickness,
-            cv2.LINE_AA,
-        )
-        explanation.saliency_map[target_class] = map_
-
-    def update_report(
-        self,
-        report_name,
-        model_id,
-        exported_to_onnx="False",
-        exported_to_ov_ir="False",
-        explained="False",
-        saliency_map_size="-",
-        map_saved="False",
-    ):
-        fields = [model_id, exported_to_onnx, exported_to_ov_ir, explained, saliency_map_size, map_saved]
-        last_row = self.report[-1]
-        if last_row[0] != model_id:
-            self.report.append(fields)
-        else:
-            for i in range(len(last_row)):
-                if last_row[i] != fields[i]:
-                    last_row[i] = fields[i]
-            bool_flags = np.array(
-                [[self.count(model[1]), self.count(model[2]), self.count(model[3])] for model in self.report[2:]]
-            )
-            self.report[1][1] = str(bool_flags[:, 0].sum())
-            self.report[1][2] = str(bool_flags[:, 1].sum())
-            self.report[1][3] = str(bool_flags[:, 2].sum())
-        with open(self.output_dir / f"timm_{report_name}", "w") as f:
-            write = csv.writer(f)
-            write.writerows(self.report)
-
     def clear_cache(self):
         if self.clear_cache_converted_models:
             ir_model_dir = self.output_dir / "timm_models" / "converted_models"
@@ -438,11 +313,3 @@ class TestImageClassificationTimm:
             huggingface_hub_dir = Path(cache_dir) / "huggingface/hub/"
             if huggingface_hub_dir.is_dir():
                 shutil.rmtree(huggingface_hub_dir)
-
-    @staticmethod
-    def count(bool_string):
-        if bool_string == "True":
-            return 1
-        if bool_string == "False":
-            return 0
-        raise ValueError
