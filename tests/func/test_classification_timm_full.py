@@ -75,6 +75,7 @@ SUPPORTED_BUT_FAILED_BY_BB_MODELS = {}
 
 NOT_SUPPORTED_BY_BB_MODELS = {
     "_nfnet_": "RuntimeError: Exception from src/inference/src/cpp/core.cpp:90: Training mode of BatchNormalization is not supported.",
+    "convit": "RuntimeError: Couldn't get TorchScript module by tracing.",
     "convnext_xxlarge": "RuntimeError: The serialized model is larger than the 2GiB limit imposed by the protobuf library.",
     "convnextv2_huge": "RuntimeError: The serialized model is larger than the 2GiB limit imposed by the protobuf library.",
     "deit3_huge": "RuntimeError: The serialized model is larger than the 2GiB limit imposed by the protobuf library.",
@@ -109,7 +110,9 @@ NOT_SUPPORTED_BY_WB_MODELS = {
     **NOT_SUPPORTED_BY_BB_MODELS,
     # Killed on WB
     "beit_large_patch16_512": "Failed to allocate 94652825600 bytes of memory",
+    "eva_large_patch14_336": "OOM Killed",
     "eva02_base_patch14_448": "OOM Killed",
+    "eva02_large_patch14_448": "OOM Killed",
     "mobilevit_": "Segmentation fault",
     "mobilevit_xxs": "Segmentation fault",
     "mvitv2_base.fb_in1k": "Segmentation fault",
@@ -121,6 +124,8 @@ NOT_SUPPORTED_BY_WB_MODELS = {
     "tf_efficientnet_l2.ns_jft_in1k": "OOM Killed",
     "xcit_large": "Failed to allocate 81581875200 bytes of memory",
     "xcit_medium_24_p8_384": "OOM Killed",
+    "xcit_small_12_p8_384": "OOM Killed",
+    "xcit_small_24_p8_384": "OOM Killed",
     # Not expected to work for now
     "botnet26t_256": "Only two outputs of the between block Add node supported, but got 1",
     "caformer": "One (and only one) of the nodes has to be Add type. But got MVN and Multiply.",
@@ -130,6 +135,7 @@ NOT_SUPPORTED_BY_WB_MODELS = {
     "convmixer": "Cannot find output backbone_node in auto mode, please provide target_layer.",
     "crossvit": "One (and only one) of the nodes has to be Add type. But got StridedSlice and StridedSlice.",
     "davit": "Only two outputs of the between block Add node supported, but got 1.",
+    "eca_botnext": "Only two outputs of the between block Add node supported, but got 1.",
     "edgenext": "Only two outputs of the between block Add node supported, but got 1",
     "efficientformer": "Cannot find output backbone_node in auto mode.",
     "focalnet": "Cannot find output backbone_node in auto mode, please provide target_layer.",
