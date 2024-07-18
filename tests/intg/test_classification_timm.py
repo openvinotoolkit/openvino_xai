@@ -342,9 +342,7 @@ class TestImageClassificationTimm:
         timm_model, model_cfg = self.get_timm_model(model_id)
         input_size = list(timm_model.default_cfg["input_size"])
         dummy_tensor = torch.rand([1] + input_size)
-        model = ov.convert_model(
-            timm_model, example_input=dummy_tensor, input=(ov.PartialShape([-1] + input_size),)
-        )
+        model = ov.convert_model(timm_model, example_input=dummy_tensor, input=(ov.PartialShape([-1] + input_size),))
 
         if model_id in LIMITED_DIVERSE_SET_OF_CNN_MODELS:
             explain_method = Method.RECIPROCAM

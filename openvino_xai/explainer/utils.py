@@ -120,7 +120,7 @@ def get_preprocess_fn(
 
 def postprocess_fn(x: OVDict, logit_name="logits") -> np.ndarray:
     """Postprocess function."""
-    return x[logit_name]
+    return x.get(logit_name, x[0])  # Models from OVC has no output names at times
 
 
 def get_postprocess_fn(logit_name="logits") -> Callable[[], np.ndarray]:

@@ -170,7 +170,6 @@ class TestImageClassificationTimm:
 
     @pytest.mark.parametrize("model_id", TEST_MODELS)
     def test_classification_white_box(self, model_id, dump_maps=False):
-
         for skipped_model in NOT_SUPPORTED_BY_WB_MODELS.keys():
             if skipped_model in model_id:
                 pytest.skip(reason=NOT_SUPPORTED_BY_WB_MODELS[skipped_model])
@@ -186,20 +185,9 @@ class TestImageClassificationTimm:
                 break
 
         timm_model, model_cfg = self.get_timm_model(model_id)
-
-        ir_path = self.data_dir / "timm_models" / "converted_models" / model_id / "model_fp32.xml"
-        if not ir_path.is_file():
-            output_model_dir = self.output_dir / "timm_models" / "converted_models" / model_id
-            output_model_dir.mkdir(parents=True, exist_ok=True)
-            ir_path = output_model_dir / "model_fp32.xml"
-            input_size = [1] + list(timm_model.default_cfg["input_size"])
-            dummy_tensor = torch.rand(input_size)
-            onnx_path = output_model_dir / "model_fp32.onnx"
-            set_dynamic_batch = explain_method == Method.VITRECIPROCAM
-            export_to_onnx(timm_model, onnx_path, dummy_tensor, set_dynamic_batch)
-            export_to_ir(onnx_path, output_model_dir / "model_fp32.xml")
-
-        model = ov.Core().read_model(ir_path)
+        input_size = list(timm_model.default_cfg["input_size"])
+        dummy_tensor = torch.rand([1] + input_size)
+        model = ov.convert_model(timm_model, example_input=dummy_tensor, input=(ov.PartialShape([-1] + input_size),))
 
         mean_values = [(item * 255) for item in model_cfg["mean"]]
         scale_values = [(item * 255) for item in model_cfg["std"]]
@@ -236,7 +224,6 @@ class TestImageClassificationTimm:
 
     @pytest.mark.parametrize("model_id", TEST_MODELS)
     def test_classification_black_box(self, model_id, dump_maps=False):
-
         for skipped_model in NOT_SUPPORTED_BY_BB_MODELS.keys():
             if skipped_model in model_id:
                 pytest.skip(reason=NOT_SUPPORTED_BY_BB_MODELS[skipped_model])
@@ -246,18 +233,9 @@ class TestImageClassificationTimm:
                 pytest.xfail(reason=SUPPORTED_BUT_FAILED_BY_BB_MODELS[failed_model])
 
         timm_model, model_cfg = self.get_timm_model(model_id)
-
-        onnx_path = self.data_dir / "timm_models" / "converted_models" / model_id / "model_fp32.onnx"
-        if not onnx_path.is_file():
-            output_model_dir = self.output_dir / "timm_models" / "converted_models" / model_id
-            output_model_dir.mkdir(parents=True, exist_ok=True)
-            onnx_path = output_model_dir / "model_fp32.onnx"
-            input_size = [1] + list(timm_model.default_cfg["input_size"])
-            dummy_tensor = torch.rand(input_size)
-            onnx_path = output_model_dir / "model_fp32.onnx"
-            export_to_onnx(timm_model, onnx_path, dummy_tensor, False)
-
-        model = ov.Core().read_model(onnx_path)
+        input_size = list(timm_model.default_cfg["input_size"])
+        dummy_tensor = torch.rand([1] + input_size)
+        model = ov.convert_model(timm_model, example_input=dummy_tensor, input=(ov.PartialShape([-1] + input_size),))
 
         mean_values = [(item * 255) for item in model_cfg["mean"]]
         scale_values = [(item * 255) for item in model_cfg["std"]]
