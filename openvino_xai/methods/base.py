@@ -2,11 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from abc import ABC, abstractmethod
-from typing import Callable
+from typing import Callable, Mapping
 
 import numpy as np
 import openvino.runtime as ov
-from openvino.runtime.utils.data_helpers.wrappers import OVDict
 
 from openvino_xai.common.utils import IdentityPreprocessFN
 
@@ -33,7 +32,7 @@ class MethodBase(ABC):
     def prepare_model(self, load_model: bool = True) -> ov.Model:
         """Model preparation steps."""
 
-    def model_forward(self, x: np.ndarray, preprocess: bool = True) -> OVDict:
+    def model_forward(self, x: np.ndarray, preprocess: bool = True) -> Mapping:
         """Forward pass of the compiled model. Applies preprocess_fn."""
         if not self._model_compiled:
             raise RuntimeError("Model is not compiled. Call prepare_model() first.")

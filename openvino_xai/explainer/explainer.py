@@ -2,11 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from enum import Enum
-from typing import Callable, List, Tuple
+from typing import Callable, List, Mapping, Tuple
 
 import numpy as np
 import openvino.runtime as ov
-from openvino.runtime.utils.data_helpers.wrappers import OVDict
 
 from openvino_xai import Task
 from openvino_xai.common.parameters import Method
@@ -53,7 +52,7 @@ class Explainer:
         (assume input images are already preprocessed by user).
     :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
     :param postprocess_fn: Postprocessing functions, required for black-box.
-    :type postprocess_fn: Callable[[OVDict], np.ndarray]
+    :type postprocess_fn: Callable[[Mapping], np.ndarray]
     :param explain_mode: Explain mode.
     :type explain_mode: ExplainMode
     :parameter explain_method: Explain method to use for model explanation.
@@ -71,7 +70,7 @@ class Explainer:
         model: ov.Model,
         task: Task,
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
-        postprocess_fn: Callable[[OVDict], np.ndarray] = None,
+        postprocess_fn: Callable[[Mapping], np.ndarray] = None,
         explain_mode: ExplainMode = ExplainMode.AUTO,
         explain_method: Method | None = None,
         target_layer: str | List[str] | None = None,
@@ -228,7 +227,7 @@ class Explainer:
             overlay_weight,
         )
 
-    def model_forward(self, x: np.ndarray, preprocess: bool = True) -> OVDict:
+    def model_forward(self, x: np.ndarray, preprocess: bool = True) -> Mapping:
         """Forward pass of the compiled model."""
         return self.method.model_forward(x, preprocess)
 
