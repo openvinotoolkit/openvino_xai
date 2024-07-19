@@ -7,6 +7,7 @@ import cv2
 import numpy as np
 import openvino as ov
 import pytest
+from pytest_mock import MockerFixture
 
 from openvino_xai.api.api import insert_xai
 from openvino_xai.common.parameters import Task
@@ -228,3 +229,27 @@ class TestExplainer:
             overlay=True,
         )
         assert explanation.saliency_map[0].shape == (100, 120, 3)
+
+    def test_init_with_file(self, mocker: MockerFixture):
+        ov_core = mocker.patch("openvino.Core")
+        create_method = mocker.patch("openvino_xai.Explainer.create_method")
+        # None
+        explainer = Explainer(
+            model=None,
+            task=Task.CLASSIFICATION,
+        )
+        ov_core.assert_not_called()
+        # str
+        path = "model.xml"
+        explainer = Explainer(
+            model=path,
+            task=Task.CLASSIFICATION,
+        )
+        ov_core.return_value.read_model.assert_called_with(path)
+        # Path
+        path = Path("model.xml")
+        explainer = Explainer(
+            model=path,
+            task=Task.CLASSIFICATION,
+        )
+        ov_core.return_value.read_model.assert_called_with(path)

@@ -383,6 +383,68 @@ class TestImageClassificationTimm:
         assert explanation.shape[-1] > 1 and explanation.shape[-2] > 1
         print(f"{model_id}: Generated classification saliency maps with shape {explanation.shape}.")
 
+    @pytest.mark.parametrize(
+        "model_id",
+        [
+            "resnet18.a1_in1k",
+            "vit_tiny_patch16_224.augreg_in21k",  # Downloads last month 15,345
+        ],
+    )
+    # @pytest.mark.parametrize("model_id", TEST_MODELS)
+    @pytest.mark.parametrize("model_format", ["xml", "onnx"])
+    def test_model_format(self, model_id, model_format):
+        if model_id in NON_SUPPORTED_BY_WB_MODELS:
+            pytest.skip(reason="Not supported yet")
+
+        if "convit_tiny.fb_in1k" in model_id:
+            pytest.skip(
+                reason="RuntimeError: Couldn't get TorchScript module by tracing."
+            )  # Torch -> OV conversion error
+
+        timm_model, model_cfg = self.get_timm_model(model_id)
+        input_size = list(timm_model.default_cfg["input_size"])
+        dummy_tensor = torch.rand([1] + input_size)
+        model = ov.convert_model(timm_model, example_input=dummy_tensor, input=(ov.PartialShape([-1] + input_size),))
+
+        if model_id in LIMITED_DIVERSE_SET_OF_CNN_MODELS:
+            explain_method = Method.RECIPROCAM
+        elif model_id in LIMITED_DIVERSE_SET_OF_VISION_TRANSFORMER_MODELS:
+            explain_method = Method.VITRECIPROCAM
+        else:
+            raise ValueError
+
+        mean_values = [(item * 255) for item in model_cfg["mean"]]
+        scale_values = [(item * 255) for item in model_cfg["std"]]
+        preprocess_fn = get_preprocess_fn(
+            change_channel_order=True,
+            input_size=model_cfg["input_size"][1:],
+            mean=mean_values,
+            std=scale_values,
+            hwc_to_chw=True,
+        )
+
+        explainer = Explainer(
+            model=model,
+            task=Task.CLASSIFICATION,
+            preprocess_fn=preprocess_fn,
+            explain_mode=ExplainMode.WHITEBOX,  # defaults to AUTO
+            explain_method=explain_method,
+            embed_scaling=False,
+        )
+
+        target_class = self.supported_num_classes[model_cfg["num_classes"]]
+        image = cv2.imread("tests/assets/cheetah_person.jpg")
+        explanation = explainer(
+            image,
+            targets=[target_class],
+            resize=False,
+            colormap=False,
+        )
+
+        assert explanation is not None
+        assert explanation.shape[-1] > 1 and explanation.shape[-2] > 1
+        print(f"{model_id}: Generated classification saliency maps with shape {explanation.shape}.")
+
     def check_for_saved_map(self, model_id, directory):
         for target in self.supported_num_classes.values():
             map_name = model_id + "_target_" + str(target) + ".jpg"

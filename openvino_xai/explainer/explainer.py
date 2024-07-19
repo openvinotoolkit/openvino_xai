@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from enum import Enum
+from os import PathLike
 from typing import Callable, List, Mapping, Tuple
 
 import numpy as np
@@ -42,10 +43,11 @@ class Explainer:
     Explainer creates methods and uses them to generate explanations.
 
     Usage:
-        explanation = explainer_object(data, explanation_parameters)
+        >>> explainer = Explainer("model.xml", Task.CLASSIFICATION)
+        >>> explanation = explainer(data)
 
-    :param model: Original model.
-    :type model: ov.Model
+    :param model: Original model object, OpenVINO IR file (.xml) or ONNX file (.onnx).
+    :type model: ov.Model | str | PathLike
     :param task: Type of the task: CLASSIFICATION or DETECTION.
     :type task: Task
     :param preprocess_fn: Preprocessing function, identity function by default
@@ -67,7 +69,7 @@ class Explainer:
 
     def __init__(
         self,
-        model: ov.Model,
+        model: ov.Model | str | PathLike,
         task: Task,
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         postprocess_fn: Callable[[Mapping], np.ndarray] = None,
@@ -78,6 +80,9 @@ class Explainer:
         device_name: str = "CPU",
         **kwargs,
     ) -> None:
+        if isinstance(model, (str, PathLike)):
+            model = ov.Core().read_model(model)
+
         self.model = model
         self.compiled_model: ov.CompiledModel | None = None
         self.task = task
@@ -131,7 +136,7 @@ class Explainer:
     def __call__(
         self,
         data: np.ndarray,
-        targets: np.ndarray | List[int | str] | int | str,
+        targets: np.ndarray | List[int | str] | int | str = -1,
         original_input_image: np.ndarray | None = None,
         label_names: List[str] | None = None,
         output_size: Tuple[int, int] | None = None,
@@ -159,7 +164,7 @@ class Explainer:
     def explain(
         self,
         data: np.ndarray,
-        targets: np.ndarray | List[int | str] | int | str,
+        targets: np.ndarray | List[int | str] | int | str = -1,
         original_input_image: np.ndarray | None = None,
         label_names: List[str] | None = None,
         output_size: Tuple[int, int] | None = None,
@@ -176,7 +181,7 @@ class Explainer:
         :param data: Input image.
         :type data: np.ndarray
         :param targets: List of custom labels to explain, optional. Can be list of integer indices (int),
-            or list of names (str) from label_names.
+            or list of names (str) from label_names. Defaults to -1, which means all class labels.
         :type targets: np.ndarray | List[int | str] | int | str
         :param label_names: List of all label names.
         :type label_names: List[str] | None
