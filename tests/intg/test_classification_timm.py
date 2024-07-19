@@ -157,25 +157,10 @@ class TestImageClassificationTimm:
         if model_id in NON_SUPPORTED_BY_WB_MODELS:
             pytest.skip(reason="Not supported yet")
 
-        timm_model, model_cfg = self.get_timm_model(model_id)
+        timm_model, model_cfg = self.get_timm_model(model_id, self.data_dir / "timm_models" / "converted_models")
         self.update_report("report_wb.csv", model_id)
 
         ir_path = self.data_dir / "timm_models" / "converted_models" / model_id / "model_fp32.xml"
-        if not ir_path.is_file():
-            output_model_dir = self.output_dir / "timm_models" / "converted_models" / model_id
-            output_model_dir.mkdir(parents=True, exist_ok=True)
-            ir_path = output_model_dir / "model_fp32.xml"
-            input_size = [1] + list(timm_model.default_cfg["input_size"])
-            dummy_tensor = torch.rand(input_size)
-            onnx_path = output_model_dir / "model_fp32.onnx"
-            set_dynamic_batch = model_id in LIMITED_DIVERSE_SET_OF_VISION_TRANSFORMER_MODELS
-            export_to_onnx(timm_model, onnx_path, dummy_tensor, set_dynamic_batch)
-            self.update_report("report_wb.csv", model_id, "True")
-            export_to_ir(onnx_path, output_model_dir / "model_fp32.xml")
-            self.update_report("report_wb.csv", model_id, "True", "True")
-        else:
-            self.update_report("report_wb.csv", model_id, "True", "True")
-
         model = ov.Core().read_model(ir_path)
 
         if model_id in LIMITED_DIVERSE_SET_OF_CNN_MODELS:
@@ -255,23 +240,11 @@ class TestImageClassificationTimm:
     def test_classification_black_box(self, model_id, dump_maps=False):
         # self.check_for_saved_map(model_id, "timm_models/maps_bb/")
 
-        timm_model, model_cfg = self.get_timm_model(model_id)
+        timm_model, model_cfg = self.get_timm_model(model_id, self.data_dir / "timm_models" / "converted_models")
         self.update_report("report_bb.csv", model_id)
 
-        onnx_path = self.data_dir / "timm_models" / "converted_models" / model_id / "model_fp32.onnx"
-        if not onnx_path.is_file():
-            output_model_dir = self.output_dir / "timm_models" / "converted_models" / model_id
-            output_model_dir.mkdir(parents=True, exist_ok=True)
-            onnx_path = output_model_dir / "model_fp32.onnx"
-            input_size = [1] + list(timm_model.default_cfg["input_size"])
-            dummy_tensor = torch.rand(input_size)
-            onnx_path = output_model_dir / "model_fp32.onnx"
-            export_to_onnx(timm_model, onnx_path, dummy_tensor, False)
-            self.update_report("report_bb.csv", model_id, "True", "True")
-        else:
-            self.update_report("report_bb.csv", model_id, "True", "True")
-
-        model = ov.Core().read_model(onnx_path)
+        ir_path = self.data_dir / "timm_models" / "converted_models" / model_id / "model_fp32.xml"
+        model = ov.Core().read_model(ir_path)
 
         mean_values = [(item * 255) for item in model_cfg["mean"]]
         scale_values = [(item * 255) for item in model_cfg["std"]]
@@ -330,7 +303,7 @@ class TestImageClassificationTimm:
         ],
     )
     # @pytest.mark.parametrize("model_id", TEST_MODELS)
-    def test_ovc_ir_insertion(self, model_id):
+    def test_ovc_model_white_box(self, model_id):
         if model_id in NON_SUPPORTED_BY_WB_MODELS:
             pytest.skip(reason="Not supported yet")
 
@@ -390,28 +363,30 @@ class TestImageClassificationTimm:
             "vit_tiny_patch16_224.augreg_in21k",  # Downloads last month 15,345
         ],
     )
-    # @pytest.mark.parametrize("model_id", TEST_MODELS)
-    @pytest.mark.parametrize("model_format", ["xml", "onnx"])
-    def test_model_format(self, model_id, model_format):
-        if model_id in NON_SUPPORTED_BY_WB_MODELS:
-            pytest.skip(reason="Not supported yet")
+    @pytest.mark.parametrize(
+        "explain_mode",
+        [
+            ExplainMode.WHITEBOX,
+            ExplainMode.BLACKBOX,
+        ],
+    )
+    @pytest.mark.parametrize(
+        "model_format",
+        ["xml", "onnx"],
+    )
+    def test_model_format(self, model_id, explain_mode, model_format):
+        if (
+            model_id == "vit_tiny_patch16_224.augreg_in21k"
+            and explain_mode == ExplainMode.WHITEBOX
+            and model_format == "onnx"
+        ):
+            pytest.xfail(
+                "RuntimeError: Failed to insert XAI into the model -> Only two outputs of the between block Add node supported, but got 3."
+            )
 
-        if "convit_tiny.fb_in1k" in model_id:
-            pytest.skip(
-                reason="RuntimeError: Couldn't get TorchScript module by tracing."
-            )  # Torch -> OV conversion error
-
-        timm_model, model_cfg = self.get_timm_model(model_id)
-        input_size = list(timm_model.default_cfg["input_size"])
-        dummy_tensor = torch.rand([1] + input_size)
-        model = ov.convert_model(timm_model, example_input=dummy_tensor, input=(ov.PartialShape([-1] + input_size),))
-
-        if model_id in LIMITED_DIVERSE_SET_OF_CNN_MODELS:
-            explain_method = Method.RECIPROCAM
-        elif model_id in LIMITED_DIVERSE_SET_OF_VISION_TRANSFORMER_MODELS:
-            explain_method = Method.VITRECIPROCAM
-        else:
-            raise ValueError
+        model_dir = self.data_dir / "timm_models" / "converted_models"
+        timm_model, model_cfg = self.get_timm_model(model_id, model_dir)
+        model_path = model_dir / model_id / ("model_fp32." + model_format)
 
         mean_values = [(item * 255) for item in model_cfg["mean"]]
         scale_values = [(item * 255) for item in model_cfg["std"]]
@@ -423,11 +398,24 @@ class TestImageClassificationTimm:
             hwc_to_chw=True,
         )
 
+        explain_method = None
+        postprocess_fn = None
+        if explain_mode == ExplainMode.WHITEBOX:
+            if model_id in LIMITED_DIVERSE_SET_OF_CNN_MODELS:
+                explain_method = Method.RECIPROCAM
+            elif model_id in LIMITED_DIVERSE_SET_OF_VISION_TRANSFORMER_MODELS:
+                explain_method = Method.VITRECIPROCAM
+            else:
+                raise ValueError
+        else:  # explain_mode == ExplainMode.BLACKBOX:
+            postprocess_fn = get_postprocess_fn()
+
         explainer = Explainer(
-            model=model,
+            model=model_path,
             task=Task.CLASSIFICATION,
             preprocess_fn=preprocess_fn,
-            explain_mode=ExplainMode.WHITEBOX,  # defaults to AUTO
+            postprocess_fn=postprocess_fn,
+            explain_mode=explain_mode,
             explain_method=explain_method,
             embed_scaling=False,
         )
@@ -439,6 +427,7 @@ class TestImageClassificationTimm:
             targets=[target_class],
             resize=False,
             colormap=False,
+            num_masks=2,  # minimal iterations for feature test
         )
 
         assert explanation is not None
@@ -458,7 +447,7 @@ class TestImageClassificationTimm:
                 self.clear_cache()
                 pytest.skip(f"Model {model_id} is already explained.")
 
-    def get_timm_model(self, model_id):
+    def get_timm_model(self, model_id: str, model_dir: Path):
         timm_model = timm.create_model(model_id, in_chans=3, pretrained=True, checkpoint_path="")
         timm_model.eval()
         model_cfg = timm_model.default_cfg
@@ -466,6 +455,17 @@ class TestImageClassificationTimm:
         if num_classes not in self.supported_num_classes:
             self.clear_cache()
             pytest.skip(f"Number of model classes {num_classes} unknown")
+        model_dir = model_dir / model_id
+        ir_path = model_dir / "model_fp32.xml"
+        if not ir_path.is_file():
+            model_dir.mkdir(parents=True, exist_ok=True)
+            ir_path = model_dir / "model_fp32.xml"
+            input_size = [1] + list(timm_model.default_cfg["input_size"])
+            dummy_tensor = torch.rand(input_size)
+            onnx_path = model_dir / "model_fp32.onnx"
+            set_dynamic_batch = model_id in LIMITED_DIVERSE_SET_OF_VISION_TRANSFORMER_MODELS
+            export_to_onnx(timm_model, onnx_path, dummy_tensor, set_dynamic_batch)
+            export_to_ir(onnx_path, model_dir / "model_fp32.xml")
         return timm_model, model_cfg
 
     @staticmethod
