@@ -76,10 +76,12 @@ jobs:
         # Use always() to always run this step to publish test results when there are test failures
         if: ${{ always() }}
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           files: .tox/dev-${{ matrix.tox-env }}/unit-test-coverage.xml
           flags: dev-${{ matrix.tox-env }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+        if: ${{ matrix.tox-env == 'py310' }}
 
   Integration-Test:
     runs-on: ubuntu-22.04
