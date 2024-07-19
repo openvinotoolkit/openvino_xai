@@ -398,12 +398,11 @@ document.write(`
 <span></span><span class="c1"># Copyright (C) 2023-2024 Intel Corporation</span>
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Tuple</span>
 
 <span class="kn">import</span> <span class="nn">cv2</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
-<span class="kn">from</span> <span class="nn">openvino.runtime.utils.data_helpers.wrappers</span> <span class="kn">import</span> <span class="n">OVDict</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
 
 <span class="kn">from</span> <span class="nn">openvino_xai.common.utils</span> <span class="kn">import</span> <span class="n">IdentityPreprocessFN</span><span class="p">,</span> <span class="n">scaling</span>
@@ -418,7 +417,7 @@ document.write(`
 <span class="sd">    :param model: OpenVINO model.</span>
 <span class="sd">    :type model: ov.Model</span>
 <span class="sd">    :param postprocess_fn: Preprocessing function that extract scores from IR model output.</span>
-<span class="sd">    :type postprocess_fn: Callable[[OVDict], np.ndarray]</span>
+<span class="sd">    :type postprocess_fn: Callable[[Mapping], np.ndarray]</span>
 <span class="sd">    :param preprocess_fn: Preprocessing function, identity function by default</span>
 <span class="sd">        (assume input images are already preprocessed by user).</span>
 <span class="sd">    :type preprocess_fn: Callable[[np.ndarray], np.ndarray]</span>
@@ -431,7 +430,7 @@ document.write(`
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">model</span><span class="p">:</span> <span class="n">ov</span><span class="o">.</span><span class="n">Model</span><span class="p">,</span>
-        <span class="n">postprocess_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">OVDict</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+        <span class="n">postprocess_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Mapping</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
         <span class="n">preprocess_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="n">IdentityPreprocessFN</span><span class="p">(),</span>
         <span class="n">device_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;CPU&quot;</span><span class="p">,</span>
         <span class="n">prepare_model</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
