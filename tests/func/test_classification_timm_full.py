@@ -8,7 +8,7 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-import openvino.runtime as ov
+import openvino as ov
 import pytest
 
 from openvino_xai.common.parameters import Method, Task

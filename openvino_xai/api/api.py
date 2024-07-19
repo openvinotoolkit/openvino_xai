@@ -3,7 +3,7 @@
 
 from typing import List
 
-import openvino.runtime as ov
+import openvino as ov
 
 from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import IdentityPreprocessFN, has_xai, logger

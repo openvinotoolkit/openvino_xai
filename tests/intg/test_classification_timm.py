@@ -8,8 +8,7 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-import openvino
-import openvino.runtime as ov
+import openvino as ov
 import pytest
 
 from openvino_xai.common.parameters import Method, Task
@@ -343,7 +342,7 @@ class TestImageClassificationTimm:
         timm_model, model_cfg = self.get_timm_model(model_id)
         input_size = list(timm_model.default_cfg["input_size"])
         dummy_tensor = torch.rand([1] + input_size)
-        model = openvino.convert_model(
+        model = ov.convert_model(
             timm_model, example_input=dummy_tensor, input=(ov.PartialShape([-1] + input_size),)
         )
 

@@ -1,7 +1,7 @@
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import openvino.runtime as ov
+import openvino as ov
 import pytest
 
 from openvino_xai.common.utils import retrieve_otx_model

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-import openvino.runtime as ov
+import openvino as ov
 import pytest
 
 import openvino_xai.api.api as xai

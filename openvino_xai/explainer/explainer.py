@@ -5,7 +5,7 @@ from enum import Enum
 from typing import Callable, List, Mapping, Tuple
 
 import numpy as np
-import openvino.runtime as ov
+import openvino as ov
 
 from openvino_xai import Task
 from openvino_xai.common.parameters import Method
@@ -79,7 +79,7 @@ class Explainer:
         **kwargs,
     ) -> None:
         self.model = model
-        self.compiled_model: ov.ie_api.CompiledModel | None = None
+        self.compiled_model: ov.CompiledModel | None = None
         self.task = task
 
         if isinstance(preprocess_fn, IdentityPreprocessFN):

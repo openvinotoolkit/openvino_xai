@@ -3,7 +3,7 @@
 
 from pathlib import Path
 
-import openvino.runtime as ov
+import openvino as ov
 import pytest
 
 from openvino_xai.common.parameters import Method, Task

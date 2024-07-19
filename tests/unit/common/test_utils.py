@@ -3,7 +3,7 @@
 
 from pathlib import Path
 
-import openvino.runtime as ov
+import openvino as ov
 
 from openvino_xai.api.api import insert_xai
 from openvino_xai.common.parameters import Task

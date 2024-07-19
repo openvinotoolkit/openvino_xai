@@ -9,7 +9,7 @@ from time import time
 
 import cv2
 import numpy as np
-import openvino.runtime as ov
+import openvino as ov
 import pandas as pd
 import pytest
 
