@@ -158,7 +158,7 @@ In this example, we are trying to know the reason why the model outputs a `cheet
 ```python
 import cv2
 import numpy as np
-import openvino.runtime as ov
+import openvino as ov
 import openvino_xai as xai
 
 # Load the model
@@ -169,9 +169,9 @@ image: np.ndarray = cv2.imread("tests/assets/cheetah_person.jpg")
 image = cv2.resize(image, dsize=(224, 224))
 image = np.expand_dims(image, 0)
 
-# Create the Explainer object
+# Create the Explainer for the model
 explainer = xai.Explainer(
-    model=ov_model,
+    model=ov_model,  # accepts "mobilenet_v3.xml" or "mobilenet_v3.onnx" as well
     task=xai.Task.CLASSIFICATION,
 )
 

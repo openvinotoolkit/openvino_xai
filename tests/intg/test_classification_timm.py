@@ -157,10 +157,11 @@ class TestImageClassificationTimm:
         if model_id in NON_SUPPORTED_BY_WB_MODELS:
             pytest.skip(reason="Not supported yet")
 
-        timm_model, model_cfg = self.get_timm_model(model_id, self.data_dir / "timm_models" / "converted_models")
+        model_dir = self.data_dir / "timm_models" / "converted_models"
+        timm_model, model_cfg = self.get_timm_model(model_id, model_dir)
         self.update_report("report_wb.csv", model_id)
 
-        ir_path = self.data_dir / "timm_models" / "converted_models" / model_id / "model_fp32.xml"
+        ir_path = model_dir / model_id / "model_fp32.xml"
         model = ov.Core().read_model(ir_path)
 
         if model_id in LIMITED_DIVERSE_SET_OF_CNN_MODELS:
@@ -239,11 +240,16 @@ class TestImageClassificationTimm:
     @pytest.mark.parametrize("model_id", TEST_MODELS)
     def test_classification_black_box(self, model_id, dump_maps=False):
         # self.check_for_saved_map(model_id, "timm_models/maps_bb/")
+        if model_id == "nest_tiny_jx.goog_in1k":
+            pytest.xfail(
+                "[cpu]reshape: the shape of input data (1.27.27.192) conflicts with the reshape pattern (0.2.14.2.14.192)"
+            )
 
-        timm_model, model_cfg = self.get_timm_model(model_id, self.data_dir / "timm_models" / "converted_models")
+        model_dir = self.data_dir / "timm_models" / "converted_models"
+        timm_model, model_cfg = self.get_timm_model(model_id, model_dir)
         self.update_report("report_bb.csv", model_id)
 
-        ir_path = self.data_dir / "timm_models" / "converted_models" / model_id / "model_fp32.xml"
+        ir_path = model_dir / model_id / "model_fp32.xml"
         model = ov.Core().read_model(ir_path)
 
         mean_values = [(item * 255) for item in model_cfg["mean"]]
@@ -312,7 +318,8 @@ class TestImageClassificationTimm:
                 reason="RuntimeError: Couldn't get TorchScript module by tracing."
             )  # Torch -> OV conversion error
 
-        timm_model, model_cfg = self.get_timm_model(model_id)
+        model_dir = self.data_dir / "timm_models" / "converted_models"
+        timm_model, model_cfg = self.get_timm_model(model_id, model_dir)
         input_size = list(timm_model.default_cfg["input_size"])
         dummy_tensor = torch.rand([1] + input_size)
         model = ov.convert_model(timm_model, example_input=dummy_tensor, input=(ov.PartialShape([-1] + input_size),))
