@@ -12,7 +12,7 @@ Content:
 
 - [OpenVINO™ Explainable AI Toolkit User Guide](#openvino-explainable-ai-toolkit-user-guide)
   - [OpenVINO XAI Architecture](#openvino-xai-architecture)
-  - [Explainer - interface to XAI algorithms](#explainer-interface-to-xai-algorithms)
+  - [`Explainer`: the main interface to XAI algorithms](#explainer-the-main-interface-to-xai-algorithms)
   - [Basic usage: Auto mode](#basic-usage-auto-mode)
     - [Running without `preprocess_fn`](#running-without-preprocess_fn)
     - [Specifying `preprocess_fn`](#specifying-preprocess_fn)
@@ -31,7 +31,7 @@ OpenVINO XAI provides the API to explain models, using two types of methods:
 - **White-box** - treats the model as a white box, making inner modifications and adding an extra XAI branch. This results in additional output from the model and relatively fast explanations.
 - **Black-box** - treats the model as a black box, working on a wide range of models. However, it requires many more inference runs.
 
-## Explainer - interface to XAI algorithms
+## `Explainer`: the main interface to XAI algorithms
 
 In a nutshell, the explanation call looks like this:
 
