@@ -70,7 +70,7 @@ explainer = xai.Explainer(
 ### Create Explainer from ONNX model file
 
 [ONNX](https://onnx.ai/) is an open format built to represent machine learning models.
-The OpenVINO Runtime supports loading and inferenc of the ONNX models, and so does OpenVINO XAI.
+The OpenVINO Runtime supports loading and inference of the ONNX models, and so does OpenVINO XAI.
 
 ```python
 explainer = xai.Explainer(
