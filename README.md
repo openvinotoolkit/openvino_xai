@@ -161,7 +161,7 @@ import numpy as np
 import openvino as ov
 import openvino_xai as xai
 
-# Load the model
+# Load the model: IR or ONNX
 ov_model: ov.Model = ov.Core().read_model("mobilenet_v3.xml")
 
 # Load the image to be analyzed
