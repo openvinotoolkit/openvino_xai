@@ -42,7 +42,7 @@ explainer = xai.Explainer(model=model, task=xai.Task.CLASSIFICATION)
 explanation = explainer(data)
 ```
 
-There are a few options for the model formats. The major use-case could be existing OpenVINO Model instance.
+There are a few options for the model formats. The major use-case is to load OpenVINO IR model from file and pass `ov.Model` instance to explainer.
 
 ### Create Explainer for OpenVINO Model instance
 
