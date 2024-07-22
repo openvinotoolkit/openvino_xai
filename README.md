@@ -171,7 +171,7 @@ image = np.expand_dims(image, 0)
 
 # Create the Explainer for the model
 explainer = xai.Explainer(
-    model=ov_model,  # accepts "mobilenet_v3.xml" or "mobilenet_v3.onnx" as well
+    model=ov_model,  # accepts path arguments "mobilenet_v3.xml" or "mobilenet_v3.onnx" as well
     task=xai.Task.CLASSIFICATION,
 )
 
