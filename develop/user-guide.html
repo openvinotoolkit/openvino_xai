@@ -341,7 +341,7 @@ document.write(`
 <li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">User Guide</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#openvino-xai-architecture">OpenVINO XAI Architecture</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#explainer-interface-to-xai-algorithms">Explainer - interface to XAI algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#explainer-the-main-interface-to-xai-algorithms"><code class="docutils literal notranslate"><span class="pre">Explainer</span></code>: the main interface to XAI algorithms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#basic-usage-auto-mode">Basic usage: Auto mode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#white-box-mode">White-Box mode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#black-box-mode">Black-Box mode</a></li>
@@ -416,7 +416,7 @@ which is useful for analyzing model’s performance.</p>
 <li><p><a class="reference internal" href="#openvino-explainable-ai-toolkit-user-guide"><span class="xref myst">OpenVINO™ Explainable AI Toolkit User Guide</span></a></p>
 <ul>
 <li><p><a class="reference internal" href="#openvino-xai-architecture"><span class="xref myst">OpenVINO XAI Architecture</span></a></p></li>
-<li><p><a class="reference internal" href="#explainer---interface-to-xai-algorithms"><span class="xref myst">Explainer - interface to XAI algorithms</span></a></p></li>
+<li><p><a class="reference internal" href="#explainer-the-main-interface-to-xai-algorithms"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Explainer</span></code>: the main interface to XAI algorithms</span></a></p></li>
 <li><p><a class="reference internal" href="#basic-usage-auto-mode"><span class="xref myst">Basic usage: Auto mode</span></a></p>
 <ul>
 <li><p><a class="reference internal" href="#running-without-preprocess_fn"><span class="xref myst">Running without <code class="docutils literal notranslate"><span class="pre">preprocess_fn</span></code></span></a></p></li>
@@ -439,19 +439,49 @@ which is useful for analyzing model’s performance.</p>
 <li><p><strong>Black-box</strong> - treats the model as a black box, working on a wide range of models. However, it requires many more inference runs.</p></li>
 </ul>
 </section>
-<section id="explainer-interface-to-xai-algorithms">
-<h2>Explainer - interface to XAI algorithms<a class="headerlink" href="#explainer-interface-to-xai-algorithms" title="Link to this heading">#</a></h2>
+<section id="explainer-the-main-interface-to-xai-algorithms">
+<h2><code class="docutils literal notranslate"><span class="pre">Explainer</span></code>: the main interface to XAI algorithms<a class="headerlink" href="#explainer-the-main-interface-to-xai-algorithms" title="Link to this heading">#</a></h2>
 <p>In a nutshell, the explanation call looks like this:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">openvino_xai</span> <span class="k">as</span> <span class="nn">xai</span>
 
-<span class="n">explainer</span> <span class="o">=</span> <span class="n">xai</span><span class="o">.</span><span class="n">Explainer</span><span class="p">(</span>
-    <span class="n">model</span><span class="p">,</span>
-    <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">,</span>
-    <span class="n">preprocess_fn</span><span class="o">=</span><span class="n">preprocess_fn</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">explanation_parameters</span><span class="p">)</span>
+<span class="n">explainer</span> <span class="o">=</span> <span class="n">xai</span><span class="o">.</span><span class="n">Explainer</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">)</span>
+<span class="n">explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>There are a few options for the model formats. The major use-case is to load OpenVINO IR model from file and pass <code class="docutils literal notranslate"><span class="pre">ov.Model</span></code> instance to explainer.</p>
+<section id="create-explainer-for-openvino-model-instance">
+<h3>Create Explainer for OpenVINO Model instance<a class="headerlink" href="#create-explainer-for-openvino-model-instance" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">openvino</span> <span class="k">as</span> <span class="nn">ov</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ov</span><span class="o">.</span><span class="n">Core</span><span class="p">()</span><span class="o">.</span><span class="n">read_model</span><span class="p">(</span><span class="s2">&quot;model.xml&quot;</span><span class="p">)</span>
+
+<span class="n">explainer</span> <span class="o">=</span> <span class="n">xai</span><span class="o">.</span><span class="n">Explainer</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+    <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="create-explainer-from-openvino-ir-file">
+<h3>Create Explainer from OpenVINO IR file<a class="headerlink" href="#create-explainer-from-openvino-ir-file" title="Link to this heading">#</a></h3>
+<p>The Explainer also supports the OpenVINO IR (Intermediate Representation) file format (.xml) directly like follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">explainer</span> <span class="o">=</span> <span class="n">xai</span><span class="o">.</span><span class="n">Explainer</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;model.xml&quot;</span><span class="p">,</span>
+    <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="create-explainer-from-onnx-model-file">
+<h3>Create Explainer from ONNX model file<a class="headerlink" href="#create-explainer-from-onnx-model-file" title="Link to this heading">#</a></h3>
+<p><a class="reference external" href="https://onnx.ai/">ONNX</a> is an open format built to represent machine learning models.
+The OpenVINO Runtime supports loading and inference of the ONNX models, and so does OpenVINO XAI.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">explainer</span> <span class="o">=</span> <span class="n">xai</span><span class="o">.</span><span class="n">Explainer</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;model.onnx&quot;</span><span class="p">,</span>
+    <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
 </section>
 <section id="basic-usage-auto-mode">
 <h2>Basic usage: Auto mode<a class="headerlink" href="#basic-usage-auto-mode" title="Link to this heading">#</a></h2>
@@ -598,7 +628,7 @@ which is useful for analyzing model’s performance.</p>
     <span class="n">explain_method</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Method</span><span class="o">.</span><span class="n">RECIPROCAM</span><span class="p">,</span>  <span class="c1"># ReciproCAM is the default XAI method for CNNs</span>
     <span class="n">label_names</span><span class="o">=</span><span class="n">voc_labels</span><span class="p">,</span>
     <span class="n">target_explain_labels</span><span class="o">=</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">],</span>  <span class="c1"># target classes to explain, also [&#39;dog&#39;, &#39;person&#39;] is a valid input, since label_names are provided</span>
-    <span class="n">overlay</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># False by default </span>
+    <span class="n">overlay</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># False by default</span>
 <span class="p">)</span>
 
 <span class="c1"># Save saliency maps</span>
@@ -645,7 +675,7 @@ Black-box approaches are based on the perturbation of the input data and measure
     <span class="n">explain_mode</span><span class="o">=</span><span class="n">ExplainMode</span><span class="o">.</span><span class="n">BLACKBOX</span><span class="p">,</span>
     <span class="n">target_explain_labels</span><span class="o">=</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">],</span>  <span class="c1"># target classes to explain</span>
     <span class="c1"># target_explain_labels=-1,  # explain all classes</span>
-    <span class="n">overlay</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># False by default </span>
+    <span class="n">overlay</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># False by default</span>
     <span class="n">num_masks</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>  <span class="c1"># kwargs for the RISE algorithm</span>
 <span class="p">)</span>
 
@@ -689,7 +719,7 @@ Black-box approaches are based on the perturbation of the input data and measure
 
 <span class="c1"># Run a bunch of classification examples</span>
 <span class="c1"># All outputs will be stored in the corresponding output directory</span>
-<span class="n">python</span> <span class="n">examples</span><span class="o">/</span><span class="n">run_classification</span><span class="o">.</span><span class="n">py</span> <span class="o">.</span><span class="n">data</span><span class="o">/</span><span class="n">otx_models</span><span class="o">/</span><span class="n">mlc_mobilenetv3_large_voc</span><span class="o">.</span><span class="n">xml</span> 
+<span class="n">python</span> <span class="n">examples</span><span class="o">/</span><span class="n">run_classification</span><span class="o">.</span><span class="n">py</span> <span class="o">.</span><span class="n">data</span><span class="o">/</span><span class="n">otx_models</span><span class="o">/</span><span class="n">mlc_mobilenetv3_large_voc</span><span class="o">.</span><span class="n">xml</span>
 <span class="n">tests</span><span class="o">/</span><span class="n">assets</span><span class="o">/</span><span class="n">cheetah_person</span><span class="o">.</span><span class="n">jpg</span> <span class="o">--</span><span class="n">output</span> <span class="n">output</span>
 </pre></div>
 </div>
@@ -743,7 +773,12 @@ Black-box approaches are based on the perturbation of the input data and measure
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#openvino-xai-architecture">OpenVINO XAI Architecture</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#explainer-interface-to-xai-algorithms">Explainer - interface to XAI algorithms</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#explainer-the-main-interface-to-xai-algorithms"><code class="docutils literal notranslate"><span class="pre">Explainer</span></code>: the main interface to XAI algorithms</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-explainer-for-openvino-model-instance">Create Explainer for OpenVINO Model instance</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-explainer-from-openvino-ir-file">Create Explainer from OpenVINO IR file</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-explainer-from-onnx-model-file">Create Explainer from ONNX model file</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-usage-auto-mode">Basic usage: Auto mode</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#running-without-preprocess-fn">Running without <code class="docutils literal notranslate"><span class="pre">preprocess_fn</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#specifying-preprocess-fn">Specifying <code class="docutils literal notranslate"><span class="pre">preprocess_fn</span></code></a></li>
@@ -799,7 +834,7 @@ Black-box approaches are based on the perturbation of the input data and measure
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.6.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
   </p>
 </div>

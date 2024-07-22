@@ -12,7 +12,7 @@ Content:
 
 - [OpenVINO™ Explainable AI Toolkit User Guide](#openvino-explainable-ai-toolkit-user-guide)
   - [OpenVINO XAI Architecture](#openvino-xai-architecture)
-  - [Explainer - interface to XAI algorithms](#explainer---interface-to-xai-algorithms)
+  - [`Explainer`: the main interface to XAI algorithms](#explainer-the-main-interface-to-xai-algorithms)
   - [Basic usage: Auto mode](#basic-usage-auto-mode)
     - [Running without `preprocess_fn`](#running-without-preprocess_fn)
     - [Specifying `preprocess_fn`](#specifying-preprocess_fn)
@@ -31,21 +31,53 @@ OpenVINO XAI provides the API to explain models, using two types of methods:
 - **White-box** - treats the model as a white box, making inner modifications and adding an extra XAI branch. This results in additional output from the model and relatively fast explanations.
 - **Black-box** - treats the model as a black box, working on a wide range of models. However, it requires many more inference runs.
 
-## Explainer - interface to XAI algorithms
+## `Explainer`: the main interface to XAI algorithms
 
 In a nutshell, the explanation call looks like this:
 
 ```python
 import openvino_xai as xai
 
-explainer = xai.Explainer(
-    model,
-    task=xai.Task.CLASSIFICATION,
-    preprocess_fn=preprocess_fn,
-)
-explanation = explainer(data, explanation_parameters)
+explainer = xai.Explainer(model=model, task=xai.Task.CLASSIFICATION)
+explanation = explainer(data)
 ```
 
+There are a few options for the model formats. The major use-case is to load OpenVINO IR model from file and pass `ov.Model` instance to explainer.
+
+### Create Explainer for OpenVINO Model instance
+
+```python
+import openvino as ov
+model = ov.Core().read_model("model.xml")
+
+explainer = xai.Explainer(
+    model=model,
+    task=xai.Task.CLASSIFICATION
+)
+```
+
+### Create Explainer from OpenVINO IR file
+
+The Explainer also supports the OpenVINO IR (Intermediate Representation) file format (.xml) directly like follows:
+
+```python
+explainer = xai.Explainer(
+    model="model.xml",
+    task=xai.Task.CLASSIFICATION
+)
+```
+
+### Create Explainer from ONNX model file
+
+[ONNX](https://onnx.ai/) is an open format built to represent machine learning models.
+The OpenVINO Runtime supports loading and inference of the ONNX models, and so does OpenVINO XAI.
+
+```python
+explainer = xai.Explainer(
+    model="model.onnx",
+    task=xai.Task.CLASSIFICATION
+)
+```
 
 ## Basic usage: Auto mode
 
@@ -202,7 +234,7 @@ explanation = explainer(
     explain_method=xai.Method.RECIPROCAM,  # ReciproCAM is the default XAI method for CNNs
     label_names=voc_labels,
     target_explain_labels=[11, 14],  # target classes to explain, also ['dog', 'person'] is a valid input, since label_names are provided
-    overlay=True,  # False by default 
+    overlay=True,  # False by default
 )
 
 # Save saliency maps
@@ -253,7 +285,7 @@ explanation = explainer(
     explain_mode=ExplainMode.BLACKBOX,
     target_explain_labels=[11, 14],  # target classes to explain
     # target_explain_labels=-1,  # explain all classes
-    overlay=True,  # False by default 
+    overlay=True,  # False by default
     num_masks=1000,  # kwargs for the RISE algorithm
 )
 
@@ -303,6 +335,6 @@ pytest tests/test_classification.py
 
 # Run a bunch of classification examples
 # All outputs will be stored in the corresponding output directory
-python examples/run_classification.py .data/otx_models/mlc_mobilenetv3_large_voc.xml 
+python examples/run_classification.py .data/otx_models/mlc_mobilenetv3_large_voc.xml
 tests/assets/cheetah_person.jpg --output output
 ```

@@ -581,10 +581,10 @@ While watching the outputs, we may want to analyze the model’s behavior for de
 In this example, we are trying to know the reason why the model outputs a <code class="docutils literal notranslate"><span class="pre">cheetah</span></code> label for the given input image.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
+<span class="kn">import</span> <span class="nn">openvino</span> <span class="k">as</span> <span class="nn">ov</span>
 <span class="kn">import</span> <span class="nn">openvino_xai</span> <span class="k">as</span> <span class="nn">xai</span>
 
-<span class="c1"># Load the model</span>
+<span class="c1"># Load the model: IR or ONNX</span>
 <span class="n">ov_model</span><span class="p">:</span> <span class="n">ov</span><span class="o">.</span><span class="n">Model</span> <span class="o">=</span> <span class="n">ov</span><span class="o">.</span><span class="n">Core</span><span class="p">()</span><span class="o">.</span><span class="n">read_model</span><span class="p">(</span><span class="s2">&quot;mobilenet_v3.xml&quot;</span><span class="p">)</span>
 
 <span class="c1"># Load the image to be analyzed</span>
@@ -592,9 +592,9 @@ In this example, we are trying to know the reason why the model outputs a <code 
 <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">dsize</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">))</span>
 <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 
-<span class="c1"># Create the Explainer object</span>
+<span class="c1"># Create the Explainer for the model</span>
 <span class="n">explainer</span> <span class="o">=</span> <span class="n">xai</span><span class="o">.</span><span class="n">Explainer</span><span class="p">(</span>
-    <span class="n">model</span><span class="o">=</span><span class="n">ov_model</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">ov_model</span><span class="p">,</span>  <span class="c1"># accepts path arguments &quot;mobilenet_v3.xml&quot; or &quot;mobilenet_v3.onnx&quot; as well</span>
     <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">,</span>
 <span class="p">)</span>
 
@@ -791,7 +791,7 @@ Intel’s products and software are intended only to be used in applications tha
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.6.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
   </p>
 </div>
