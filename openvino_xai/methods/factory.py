@@ -106,14 +106,21 @@ class WhiteBoxMethodFactory(MethodFactory):
 
         if explain_method is None or explain_method == Method.RECIPROCAM:
             logger.info("Using ReciproCAM method (for CNNs).")
-            return ReciproCAM(
-                model,
-                preprocess_fn,
-                target_layer,
-                embed_scaling,
-                device_name,
-                **kwargs,
-            )
+            try:
+                return ReciproCAM(
+                    model,
+                    preprocess_fn,
+                    target_layer,
+                    embed_scaling,
+                    device_name,
+                    **kwargs,
+                )
+            except Exception as e:
+                if explain_method is None:
+                    logger.info(f"Not successfull due to '{e}'. Trying another methods.")
+                    explain_method = Method.VITRECIPROCAM
+                else:
+                    raise e
         if explain_method == Method.VITRECIPROCAM:
             logger.info("Using ViTReciproCAM method (for vision transformers).")
             return ViTReciproCAM(
