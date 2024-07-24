@@ -4,21 +4,24 @@
 
 ### Summary
 
-*
+* Support OpenVINO IR (.xml) / ONNX (.onnx) model file for `Explainer` model
 
 ### What's Changed
 
-*
+* Use OVC converted models in func tests by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/44
+* Update CodeCov action by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/46
+* Refactor OpenVINO imports by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/45
+* Support OV IR / ONNX model file for Explainer by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/47
+
 
 ### Known Issues
 
-* OpenVINO IR branch insertion not working for models converted directly from torch models in https://github.com/openvinotoolkit/openvino_xai/issues/26
 * Runtime error from ONNX / OpenVINO IR models while conversion or inference for XAI in https://github.com/openvinotoolkit/openvino_xai/issues/29
 * Models not supported by white box XAI methods in https://github.com/openvinotoolkit/openvino_xai/issues/30
 
 ### New Contributors
 
-*
+* N/A
 
 ---
 
