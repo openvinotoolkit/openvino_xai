@@ -31,6 +31,7 @@ TEST_MODELS = timm.list_models(pretrained=True)
 
 CNN_MODELS = [
     "bat_resnext",
+    "botnet",
     "convnext",
     "cs3",
     "cs3darknet",
@@ -82,7 +83,7 @@ NOT_SUPPORTED_BY_BB_MODELS = {
     "dm_nfnet": "openvino._pyopenvino.GeneralFailure: Check 'false' failed at src/frontends/onnx/frontend/src/frontend.cpp:144",
     "eca_nfnet": "openvino._pyopenvino.GeneralFailure: Check 'false' failed at src/frontends/onnx/frontend/src/frontend.cpp:144",
     "eva_giant": "RuntimeError: The serialized model is larger than the 2GiB limit imposed by the protobuf library.",
-    "halo": "torch.onnx.errors.SymbolicValueError: Unsupported: ONNX export of operator Unfold, input size not accessible.",
+    # "halo": "torch.onnx.errors.SymbolicValueError: Unsupported: ONNX export of operator Unfold, input size not accessible.",
     "nf_regnet": "RuntimeError: Exception from src/inference/src/cpp/core.cpp:90: Training mode of BatchNormalization is not supported.",
     "nf_resnet": "RuntimeError: Exception from src/inference/src/cpp/core.cpp:90: Training mode of BatchNormalization is not supported.",
     "nfnet_l0": "RuntimeError: Exception from src/inference/src/cpp/core.cpp:90: Training mode of BatchNormalization is not supported.",
@@ -127,7 +128,7 @@ NOT_SUPPORTED_BY_WB_MODELS = {
     "xcit_small_12_p8_384": "OOM Killed",
     "xcit_small_24_p8_384": "OOM Killed",
     # Not expected to work for now
-    "botnet26t_256": "Only two outputs of the between block Add node supported, but got 1",
+    # "botnet26t_256": "Only two outputs of the between block Add node supported, but got 1",
     "caformer": "One (and only one) of the nodes has to be Add type. But got MVN and Multiply.",
     "cait_": "Cannot create an empty Constant. Please provide valid data.",
     "coat_": "Only two outputs of the between block Add node supported, but got 1.",
@@ -146,7 +147,7 @@ NOT_SUPPORTED_BY_WB_MODELS = {
     "mobilevitv2": "Cannot find output backbone_node in auto mode, please provide target_layer.",
     "nest_": "Cannot find output backbone_node in auto mode, please provide target_layer.",
     "poolformer": "Cannot find output backbone_node in auto mode, please provide target_layer.",
-    "sebotnet": "Only two outputs of the between block Add node supported, but got 1.",
+    # "sebotnet": "Only two outputs of the between block Add node supported, but got 1.",
     "sequencer2d": "Cannot find output backbone_node in auto mode, please provide target_layer.",
     "tnt_s_patch16_224": "Only two outputs of the between block Add node supported, but got 1.",
     "tresnet": "Batch shape of the output should be dynamic, but it is static.",
