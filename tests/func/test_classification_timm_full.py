@@ -29,52 +29,6 @@ pytest.importorskip("onnx")
 
 TEST_MODELS = timm.list_models(pretrained=True)
 
-CNN_MODELS = [
-    "bat_resnext",
-    "botnet",
-    "botnext",
-    "convmixer",
-    "convnext",
-    "cs3",
-    "cs3darknet",
-    "darknet",
-    "densenet",
-    "dla",
-    "dpn",
-    "edgenext",
-    "efficientnet",
-    "ese_vovnet",
-    "fbnet",
-    "gernet",
-    "ghostnet",
-    "hardcorenas",
-    "hrnet",
-    "inception",
-    "lcnet",
-    "legacy_",
-    "mixnet",
-    "mnasnet",
-    "mobilenet",
-    "nasnet",
-    "regnet",
-    "repvgg",
-    "res2net",
-    "res2next",
-    "resnest",
-    "resnet",
-    "resnext",
-    "rexnet",
-    "selecsls",
-    "semnasnet",
-    "senet",
-    "seresnext",
-    "spnasnet",
-    "tinynet",
-    "tresnet",
-    "vgg",
-    "xception",
-]
-
 SUPPORTED_BUT_FAILED_BY_BB_MODELS = {}
 
 NOT_SUPPORTED_BY_BB_MODELS = {
@@ -132,32 +86,23 @@ NOT_SUPPORTED_BY_WB_MODELS = {
     "xcit_small_12_p8_384": "OOM Killed",
     "xcit_small_24_p8_384": "OOM Killed",
     # Not expected to work for now
-    # "botnet26t_256": "Only two outputs of the between block Add node supported, but got 1",
-    "caformer": "One (and only one) of the nodes has to be Add type. But got MVN and Multiply.",
     "cait_": "Cannot create an empty Constant. Please provide valid data.",
     "coat_": "Only two outputs of the between block Add node supported, but got 1.",
-    "coatn": "Cannot find output backbone_node in auto mode, please provide target_layer.",
-    # "convmixer": "Cannot find output backbone_node in auto mode, please provide target_layer.",
     "crossvit": "One (and only one) of the nodes has to be Add type. But got StridedSlice and StridedSlice.",
-    "davit": "Only two outputs of the between block Add node supported, but got 1.",
-    # "eca_botnext": "Only two outputs of the between block Add node supported, but got 1.",
-    # "edgenext": "Only two outputs of the between block Add node supported, but got 1",
-    "efficientformer": "Cannot find output backbone_node in auto mode.",
-    "focalnet": "Cannot find output backbone_node in auto mode, please provide target_layer.",
-    "gcvit": "Cannot find output backbone_node in auto mode, please provide target_layer.",
-    "levit_": "Cannot find output backbone_node in auto mode, please provide target_layer.",
-    "maxvit": "Cannot find output backbone_node in auto mode, please provide target_layer.",
-    "maxxvit": "Cannot find output backbone_node in auto mode, please provide target_layer.",
-    "mobilevitv2": "Cannot find output backbone_node in auto mode, please provide target_layer.",
-    "nest_": "Cannot find output backbone_node in auto mode, please provide target_layer.",
-    "poolformer": "Cannot find output backbone_node in auto mode, please provide target_layer.",
-    # "sebotnet": "Only two outputs of the between block Add node supported, but got 1.",
+    # work in CNN mode -> "davit": "Only two outputs of the between block Add node supported, but got 1.",
+    # work in CNN mode -> "efficientformer": "Cannot find output backbone_node in auto mode.",
+    # work in CNN mode -> "focalnet": "Cannot find output backbone_node in auto mode, please provide target_layer.",
+    # work in CNN mode -> "gcvit": "Cannot find output backbone_node in auto mode, please provide target_layer.",
+    "levit_": "Check 'TRShape::merge_into(output_shape, in_copy)' failed",
+    # work in CNN mode -> "maxvit": "Cannot find output backbone_node in auto mode, please provide target_layer.",
+    # work in CNN mode -> "maxxvit": "Cannot find output backbone_node in auto mode, please provide target_layer.",
+    # work in CNN mode -> "mobilevitv2": "Cannot find output backbone_node in auto mode, please provide target_layer.",
+    # work in CNN mode -> "nest_": "Cannot find output backbone_node in auto mode, please provide target_layer.",
+    # work in CNN mode -> "poolformer": "Cannot find output backbone_node in auto mode, please provide target_layer.",
     "sequencer2d": "Cannot find output backbone_node in auto mode, please provide target_layer.",
     "tnt_s_patch16_224": "Only two outputs of the between block Add node supported, but got 1.",
-    "tresnet": "Batch shape of the output should be dynamic, but it is static.",
     "twins": "One (and only one) of the nodes has to be Add type. But got ShapeOf and Transpose.",
-    "visformer": "Cannot find output backbone_node in auto mode, please provide target_layer",
-    "vit_relpos_base_patch32_plus_rpn_256": "Check 'TRShape::merge_into(output_shape, in_copy)' failed",
+    # work in CNN mode -> "visformer": "Cannot find output backbone_node in auto mode, please provide target_layer",
     "vit_relpos_medium_patch16_rpn_224": "ValueError in openvino_xai/methods/white_box/recipro_cam.py:215",
 }
 
@@ -189,11 +134,7 @@ class TestImageClassificationTimm:
             if failed_model in model_id:
                 pytest.xfail(reason=SUPPORTED_BUT_FAILED_BY_WB_MODELS[failed_model])
 
-        explain_method = Method.VITRECIPROCAM
-        for cnn_model in CNN_MODELS:
-            if cnn_model in model_id:
-                explain_method = Method.RECIPROCAM
-                break
+        explain_method = None
 
         timm_model, model_cfg = self.get_timm_model(model_id)
         input_size = list(timm_model.default_cfg["input_size"])
