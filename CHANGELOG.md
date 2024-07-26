@@ -12,6 +12,7 @@
 * Update CodeCov action by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/46
 * Refactor OpenVINO imports by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/45
 * Support OV IR / ONNX model file for Explainer by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/47
+* Try CNN -> ViT assumption for IR insertion by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/48
 
 
 ### Known Issues
