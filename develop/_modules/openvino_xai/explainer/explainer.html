@@ -407,13 +407,16 @@ document.write(`
 
 <span class="kn">from</span> <span class="nn">openvino_xai</span> <span class="kn">import</span> <span class="n">Task</span>
 <span class="kn">from</span> <span class="nn">openvino_xai.common.parameters</span> <span class="kn">import</span> <span class="n">Method</span>
-<span class="kn">from</span> <span class="nn">openvino_xai.common.utils</span> <span class="kn">import</span> <span class="n">IdentityPreprocessFN</span><span class="p">,</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">openvino_xai.common.utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">IdentityPreprocessFN</span><span class="p">,</span>
+    <span class="n">infer_size_from_image</span><span class="p">,</span>
+    <span class="n">logger</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">openvino_xai.explainer.explanation</span> <span class="kn">import</span> <span class="n">Explanation</span>
 <span class="kn">from</span> <span class="nn">openvino_xai.explainer.utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">convert_targets_to_numpy</span><span class="p">,</span>
     <span class="n">explains_all</span><span class="p">,</span>
     <span class="n">get_explain_target_indices</span><span class="p">,</span>
-    <span class="n">infer_size_from_image</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">openvino_xai.explainer.visualizer</span> <span class="kn">import</span> <span class="n">Visualizer</span>
 <span class="kn">from</span> <span class="nn">openvino_xai.methods.base</span> <span class="kn">import</span> <span class="n">MethodBase</span>
@@ -672,6 +675,7 @@ document.write(`
             <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
             <span class="n">postprocess_fn</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">postprocess_fn</span><span class="p">,</span>
             <span class="n">preprocess_fn</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">preprocess_fn</span><span class="p">,</span>
+            <span class="n">explain_method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">explain_method</span><span class="p">,</span>
             <span class="n">device_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device_name</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Explaining the model in black-box mode.&quot;</span><span class="p">)</span>

@@ -403,7 +403,7 @@ document.write(`
 <span class="kn">import</span> <span class="nn">cv2</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">openvino_xai.common.utils</span> <span class="kn">import</span> <span class="n">scaling</span>
+<span class="kn">from</span> <span class="nn">openvino_xai.common.utils</span> <span class="kn">import</span> <span class="n">format_to_bhwc</span><span class="p">,</span> <span class="n">infer_size_from_image</span><span class="p">,</span> <span class="n">scaling</span>
 <span class="kn">from</span> <span class="nn">openvino_xai.explainer.explanation</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">COLOR_MAPPED_LAYOUTS</span><span class="p">,</span>
     <span class="n">GRAY_LAYOUTS</span><span class="p">,</span>
@@ -412,7 +412,6 @@ document.write(`
     <span class="n">Explanation</span><span class="p">,</span>
     <span class="n">Layout</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">openvino_xai.explainer.utils</span> <span class="kn">import</span> <span class="n">format_to_bhwc</span><span class="p">,</span> <span class="n">infer_size_from_image</span>
 
 
 <div class="viewcode-block" id="resize">

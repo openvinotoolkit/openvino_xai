@@ -640,7 +640,13 @@ The OpenVINO Runtime supports loading and inference of the ONNX models, and so d
 <h2>Black-Box mode<a class="headerlink" href="#black-box-mode" title="Link to this heading">#</a></h2>
 <p>Black-box mode does not update the model (treating the model as a black box).
 Black-box approaches are based on the perturbation of the input data and measurement of the model’s output change.</p>
-<p>The process is repeated many times, requiring hundreds or thousands of forward passes and introducing <strong>significant computational overhead</strong>.</p>
+<p>For black-box mode we support 2 algorithms: <strong>AISE</strong> (by default) and <a class="reference external" href="https://arxiv.org/abs/1806.07421"><strong>RISE</strong></a>. AISE is more effective for generating saliency maps for a few specific classes. RISE - to generate maps for all classes at once.</p>
+<p>Pros:</p>
+<ul class="simple">
+<li><p><strong>Flexible</strong> - can be applied to any custom model.
+Cons:</p></li>
+<li><p><strong>Computational overhead</strong> - black-box requires hundreds or thousands of forward passes.</p></li>
+</ul>
 <p><code class="docutils literal notranslate"><span class="pre">preprocess_fn</span></code> (or preprocessed images) and <code class="docutils literal notranslate"><span class="pre">postprocess_fn</span></code> are required to be provided by the user for black-box mode.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -676,7 +682,6 @@ Black-box approaches are based on the perturbation of the input data and measure
     <span class="n">target_explain_labels</span><span class="o">=</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">],</span>  <span class="c1"># target classes to explain</span>
     <span class="c1"># target_explain_labels=-1,  # explain all classes</span>
     <span class="n">overlay</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># False by default</span>
-    <span class="n">num_masks</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>  <span class="c1"># kwargs for the RISE algorithm</span>
 <span class="p">)</span>
 
 <span class="c1"># Save saliency maps</span>

@@ -416,9 +416,9 @@ document.write(`
 
 <span class="sd">    :param model: OpenVINO model.</span>
 <span class="sd">    :type model: ov.Model</span>
-<span class="sd">    :param postprocess_fn: Preprocessing function that extract scores from IR model output.</span>
-<span class="sd">    :type postprocess_fn: Callable[[Mapping], np.ndarray]</span>
-<span class="sd">    :param preprocess_fn: Preprocessing function, identity function by default</span>
+<span class="sd">    :param postprocess_fn: Post-processing function that extract scores from IR model output.</span>
+<span class="sd">    :type postprocess_fn: Callable[[OVDict], np.ndarray]</span>
+<span class="sd">    :param preprocess_fn: Pre-processing function, identity function by default</span>
 <span class="sd">        (assume input images are already preprocessed by user).</span>
 <span class="sd">    :type preprocess_fn: Callable[[np.ndarray], np.ndarray]</span>
 <span class="sd">    :param device_name: Device type name.</span>
@@ -441,14 +441,6 @@ document.write(`
         <span class="k">if</span> <span class="n">prepare_model</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">prepare_model</span><span class="p">()</span>
 
-<div class="viewcode-block" id="RISE.prepare_model">
-<a class="viewcode-back" href="../../../../api-manual.html#openvino_xai.methods.RISE.prepare_model">[docs]</a>
-    <span class="k">def</span> <span class="nf">prepare_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">load_model</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ov</span><span class="o">.</span><span class="n">Model</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">load_model</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">load_model</span><span class="p">()</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span></div>
-
-
 <div class="viewcode-block" id="RISE.generate_saliency_map">
 <a class="viewcode-back" href="../../../../api-manual.html#openvino_xai.methods.RISE.generate_saliency_map">[docs]</a>
     <span class="k">def</span> <span class="nf">generate_saliency_map</span><span class="p">(</span>
@@ -460,7 +452,7 @@ document.write(`
         <span class="n">prob</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
         <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
         <span class="n">scale_output</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generates inference result of the RISE algorithm.</span>
 
@@ -507,13 +499,11 @@ document.write(`
         <span class="n">prob</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-        <span class="kn">from</span> <span class="nn">openvino_xai.explainer.utils</span> <span class="kn">import</span> <span class="n">is_bhwc_layout</span>
+        <span class="kn">from</span> <span class="nn">openvino_xai.common.utils</span> <span class="kn">import</span> <span class="n">is_bhwc_layout</span>
 
         <span class="n">input_size</span> <span class="o">=</span> <span class="n">data_preprocessed</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="k">if</span> <span class="n">is_bhwc_layout</span><span class="p">(</span><span class="n">data_preprocessed</span><span class="p">)</span> <span class="k">else</span> <span class="n">data_preprocessed</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
 
-        <span class="n">forward_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_forward</span><span class="p">(</span><span class="n">data_preprocessed</span><span class="p">,</span> <span class="n">preprocess</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="n">logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">postprocess_fn</span><span class="p">(</span><span class="n">forward_output</span><span class="p">)</span>
-        <span class="n">_</span><span class="p">,</span> <span class="n">num_classes</span> <span class="o">=</span> <span class="n">logits</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">num_classes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_num_classes</span><span class="p">(</span><span class="n">data_preprocessed</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">target_classes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">num_targets</span> <span class="o">=</span> <span class="n">num_classes</span>
