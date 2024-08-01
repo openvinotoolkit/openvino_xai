@@ -398,21 +398,23 @@ document.write(`
 <span></span><span class="c1"># Copyright (C) 2023-2024 Intel Corporation</span>
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Tuple</span>
 
 <span class="kn">import</span> <span class="nn">cv2</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
 
-<span class="kn">from</span> <span class="nn">openvino_xai.common.utils</span> <span class="kn">import</span> <span class="n">IdentityPreprocessFN</span><span class="p">,</span> <span class="n">scaling</span>
-<span class="kn">from</span> <span class="nn">openvino_xai.methods.black_box.base</span> <span class="kn">import</span> <span class="n">BlackBoxXAIMethod</span>
+<span class="kn">from</span> <span class="nn">openvino_xai.common.utils</span> <span class="kn">import</span> <span class="n">IdentityPreprocessFN</span><span class="p">,</span> <span class="n">is_bhwc_layout</span><span class="p">,</span> <span class="n">scaling</span>
+<span class="kn">from</span> <span class="nn">openvino_xai.methods.black_box.base</span> <span class="kn">import</span> <span class="n">BlackBoxXAIMethod</span><span class="p">,</span> <span class="n">Preset</span>
 
 
 <div class="viewcode-block" id="RISE">
 <a class="viewcode-back" href="../../../../api-manual.html#openvino_xai.methods.RISE">[docs]</a>
 <span class="k">class</span> <span class="nc">RISE</span><span class="p">(</span><span class="n">BlackBoxXAIMethod</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;RISE explains classification models in black-box mode using RISE (https://arxiv.org/abs/1806.07421).</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;RISE explains classification models in black-box mode using</span>
+<span class="sd">    &#39;RISE: Randomized Input Sampling for Explanation of Black-box Models&#39; paper</span>
+<span class="sd">    (https://arxiv.org/abs/1806.07421).</span>
 
 <span class="sd">    :param model: OpenVINO model.</span>
 <span class="sd">    :type model: ov.Model</span>
@@ -446,20 +448,23 @@ document.write(`
     <span class="k">def</span> <span class="nf">generate_saliency_map</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-        <span class="n">explain_target_indices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">num_masks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5000</span><span class="p">,</span>
+        <span class="n">target_indices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">preset</span><span class="p">:</span> <span class="n">Preset</span> <span class="o">=</span> <span class="n">Preset</span><span class="o">.</span><span class="n">BALANCE</span><span class="p">,</span>
+        <span class="n">num_masks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">num_cells</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
         <span class="n">prob</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
         <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
         <span class="n">scale_output</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generates inference result of the RISE algorithm.</span>
 
 <span class="sd">        :param data: Input image.</span>
 <span class="sd">        :type data: np.ndarray</span>
-<span class="sd">        :param explain_target_indices: List of target indices to explain.</span>
-<span class="sd">        :type explain_target_indices: List[int]</span>
+<span class="sd">        :param target_indices: List of target indices to explain.</span>
+<span class="sd">        :type target_indices: List[int]</span>
+<span class="sd">        :param preset: Speed-Quality preset, defines predefined configurations that manage speed-quality tradeoff.</span>
+<span class="sd">        :type preset: Preset</span>
 <span class="sd">        :param num_masks: Number of generated masks to aggregate.</span>
 <span class="sd">        :type num_masks: int</span>
 <span class="sd">        :param num_cells: Number of cells for low-dimensional RISE</span>
@@ -475,20 +480,45 @@ document.write(`
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">data_preprocessed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">preprocess_fn</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
+        <span class="n">num_masks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preset_parameters</span><span class="p">(</span><span class="n">preset</span><span class="p">,</span> <span class="n">num_masks</span><span class="p">)</span>
+
         <span class="n">saliency_maps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_synchronous_explanation</span><span class="p">(</span>
             <span class="n">data_preprocessed</span><span class="p">,</span>
-            <span class="n">explain_target_indices</span><span class="p">,</span>
+            <span class="n">target_indices</span><span class="p">,</span>
             <span class="n">num_masks</span><span class="p">,</span>
             <span class="n">num_cells</span><span class="p">,</span>
             <span class="n">prob</span><span class="p">,</span>
             <span class="n">seed</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">scale_output</span><span class="p">:</span>
-            <span class="n">saliency_maps</span> <span class="o">=</span> <span class="n">scaling</span><span class="p">(</span><span class="n">saliency_maps</span><span class="p">)</span>
-        <span class="n">saliency_maps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">saliency_maps</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">saliency_maps</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">scale_output</span><span class="p">:</span>
+                <span class="n">saliency_maps</span> <span class="o">=</span> <span class="n">scaling</span><span class="p">(</span><span class="n">saliency_maps</span><span class="p">)</span>
+            <span class="n">saliency_maps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">saliency_maps</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">saliency_maps</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">saliency_maps</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">scale_output</span><span class="p">:</span>
+                    <span class="n">saliency_maps</span><span class="p">[</span><span class="n">target</span><span class="p">]</span> <span class="o">=</span> <span class="n">scaling</span><span class="p">(</span><span class="n">saliency_maps</span><span class="p">[</span><span class="n">target</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">saliency_maps</span></div>
 
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_preset_parameters</span><span class="p">(</span>
+        <span class="n">preset</span><span class="p">:</span> <span class="n">Preset</span><span class="p">,</span>
+        <span class="n">num_masks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="c1"># TODO (negvet): preset num_cells</span>
+        <span class="k">if</span> <span class="n">num_masks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">num_masks</span>
+
+        <span class="k">if</span> <span class="n">preset</span> <span class="o">==</span> <span class="n">Preset</span><span class="o">.</span><span class="n">SPEED</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">2000</span>
+        <span class="k">elif</span> <span class="n">preset</span> <span class="o">==</span> <span class="n">Preset</span><span class="o">.</span><span class="n">BALANCE</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">5000</span>
+        <span class="k">elif</span> <span class="n">preset</span> <span class="o">==</span> <span class="n">Preset</span><span class="o">.</span><span class="n">QUALITY</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">8000</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Preset </span><span class="si">{</span><span class="n">preset</span><span class="si">}</span><span class="s2"> is not supported.&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_run_synchronous_explanation</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -499,8 +529,6 @@ document.write(`
         <span class="n">prob</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-        <span class="kn">from</span> <span class="nn">openvino_xai.common.utils</span> <span class="kn">import</span> <span class="n">is_bhwc_layout</span>
-
         <span class="n">input_size</span> <span class="o">=</span> <span class="n">data_preprocessed</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="k">if</span> <span class="n">is_bhwc_layout</span><span class="p">(</span><span class="n">data_preprocessed</span><span class="p">)</span> <span class="k">else</span> <span class="n">data_preprocessed</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
 
         <span class="n">num_classes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_num_classes</span><span class="p">(</span><span class="n">data_preprocessed</span><span class="p">)</span>
@@ -512,7 +540,7 @@ document.write(`
 
         <span class="n">rand_generator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
 
-        <span class="n">sal_maps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_targets</span><span class="p">,</span> <span class="n">input_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">input_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">saliency_maps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_targets</span><span class="p">,</span> <span class="n">input_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">input_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
         <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_masks</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Explaining in synchronous mode&quot;</span><span class="p">):</span>
             <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_mask</span><span class="p">(</span><span class="n">input_size</span><span class="p">,</span> <span class="n">num_cells</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">rand_generator</span><span class="p">)</span>
             <span class="c1"># Add channel dimensions for masks</span>
@@ -525,11 +553,11 @@ document.write(`
             <span class="n">raw_scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">postprocess_fn</span><span class="p">(</span><span class="n">forward_output</span><span class="p">)</span>
 
             <span class="n">sal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_scored_mask</span><span class="p">(</span><span class="n">raw_scores</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">target_classes</span><span class="p">)</span>
-            <span class="n">sal_maps</span> <span class="o">+=</span> <span class="n">sal</span>
+            <span class="n">saliency_maps</span> <span class="o">+=</span> <span class="n">sal</span>
 
         <span class="k">if</span> <span class="n">target_classes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">sal_maps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reconstruct_sparce_saliency_map</span><span class="p">(</span><span class="n">sal_maps</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">input_size</span><span class="p">,</span> <span class="n">target_classes</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">sal_maps</span>
+            <span class="n">saliency_maps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reformat_as_dict</span><span class="p">(</span><span class="n">saliency_maps</span><span class="p">,</span> <span class="n">target_classes</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">saliency_maps</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_get_scored_mask</span><span class="p">(</span><span class="n">raw_scores</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">target_classes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -539,15 +567,11 @@ document.write(`
             <span class="k">return</span> <span class="n">raw_scores</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">mask</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_reconstruct_sparce_saliency_map</span><span class="p">(</span>
-        <span class="n">sal_maps</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">input_size</span><span class="p">,</span> <span class="n">target_classes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="k">def</span> <span class="nf">_reformat_as_dict</span><span class="p">(</span>
+        <span class="n">saliency_maps</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">target_classes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-        <span class="c1"># TODO: see if np.put() or other alternatives works faster (requires flatten array)</span>
-        <span class="n">sal_maps_tmp</span> <span class="o">=</span> <span class="n">sal_maps</span>
-        <span class="n">sal_maps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">input_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">input_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sal</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sal_maps_tmp</span><span class="p">):</span>
-            <span class="n">sal_maps</span><span class="p">[</span><span class="n">target_classes</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="n">sal</span>
-        <span class="k">return</span> <span class="n">sal_maps</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">target_class</span><span class="p">:</span> <span class="n">saliency_map</span> <span class="k">for</span> <span class="n">target_class</span><span class="p">,</span> <span class="n">saliency_map</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">target_classes</span><span class="p">,</span> <span class="n">saliency_maps</span><span class="p">)}</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_generate_mask</span><span class="p">(</span><span class="n">input_size</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">num_cells</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">prob</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">rand_generator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>

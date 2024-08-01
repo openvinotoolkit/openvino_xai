@@ -421,7 +421,7 @@ document.write(`
 <a class="viewcode-back" href="../../../../api-manual.html#openvino_xai.methods.AISE">[docs]</a>
 <span class="k">class</span> <span class="nc">AISE</span><span class="p">(</span><span class="n">BlackBoxXAIMethod</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;AISE explains classification models in black-box mode using</span>
-<span class="sd">    AISE: Adaptive Input Sampling for Explanation of Black-box Models.</span>
+<span class="sd">    AISE: Adaptive Input Sampling for Explanation of Black-box Models</span>
 <span class="sd">    (TODO (negvet): add link to the paper.)</span>
 
 <span class="sd">    :param model: OpenVINO model.</span>
@@ -468,7 +468,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">generate_saliency_map</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-        <span class="n">explain_target_indices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">target_indices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">preset</span><span class="p">:</span> <span class="n">Preset</span> <span class="o">=</span> <span class="n">Preset</span><span class="o">.</span><span class="n">BALANCE</span><span class="p">,</span>
         <span class="n">num_iterations_per_kernel</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">kernel_widths</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -482,9 +482,9 @@ document.write(`
 
 <span class="sd">        :param data: Input image.</span>
 <span class="sd">        :type data: np.ndarray</span>
-<span class="sd">        :param explain_target_indices: List of target indices to explain.</span>
-<span class="sd">        :type explain_target_indices: List[int]</span>
-<span class="sd">        :param preset: Speed-Quality preset, defines predefined configurations that manage speed-quality tradeoff.</span>
+<span class="sd">        :param target_indices: List of target indices to explain.</span>
+<span class="sd">        :type target_indices: List[int]</span>
+<span class="sd">        :param preset: Speed-Quality preset, defines predefined configurations that manage the speed-quality tradeoff.</span>
 <span class="sd">        :type preset: Preset</span>
 <span class="sd">        :param num_iterations_per_kernel: Number of iterations per kernel, defines compute budget.</span>
 <span class="sd">        :type num_iterations_per_kernel: int</span>
@@ -499,13 +499,17 @@ document.write(`
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data_preprocessed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">preprocess_fn</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">explain_target_indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">target_indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">num_classes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_num_classes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_preprocessed</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">num_classes</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;num_classes = </span><span class="si">{</span><span class="n">num_classes</span><span class="si">}</span><span class="s2">, which might take significant time to process.&quot;</span><span class="p">)</span>
-            <span class="n">explain_target_indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_classes</span><span class="p">))</span>
+            <span class="n">target_indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_classes</span><span class="p">))</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_preset_parameters</span><span class="p">(</span><span class="n">preset</span><span class="p">,</span> <span class="n">num_iterations_per_kernel</span><span class="p">,</span> <span class="n">kernel_widths</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_iterations_per_kernel</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel_widths</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preset_parameters</span><span class="p">(</span>
+            <span class="n">preset</span><span class="p">,</span>
+            <span class="n">num_iterations_per_kernel</span><span class="p">,</span>
+            <span class="n">kernel_widths</span><span class="p">,</span>
+        <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">solver_epsilon</span> <span class="o">=</span> <span class="n">solver_epsilon</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">locally_biased</span> <span class="o">=</span> <span class="n">locally_biased</span>
@@ -514,7 +518,7 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">_mask_generator</span> <span class="o">=</span> <span class="n">GaussianPerturbationMask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">)</span>
 
         <span class="n">saliency_maps</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">explain_target_indices</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">target_indices</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">kernel_params_hist</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">pred_score_hist</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
 
@@ -526,28 +530,29 @@ document.write(`
         <span class="k">return</span> <span class="n">saliency_maps</span></div>
 
 
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_preset_parameters</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
         <span class="n">preset</span><span class="p">:</span> <span class="n">Preset</span><span class="p">,</span>
         <span class="n">num_iterations_per_kernel</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">kernel_widths</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
         <span class="k">if</span> <span class="n">preset</span> <span class="o">==</span> <span class="n">Preset</span><span class="o">.</span><span class="n">SPEED</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">num_iterations_per_kernel</span> <span class="o">=</span> <span class="mi">25</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">kernel_widths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+            <span class="n">iterations</span> <span class="o">=</span> <span class="mi">25</span>
+            <span class="n">widths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">preset</span> <span class="o">==</span> <span class="n">Preset</span><span class="o">.</span><span class="n">BALANCE</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">num_iterations_per_kernel</span> <span class="o">=</span> <span class="mi">50</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">kernel_widths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+            <span class="n">iterations</span> <span class="o">=</span> <span class="mi">50</span>
+            <span class="n">widths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">preset</span> <span class="o">==</span> <span class="n">Preset</span><span class="o">.</span><span class="n">QUALITY</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">num_iterations_per_kernel</span> <span class="o">=</span> <span class="mi">85</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">kernel_widths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.075</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+            <span class="n">iterations</span> <span class="o">=</span> <span class="mi">85</span>
+            <span class="n">widths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.075</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Preset </span><span class="si">{</span><span class="n">preset</span><span class="si">}</span><span class="s2"> is not supported.&quot;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">num_iterations_per_kernel</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">num_iterations_per_kernel</span> <span class="o">=</span> <span class="n">num_iterations_per_kernel</span>
-        <span class="k">if</span> <span class="n">kernel_widths</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">kernel_widths</span> <span class="o">=</span> <span class="n">kernel_widths</span>
+        <span class="k">if</span> <span class="n">num_iterations_per_kernel</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">num_iterations_per_kernel</span> <span class="o">=</span> <span class="n">iterations</span>
+        <span class="k">if</span> <span class="n">kernel_widths</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kernel_widths</span> <span class="o">=</span> <span class="n">widths</span>
+        <span class="k">return</span> <span class="n">num_iterations_per_kernel</span><span class="p">,</span> <span class="n">kernel_widths</span>
 
     <span class="k">def</span> <span class="nf">_run_synchronous_explanation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">kernel_width</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel_widths</span><span class="p">:</span>
