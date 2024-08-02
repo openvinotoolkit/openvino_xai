@@ -7,6 +7,8 @@ from typing import Any, Callable, List, Mapping, Tuple
 import cv2
 import numpy as np
 
+from openvino_xai.common.utils import sigmoid, softmax
+
 
 def convert_targets_to_numpy(targets):
     targets = np.asarray(targets)
@@ -15,7 +17,7 @@ def convert_targets_to_numpy(targets):
     return np.atleast_1d(targets)
 
 
-def get_explain_target_indices(
+def get_target_indices(
     targets: np.ndarray | List[int | str],
     label_names: List[str] | None = None,
 ) -> List[int]:
@@ -127,17 +129,6 @@ def get_postprocess_fn(logit_name="logits") -> Callable[[], np.ndarray]:
     return partial(postprocess_fn, logit_name=logit_name)
 
 
-def softmax(x: np.ndarray) -> np.ndarray:
-    """Compute softmax values of x."""
-    e_x = np.exp(x - np.max(x))
-    return e_x / e_x.sum()
-
-
-def sigmoid(x: np.ndarray) -> np.ndarray:
-    """Compute sigmoid values of x."""
-    return 1 / (1 + np.exp(-x))
-
-
 class ActivationType(Enum):
     SIGMOID = "sigmoid"
     SOFTMAX = "softmax"
@@ -154,34 +145,3 @@ def get_score(x: np.ndarray, index: int, activation: ActivationType = Activation
         assert x.shape[0] == 1
         return x[0, index]
     return x[index]
-
-
-def format_to_bhwc(image: np.ndarray) -> np.ndarray:
-    """Format image to BHWC from ndim=3 or ndim=4."""
-    if image.ndim == 3:
-        image = np.expand_dims(image, axis=0)
-    if not is_bhwc_layout(image):
-        # bchw layout -> bhwc
-        image = image.transpose((0, 2, 3, 1))
-    return image
-
-
-def is_bhwc_layout(image: np.array) -> bool:
-    """Check whether layout of image is BHWC."""
-    _, dim0, dim1, dim2 = image.shape
-    if dim0 > dim2 and dim1 > dim2:  # bhwc layout
-        return True
-    return False
-
-
-def infer_size_from_image(image: np.ndarray) -> Tuple[int, int]:
-    """Estimate image size."""
-    if image.ndim == 2:
-        return image.shape
-
-    image = format_to_bhwc(image)
-    if image.ndim == 4:
-        _, h, w, _ = image.shape
-    else:
-        raise ValueError(f"Supports only two, three, and four dimensional image, but got {image.ndim}.")
-    return h, w

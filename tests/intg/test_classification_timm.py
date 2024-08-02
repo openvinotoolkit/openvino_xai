@@ -277,8 +277,9 @@ class TestImageClassificationTimm:
         explanation = explainer(
             image,
             targets=[target_class],
-            # num_masks=2000,  # kwargs of the RISE algo
-            num_masks=2,  # minimal iterations for feature test
+            overlay=True,
+            num_iterations_per_kernel=2,
+            kernel_widths=[0.1],
         )
 
         assert explanation is not None
@@ -434,7 +435,7 @@ class TestImageClassificationTimm:
             targets=[target_class],
             resize=False,
             colormap=False,
-            num_masks=2,  # minimal iterations for feature test
+            num_iterations_per_kernel=2,  # minimal iterations for feature test
         )
 
         assert explanation is not None

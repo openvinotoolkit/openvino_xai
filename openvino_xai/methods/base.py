@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from abc import ABC, abstractmethod
-from typing import Callable, Mapping
+from typing import Callable, Dict, Mapping
 
 import numpy as np
 import openvino.runtime as ov
@@ -41,7 +41,7 @@ class MethodBase(ABC):
         return self._model_compiled(x)
 
     @abstractmethod
-    def generate_saliency_map(self, data: np.ndarray) -> np.ndarray:
+    def generate_saliency_map(self, data: np.ndarray) -> Dict[int, np.ndarray] | np.ndarray:
         """Saliency map generation."""
 
     def load_model(self) -> None:

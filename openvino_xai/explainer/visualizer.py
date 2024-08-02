@@ -6,7 +6,7 @@ from typing import Dict, List, Tuple
 import cv2
 import numpy as np
 
-from openvino_xai.common.utils import scaling
+from openvino_xai.common.utils import format_to_bhwc, infer_size_from_image, scaling
 from openvino_xai.explainer.explanation import (
     COLOR_MAPPED_LAYOUTS,
     GRAY_LAYOUTS,
@@ -15,7 +15,6 @@ from openvino_xai.explainer.explanation import (
     Explanation,
     Layout,
 )
-from openvino_xai.explainer.utils import format_to_bhwc, infer_size_from_image
 
 
 def resize(saliency_map: np.ndarray, output_size: Tuple[int, int]) -> np.ndarray:

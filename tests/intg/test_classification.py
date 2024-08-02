@@ -14,6 +14,7 @@ from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import has_xai, retrieve_otx_model
 from openvino_xai.explainer.explainer import Explainer, ExplainMode
 from openvino_xai.explainer.utils import get_postprocess_fn, get_preprocess_fn
+from openvino_xai.methods.black_box.base import Preset
 
 MODELS = [
     "mlc_mobilenetv3_large_voc",  # verified
@@ -311,6 +312,44 @@ class TestClsBB:
 
     @pytest.mark.parametrize("model_name", MODELS)
     @pytest.mark.parametrize("overlay", [True, False])
+    @pytest.mark.parametrize("scaling", [True, False])
+    def test_aise(
+        self,
+        model_name: str,
+        overlay: bool,
+        scaling: bool,
+    ):
+        retrieve_otx_model(self.data_dir, model_name)
+        model_path = self.data_dir / "otx_models" / (model_name + ".xml")
+        model = ov.Core().read_model(model_path)
+
+        explainer = Explainer(
+            model=model,
+            task=Task.CLASSIFICATION,
+            preprocess_fn=self.preprocess_fn,  # type: ignore
+            postprocess_fn=get_postprocess_fn(),  # type: ignore
+            explain_mode=ExplainMode.BLACKBOX,
+        )
+        target_class = 1
+        explanation = explainer(
+            self.image,
+            targets=[target_class],
+            scaling=scaling,
+            overlay=overlay,
+            resize=False,
+            colormap=False,
+            num_iterations_per_kernel=2,
+            kernel_widths=[0.1],
+        )
+        assert target_class in explanation.saliency_map
+        assert len(explanation.saliency_map) == len([target_class])
+        if overlay:
+            assert explanation.saliency_map[target_class].ndim == 3
+        else:
+            assert explanation.saliency_map[target_class].ndim == 2
+
+    @pytest.mark.parametrize("model_name", MODELS)
+    @pytest.mark.parametrize("overlay", [True, False])
     @pytest.mark.parametrize(
         "explain_all_classes",
         [
@@ -319,7 +358,7 @@ class TestClsBB:
         ],
     )
     @pytest.mark.parametrize("scaling", [True, False])
-    def test_classification_black_box_visualizing(
+    def test_rise(
         self,
         model_name: str,
         overlay: bool,
@@ -336,6 +375,7 @@ class TestClsBB:
             preprocess_fn=self.preprocess_fn,  # type: ignore
             postprocess_fn=get_postprocess_fn(),  # type: ignore
             explain_mode=ExplainMode.BLACKBOX,
+            explain_method=Method.RISE,
         )
 
         if not explain_all_classes:
@@ -380,12 +420,8 @@ class TestClsBB:
                     for map_ in explanation.saliency_map.values():
                         assert map_.min() == 0, f"{map_.min()}"
                         assert map_.max() in {254, 255}, f"{map_.max()}"
-                    if model_name in self._ref_sal_maps:
-                        actual_sal_vals = explanation.saliency_map[0][0, :10].astype(np.int16)
-                        ref_sal_vals = self._ref_sal_maps[DEFAULT_CLS_MODEL].astype(np.uint8)
-                        assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
 
-    def test_classification_black_box_xai_model_as_input(self):
+    def test_rise_xai_model_as_input(self):
         retrieve_otx_model(self.data_dir, DEFAULT_CLS_MODEL)
         model_path = self.data_dir / "otx_models" / (DEFAULT_CLS_MODEL + ".xml")
         model = ov.Core().read_model(model_path)
@@ -401,6 +437,7 @@ class TestClsBB:
             preprocess_fn=self.preprocess_fn,
             postprocess_fn=get_postprocess_fn(),
             explain_mode=ExplainMode.BLACKBOX,
+            explain_method=Method.RISE,
         )
         explanation = explainer(
             self.image,

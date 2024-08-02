@@ -214,8 +214,7 @@ class TestImageClassificationTimm:
         explanation = explainer(
             image,
             targets=[target_class],
-            # num_masks=2000,  # kwargs of the RISE algo
-            num_masks=2,  # minimal iterations for feature test
+            num_iterations_per_kernel=2,  # minimal iterations for feature test
         )
 
         assert explanation is not None

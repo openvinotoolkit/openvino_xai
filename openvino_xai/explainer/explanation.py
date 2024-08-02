@@ -12,7 +12,7 @@ import numpy as np
 from openvino_xai.explainer.utils import (
     convert_targets_to_numpy,
     explains_all,
-    get_explain_target_indices,
+    get_target_indices,
 )
 
 
@@ -20,7 +20,8 @@ class Explanation:
     """
     Explanation selects target saliency maps, holds it and its layout.
 
-    :param saliency_map: Raw saliency map.
+    :param saliency_map: Raw saliency map, as a numpy array or as a dict.
+    :type saliency_map: np.ndarray | Dict[int | str, np.ndarray]
     :param targets: List of custom labels to explain, optional. Can be list of integer indices (int),
         or list of names (str) from label_names.
     :type targets: np.ndarray | List[int | str] | int | str
@@ -30,14 +31,21 @@ class Explanation:
 
     def __init__(
         self,
-        saliency_map: np.ndarray,
+        saliency_map: np.ndarray | Dict[int | str, np.ndarray],
         targets: np.ndarray | List[int | str] | int | str,
         label_names: List[str] | None = None,
     ):
         targets = convert_targets_to_numpy(targets)
 
-        self._check_saliency_map(saliency_map)
-        self._saliency_map = self._format_sal_map_as_dict(saliency_map)
+        if isinstance(saliency_map, np.ndarray):
+            self._check_saliency_map(saliency_map)
+            self._saliency_map = self._format_sal_map_as_dict(saliency_map)
+            self.total_num_targets = len(self._saliency_map)
+        elif isinstance(saliency_map, dict):
+            self._saliency_map = saliency_map
+            self.total_num_targets = None
+        else:
+            raise ValueError(f"Expect saliency_map to be np.ndarray or dict, but got{type(saliency_map)}.")
 
         if "per_image_map" in self._saliency_map:
             self.layout = Layout.ONE_MAP_PER_IMAGE_GRAY
@@ -74,8 +82,6 @@ class Explanation:
     def _check_saliency_map(saliency_map: np.ndarray):
         if saliency_map is None:
             raise RuntimeError("Saliency map is None.")
-        if not isinstance(saliency_map, np.ndarray):
-            raise ValueError(f"Raw saliency_map has to be np.ndarray, but got {type(saliency_map)}.")
         if saliency_map.size == 0:
             raise RuntimeError("Saliency map is zero size array.")
         if saliency_map.shape[0] > 1:
@@ -105,24 +111,26 @@ class Explanation:
         label_names: List[str] | None = None,
     ) -> Dict[int | str, np.ndarray]:
         assert self.layout == Layout.MULTIPLE_MAPS_PER_IMAGE_GRAY
-        explain_target_indices = self._select_target_indices(
+        target_indices = self._select_target_indices(
             targets=targets,
-            total_num_targets=len(self._saliency_map),
             label_names=label_names,
         )
-        saliency_maps_selected = {i: self._saliency_map[i] for i in explain_target_indices}
+        saliency_maps_selected = {i: self._saliency_map[i] for i in target_indices}
         return saliency_maps_selected
 
-    @staticmethod
     def _select_target_indices(
+        self,
         targets: np.ndarray | List[int | str],
-        total_num_targets: int,
         label_names: List[str] | None = None,
     ) -> List[int] | np.ndarray:
-        explain_target_indices = get_explain_target_indices(targets, label_names)
-        if not all(0 <= target_index <= (total_num_targets - 1) for target_index in explain_target_indices):
-            raise ValueError(f"All targets explanation indices have to be in range 0..{total_num_targets - 1}.")
-        return explain_target_indices
+        target_indices = get_target_indices(targets, label_names)
+        if self.total_num_targets is not None:
+            if not all(0 <= target_index <= (self.total_num_targets - 1) for target_index in target_indices):
+                raise ValueError(f"All targets indices have to be in range 0..{self.total_num_targets - 1}.")
+        else:
+            if not all(target_index in self.saliency_map for target_index in target_indices):
+                raise ValueError("Provided targer index {targer_index} is not available among saliency maps.")
+        return target_indices
 
     def save(self, dir_path: Path | str, name: str | None = None) -> None:
         """Dumps saliency map."""

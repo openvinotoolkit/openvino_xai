@@ -10,13 +10,16 @@ import openvino as ov
 
 from openvino_xai import Task
 from openvino_xai.common.parameters import Method
-from openvino_xai.common.utils import IdentityPreprocessFN, logger
+from openvino_xai.common.utils import (
+    IdentityPreprocessFN,
+    infer_size_from_image,
+    logger,
+)
 from openvino_xai.explainer.explanation import Explanation
 from openvino_xai.explainer.utils import (
     convert_targets_to_numpy,
     explains_all,
-    get_explain_target_indices,
-    infer_size_from_image,
+    get_target_indices,
 )
 from openvino_xai.explainer.visualizer import Visualizer
 from openvino_xai.methods.base import MethodBase
@@ -202,16 +205,16 @@ class Explainer:
         """
         targets = convert_targets_to_numpy(targets)
 
-        explain_target_indices = None
+        target_indices = None
         if isinstance(self.method, BlackBoxXAIMethod) and not explains_all(targets):
-            explain_target_indices = get_explain_target_indices(
+            target_indices = get_target_indices(
                 targets,
                 label_names,
             )
 
         saliency_map = self.method.generate_saliency_map(
             data,
-            explain_target_indices=explain_target_indices,  # type: ignore
+            target_indices=target_indices,  # type: ignore
             **kwargs,
         )
 
@@ -258,6 +261,7 @@ class Explainer:
             model=self.model,
             postprocess_fn=self.postprocess_fn,
             preprocess_fn=self.preprocess_fn,
+            explain_method=self.explain_method,
             device_name=self.device_name,
         )
         logger.info("Explaining the model in black-box mode.")

@@ -59,8 +59,8 @@ def retrieve_otx_model(data_dir: str | Path, model_name: str, dir_url=None) -> N
 
 def scaling(saliency_map: np.ndarray, cast_to_uint8: bool = True) -> np.ndarray:
     """Scaling saliency maps to [0, 255] range."""
-    original_num_dims = saliency_map.shape
-    if len(original_num_dims) == 2:
+    original_num_dims = saliency_map.ndim
+    if original_num_dims == 2:
         # If input map is 2D array, add dim so that below code would work
         saliency_map = saliency_map[np.newaxis, ...]
 
@@ -87,6 +87,52 @@ def get_min_max(saliency_map: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     return min_values, max_values
 
 
+def sigmoid(x: np.ndarray) -> np.ndarray:
+    """Compute sigmoid values of x."""
+    return 1 / (1 + np.exp(-x))
+
+
+def softmax(x: np.ndarray) -> np.ndarray:
+    """Compute softmax values of x."""
+    e_x = np.exp(x - np.max(x))
+    return e_x / e_x.sum()
+
+
 class IdentityPreprocessFN:
     def __call__(self, x: Any) -> Any:
         return x
+
+
+def is_bhwc_layout(image: np.array) -> bool:
+    """Check whether layout of image is BHWC."""
+    _, dim0, dim1, dim2 = image.shape
+    if dim0 > dim2 and dim1 > dim2:  # bhwc layout
+        return True
+    return False
+
+
+def format_to_bhwc(image: np.ndarray) -> np.ndarray:
+    """Format image to BHWC from ndim=3 or ndim=4."""
+    if image.ndim == 3:
+        image = np.expand_dims(image, axis=0)
+    if not is_bhwc_layout(image):
+        # bchw layout -> bhwc
+        image = image.transpose((0, 2, 3, 1))
+    return image
+
+
+def infer_size_from_image(image: np.ndarray) -> Tuple[int, int]:
+    """Estimate image size."""
+    if image.ndim not in [2, 3, 4]:
+        raise ValueError(f"Supports only two, three, and four dimensional image, but got {image.ndim}.")
+
+    if image.ndim == 2:
+        return image.shape
+
+    if image.ndim == 3:
+        image = np.expand_dims(image, axis=0)
+    _, dim0, dim1, dim2 = image.shape
+    if dim0 > dim2 and dim1 > dim2:  # bhwc layout:
+        return dim0, dim1
+    else:
+        return dim1, dim2

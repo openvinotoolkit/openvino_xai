@@ -10,6 +10,7 @@ import openvino.runtime as ov
 from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import IdentityPreprocessFN, logger
 from openvino_xai.methods.base import MethodBase
+from openvino_xai.methods.black_box.aise import AISE
 from openvino_xai.methods.black_box.base import BlackBoxXAIMethod
 from openvino_xai.methods.black_box.rise import RISE
 from openvino_xai.methods.white_box.activation_map import ActivationMap
@@ -191,13 +192,18 @@ class BlackBoxMethodFactory(MethodFactory):
         model: ov.Model,
         postprocess_fn: Callable[[Mapping], np.ndarray],
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
+        explain_method: Method | None = None,
         device_name: str = "CPU",
         **kwargs,
     ) -> MethodBase:
         if task == Task.CLASSIFICATION:
-            return cls.create_classification_method(model, postprocess_fn, preprocess_fn, device_name, **kwargs)
+            return cls.create_classification_method(
+                model, postprocess_fn, preprocess_fn, explain_method, device_name, **kwargs
+            )
         if task == Task.DETECTION:
-            return cls.create_detection_method(model, postprocess_fn, preprocess_fn, device_name, **kwargs)
+            return cls.create_detection_method(
+                model, postprocess_fn, preprocess_fn, explain_method, device_name, **kwargs
+            )
         raise ValueError(f"Model type {task} is not supported in black-box mode.")
 
     @staticmethod
@@ -205,10 +211,12 @@ class BlackBoxMethodFactory(MethodFactory):
         model: ov.Model,
         postprocess_fn: Callable[[Mapping], np.ndarray],
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
+        explain_method: Method | None = None,
         device_name: str = "CPU",
         **kwargs,
     ) -> BlackBoxXAIMethod:
         """Generates instance of the classification black-box method class.
+        Using AISE as a default method.
 
         :param model: OV IR model.
         :type model: ov.Model
@@ -220,7 +228,11 @@ class BlackBoxMethodFactory(MethodFactory):
         :param device_name: Device type name.
         :type device_name: str
         """
-        return RISE(model, postprocess_fn, preprocess_fn, device_name, **kwargs)
+        if explain_method is None or explain_method == Method.AISE:
+            return AISE(model, postprocess_fn, preprocess_fn, device_name, **kwargs)
+        elif explain_method == Method.RISE:
+            return RISE(model, postprocess_fn, preprocess_fn, device_name, **kwargs)
+        raise ValueError(f"Requested explanation method {explain_method} is not implemented.")
 
     @staticmethod
     def create_detection_method(*args, **kwargs) -> BlackBoxXAIMethod:

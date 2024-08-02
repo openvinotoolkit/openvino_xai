@@ -53,7 +53,7 @@ def explain_auto(args):
         preprocess_fn=preprocess_fn,
     )
 
-    # Prepare input image and explanation parameters, can be different for each explain call
+    # Prepare input image
     image = cv2.imread(args.image_path)
 
     # Generate explanation
@@ -96,7 +96,7 @@ def explain_white_box(args):
         embed_scaling=True, # True by default.  If set to True, saliency map scale (0 ~ 255) operation is embedded in the model
     )
 
-    # Prepare input image and explanation parameters, can be different for each explain call
+    # Prepare input image and label names
     image = cv2.imread(args.image_path)
     voc_labels = ['aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car', 'cat', 'chair', 'cow', 'diningtable',
               'dog', 'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor']
@@ -139,7 +139,7 @@ def explain_black_box(args):
         explain_mode=ExplainMode.BLACKBOX,  # defaults to AUTO
     )
 
-    # Prepare input image and explanation parameters, can be different for each explain call
+    # Prepare input image and label names
     image = cv2.imread(args.image_path)
     voc_labels = ['aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car', 'cat', 'chair', 'cow', 'diningtable',
               'dog', 'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor']
@@ -150,7 +150,6 @@ def explain_black_box(args):
         targets=['dog', 'person'],  # target classes to explain, also [11, 14] possible
         label_names=voc_labels,  # optional names
         overlay=True,
-        num_masks=1000,  # kwargs of the RISE algo
     )
 
     logger.info(
@@ -225,7 +224,7 @@ def explain_white_box_vit(args):
         # target_layer="/blocks/blocks.10/Add_1",  # timm vit_base_patch8_224.augreg_in21k_ft_in1k
     )
 
-    # Prepare input image and explanation parameters, can be different for each explain call
+    # Prepare input image
     image = cv2.imread(args.image_path)
 
     # Generate explanation
