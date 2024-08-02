@@ -10,7 +10,7 @@ from pytest_mock import MockerFixture
 from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import retrieve_otx_model
 from openvino_xai.explainer.utils import get_postprocess_fn, get_preprocess_fn
-from openvino_xai.methods.black_box.rise import RISE
+from openvino_xai.methods.black_box.aise import AISE
 from openvino_xai.methods.factory import BlackBoxMethodFactory, WhiteBoxMethodFactory
 from openvino_xai.methods.white_box.activation_map import ActivationMap
 from openvino_xai.methods.white_box.det_class_probability_map import (
@@ -108,7 +108,7 @@ def test_create_bb_cls_vit_method(fxt_data_root: Path):
     model_path = fxt_data_root / "otx_models" / (VIT_MODEL + ".xml")
     model_vit = ov.Core().read_model(model_path)
     explain_method = BlackBoxMethodFactory.create_method(Task.CLASSIFICATION, model_vit, get_postprocess_fn())
-    assert isinstance(explain_method, RISE)
+    assert isinstance(explain_method, AISE)
 
 
 def test_create_wb_det_cnn_method(fxt_data_root: Path):
