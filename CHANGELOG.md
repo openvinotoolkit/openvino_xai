@@ -6,6 +6,7 @@
 
 * Support OpenVINO IR (.xml) / ONNX (.onnx) model file for `Explainer` model
 * Enable AISE: Adaptive Input Sampling for Explanation of Black-box Models.
+* Upgrade OpenVINO to 2024.3.0
 
 ### What's Changed
 
@@ -15,6 +16,7 @@
 * Support OV IR / ONNX model file for Explainer by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/47
 * Try CNN -> ViT assumption for IR insertion by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/48
 * Enable AISE: Adaptive Input Sampling for Explanation of Black-box Models by @negvet in https://github.com/openvinotoolkit/openvino_xai/pull/49
+* Upgrade OpenVINO to 2024.3.0 by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/52
 
 ### Known Issues
 
