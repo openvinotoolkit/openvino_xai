@@ -233,10 +233,10 @@ class ViTReciproCAM(FeatureMapPerturbationBase):
         norm_node_ori = self._get_non_add_node_from_two_nodes(post_target_node_ori)
         while norm_node_ori.get_type_name() != "Add":
             if len(norm_node_ori.outputs()) > 1:
-                raise ValueError
+                raise ValueError("Number of normalization outputs > 1!")
             inputs = norm_node_ori.output(0).get_target_inputs()
             if len(inputs) > 1:
-                raise ValueError
+                raise ValueError("Number of normalization inputs > 1!")
             norm_node_ori = next(iter(inputs)).get_node()
 
         # Mosaic feature map after the LayerNorm

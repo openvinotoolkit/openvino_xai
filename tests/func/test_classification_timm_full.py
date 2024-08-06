@@ -32,36 +32,19 @@ TEST_MODELS = timm.list_models(pretrained=True)
 SUPPORTED_BUT_FAILED_BY_BB_MODELS = {}
 
 NOT_SUPPORTED_BY_BB_MODELS = {
-    "_nfnet_": "RuntimeError: Exception from src/inference/src/cpp/core.cpp:90: Training mode of BatchNormalization is not supported.",
-    "convit": "RuntimeError: Couldn't get TorchScript module by tracing.",
-    "convnext_xxlarge": "RuntimeError: The serialized model is larger than the 2GiB limit imposed by the protobuf library.",
-    "convnextv2_huge": "RuntimeError: The serialized model is larger than the 2GiB limit imposed by the protobuf library.",
-    "deit3_huge": "RuntimeError: The serialized model is larger than the 2GiB limit imposed by the protobuf library.",
-    "dm_nfnet": "openvino._pyopenvino.GeneralFailure: Check 'false' failed at src/frontends/onnx/frontend/src/frontend.cpp:144",
-    "eca_nfnet": "openvino._pyopenvino.GeneralFailure: Check 'false' failed at src/frontends/onnx/frontend/src/frontend.cpp:144",
-    "eva_giant": "RuntimeError: The serialized model is larger than the 2GiB limit imposed by the protobuf library.",
-    # "halo": "torch.onnx.errors.SymbolicValueError: Unsupported: ONNX export of operator Unfold, input size not accessible.",
-    "nf_regnet": "RuntimeError: Exception from src/inference/src/cpp/core.cpp:90: Training mode of BatchNormalization is not supported.",
-    "nf_resnet": "RuntimeError: Exception from src/inference/src/cpp/core.cpp:90: Training mode of BatchNormalization is not supported.",
-    "nfnet_l0": "RuntimeError: Exception from src/inference/src/cpp/core.cpp:90: Training mode of BatchNormalization is not supported.",
-    "regnety_1280": "RuntimeError: The serialized model is larger than the 2GiB limit imposed by the protobuf library.",
-    "regnety_2560": "RuntimeError: The serialized model is larger than the 2GiB limit imposed by the protobuf library.",
     "repvit": "urllib.error.HTTPError: HTTP Error 404: Not Found",
-    "resnetv2": "RuntimeError: Exception from src/inference/src/cpp/core.cpp:90: Training mode of BatchNormalization is not supported.",
     "tf_efficientnet_cc": "torch.onnx.errors.SymbolicValueError: Unsupported: ONNX export of convolution for kernel of unknown shape.",
     "vit_base_r50_s16_224.orig_in21k": "RuntimeError: Error(s) in loading state_dict for VisionTransformer",
     "vit_gigantic_patch16_224_ijepa.in22k": "RuntimeError: shape '[1, 13, 13, -1]' is invalid for input of size 274560",
     "vit_huge_patch14_224.orig_in21k": "RuntimeError: Error(s) in loading state_dict for VisionTransformer",
     "vit_large_patch32_224.orig_in21k": "RuntimeError: Error(s) in loading state_dict for VisionTransformer",
-    "vit_large_r50_s32": "RuntimeError: Exception from src/inference/src/cpp/core.cpp:90: Training mode of BatchNormalization is not supported.",
-    "vit_small_r26_s32": "RuntimeError: Exception from src/inference/src/cpp/core.cpp:90: Training mode of BatchNormalization is not supported.",
-    "vit_tiny_r_s16": "RuntimeError: Exception from src/inference/src/cpp/core.cpp:90: Training mode of BatchNormalization is not supported.",
-    "volo_": "torch.onnx.errors.UnsupportedOperatorError: Exporting the operator 'aten::col2im' to ONNX opset version 14 is not supported.",
+    "volo_": "RuntimeError: Exception from src/core/src/dimension.cpp:227: Cannot get length of dynamic dimension",
 }
 
 SUPPORTED_BUT_FAILED_BY_WB_MODELS = {
-    "convformer": "Cannot find output backbone_node in auto mode, please provide target_layer.",
     "swin": "Only two outputs of the between block Add node supported, but got 1. Try to use black-box.",
+    "vit_base_patch16_rpn_224": "Number of normalization outputs > 1",
+    "vit_relpos_medium_patch16_rpn_224": "ValueError in openvino_xai/methods/white_box/recipro_cam.py:215",
 }
 
 NOT_SUPPORTED_BY_WB_MODELS = {
@@ -103,7 +86,6 @@ NOT_SUPPORTED_BY_WB_MODELS = {
     "tnt_s_patch16_224": "Only two outputs of the between block Add node supported, but got 1.",
     "twins": "One (and only one) of the nodes has to be Add type. But got ShapeOf and Transpose.",
     # work in CNN mode -> "visformer": "Cannot find output backbone_node in auto mode, please provide target_layer",
-    "vit_relpos_medium_patch16_rpn_224": "ValueError in openvino_xai/methods/white_box/recipro_cam.py:215",
 }
 
 
