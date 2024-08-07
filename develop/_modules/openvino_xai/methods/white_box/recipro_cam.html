@@ -641,10 +641,10 @@ document.write(`
         <span class="n">norm_node_ori</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_non_add_node_from_two_nodes</span><span class="p">(</span><span class="n">post_target_node_ori</span><span class="p">)</span>
         <span class="k">while</span> <span class="n">norm_node_ori</span><span class="o">.</span><span class="n">get_type_name</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">&quot;Add&quot;</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">norm_node_ori</span><span class="o">.</span><span class="n">outputs</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Number of normalization outputs &gt; 1!&quot;</span><span class="p">)</span>
             <span class="n">inputs</span> <span class="o">=</span> <span class="n">norm_node_ori</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">get_target_inputs</span><span class="p">()</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Number of normalization inputs &gt; 1!&quot;</span><span class="p">)</span>
             <span class="n">norm_node_ori</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">inputs</span><span class="p">))</span><span class="o">.</span><span class="n">get_node</span><span class="p">()</span>
 
         <span class="c1"># Mosaic feature map after the LayerNorm</span>
@@ -812,7 +812,7 @@ document.write(`
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.0.2.
     <br/>
   </p>
 </div>
