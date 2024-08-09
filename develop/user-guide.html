@@ -347,6 +347,7 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="#black-box-mode">Black-Box mode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#xai-insertion-white-box-usage">XAI insertion (white-box usage)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#plot-saliency-maps">Plot saliency maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#saving-saliency-maps">Saving saliency maps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#example-scripts">Example scripts</a></li>
 </ul>
 </li>
@@ -434,6 +435,7 @@ which is useful for analyzing model’s performance.</p>
 <li><p><a class="reference internal" href="#black-box-mode"><span class="xref myst">Black-Box mode</span></a></p></li>
 <li><p><a class="reference internal" href="#xai-insertion-white-box-usage"><span class="xref myst">XAI insertion (white-box usage)</span></a></p></li>
 <li><p><a class="reference internal" href="#plot-saliency-maps"><span class="xref myst">Plot saliency maps</span></a></p></li>
+<li><p><a class="reference internal" href="#saving-saliency-maps"><span class="xref myst">Saving saliency maps</span></a></p></li>
 <li><p><a class="reference internal" href="#example-scripts"><span class="xref myst">Example scripts</span></a></p></li>
 </ul>
 </li>
@@ -502,8 +504,8 @@ The OpenVINO Runtime supports loading and inference of the ONNX models, and so d
 <p>Here’s the example how we can avoid passing <code class="docutils literal notranslate"><span class="pre">preprocess_fn</span></code> by preprocessing data beforehand (like resizing and adding a batch dimension).</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Mapping</span>
 <span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
-<span class="kn">from</span> <span class="nn">from</span> <span class="n">typing</span> <span class="kn">import</span> <span class="nn">Mapping</span>
 
 <span class="kn">import</span> <span class="nn">openvino_xai</span> <span class="k">as</span> <span class="nn">xai</span>
 
@@ -539,7 +541,7 @@ The OpenVINO Runtime supports loading and inference of the ONNX models, and so d
 <span class="p">)</span>
 
 <span class="c1"># Save saliency maps</span>
-<span class="n">explanation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;output_path&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">)</span>
+<span class="n">explanation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;output_path&quot;</span><span class="p">,</span> <span class="s2">&quot;name_&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -547,8 +549,8 @@ The OpenVINO Runtime supports loading and inference of the ONNX models, and so d
 <h3>Specifying <code class="docutils literal notranslate"><span class="pre">preprocess_fn</span></code><a class="headerlink" href="#specifying-preprocess-fn" title="Link to this heading">#</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Mapping</span>
+<span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
 
 <span class="kn">import</span> <span class="nn">openvino_xai</span> <span class="k">as</span> <span class="nn">xai</span>
 
@@ -585,7 +587,7 @@ The OpenVINO Runtime supports loading and inference of the ONNX models, and so d
 <span class="p">)</span>
 
 <span class="c1"># Save saliency maps</span>
-<span class="n">explanation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;output_path&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">)</span>
+<span class="n">explanation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;output_path&quot;</span><span class="p">,</span> <span class="s2">&quot;name_&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -640,7 +642,7 @@ The OpenVINO Runtime supports loading and inference of the ONNX models, and so d
 <span class="p">)</span>
 
 <span class="c1"># Save saliency maps</span>
-<span class="n">explanation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;output_path&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">)</span>
+<span class="n">explanation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;output_path&quot;</span><span class="p">,</span> <span class="s2">&quot;name_&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -693,7 +695,7 @@ Cons:</p></li>
 <span class="p">)</span>
 
 <span class="c1"># Save saliency maps</span>
-<span class="n">explanation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;output_path&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">)</span>
+<span class="n">explanation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;output_path&quot;</span><span class="p">,</span> <span class="s2">&quot;name_&quot;</span><span class="p">)</span>
 
 </pre></div>
 </div>
@@ -731,7 +733,9 @@ Cons:</p></li>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
+
 <span class="kn">import</span> <span class="nn">openvino_xai</span> <span class="k">as</span> <span class="nn">xai</span>
+<span class="kn">from</span> <span class="nn">openvino_xai.explainer</span> <span class="kn">import</span> <span class="n">ExplainMode</span>
 
 <span class="k">def</span> <span class="nf">preprocess_fn</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Preprocess the input image.&quot;&quot;&quot;</span>
@@ -777,6 +781,92 @@ Cons:</p></li>
 <span class="n">explanation</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;cv&quot;</span><span class="p">)</span> <span class="c1"># plot all saliency map</span>
 <span class="n">explanation</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;cv&quot;</span><span class="p">)</span>
 <span class="n">explanation</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;cat&quot;</span><span class="p">],</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;cv&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="saving-saliency-maps">
+<h2>Saving saliency maps<a class="headerlink" href="#saving-saliency-maps" title="Link to this heading">#</a></h2>
+<p>You can easily save saliency maps with flexible naming options by using a <code class="docutils literal notranslate"><span class="pre">prefix</span></code> and <code class="docutils literal notranslate"><span class="pre">postfix</span></code>. The <code class="docutils literal notranslate"><span class="pre">prefix</span></code> allows saliency maps from the same image to have consistent naming.</p>
+<p>The format for naming is:</p>
+<p><code class="docutils literal notranslate"><span class="pre">{prefix}</span> <span class="pre">+</span> <span class="pre">target_id</span> <span class="pre">+</span> <span class="pre">{postfix}.jpg</span></code></p>
+<p>Additionally, you can include the confidence score for each class in the saved saliency map’s name.</p>
+<p><code class="docutils literal notranslate"><span class="pre">{prefix}</span> <span class="pre">+</span> <span class="pre">target_id</span> <span class="pre">+</span> <span class="pre">{postfix}</span> <span class="pre">+</span> <span class="pre">confidence.jpg</span></code></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Mapping</span>
+
+<span class="kn">import</span> <span class="nn">openvino_xai</span> <span class="k">as</span> <span class="nn">xai</span>
+<span class="kn">from</span> <span class="nn">openvino_xai.explainer</span> <span class="kn">import</span> <span class="n">ExplainMode</span>
+
+<span class="k">def</span> <span class="nf">preprocess_fn</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Preprocess the input image.&quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">image</span><span class="p">,</span> <span class="n">dsize</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">))</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">transpose</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">processed_image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">processed_image</span>
+
+<span class="k">def</span> <span class="nf">postprocess_fn</span><span class="p">(</span><span class="n">output</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Postprocess the model output.&quot;&quot;&quot;</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">softmax</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">softmax</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute softmax values of x.&quot;&quot;&quot;</span>
+    <span class="n">e_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">e_x</span> <span class="o">/</span> <span class="n">e_x</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+<span class="c1"># Generate and process saliency maps (as many as required, sequentially)</span>
+<span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="s2">&quot;path/to/image.jpg&quot;</span><span class="p">)</span>
+
+<span class="c1"># Create ov.Model</span>
+<span class="n">MODEL_PATH</span> <span class="o">=</span> <span class="s2">&quot;path/to/model.xml&quot;</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ov</span><span class="o">.</span><span class="n">Core</span><span class="p">()</span><span class="o">.</span><span class="n">read_model</span><span class="p">(</span><span class="n">MODEL_PATH</span><span class="p">)</span>  <span class="c1"># type: ov.Model</span>
+
+<span class="c1"># The Explainer object will prepare and load the model once in the beginning</span>
+<span class="n">explainer</span> <span class="o">=</span> <span class="n">xai</span><span class="o">.</span><span class="n">Explainer</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">,</span>
+    <span class="n">preprocess_fn</span><span class="o">=</span><span class="n">preprocess_fn</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">voc_labels</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;aeroplane&#39;</span><span class="p">,</span> <span class="s1">&#39;bicycle&#39;</span><span class="p">,</span> <span class="s1">&#39;bird&#39;</span><span class="p">,</span> <span class="s1">&#39;boat&#39;</span><span class="p">,</span> <span class="s1">&#39;bottle&#39;</span><span class="p">,</span> <span class="s1">&#39;bus&#39;</span><span class="p">,</span> <span class="s1">&#39;car&#39;</span><span class="p">,</span> <span class="s1">&#39;cat&#39;</span><span class="p">,</span> <span class="s1">&#39;chair&#39;</span><span class="p">,</span> <span class="s1">&#39;cow&#39;</span><span class="p">,</span> <span class="s1">&#39;diningtable&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;dog&#39;</span><span class="p">,</span> <span class="s1">&#39;horse&#39;</span><span class="p">,</span> <span class="s1">&#39;motorbike&#39;</span><span class="p">,</span> <span class="s1">&#39;person&#39;</span><span class="p">,</span> <span class="s1">&#39;pottedplant&#39;</span><span class="p">,</span> <span class="s1">&#39;sheep&#39;</span><span class="p">,</span> <span class="s1">&#39;sofa&#39;</span><span class="p">,</span> <span class="s1">&#39;train&#39;</span><span class="p">,</span> <span class="s1">&#39;tvmonitor&#39;</span>
+<span class="p">]</span>
+
+<span class="c1"># Get predicted confidences for the image</span>
+<span class="n">compiled_model</span> <span class="o">=</span> <span class="n">core</span><span class="o">.</span><span class="n">compile_model</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">device_name</span><span class="o">=</span><span class="s2">&quot;AUTO&quot;</span><span class="p">)</span>
+<span class="n">logits</span> <span class="o">=</span> <span class="n">compiled_model</span><span class="p">(</span><span class="n">preprocess_fn</span><span class="p">(</span><span class="n">image</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">result_infer</span> <span class="o">=</span> <span class="n">postprocess_fn</span><span class="p">(</span><span class="n">logits</span><span class="p">)</span>
+
+<span class="c1"># Generate list of predicted class indices and scores</span>
+<span class="n">result_idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">result_infer</span> <span class="o">&gt;</span> <span class="mf">0.4</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+<span class="n">result_scores</span> <span class="o">=</span> <span class="n">result_infer</span><span class="p">[</span><span class="n">result_idxs</span><span class="p">]</span>
+
+<span class="c1"># Generate dict {class_index: confidence} to save saliency maps</span>
+<span class="n">scores_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">score</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">score</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">result_idxs</span><span class="p">,</span> <span class="n">result_scores</span><span class="p">)}</span>
+
+<span class="c1"># Run explanation</span>
+<span class="n">explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span>
+    <span class="n">image</span><span class="p">,</span>
+    <span class="n">explain_mode</span><span class="o">=</span><span class="n">ExplainMode</span><span class="o">.</span><span class="n">WHITEBOX</span><span class="p">,</span>
+    <span class="n">label_names</span><span class="o">=</span><span class="n">voc_labels</span><span class="p">,</span>
+    <span class="n">target_explain_labels</span><span class="o">=</span><span class="n">result_idxs</span><span class="p">,</span>  <span class="c1"># target classes to explain</span>
+<span class="p">)</span>
+
+<span class="c1"># Save saliency maps flexibly</span>
+<span class="n">OUTPUT_PATH</span> <span class="o">=</span> <span class="s2">&quot;output_path&quot;</span>
+<span class="n">explanation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">OUTPUT_PATH</span><span class="p">)</span>  <span class="c1"># aeroplane.jpg</span>
+<span class="n">explanation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">OUTPUT_PATH</span><span class="p">,</span> <span class="s2">&quot;image_name_target_&quot;</span><span class="p">)</span>  <span class="c1"># image_name_target_aeroplane.jpg</span>
+<span class="n">explanation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">OUTPUT_PATH</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;image_name_target_&quot;</span><span class="p">)</span>  <span class="c1"># image_name_target_aeroplane.jpg</span>
+<span class="n">explanation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">OUTPUT_PATH</span><span class="p">,</span> <span class="n">postfix</span><span class="o">=</span><span class="s2">&quot;_class_map&quot;</span><span class="p">)</span>  <span class="c1"># aeroplane_class_map.jpg</span>
+<span class="n">explanation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">OUTPUT_PATH</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;image_name_&quot;</span><span class="p">,</span> <span class="n">postfix</span><span class="o">=</span><span class="s2">&quot;_class_map&quot;</span><span class="p">)</span>  <span class="c1"># image_name_aeroplane_class_map.jpg</span>
+
+<span class="c1"># Save saliency maps with confidence scores</span>
+<span class="n">explanation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
+    <span class="n">OUTPUT_PATH</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;image_name_&quot;</span><span class="p">,</span> <span class="n">postfix</span><span class="o">=</span><span class="s2">&quot;_conf_&quot;</span><span class="p">,</span> <span class="n">confidence_scores</span><span class="o">=</span><span class="n">scores_dict</span>
+<span class="p">)</span>  <span class="c1"># image_name_aeroplane_conf_0.85.jpg</span>
 </pre></div>
 </div>
 </section>
@@ -858,6 +948,7 @@ Cons:</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#black-box-mode">Black-Box mode</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#xai-insertion-white-box-usage">XAI insertion (white-box usage)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plot-saliency-maps">Plot saliency maps</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#saving-saliency-maps">Saving saliency maps</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-scripts">Example scripts</a></li>
 </ul>
   </nav></div>

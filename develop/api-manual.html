@@ -617,8 +617,49 @@ num_columns (int): Number of columns in the saliency maps visualization grid for
 
 <dl class="py method">
 <dt class="sig sig-object py" id="openvino_xai.explainer.Explanation.save">
-<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dir_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.12)"><span class="pre">Path</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/openvino_xai/explainer/explanation.html#Explanation.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openvino_xai.explainer.Explanation.save" title="Link to this definition">#</a></dt>
-<dd><p>Dumps saliency map.</p>
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dir_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.12)"><span class="pre">Path</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postfix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confidence_scores</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.12)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/openvino_xai/explainer/explanation.html#Explanation.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openvino_xai.explainer.Explanation.save" title="Link to this definition">#</a></dt>
+<dd><p>Dumps saliency map images to the specified directory.</p>
+<p>Allows flexibly name the files with the prefix and postfix.
+{prefix} + target_id + {postfix}.jpg</p>
+<p>Also allows to add confidence scores to the file names.
+{prefix} + target_id + {postfix} + confidence.jpg</p>
+<p>save(output_dir) -&gt; aeroplane.jpg
+save(output_dir, prefix=”<a href="#id1"><span class="problematic" id="id2">image_name_target_</span></a>”) -&gt; image_name_target_aeroplane.jpg
+save(output_dir, postfix=”_class_map”) -&gt; aeroplane_class_map.jpg
+save(</p>
+<blockquote>
+<div><p>output_dir, prefix=”<a href="#id3"><span class="problematic" id="id4">image_name_</span></a>”, postfix=”_conf_”, confidence_scores=scores</p>
+</div></blockquote>
+<p>) -&gt; image_name_aeroplane_conf_0.85.jpg</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param dir_path<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The directory path where the saliency maps will be saved.</p>
+</dd>
+<dt class="field-even">type dir_path<span class="colon">:</span></dt>
+<dd class="field-even"><p>Path | str</p>
+</dd>
+<dt class="field-odd">param prefix<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional prefix for the saliency map names. Default is an empty string.</p>
+</dd>
+<dt class="field-even">type prefix<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+<dt class="field-odd">param postfix<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional postfix for the saliency map names. Default is an empty string.</p>
+</dd>
+<dt class="field-even">type postfix<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+<dt class="field-odd">param confidence_scores<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict with confidence scores for each class index. Default is None.</p>
+</dd>
+<dt class="field-even">type confidence_scores<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict[int, float] | None</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">
@@ -717,7 +758,7 @@ Therefore, scaling=False here by default.</p></li>
 <p id="module-openvino_xai.methods">XAI algorithms.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="openvino_xai.methods.AISE">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openvino_xai.methods.</span></span><span class="sig-name descname"><span class="pre">AISE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">model:</span> <span class="pre">~openvino.runtime.ie_api.Model,</span> <span class="pre">postprocess_fn:</span> <span class="pre">~typing.Callable[[~openvino.runtime.utils.data_helpers.wrappers.OVDict],</span> <span class="pre">~numpy.ndarray],</span> <span class="pre">preprocess_fn:</span> <span class="pre">~typing.Callable[[~numpy.ndarray],</span> <span class="pre">~numpy.ndarray]</span> <span class="pre">=</span> <span class="pre">&lt;openvino_xai.common.utils.IdentityPreprocessFN</span> <span class="pre">object&gt;,</span> <span class="pre">device_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'CPU',</span> <span class="pre">prepare_model:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openvino_xai/methods/black_box/aise.html#AISE"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openvino_xai.methods.AISE" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openvino_xai.methods.</span></span><span class="sig-name descname"><span class="pre">AISE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">model:</span> <span class="pre">~openvino.runtime.ie_api.Model,</span> <span class="pre">postprocess_fn:</span> <span class="pre">~typing.Callable[[~typing.Mapping],</span> <span class="pre">~numpy.ndarray],</span> <span class="pre">preprocess_fn:</span> <span class="pre">~typing.Callable[[~numpy.ndarray],</span> <span class="pre">~numpy.ndarray]</span> <span class="pre">=</span> <span class="pre">&lt;openvino_xai.common.utils.IdentityPreprocessFN</span> <span class="pre">object&gt;,</span> <span class="pre">device_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'CPU',</span> <span class="pre">prepare_model:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openvino_xai/methods/black_box/aise.html#AISE"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openvino_xai.methods.AISE" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BlackBoxXAIMethod</span></code></p>
 <p>AISE explains classification models in black-box mode using
 AISE: Adaptive Input Sampling for Explanation of Black-box Models
@@ -726,7 +767,7 @@ AISE: Adaptive Input Sampling for Explanation of Black-box Models
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> (<em>ov.Model</em>) – OpenVINO model.</p></li>
-<li><p><strong>postprocess_fn</strong> (<em>Callable</em><em>[</em><em>[</em><em>OVDict</em><em>]</em><em>, </em><em>np.ndarray</em><em>]</em>) – Post-processing function that extract scores from IR model output.</p></li>
+<li><p><strong>postprocess_fn</strong> (<em>Callable</em><em>[</em><em>[</em><em>Mapping</em><em>]</em><em>, </em><em>np.ndarray</em><em>]</em>) – Post-processing function that extract scores from IR model output.</p></li>
 <li><p><strong>preprocess_fn</strong> (<em>Callable</em><em>[</em><em>[</em><em>np.ndarray</em><em>]</em><em>, </em><em>np.ndarray</em><em>]</em>) – Pre-processing function, identity function by default
 (assume input images are already preprocessed by user).</p></li>
 <li><p><strong>device_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Device type name.</p></li>
@@ -847,7 +888,7 @@ Optimized for per class saliency map generation. Not effcient for large number o
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> (<em>ov.Model</em>) – OpenVINO model.</p></li>
-<li><p><strong>postprocess_fn</strong> (<em>Callable</em><em>[</em><em>[</em><em>OVDict</em><em>]</em><em>, </em><em>np.ndarray</em><em>]</em>) – Post-processing function that extract scores from IR model output.</p></li>
+<li><p><strong>postprocess_fn</strong> (<em>Callable</em><em>[</em><em>[</em><em>Mapping</em><em>]</em><em>, </em><em>np.ndarray</em><em>]</em>) – Post-processing function that extract scores from IR model output.</p></li>
 <li><p><strong>preprocess_fn</strong> (<em>Callable</em><em>[</em><em>[</em><em>np.ndarray</em><em>]</em><em>, </em><em>np.ndarray</em><em>]</em>) – Pre-processing function, identity function by default
 (assume input images are already preprocessed by user).</p></li>
 <li><p><strong>device_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Device type name.</p></li>

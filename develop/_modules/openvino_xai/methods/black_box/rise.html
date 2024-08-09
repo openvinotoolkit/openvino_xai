@@ -419,7 +419,7 @@ document.write(`
 <span class="sd">    :param model: OpenVINO model.</span>
 <span class="sd">    :type model: ov.Model</span>
 <span class="sd">    :param postprocess_fn: Post-processing function that extract scores from IR model output.</span>
-<span class="sd">    :type postprocess_fn: Callable[[OVDict], np.ndarray]</span>
+<span class="sd">    :type postprocess_fn: Callable[[Mapping], np.ndarray]</span>
 <span class="sd">    :param preprocess_fn: Pre-processing function, identity function by default</span>
 <span class="sd">        (assume input images are already preprocessed by user).</span>
 <span class="sd">    :type preprocess_fn: Callable[[np.ndarray], np.ndarray]</span>
