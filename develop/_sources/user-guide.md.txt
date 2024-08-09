@@ -13,12 +13,16 @@ Content:
 - [OpenVINO™ Explainable AI Toolkit User Guide](#openvino-explainable-ai-toolkit-user-guide)
   - [OpenVINO XAI Architecture](#openvino-xai-architecture)
   - [`Explainer`: the main interface to XAI algorithms](#explainer-the-main-interface-to-xai-algorithms)
+    - [Create Explainer for OpenVINO Model instance](#create-explainer-for-openvino-model-instance)
+    - [Create Explainer from OpenVINO IR file](#create-explainer-from-openvino-ir-file)
+    - [Create Explainer from ONNX model file](#create-explainer-from-onnx-model-file)
   - [Basic usage: Auto mode](#basic-usage-auto-mode)
     - [Running without `preprocess_fn`](#running-without-preprocess_fn)
     - [Specifying `preprocess_fn`](#specifying-preprocess_fn)
   - [White-Box mode](#white-box-mode)
   - [Black-Box mode](#black-box-mode)
   - [XAI insertion (white-box usage)](#xai-insertion-white-box-usage)
+  - [Plot saliency maps](#plot-saliency-maps)
   - [Example scripts](#example-scripts)
 
 
@@ -97,12 +101,12 @@ Here's the example how we can avoid passing `preprocess_fn` by preprocessing dat
 import cv2
 import numpy as np
 import openvino.runtime as ov
-from openvino.runtime.utils.data_helpers.wrappers import OVDict
+from from typing import Mapping
 
 import openvino_xai as xai
 
 
-def postprocess_fn(x: OVDict):
+def postprocess_fn(x: Mapping):
     # Implementing our own post-process function based on the model's implementation
     # Return "logits" model output
     return x["logits"]
@@ -143,7 +147,7 @@ explanation.save("output_path", "name")
 import cv2
 import numpy as np
 import openvino.runtime as ov
-from openvino.runtime.utils.data_helpers.wrappers import OVDict
+from typing import Mapping
 
 import openvino_xai as xai
 
@@ -154,7 +158,7 @@ def preprocess_fn(x: np.ndarray) -> np.ndarray:
     x = np.expand_dims(x, 0)
     return x
 
-def postprocess_fn(x: OVDict):
+def postprocess_fn(x: Mapping):
     # Implementing our own post-process function based on the model's implementation
     # Return "logits" model output
     return x["logits"]
@@ -327,6 +331,65 @@ model_xai = xai.insert_xai(
 # ***** Downstream task: user's code that infers model_xai and picks 'saliency_map' output *****
 ```
 
+## Plot saliency maps
+
+To visualize saliency maps, use the `explanation.plot` function.
+
+The `matplotlib` backend is more convenient for plotting saliency maps in Jupyter notebooks, as it uses the Matplotlib library. By default it generates the grid with 4 images per row (can be agjusted by `num_collumns` parameter).
+
+The `cv` backend is better for visualization in Python scripts, as it opens extra windows to display the generated saliency maps.
+
+```python
+import cv2
+import numpy as np
+import openvino.runtime as ov
+import openvino_xai as xai
+
+def preprocess_fn(image: np.ndarray) -> np.ndarray:
+    """Preprocess the input image."""
+    resized_image = cv2.resize(src=image, dsize=(224, 224))
+    expanded_image = np.expand_dims(resized_image, 0)
+    return expanded_image
+
+# Create ov.Model
+MODEL_PATH = "path/to/model.xml"
+model = ov.Core().read_model(MODEL_PATH)  # type: ov.Model
+
+# The Explainer object will prepare and load the model once in the beginning
+explainer = xai.Explainer(
+    model,
+    task=xai.Task.CLASSIFICATION,
+    preprocess_fn=preprocess_fn,
+)
+
+voc_labels = [
+    'aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car', 'cat', 'chair', 'cow', 'diningtable',
+    'dog', 'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor'
+]
+
+# Generate and process saliency maps (as many as required, sequentially)
+image = cv2.imread("path/to/image.jpg")
+
+# Run explanation
+explanation = explainer(
+    image,
+    explain_mode=ExplainMode.WHITEBOX,
+    label_names=voc_labels,
+    target_explain_labels=[7, 11],  # ['cat', 'dog'] also possible as target classes to explain
+)
+
+# Use matplotlib (recommended for Jupyter) - default backend
+explanation.plot() # plot all saliency map
+explanation.plot(targets=[7], backend="matplotlib")
+explanation.plot(targets=["cat"], backend="matplotlib")
+# Plots a grid with 5 images per row
+explanation.plot(num_columns=5, backend="matplotlib")
+
+# Use OpenCV (recommended for Python) - will open new windows with saliency maps
+explanation.plot(backend="cv") # plot all saliency map
+explanation.plot(targets=[7], backend="cv")
+explanation.plot(targets=["cat"], backend="cv")
+```
 
 ## Example scripts
 

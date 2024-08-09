@@ -404,8 +404,10 @@ document.write(`
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span>
 
 <span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
+<span class="kn">from</span> <span class="nn">openvino_xai.common.utils</span> <span class="kn">import</span> <span class="n">logger</span>
 <span class="kn">from</span> <span class="nn">openvino_xai.explainer.utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">convert_targets_to_numpy</span><span class="p">,</span>
     <span class="n">explains_all</span><span class="p">,</span>
@@ -549,7 +551,98 @@ document.write(`
                     <span class="n">target_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">cls_idx</span><span class="p">)</span>
             <span class="n">image_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">save_name</span><span class="si">}</span><span class="s2">_target_</span><span class="si">{</span><span class="n">target_name</span><span class="si">}</span><span class="s2">.jpg&quot;</span> <span class="k">if</span> <span class="n">save_name</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;target_</span><span class="si">{</span><span class="n">target_name</span><span class="si">}</span><span class="s2">.jpg&quot;</span>
             <span class="n">cv2</span><span class="o">.</span><span class="n">imwrite</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dir_path</span><span class="p">,</span> <span class="n">image_name</span><span class="p">),</span> <span class="n">img</span><span class="o">=</span><span class="n">map_to_save</span><span class="p">)</span></div>
-</div>
+
+
+<div class="viewcode-block" id="Explanation.plot">
+<a class="viewcode-back" href="../../../api-manual.html#openvino_xai.explainer.Explanation.plot">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">targets</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;matplotlib&quot;</span><span class="p">,</span>
+        <span class="n">max_num_plots</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">24</span><span class="p">,</span>
+        <span class="n">num_columns</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plots saliency maps using the specified backend.</span>
+
+<span class="sd">        This function plots available saliency maps using the specified backend. Targets to plot</span>
+<span class="sd">        can be specified by passing a list of target class indices or names. If a provided class is</span>
+<span class="sd">        not available among the saliency maps, it is omitted.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            targets (np.ndarray | List[int | str] | None): A list or array of target class indices or names to plot.</span>
+<span class="sd">                By default, it&#39;s None, and all available saliency maps are plotted.</span>
+<span class="sd">            backend (str): The plotting backend to use. Can be either &#39;matplotlib&#39; (recommended for Jupyter)</span>
+<span class="sd">                or &#39;cv&#39; (recommended for Python scripts). Default is &#39;matplotlib&#39;.</span>
+<span class="sd">            max_num_plots (int): Max number of images to plot. Default is 24 to avoid memory issues.</span>
+<span class="sd">            num_columns (int): Number of columns in the saliency maps visualization grid for the matplotlib backend.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">targets</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">explains_all</span><span class="p">(</span><span class="n">targets</span><span class="p">):</span>
+            <span class="n">checked_targets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">target_indices</span> <span class="o">=</span> <span class="n">get_target_indices</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_names</span><span class="p">)</span>
+            <span class="n">checked_targets</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">target_index</span> <span class="ow">in</span> <span class="n">target_indices</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">target_index</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">saliency_map</span><span class="p">:</span>
+                    <span class="n">checked_targets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">target_index</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Provided class index </span><span class="si">{</span><span class="n">target_index</span><span class="si">}</span><span class="s2"> is not available among saliency maps.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">checked_targets</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_num_plots</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Decrease the number of plotted saliency maps from </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">checked_targets</span><span class="p">)</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">max_num_plots</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="s2">&quot; to avoid the memory issue. To avoid this, increase the &#39;max_num_plots&#39; argument.&quot;</span>
+            <span class="p">)</span>
+            <span class="n">checked_targets</span> <span class="o">=</span> <span class="n">checked_targets</span><span class="p">[:</span><span class="n">max_num_plots</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;matplotlib&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_plot_matplotlib</span><span class="p">(</span><span class="n">checked_targets</span><span class="p">,</span> <span class="n">num_columns</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;cv&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_plot_cv</span><span class="p">(</span><span class="n">checked_targets</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown backend </span><span class="si">{</span><span class="n">backend</span><span class="si">}</span><span class="s2">. Use &#39;matplotlib&#39; or &#39;cv&#39;.&quot;</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_plot_matplotlib</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">checked_targets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">],</span> <span class="n">num_cols</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Plots saliency maps using matplotlib.&quot;&quot;&quot;</span>
+        <span class="n">num_rows</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">checked_targets</span><span class="p">)</span> <span class="o">/</span> <span class="n">num_cols</span><span class="p">))</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">num_rows</span><span class="p">,</span> <span class="n">num_cols</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span> <span class="o">*</span> <span class="n">num_cols</span><span class="p">,</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">num_rows</span><span class="p">))</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">target_index</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">checked_targets</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_names</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target_index</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">):</span>
+                <span class="n">label_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">label_names</span><span class="p">[</span><span class="n">target_index</span><span class="p">]</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">target_index</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">label_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">target_index</span><span class="p">)</span>
+
+            <span class="n">map_to_plot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">saliency_map</span><span class="p">[</span><span class="n">target_index</span><span class="p">]</span>
+
+            <span class="n">axes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">map_to_plot</span><span class="p">)</span>
+            <span class="n">axes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;off&quot;</span><span class="p">)</span>  <span class="c1"># Hide the axis</span>
+            <span class="n">axes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Class </span><span class="si">{</span><span class="n">label_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Hide remaining axes</span>
+        <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="n">axes</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">checked_targets</span><span class="p">)</span> <span class="p">:]:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_plot_cv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">checked_targets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Plots saliency maps using OpenCV.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">target_index</span> <span class="ow">in</span> <span class="n">checked_targets</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_names</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target_index</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">):</span>
+                <span class="n">label_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">label_names</span><span class="p">[</span><span class="n">target_index</span><span class="p">]</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">target_index</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">label_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">target_index</span><span class="p">)</span>
+
+            <span class="n">map_to_plot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">saliency_map</span><span class="p">[</span><span class="n">target_index</span><span class="p">]</span>
+            <span class="n">map_to_plot</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">map_to_plot</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2RGB</span><span class="p">)</span>
+
+            <span class="n">cv2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Class </span><span class="si">{</span><span class="n">label_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">map_to_plot</span><span class="p">)</span>
+            <span class="n">cv2</span><span class="o">.</span><span class="n">waitKey</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">cv2</span><span class="o">.</span><span class="n">destroyAllWindows</span><span class="p">()</span></div>
 
 
 

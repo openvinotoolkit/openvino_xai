@@ -346,6 +346,7 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="#white-box-mode">White-Box mode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#black-box-mode">Black-Box mode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#xai-insertion-white-box-usage">XAI insertion (white-box usage)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#plot-saliency-maps">Plot saliency maps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#example-scripts">Example scripts</a></li>
 </ul>
 </li>
@@ -416,7 +417,13 @@ which is useful for analyzing model’s performance.</p>
 <li><p><a class="reference internal" href="#openvino-explainable-ai-toolkit-user-guide"><span class="xref myst">OpenVINO™ Explainable AI Toolkit User Guide</span></a></p>
 <ul>
 <li><p><a class="reference internal" href="#openvino-xai-architecture"><span class="xref myst">OpenVINO XAI Architecture</span></a></p></li>
-<li><p><a class="reference internal" href="#explainer-the-main-interface-to-xai-algorithms"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Explainer</span></code>: the main interface to XAI algorithms</span></a></p></li>
+<li><p><a class="reference internal" href="#explainer-the-main-interface-to-xai-algorithms"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Explainer</span></code>: the main interface to XAI algorithms</span></a></p>
+<ul>
+<li><p><a class="reference internal" href="#create-explainer-for-openvino-model-instance"><span class="xref myst">Create Explainer for OpenVINO Model instance</span></a></p></li>
+<li><p><a class="reference internal" href="#create-explainer-from-openvino-ir-file"><span class="xref myst">Create Explainer from OpenVINO IR file</span></a></p></li>
+<li><p><a class="reference internal" href="#create-explainer-from-onnx-model-file"><span class="xref myst">Create Explainer from ONNX model file</span></a></p></li>
+</ul>
+</li>
 <li><p><a class="reference internal" href="#basic-usage-auto-mode"><span class="xref myst">Basic usage: Auto mode</span></a></p>
 <ul>
 <li><p><a class="reference internal" href="#running-without-preprocess_fn"><span class="xref myst">Running without <code class="docutils literal notranslate"><span class="pre">preprocess_fn</span></code></span></a></p></li>
@@ -426,6 +433,7 @@ which is useful for analyzing model’s performance.</p>
 <li><p><a class="reference internal" href="#white-box-mode"><span class="xref myst">White-Box mode</span></a></p></li>
 <li><p><a class="reference internal" href="#black-box-mode"><span class="xref myst">Black-Box mode</span></a></p></li>
 <li><p><a class="reference internal" href="#xai-insertion-white-box-usage"><span class="xref myst">XAI insertion (white-box usage)</span></a></p></li>
+<li><p><a class="reference internal" href="#plot-saliency-maps"><span class="xref myst">Plot saliency maps</span></a></p></li>
 <li><p><a class="reference internal" href="#example-scripts"><span class="xref myst">Example scripts</span></a></p></li>
 </ul>
 </li>
@@ -495,12 +503,12 @@ The OpenVINO Runtime supports loading and inference of the ONNX models, and so d
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
-<span class="kn">from</span> <span class="nn">openvino.runtime.utils.data_helpers.wrappers</span> <span class="kn">import</span> <span class="n">OVDict</span>
+<span class="kn">from</span> <span class="nn">from</span> <span class="n">typing</span> <span class="kn">import</span> <span class="nn">Mapping</span>
 
 <span class="kn">import</span> <span class="nn">openvino_xai</span> <span class="k">as</span> <span class="nn">xai</span>
 
 
-<span class="k">def</span> <span class="nf">postprocess_fn</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">OVDict</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">postprocess_fn</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">):</span>
     <span class="c1"># Implementing our own post-process function based on the model&#39;s implementation</span>
     <span class="c1"># Return &quot;logits&quot; model output</span>
     <span class="k">return</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;logits&quot;</span><span class="p">]</span>
@@ -540,7 +548,7 @@ The OpenVINO Runtime supports loading and inference of the ONNX models, and so d
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
-<span class="kn">from</span> <span class="nn">openvino.runtime.utils.data_helpers.wrappers</span> <span class="kn">import</span> <span class="n">OVDict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Mapping</span>
 
 <span class="kn">import</span> <span class="nn">openvino_xai</span> <span class="k">as</span> <span class="nn">xai</span>
 
@@ -551,7 +559,7 @@ The OpenVINO Runtime supports loading and inference of the ONNX models, and so d
     <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">x</span>
 
-<span class="k">def</span> <span class="nf">postprocess_fn</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">OVDict</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">postprocess_fn</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">):</span>
     <span class="c1"># Implementing our own post-process function based on the model&#39;s implementation</span>
     <span class="c1"># Return &quot;logits&quot; model output</span>
     <span class="k">return</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;logits&quot;</span><span class="p">]</span>
@@ -715,6 +723,63 @@ Cons:</p></li>
 </pre></div>
 </div>
 </section>
+<section id="plot-saliency-maps">
+<h2>Plot saliency maps<a class="headerlink" href="#plot-saliency-maps" title="Link to this heading">#</a></h2>
+<p>To visualize saliency maps, use the <code class="docutils literal notranslate"><span class="pre">explanation.plot</span></code> function.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">matplotlib</span></code> backend is more convenient for plotting saliency maps in Jupyter notebooks, as it uses the Matplotlib library. By default it generates the grid with 4 images per row (can be agjusted by <code class="docutils literal notranslate"><span class="pre">num_collumns</span></code> parameter).</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">cv</span></code> backend is better for visualization in Python scripts, as it opens extra windows to display the generated saliency maps.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
+<span class="kn">import</span> <span class="nn">openvino_xai</span> <span class="k">as</span> <span class="nn">xai</span>
+
+<span class="k">def</span> <span class="nf">preprocess_fn</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Preprocess the input image.&quot;&quot;&quot;</span>
+    <span class="n">resized_image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">image</span><span class="p">,</span> <span class="n">dsize</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">))</span>
+    <span class="n">expanded_image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">resized_image</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">expanded_image</span>
+
+<span class="c1"># Create ov.Model</span>
+<span class="n">MODEL_PATH</span> <span class="o">=</span> <span class="s2">&quot;path/to/model.xml&quot;</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ov</span><span class="o">.</span><span class="n">Core</span><span class="p">()</span><span class="o">.</span><span class="n">read_model</span><span class="p">(</span><span class="n">MODEL_PATH</span><span class="p">)</span>  <span class="c1"># type: ov.Model</span>
+
+<span class="c1"># The Explainer object will prepare and load the model once in the beginning</span>
+<span class="n">explainer</span> <span class="o">=</span> <span class="n">xai</span><span class="o">.</span><span class="n">Explainer</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">,</span>
+    <span class="n">preprocess_fn</span><span class="o">=</span><span class="n">preprocess_fn</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">voc_labels</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;aeroplane&#39;</span><span class="p">,</span> <span class="s1">&#39;bicycle&#39;</span><span class="p">,</span> <span class="s1">&#39;bird&#39;</span><span class="p">,</span> <span class="s1">&#39;boat&#39;</span><span class="p">,</span> <span class="s1">&#39;bottle&#39;</span><span class="p">,</span> <span class="s1">&#39;bus&#39;</span><span class="p">,</span> <span class="s1">&#39;car&#39;</span><span class="p">,</span> <span class="s1">&#39;cat&#39;</span><span class="p">,</span> <span class="s1">&#39;chair&#39;</span><span class="p">,</span> <span class="s1">&#39;cow&#39;</span><span class="p">,</span> <span class="s1">&#39;diningtable&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;dog&#39;</span><span class="p">,</span> <span class="s1">&#39;horse&#39;</span><span class="p">,</span> <span class="s1">&#39;motorbike&#39;</span><span class="p">,</span> <span class="s1">&#39;person&#39;</span><span class="p">,</span> <span class="s1">&#39;pottedplant&#39;</span><span class="p">,</span> <span class="s1">&#39;sheep&#39;</span><span class="p">,</span> <span class="s1">&#39;sofa&#39;</span><span class="p">,</span> <span class="s1">&#39;train&#39;</span><span class="p">,</span> <span class="s1">&#39;tvmonitor&#39;</span>
+<span class="p">]</span>
+
+<span class="c1"># Generate and process saliency maps (as many as required, sequentially)</span>
+<span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="s2">&quot;path/to/image.jpg&quot;</span><span class="p">)</span>
+
+<span class="c1"># Run explanation</span>
+<span class="n">explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span>
+    <span class="n">image</span><span class="p">,</span>
+    <span class="n">explain_mode</span><span class="o">=</span><span class="n">ExplainMode</span><span class="o">.</span><span class="n">WHITEBOX</span><span class="p">,</span>
+    <span class="n">label_names</span><span class="o">=</span><span class="n">voc_labels</span><span class="p">,</span>
+    <span class="n">target_explain_labels</span><span class="o">=</span><span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">11</span><span class="p">],</span>  <span class="c1"># [&#39;cat&#39;, &#39;dog&#39;] also possible as target classes to explain</span>
+<span class="p">)</span>
+
+<span class="c1"># Use matplotlib (recommended for Jupyter) - default backend</span>
+<span class="n">explanation</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span> <span class="c1"># plot all saliency map</span>
+<span class="n">explanation</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="n">explanation</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;cat&quot;</span><span class="p">],</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+<span class="c1"># Plots a grid with 5 images per row</span>
+<span class="n">explanation</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">num_columns</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+
+<span class="c1"># Use OpenCV (recommended for Python) - will open new windows with saliency maps</span>
+<span class="n">explanation</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;cv&quot;</span><span class="p">)</span> <span class="c1"># plot all saliency map</span>
+<span class="n">explanation</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;cv&quot;</span><span class="p">)</span>
+<span class="n">explanation</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;cat&quot;</span><span class="p">],</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;cv&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
 <section id="example-scripts">
 <h2>Example scripts<a class="headerlink" href="#example-scripts" title="Link to this heading">#</a></h2>
 <p>More usage scenarios that can be used with your own models and images as arguments are available in <a class="reference internal" href="#../../examples"><span class="xref myst">examples</span></a>.</p>
@@ -792,6 +857,7 @@ Cons:</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#white-box-mode">White-Box mode</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#black-box-mode">Black-Box mode</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#xai-insertion-white-box-usage">XAI insertion (white-box usage)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plot-saliency-maps">Plot saliency maps</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-scripts">Example scripts</a></li>
 </ul>
   </nav></div>
