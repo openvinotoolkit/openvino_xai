@@ -16,10 +16,10 @@ from openvino_xai.common.utils import (
     has_xai,
 )
 from openvino_xai.inserter.inserter import insert_xai_branch_into_model
-from openvino_xai.methods.base import MethodBase
+from openvino_xai.methods.base import OVMethod
 
 
-class WhiteBoxMethod(MethodBase):
+class WhiteBoxMethod(OVMethod):
     """
     Base class for white-box XAI methods.
 

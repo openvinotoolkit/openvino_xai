@@ -10,7 +10,8 @@ from typing import Any, Tuple
 from urllib.request import urlretrieve
 
 import numpy as np
-import openvino.runtime as ov
+import openvino as ov
+import torch
 
 logger = logging.getLogger("openvino_xai")
 handler = logging.StreamHandler()
@@ -23,20 +24,23 @@ logger.setLevel(logging.INFO)
 SALIENCY_MAP_OUTPUT_NAME = "saliency_map"
 
 
-def has_xai(model: ov.Model) -> bool:
+def has_xai(model: ov.Model | torch.nn.Module) -> bool:
     """
     Function checks if the model contains XAI branch.
 
-    :param model: OV IR model.
-    :type model: ov.Model
+    :param model: Input model for inspect.
+    :type model: ov.Model | torch.nn.Module
     :return: True is the model has XAI branch and saliency_map output, False otherwise.
     """
-    if not isinstance(model, ov.Model):
-        raise ValueError(f"Input model has to be ov.Model instance, but got{type(model)}.")
-    for output in model.outputs:
-        if SALIENCY_MAP_OUTPUT_NAME in output.get_names():
-            return True
-    return False
+    if isinstance(model, ov.Model):
+        for output in model.outputs:
+            if SALIENCY_MAP_OUTPUT_NAME in output.get_names():
+                return True
+        return False
+    elif isinstance(model, torch.nn.Module):
+        raise NotImplementedError
+    else:
+        raise ValueError(f"Input model has to be openvino.Model or torch.nn.Module instance, but got{type(model)}.")
 
 
 # Not a part of product

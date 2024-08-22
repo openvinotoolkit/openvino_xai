@@ -1,31 +1,34 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import List
+from typing import List, TypeVar
 
 import openvino as ov
+import torch
 
 from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import IdentityPreprocessFN, has_xai, logger
 from openvino_xai.methods.factory import WhiteBoxMethodFactory
 
+Model = TypeVar("Model", ov.Model, torch.nn.Module)
+
 
 def insert_xai(
-    model: ov.Model,
+    model: Model,
     task: Task,
     explain_method: Method | None = None,
     target_layer: str | List[str] | None = None,
     embed_scaling: bool | None = True,
     **kwargs,
-) -> ov.Model:
+) -> Model:
     """
-    Function that inserts XAI branch into IR.
+    Inserts XAI branch into the given model.
 
     Usage:
         model_xai = openvino_xai.insert_xai(model, task=Task.CLASSIFICATION)
 
-    :param model: Original IR.
-    :type model: ov.Model | str
+    :param model: Original model.
+    :type model: ov.Model | torch.nn.Module
     :param task: Type of the task: CLASSIFICATION or DETECTION.
     :type task: Task
     :parameter explain_method: Explain method to use for model explanation.
@@ -37,7 +40,7 @@ def insert_xai(
     """
 
     if has_xai(model):
-        logger.info("Provided IR model already contains XAI branch, return it as-is.")
+        logger.info("Provided model already contains XAI branch, return it as-is.")
         return model
 
     method = WhiteBoxMethodFactory.create_method(

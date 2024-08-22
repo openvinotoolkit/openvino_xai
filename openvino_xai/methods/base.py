@@ -2,20 +2,24 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from abc import ABC, abstractmethod
-from typing import Callable, Dict, Mapping
+from typing import Callable, Dict, Generic, Mapping, TypeVar
 
 import numpy as np
-import openvino.runtime as ov
+import openvino as ov
+import torch
 
 from openvino_xai.common.utils import IdentityPreprocessFN
 
+Model = TypeVar("Model", ov.Model, torch.nn.Module)
+CompiledModel = TypeVar("CompiledModel", ov.CompiledModel, torch.nn.Module)
 
-class MethodBase(ABC):
+
+class MethodBase(ABC, Generic[Model, CompiledModel]):
     """Base class for XAI methods."""
 
     def __init__(
         self,
-        model: ov.Model = None,
+        model: Model | None = None,
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         device_name: str = "CPU",
     ):
@@ -25,11 +29,11 @@ class MethodBase(ABC):
         self._device_name = device_name
 
     @property
-    def model_compiled(self) -> ov.ie_api.CompiledModel | None:
+    def model_compiled(self) -> CompiledModel | None:
         return self._model_compiled
 
     @abstractmethod
-    def prepare_model(self, load_model: bool = True) -> ov.Model:
+    def prepare_model(self, load_model: bool = True) -> Model:
         """Model preparation steps."""
 
     def model_forward(self, x: np.ndarray, preprocess: bool = True) -> Mapping:
@@ -44,6 +48,12 @@ class MethodBase(ABC):
     def generate_saliency_map(self, data: np.ndarray) -> Dict[int, np.ndarray] | np.ndarray:
         """Saliency map generation."""
 
+
+class OVMethod(MethodBase[ov.Model, ov.CompiledModel]):
     def load_model(self) -> None:
         core = ov.Core()
         self._model_compiled = core.compile_model(model=self._model, device_name=self._device_name)
+
+
+class TorchMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
+    pass

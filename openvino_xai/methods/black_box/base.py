@@ -5,10 +5,10 @@ from enum import Enum
 
 import openvino.runtime as ov
 
-from openvino_xai.methods.base import MethodBase
+from openvino_xai.methods.base import OVMethod
 
 
-class BlackBoxXAIMethod(MethodBase):
+class BlackBoxXAIMethod(OVMethod):
     """Base class for methods that explain model in Black-Box mode."""
 
     def prepare_model(self, load_model: bool = True) -> ov.Model:

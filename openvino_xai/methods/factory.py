@@ -5,7 +5,8 @@ from abc import ABC, abstractmethod
 from typing import Callable, List, Mapping
 
 import numpy as np
-import openvino.runtime as ov
+import openvino as ov
+import torch
 
 from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import IdentityPreprocessFN, logger
@@ -43,7 +44,7 @@ class WhiteBoxMethodFactory(MethodFactory):
     def create_method(
         cls,
         task: Task,
-        model: ov.Model,
+        model: ov.Model | torch.nn.Module,
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         explain_method: Method | None = None,
         target_layer: str | List[str] | None = None,
@@ -71,11 +72,11 @@ class WhiteBoxMethodFactory(MethodFactory):
                 device_name,
                 **kwargs,
             )
-        raise ValueError(f"Model type {task} is not supported in white-box mode.")
+        raise ValueError(f"Task type {task} is not supported in white-box mode.")
 
     @staticmethod
     def create_classification_method(
-        model: ov.Model,
+        model: ov.Model | torch.nn.Module,
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         explain_method: Method | None = None,
         target_layer: str | None = None,
@@ -85,8 +86,8 @@ class WhiteBoxMethodFactory(MethodFactory):
     ) -> WhiteBoxMethod:
         """Generates instance of the classification white-box method class.
 
-        :param model: OV IR model.
-        :type model: ov.Model
+        :param model: Input model.
+        :type model: ov.Model | torch.nn.Module
         :param preprocess_fn: Preprocessing function, identity function by default
             (assume input images are already preprocessed by user).
         :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
@@ -146,7 +147,7 @@ class WhiteBoxMethodFactory(MethodFactory):
 
     @staticmethod
     def create_detection_method(
-        model: ov.Model,
+        model: ov.Model | torch.nn.Module,
         preprocess_fn: Callable[[np.ndarray], np.ndarray],
         explain_method: Method | None = None,
         target_layer: List[str] | None = None,
@@ -156,8 +157,8 @@ class WhiteBoxMethodFactory(MethodFactory):
     ) -> WhiteBoxMethod:
         """Generates instance of the detection white-box method class.
 
-        :param model: OV IR model.
-        :type model: ov.Model
+        :param model: Input model.
+        :type model: ov.Model | torch.nn.Module
         :param preprocess_fn: Preprocessing function, identity function by default
             (assume input images are already preprocessed by user).
         :type preprocess_fn: Callable[[np.ndarray], np.ndarray]
@@ -168,6 +169,9 @@ class WhiteBoxMethodFactory(MethodFactory):
         :parameter embed_scaling: If set to True, saliency map scale (0 ~ 255) operation is embedded in the model.
         :type embed_scaling: bool
         """
+
+        if isinstance(model, torch.nn.Module):
+            raise NotImplementedError("Torch models are not yet supported by detection white box methods.")
 
         if target_layer is None:
             raise ValueError("target_layer is required for the detection.")
@@ -218,9 +222,9 @@ class BlackBoxMethodFactory(MethodFactory):
         """Generates instance of the classification black-box method class.
         Using AISE as a default method.
 
-        :param model: OV IR model.
+        :param model: Input model.
         :type model: ov.Model
-        :param postprocess_fn: Preprocessing function that extract scores from IR model output.
+        :param postprocess_fn: Preprocessing function that extract scores from model output.
         :type postprocess_fn: Callable[[Mapping], np.ndarray]
         :param preprocess_fn: Preprocessing function, identity function by default
             (assume input images are already preprocessed by user).
