@@ -15,6 +15,7 @@ dependencies = [
   "numpy==1.*",
   "tqdm",
   "matplotlib",
+  "torch",
 ]
 requires-python = ">=3.10"
 authors = [
@@ -42,8 +43,6 @@ dev = [
   "pytest-xdist",
   "pre-commit==3.7.0",
   "addict",
-]
-val = [
   "timm==0.9.5",
   "onnx==1.14.1",
   "pandas",
