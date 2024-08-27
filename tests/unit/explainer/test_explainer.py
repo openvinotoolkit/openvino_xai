@@ -15,7 +15,7 @@ from openvino_xai.common.utils import retrieve_otx_model
 from openvino_xai.explainer.explainer import Explainer, ExplainMode
 from openvino_xai.explainer.utils import get_postprocess_fn, get_preprocess_fn
 from openvino_xai.methods.black_box.base import Preset
-from tests.unit.explanation.test_explanation_utils import VOC_NAMES
+from tests.unit.explainer.test_explanation_utils import VOC_NAMES
 
 MODEL_NAME = "mlc_mobilenetv3_large_voc"
 

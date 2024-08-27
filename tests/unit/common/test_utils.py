@@ -4,8 +4,8 @@
 from pathlib import Path
 
 import openvino as ov
-import torch
 import pytest
+import torch
 from pytest_mock import MockerFixture
 
 from openvino_xai.api.api import insert_xai

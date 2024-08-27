@@ -5,6 +5,7 @@ from pathlib import Path
 
 import openvino as ov
 import pytest
+import torch
 from pytest_mock import MockerFixture
 
 from openvino_xai.common.parameters import Method, Task
@@ -147,3 +148,18 @@ def test_create_wb_det_cnn_method(fxt_data_root: Path):
             saliency_map_size=sal_map_size,
         )
     assert str(exc_info.value) == "Requested explanation method abc is not implemented."
+
+
+def test_create_torch_method():
+    model = torch.nn.Module()
+    with pytest.raises(NotImplementedError):
+        explain_method = BlackBoxMethodFactory.create_method(Task.CLASSIFICATION, model, get_postprocess_fn())
+    model = {}
+    with pytest.raises(ValueError):
+        explain_method = BlackBoxMethodFactory.create_method(Task.CLASSIFICATION, model, get_postprocess_fn())
+    model = torch.nn.Module()
+    with pytest.raises(NotImplementedError):
+        explain_method = WhiteBoxMethodFactory.create_method(Task.CLASSIFICATION, model, get_postprocess_fn())
+    model = {}
+    with pytest.raises(ValueError):
+        explain_method = WhiteBoxMethodFactory.create_method(Task.CLASSIFICATION, model, get_postprocess_fn())

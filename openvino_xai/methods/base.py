@@ -17,6 +17,18 @@ CompiledModel = TypeVar("CompiledModel", ov.CompiledModel, torch.nn.Module)
 class MethodBase(ABC, Generic[Model, CompiledModel]):
     """Base class for XAI methods."""
 
+    def __new__(
+        cls,
+        model: Model | None = None,
+        *args,
+        **kwargs,
+    ):
+        if isinstance(model, torch.nn.Module):
+            raise NotImplementedError(f"{type(model)} is not yet supported for {cls}")
+        elif model is not None and not isinstance(model, ov.Model):
+            raise ValueError(f"{type(model)} is not supported")
+        return super().__new__(cls)
+
     def __init__(
         self,
         model: Model | None = None,
