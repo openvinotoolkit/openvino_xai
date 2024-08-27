@@ -119,20 +119,27 @@ def get_preprocess_fn(
     )
 
 
-def postprocess_fn(x: Mapping, logit_name="logits") -> np.ndarray:
-    """Postprocess function."""
-    return x.get(logit_name, x[0])  # Models from OVC has no output names at times
-
-
-def get_postprocess_fn(logit_name="logits") -> Callable[[], np.ndarray]:
-    """Returns partially initialized postprocess_fn."""
-    return partial(postprocess_fn, logit_name=logit_name)
-
-
 class ActivationType(Enum):
     SIGMOID = "sigmoid"
     SOFTMAX = "softmax"
     NONE = "none"
+
+
+def postprocess_fn(x: Mapping, logit_name="logits", activation: ActivationType = ActivationType.NONE) -> np.ndarray:
+    """Postprocess function."""
+    x = x.get(logit_name, x[0])  # Models from OVC has no output names at times
+    if activation == ActivationType.SOFTMAX:
+        return softmax(x)
+    if activation == ActivationType.SIGMOID:
+        return sigmoid(x)
+    return x
+
+
+def get_postprocess_fn(
+    logit_name="logits", activation: ActivationType = ActivationType.NONE
+) -> Callable[[], np.ndarray]:
+    """Returns partially initialized postprocess_fn."""
+    return partial(postprocess_fn, logit_name=logit_name, activation=activation)
 
 
 def get_score(x: np.ndarray, index: int, activation: ActivationType = ActivationType.NONE):
