@@ -398,11 +398,12 @@ document.write(`
 <span></span><span class="c1"># Copyright (C) 2023-2024 Intel Corporation</span>
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
 
 <span class="kn">import</span> <span class="nn">cv2</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
+<span class="kn">from</span> <span class="nn">openvino_xai.common.parameters</span> <span class="kn">import</span> <span class="n">Task</span>
 <span class="kn">from</span> <span class="nn">openvino_xai.common.utils</span> <span class="kn">import</span> <span class="n">format_to_bhwc</span><span class="p">,</span> <span class="n">infer_size_from_image</span><span class="p">,</span> <span class="n">scaling</span>
 <span class="kn">from</span> <span class="nn">openvino_xai.explainer.explanation</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">COLOR_MAPPED_LAYOUTS</span><span class="p">,</span>
@@ -474,7 +475,7 @@ document.write(`
 <a class="viewcode-back" href="../../../api-manual.html#openvino_xai.explainer.Visualizer">[docs]</a>
 <span class="k">class</span> <span class="nc">Visualizer</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Visualizer implements post-processing for the saliency map in explanation result.</span>
+<span class="sd">    Visualizer implements post-processing for the saliency maps in explanation.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="Visualizer.__call__">
@@ -543,7 +544,7 @@ document.write(`
             <span class="n">original_input_image</span> <span class="o">=</span> <span class="n">format_to_bhwc</span><span class="p">(</span><span class="n">original_input_image</span><span class="p">)</span>
 
         <span class="n">saliency_map_dict</span> <span class="o">=</span> <span class="n">explanation</span><span class="o">.</span><span class="n">saliency_map</span>
-        <span class="n">class_idx_to_return</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">saliency_map_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">indices_to_return</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">saliency_map_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
         <span class="c1"># Convert to numpy array to use vectorized scale (0 ~ 255) operation and speed up lots of classes scenario</span>
         <span class="n">saliency_map_np</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">saliency_map_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
@@ -559,6 +560,7 @@ document.write(`
             <span class="n">saliency_map_np</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_overlay</span><span class="p">(</span>
                 <span class="n">explanation</span><span class="p">,</span> <span class="n">saliency_map_np</span><span class="p">,</span> <span class="n">original_input_image</span><span class="p">,</span> <span class="n">output_size</span><span class="p">,</span> <span class="n">overlay_weight</span>
             <span class="p">)</span>
+            <span class="n">saliency_map_np</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_metadata</span><span class="p">(</span><span class="n">explanation</span><span class="o">.</span><span class="n">metadata</span><span class="p">,</span> <span class="n">saliency_map_np</span><span class="p">,</span> <span class="n">indices_to_return</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">resize</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">original_input_image</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">output_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -570,8 +572,31 @@ document.write(`
                 <span class="n">saliency_map_np</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_colormap</span><span class="p">(</span><span class="n">explanation</span><span class="p">,</span> <span class="n">saliency_map_np</span><span class="p">)</span>
 
         <span class="c1"># Convert back to dict</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_explanation_with_processed_sal_map</span><span class="p">(</span><span class="n">explanation</span><span class="p">,</span> <span class="n">saliency_map_np</span><span class="p">,</span> <span class="n">class_idx_to_return</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_explanation_with_processed_sal_map</span><span class="p">(</span><span class="n">explanation</span><span class="p">,</span> <span class="n">saliency_map_np</span><span class="p">,</span> <span class="n">indices_to_return</span><span class="p">)</span></div>
 
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_apply_metadata</span><span class="p">(</span><span class="n">metadata</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Task</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">saliency_map_np</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">indices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">]):</span>
+        <span class="c1"># TODO (negvet): support when indices are strings</span>
+        <span class="k">if</span> <span class="n">metadata</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">Task</span><span class="o">.</span><span class="n">DETECTION</span> <span class="ow">in</span> <span class="n">metadata</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">smap_i</span><span class="p">,</span> <span class="n">target_index</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">saliency_map_np</span><span class="p">)),</span> <span class="n">indices</span><span class="p">):</span>
+                    <span class="n">saliency_map</span> <span class="o">=</span> <span class="n">saliency_map_np</span><span class="p">[</span><span class="n">smap_i</span><span class="p">]</span>
+                    <span class="n">box</span><span class="p">,</span> <span class="n">score</span><span class="p">,</span> <span class="n">label_index</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="n">Task</span><span class="o">.</span><span class="n">DETECTION</span><span class="p">][</span><span class="n">target_index</span><span class="p">]</span>
+                    <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span> <span class="o">=</span> <span class="n">box</span>
+                    <span class="n">cv2</span><span class="o">.</span><span class="n">rectangle</span><span class="p">(</span><span class="n">saliency_map</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">x1</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">y1</span><span class="p">)),</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">x2</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">y2</span><span class="p">)),</span> <span class="n">color</span><span class="o">=</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">thickness</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="n">box_label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label_index</span><span class="si">}</span><span class="s2">|</span><span class="si">{</span><span class="n">score</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="n">box_label_loc</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">x1</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">y1</span> <span class="o">-</span> <span class="mi">5</span><span class="p">)</span>
+                    <span class="n">cv2</span><span class="o">.</span><span class="n">putText</span><span class="p">(</span>
+                        <span class="n">saliency_map</span><span class="p">,</span>
+                        <span class="n">box_label</span><span class="p">,</span>
+                        <span class="n">org</span><span class="o">=</span><span class="n">box_label_loc</span><span class="p">,</span>
+                        <span class="n">fontFace</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                        <span class="n">fontScale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                        <span class="n">color</span><span class="o">=</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                        <span class="n">thickness</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                    <span class="p">)</span>
+        <span class="k">return</span> <span class="n">saliency_map_np</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_apply_scaling</span><span class="p">(</span><span class="n">explanation</span><span class="p">:</span> <span class="n">Explanation</span><span class="p">,</span> <span class="n">saliency_map_np</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -636,15 +661,15 @@ document.write(`
     <span class="k">def</span> <span class="nf">_update_explanation_with_processed_sal_map</span><span class="p">(</span>
         <span class="n">explanation</span><span class="p">:</span> <span class="n">Explanation</span><span class="p">,</span>
         <span class="n">saliency_map_np</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-        <span class="n">class_idx</span><span class="p">:</span> <span class="n">List</span><span class="p">,</span>
+        <span class="n">target_indices</span><span class="p">:</span> <span class="n">List</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Explanation</span><span class="p">:</span>
         <span class="n">dict_sal_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="n">explanation</span><span class="o">.</span><span class="n">layout</span> <span class="ow">in</span> <span class="n">ONE_MAP_LAYOUTS</span><span class="p">:</span>
             <span class="n">dict_sal_map</span><span class="p">[</span><span class="s2">&quot;per_image_map&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">saliency_map_np</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">saliency_map_np</span> <span class="o">=</span> <span class="n">dict_sal_map</span>
         <span class="k">elif</span> <span class="n">explanation</span><span class="o">.</span><span class="n">layout</span> <span class="ow">in</span> <span class="n">MULTIPLE_MAP_LAYOUTS</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">class_sal</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">class_idx</span><span class="p">,</span> <span class="n">saliency_map_np</span><span class="p">):</span>
-                <span class="n">dict_sal_map</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">class_sal</span>
+            <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">sal_map</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">target_indices</span><span class="p">,</span> <span class="n">saliency_map_np</span><span class="p">):</span>
+                <span class="n">dict_sal_map</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">sal_map</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span>
         <span class="n">explanation</span><span class="o">.</span><span class="n">saliency_map</span> <span class="o">=</span> <span class="n">dict_sal_map</span>

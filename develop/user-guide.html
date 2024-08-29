@@ -650,7 +650,7 @@ The OpenVINO Runtime supports loading and inference of the ONNX models, and so d
 <h2>Black-Box mode<a class="headerlink" href="#black-box-mode" title="Link to this heading">#</a></h2>
 <p>Black-box mode does not update the model (treating the model as a black box).
 Black-box approaches are based on the perturbation of the input data and measurement of the model’s output change.</p>
-<p>For black-box mode we support 2 algorithms: <strong>AISE</strong> (by default) and <a class="reference external" href="https://arxiv.org/abs/1806.07421"><strong>RISE</strong></a>. AISE is more effective for generating saliency maps for a few specific classes. RISE - to generate maps for all classes at once.</p>
+<p>For black-box mode we support 2 algorithms: <strong>AISE</strong> (by default) and <a class="reference external" href="https://arxiv.org/abs/1806.07421"><strong>RISE</strong></a>. AISE is more effective for generating saliency maps for a few specific classes. RISE - to generate maps for all classes at once. AISE is supported for both classification and detection task.</p>
 <p>Pros:</p>
 <ul class="simple">
 <li><p><strong>Flexible</strong> - can be applied to any custom model.

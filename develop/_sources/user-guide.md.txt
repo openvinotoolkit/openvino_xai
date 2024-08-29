@@ -252,7 +252,7 @@ explanation.save("output_path", "name_")
 Black-box mode does not update the model (treating the model as a black box).
 Black-box approaches are based on the perturbation of the input data and measurement of the model's output change.
 
-For black-box mode we support 2 algorithms: **AISE** (by default) and [**RISE**](https://arxiv.org/abs/1806.07421). AISE is more effective for generating saliency maps for a few specific classes. RISE - to generate maps for all classes at once.
+For black-box mode we support 2 algorithms: **AISE** (by default) and [**RISE**](https://arxiv.org/abs/1806.07421). AISE is more effective for generating saliency maps for a few specific classes. RISE - to generate maps for all classes at once. AISE is supported for both classification and detection task.
 
 Pros:
 - **Flexible** - can be applied to any custom model.
