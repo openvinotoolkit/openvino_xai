@@ -131,9 +131,11 @@ class ReciproCAM(TorchMethod):
 
     def _feature_hook(self, module: torch.nn.Module, inputs: Any, output: torch.Tensor) -> torch.Tensor:
         """feature_maps -> vertical stack of feature_maps + mosaic_feature_maps."""
-        self._feature_map = output
-        batch_size, c, h, w = output.shape
-        feature_maps = [output]
+        batch_size, c, h, w = self._feature_shape = output.shape
+        feature_map = output
+        if self._optimize_gap:
+            feature_map = feature_map.reshape([batch_size, c, h * w]).mean(dim=-1)[:, :, None, None]  # Spatial average
+        feature_maps = [feature_map]
         for i in range(batch_size):
             mosaic_feature_map = self._get_mosaic_feature_map(output[i], c, h, w)
             feature_maps.append(mosaic_feature_map)
@@ -142,7 +144,7 @@ class ReciproCAM(TorchMethod):
     def _output_hook(
         self, module: torch.nn.Module, inputs: Any, output: torch.Tensor
     ) -> Dict[str, torch.Tensor]:
-        batch_size, _, h, w = self._feature_map.shape
+        batch_size, _, h, w = self._feature_shape
         num_classes = output.shape[1]
         predictions = output[:batch_size]
         saliency_maps = output[batch_size:]
