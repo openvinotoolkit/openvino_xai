@@ -15,7 +15,7 @@ from openvino_xai.common.utils import (
     IdentityPreprocessFN,
     has_xai,
 )
-from openvino_xai.inserter.inserter import insert_xai_branch_into_ov_model
+from openvino_xai.inserter.inserter import insert_xai_branch_into_model
 from openvino_xai.methods.base import OVMethod
 
 
@@ -68,7 +68,7 @@ class WhiteBoxMethod(OVMethod):
             return self._model
 
         xai_output_node = self.generate_xai_branch()
-        self._model = insert_xai_branch_into_ov_model(self._model_ori, xai_output_node, self.embed_scaling)
+        self._model = insert_xai_branch_into_model(self._model_ori, xai_output_node, self.embed_scaling)
         if not has_xai(self._model):
             raise RuntimeError("Insertion of the XAI branch into the model was not successful.")
         if load_model:

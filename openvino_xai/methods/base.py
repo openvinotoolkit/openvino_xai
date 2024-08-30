@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from abc import ABC, abstractmethod
-from typing import Callable, Dict, Generic, Mapping, TypeVar
+from typing import Callable, Dict, Generic, Mapping, TypeAlias, TypeVar
 
 import numpy as np
 import openvino as ov
@@ -12,6 +12,7 @@ from openvino_xai.common.utils import IdentityPreprocessFN
 
 Model = TypeVar("Model", ov.Model, torch.nn.Module)
 CompiledModel = TypeVar("CompiledModel", ov.CompiledModel, torch.nn.Module)
+PreprocessFn: TypeAlias = Callable[[np.ndarray], np.ndarray]
 
 
 class MethodBase(ABC, Generic[Model, CompiledModel]):
@@ -32,7 +33,7 @@ class MethodBase(ABC, Generic[Model, CompiledModel]):
     def __init__(
         self,
         model: Model | None = None,
-        preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
+        preprocess_fn: PreprocessFn = IdentityPreprocessFN(),
         device_name: str = "CPU",
     ):
         self._model = model
@@ -65,7 +66,3 @@ class OVMethod(MethodBase[ov.Model, ov.CompiledModel]):
     def load_model(self) -> None:
         core = ov.Core()
         self._model_compiled = core.compile_model(model=self._model, device_name=self._device_name)
-
-
-class TorchMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
-    pass

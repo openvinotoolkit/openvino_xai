@@ -38,10 +38,7 @@ def has_xai(model: ov.Model | torch.nn.Module) -> bool:
                 return True
         return False
     elif isinstance(model, torch.nn.Module):
-        for name, _ in model.named_modules():
-            if SALIENCY_MAP_OUTPUT_NAME == name:
-                return True
-        return False
+        return getattr(model, "has_xai", False)
     else:
         raise ValueError(f"Input model has to be openvino.Model or torch.nn.Module instance, but got{type(model)}.")
 

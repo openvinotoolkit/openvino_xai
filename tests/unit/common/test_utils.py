@@ -33,7 +33,7 @@ def test_has_xai(fxt_data_root: Path):
     # Torch
     model = torch.nn.Module()
     assert has_xai(model) == False
-    model.saliency_map = torch.nn.Module()
+    model.has_xai = True
     assert has_xai(model) == True
 
     # Other
