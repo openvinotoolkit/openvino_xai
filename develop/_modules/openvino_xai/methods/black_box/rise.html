@@ -407,6 +407,7 @@ document.write(`
 
 <span class="kn">from</span> <span class="nn">openvino_xai.common.utils</span> <span class="kn">import</span> <span class="n">IdentityPreprocessFN</span><span class="p">,</span> <span class="n">is_bhwc_layout</span><span class="p">,</span> <span class="n">scaling</span>
 <span class="kn">from</span> <span class="nn">openvino_xai.methods.black_box.base</span> <span class="kn">import</span> <span class="n">BlackBoxXAIMethod</span><span class="p">,</span> <span class="n">Preset</span>
+<span class="kn">from</span> <span class="nn">openvino_xai.methods.black_box.utils</span> <span class="kn">import</span> <span class="n">check_classification_output</span>
 
 
 <div class="viewcode-block" id="RISE">
@@ -415,6 +416,8 @@ document.write(`
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;RISE explains classification models in black-box mode using</span>
 <span class="sd">    &#39;RISE: Randomized Input Sampling for Explanation of Black-box Models&#39; paper</span>
 <span class="sd">    (https://arxiv.org/abs/1806.07421).</span>
+
+<span class="sd">    postprocess_fn expected to return one container with scores. With batch dimention equals to one.</span>
 
 <span class="sd">    :param model: OpenVINO model.</span>
 <span class="sd">    :type model: ov.Model</span>
@@ -551,6 +554,7 @@ document.write(`
 
             <span class="n">forward_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_forward</span><span class="p">(</span><span class="n">masked</span><span class="p">,</span> <span class="n">preprocess</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="n">raw_scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">postprocess_fn</span><span class="p">(</span><span class="n">forward_output</span><span class="p">)</span>
+            <span class="n">check_classification_output</span><span class="p">(</span><span class="n">raw_scores</span><span class="p">)</span>
 
             <span class="n">sal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_scored_mask</span><span class="p">(</span><span class="n">raw_scores</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">target_classes</span><span class="p">)</span>
             <span class="n">saliency_maps</span> <span class="o">+=</span> <span class="n">sal</span>

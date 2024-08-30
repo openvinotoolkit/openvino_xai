@@ -761,7 +761,7 @@ Therefore, scaling=False here by default.</p></li>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openvino_xai.methods.</span></span><span class="sig-name descname"><span class="pre">AISEClassification</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">model:</span> <span class="pre">~openvino.runtime.ie_api.Model,</span> <span class="pre">postprocess_fn:</span> <span class="pre">~typing.Callable[[~openvino.runtime.utils.data_helpers.wrappers.OVDict],</span> <span class="pre">~numpy.ndarray],</span> <span class="pre">preprocess_fn:</span> <span class="pre">~typing.Callable[[~numpy.ndarray],</span> <span class="pre">~numpy.ndarray]</span> <span class="pre">=</span> <span class="pre">&lt;openvino_xai.common.utils.IdentityPreprocessFN</span> <span class="pre">object&gt;,</span> <span class="pre">device_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'CPU',</span> <span class="pre">prepare_model:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openvino_xai/methods/black_box/aise/classification.html#AISEClassification"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openvino_xai.methods.AISEClassification" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">AISEBase</span></code></p>
 <p>AISE for classification models.</p>
-<p>postprocess_fn expected to return one container with scores. Without batch dim.</p>
+<p>postprocess_fn expected to return one container with scores. With batch dimention equals to one.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -802,7 +802,7 @@ Optimized for per class saliency map generation. Not effcient for large number o
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openvino_xai.methods.</span></span><span class="sig-name descname"><span class="pre">AISEDetection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">model:</span> <span class="pre">~openvino.runtime.ie_api.Model,</span> <span class="pre">postprocess_fn:</span> <span class="pre">~typing.Callable[[~openvino.runtime.utils.data_helpers.wrappers.OVDict],</span> <span class="pre">~numpy.ndarray],</span> <span class="pre">preprocess_fn:</span> <span class="pre">~typing.Callable[[~numpy.ndarray],</span> <span class="pre">~numpy.ndarray]</span> <span class="pre">=</span> <span class="pre">&lt;openvino_xai.common.utils.IdentityPreprocessFN</span> <span class="pre">object&gt;,</span> <span class="pre">device_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'CPU',</span> <span class="pre">prepare_model:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openvino_xai/methods/black_box/aise/detection.html#AISEDetection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#openvino_xai.methods.AISEDetection" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">AISEBase</span></code></p>
 <p>AISE for detection models.</p>
-<p>postprocess_fn expected to return three containers: boxes (format: [x1, y1, x2, y2]), scores, labels. Without batch dim.</p>
+<p>postprocess_fn expected to return three containers: boxes (format: [x1, y1, x2, y2]), scores, labels. With batch dimention equals to one.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -924,6 +924,7 @@ Optimized for per class saliency map generation. Not effcient for large number o
 <p>RISE explains classification models in black-box mode using
 ‘RISE: Randomized Input Sampling for Explanation of Black-box Models’ paper
 (<a class="reference external" href="https://arxiv.org/abs/1806.07421">https://arxiv.org/abs/1806.07421</a>).</p>
+<p>postprocess_fn expected to return one container with scores. With batch dimention equals to one.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">

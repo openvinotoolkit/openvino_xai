@@ -415,6 +415,7 @@ document.write(`
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">openvino_xai.methods.black_box.aise.base</span> <span class="kn">import</span> <span class="n">AISEBase</span><span class="p">,</span> <span class="n">GaussianPerturbationMask</span>
 <span class="kn">from</span> <span class="nn">openvino_xai.methods.black_box.base</span> <span class="kn">import</span> <span class="n">Preset</span>
+<span class="kn">from</span> <span class="nn">openvino_xai.methods.black_box.utils</span> <span class="kn">import</span> <span class="n">check_classification_output</span>
 
 
 <div class="viewcode-block" id="AISEClassification">
@@ -423,7 +424,7 @@ document.write(`
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    AISE for classification models.</span>
 
-<span class="sd">    postprocess_fn expected to return one container with scores. Without batch dim.</span>
+<span class="sd">    postprocess_fn expected to return one container with scores. With batch dimention equals to one.</span>
 
 <span class="sd">    :param model: OpenVINO model.</span>
 <span class="sd">    :type model: ov.Model</span>
@@ -546,14 +547,15 @@ document.write(`
             <span class="n">kernel_widths</span> <span class="o">=</span> <span class="n">widths</span>
         <span class="k">return</span> <span class="n">num_iterations_per_kernel</span><span class="p">,</span> <span class="n">kernel_widths</span>
 
-    <span class="k">def</span> <span class="nf">_get_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_perturbed</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_get_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_perturbed</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get loss for perturbed input.&quot;&quot;&quot;</span>
         <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_forward</span><span class="p">(</span><span class="n">data_perturbed</span><span class="p">,</span> <span class="n">preprocess</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">postprocess_fn</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">check_classification_output</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">sigmoid</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="n">pred_scores</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>  <span class="c1"># type: ignore</span>
-        <span class="k">return</span> <span class="n">pred_scores</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">]</span></div>
+        <span class="k">return</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">]</span></div>
 
 </pre></div>
 

@@ -415,6 +415,7 @@ document.write(`
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">openvino_xai.methods.black_box.aise.base</span> <span class="kn">import</span> <span class="n">AISEBase</span><span class="p">,</span> <span class="n">GaussianPerturbationMask</span>
 <span class="kn">from</span> <span class="nn">openvino_xai.methods.black_box.base</span> <span class="kn">import</span> <span class="n">Preset</span>
+<span class="kn">from</span> <span class="nn">openvino_xai.methods.black_box.utils</span> <span class="kn">import</span> <span class="n">check_detection_output</span>
 
 
 <div class="viewcode-block" id="AISEDetection">
@@ -423,7 +424,7 @@ document.write(`
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    AISE for detection models.</span>
 
-<span class="sd">    postprocess_fn expected to return three containers: boxes (format: [x1, y1, x2, y2]), scores, labels. Without batch dim.</span>
+<span class="sd">    postprocess_fn expected to return three containers: boxes (format: [x1, y1, x2, y2]), scores, labels. With batch dimention equals to one.</span>
 
 <span class="sd">    :param model: OpenVINO model.</span>
 <span class="sd">    :type model: ov.Model</span>
@@ -494,8 +495,11 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">data_preprocessed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">preprocess_fn</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
         <span class="n">forward_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_forward</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_preprocessed</span><span class="p">,</span> <span class="n">preprocess</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-        <span class="c1"># postprocess_fn expected to return three containers: boxes (x1, y1, x2, y2), scores, labels, without batch dim.</span>
-        <span class="n">boxes</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">postprocess_fn</span><span class="p">(</span><span class="n">forward_output</span><span class="p">)</span>
+        <span class="c1"># postprocess_fn expected to return three containers: boxes (x1, y1, x2, y2), scores, labels.</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">postprocess_fn</span><span class="p">(</span><span class="n">forward_output</span><span class="p">)</span>
+        <span class="n">check_detection_output</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+        <span class="n">boxes</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">output</span>
+        <span class="n">boxes</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">scores</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="n">target_indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">num_boxes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">boxes</span><span class="p">)</span>
@@ -583,12 +587,13 @@ document.write(`
     <span class="k">def</span> <span class="nf">_get_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_perturbed</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get loss for perturbed input.&quot;&quot;&quot;</span>
         <span class="n">forward_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_forward</span><span class="p">(</span><span class="n">data_perturbed</span><span class="p">,</span> <span class="n">preprocess</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="n">boxes</span><span class="p">,</span> <span class="n">pred_scores</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">postprocess_fn</span><span class="p">(</span><span class="n">forward_output</span><span class="p">)</span>
+        <span class="n">boxes</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">postprocess_fn</span><span class="p">(</span><span class="n">forward_output</span><span class="p">)</span>
+        <span class="n">boxes</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">scores</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="n">loss</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">for</span> <span class="n">box</span><span class="p">,</span> <span class="n">pred_score</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">boxes</span><span class="p">,</span> <span class="n">pred_scores</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">box</span><span class="p">,</span> <span class="n">score</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">boxes</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">label</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_label</span><span class="p">:</span>
-                <span class="n">loss</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iou</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_box</span><span class="p">,</span> <span class="n">box</span><span class="p">)</span> <span class="o">*</span> <span class="n">pred_score</span><span class="p">)</span>
+                <span class="n">loss</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iou</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_box</span><span class="p">,</span> <span class="n">box</span><span class="p">)</span> <span class="o">*</span> <span class="n">score</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">loss</span>
 
     <span class="nd">@staticmethod</span>
