@@ -64,7 +64,7 @@ class TorchMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
 
         if preprocess:
             x = self.preprocess_fn(x)
-        x = torch.from_numpy(x)
+        x = torch.from_numpy(x).float()
 
         with torch.no_grad():
             x = self._model_compiled(x)
@@ -82,7 +82,7 @@ class TorchMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
 
     def _output_hook(
         self, module: torch.nn.Module, inputs: Any, output: torch.Tensor
-    ) -> Dict[str, torch.Tensor | None]:
+    ) -> Dict[str, torch.Tensor]:
         return {
             "prediction": output,
             SALIENCY_MAP_OUTPUT_NAME: torch.empty_like(output),
@@ -106,7 +106,7 @@ class ActivationMap(TorchMethod):
 
     def _output_hook(
         self, module: torch.nn.Module, inputs: Any, output: torch.Tensor
-    ) -> Dict[str, torch.Tensor | None]:
+    ) -> Dict[str, torch.Tensor]:
         feature_map = self._feature_map
         batch_size, _, h, w = feature_map.shape
         activation_map = torch.mean(feature_map, dim=1)
@@ -120,60 +120,63 @@ class ActivationMap(TorchMethod):
         }
 
 
-# class ReciproCAM(TorchMethod):
-#    """Implementation of Recipro-CAM for class-wise saliency map.
-#
-#    Recipro-CAM: gradient-free reciprocal class activation map (https://arxiv.org/pdf/2209.14074.pdf)
-#    """
-#
-#    def func(self, feature_map: FeatureMapType, fpn_idx: int = -1) -> torch.Tensor:
-#        """Generate the class-wise saliency maps using Recipro-CAM and then normalizing to (0, 255).
-#
-#        Args:
-#            feature_map (Union[torch.Tensor, List[torch.Tensor]]): feature maps from backbone or list of feature maps
-#                                                                    from FPN.
-#            fpn_idx (int, optional): The layer index to be processed if the model is a FPN.
-#                                      Defaults to 0 which uses the largest feature map from FPN.
-#
-#        Returns:
-#            torch.Tensor: Class-wise Saliency Maps. One saliency map per each class - [batch, class_id, H, W]
-#        """
-#        if isinstance(feature_map, (list, tuple)):
-#            feature_map = feature_map[fpn_idx]
-#
-#        batch_size, channel, h, w = feature_map.size()
-#        saliency_map = torch.empty(batch_size, self._num_classes, h, w)
-#        for f in range(batch_size):
-#            mosaic_feature_map = self._get_mosaic_feature_map(feature_map[f], channel, h, w)
-#            mosaic_prediction = self._predict_from_feature_map(mosaic_feature_map)
-#            saliency_map[f] = mosaic_prediction.transpose(0, 1).reshape((self._num_classes, h, w))
-#
-#        if self._norm_saliency_maps:
-#            saliency_map = saliency_map.reshape((batch_size, self._num_classes, h * w))
-#            saliency_map = self._normalize_map(saliency_map)
-#
-#        return saliency_map.reshape((batch_size, self._num_classes, h, w))
-#
-#    def _get_mosaic_feature_map(self, feature_map: torch.Tensor, c: int, h: int, w: int) -> torch.Tensor:
-#        if self._optimize_gap:
-#            # if isinstance(model_neck, GlobalAveragePooling):
-#            # Optimization workaround for the GAP case (simulate GAP with more simple compute graph)
-#            # Possible due to static sparsity of mosaic_feature_map
-#            # Makes the downstream GAP operation to be dummy
-#            feature_map_transposed = torch.flatten(feature_map, start_dim=1).transpose(0, 1)[:, :, None, None]
-#            mosaic_feature_map = feature_map_transposed / (h * w)
-#        else:
-#            feature_map_repeated = feature_map.repeat(h * w, 1, 1, 1)
-#            mosaic_feature_map_mask = torch.zeros(h * w, c, h, w).to(feature_map.device)
-#            spacial_order = torch.arange(h * w).reshape(h, w)
-#            for i in range(h):
-#                for j in range(w):
-#                    k = spacial_order[i, j]
-#                    mosaic_feature_map_mask[k, :, i, j] = torch.ones(c).to(feature_map.device)
-#            mosaic_feature_map = feature_map_repeated * mosaic_feature_map_mask
-#        return mosaic_feature_map
-#
-#
+class ReciproCAM(TorchMethod):
+    """Implementation of Recipro-CAM for class-wise saliency map.
+
+    Recipro-CAM: gradient-free reciprocal class activation map (https://arxiv.org/pdf/2209.14074.pdf)
+    """
+    def __init__(self, *args, optimize_gap: bool = False, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._optimize_gap = optimize_gap
+
+    def _feature_hook(self, module: torch.nn.Module, inputs: Any, output: torch.Tensor) -> torch.Tensor:
+        """feature_maps -> vertical stack of feature_maps + mosaic_feature_maps."""
+        self._feature_map = output
+        batch_size, c, h, w = output.shape
+        feature_maps = [output]
+        for i in range(batch_size):
+            mosaic_feature_map = self._get_mosaic_feature_map(output[i], c, h, w)
+            feature_maps.append(mosaic_feature_map)
+        return torch.cat(feature_maps)
+
+    def _output_hook(
+        self, module: torch.nn.Module, inputs: Any, output: torch.Tensor
+    ) -> Dict[str, torch.Tensor]:
+        batch_size, _, h, w = self._feature_map.shape
+        num_classes = output.shape[1]
+        predictions = output[:batch_size]
+        saliency_maps = output[batch_size:]
+        saliency_maps = saliency_maps.reshape([batch_size, h * w, num_classes])
+        saliency_maps = saliency_maps.transpose(1, 2)  # BxHWxC -> BxCxHW
+        if self._embed_scaling:
+            saliency_maps = saliency_maps.reshape((batch_size * num_classes, h * w))
+            saliency_maps = self._normalize_map(saliency_maps)
+        saliency_maps = saliency_maps.reshape([batch_size, num_classes, h, w])
+        return {
+            "prediction": predictions,
+            SALIENCY_MAP_OUTPUT_NAME: saliency_maps,
+        }
+
+    def _get_mosaic_feature_map(self, feature_map: torch.Tensor, c: int, h: int, w: int) -> torch.Tensor:
+        if self._optimize_gap:
+            # if isinstance(model_neck, GlobalAveragePooling):
+            # Optimization workaround for the GAP case (simulate GAP with more simple compute graph)
+            # Possible due to static sparsity of mosaic_feature_map
+            # Makes the downstream GAP operation to be dummy
+            feature_map_transposed = torch.flatten(feature_map, start_dim=1).transpose(0, 1)[:, :, None, None]
+            mosaic_feature_map = feature_map_transposed / (h * w)
+        else:
+            feature_map_repeated = feature_map.repeat(h * w, 1, 1, 1)
+            mosaic_feature_map_mask = torch.zeros(h * w, c, h, w).to(feature_map.device)
+            spacial_order = torch.arange(h * w).reshape(h, w)
+            for i in range(h):
+                for j in range(w):
+                    k = spacial_order[i, j]
+                    mosaic_feature_map_mask[k, :, i, j] = torch.ones(c).to(feature_map.device)
+            mosaic_feature_map = feature_map_repeated * mosaic_feature_map_mask
+        return mosaic_feature_map
+
+
 # class ViTReciproCAM(TorchMethod):
 #    """Implementation of ViTRecipro-CAM for class-wise saliency map for transformer-based classifiers.
 #
