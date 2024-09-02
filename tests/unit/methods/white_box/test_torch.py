@@ -3,19 +3,18 @@
 #
 # Copy & edit from https://github.com/openvinotoolkit/training_extensions/blob/2.1.0/tests/unit/algo/explain/test_xai_algorithms.py
 
-import pytest
-
 from typing import Any, Callable, Dict, Mapping, Sequence, TypeAlias
 
 import numpy as np
+import pytest
 import torch
 
 from openvino_xai.common.utils import SALIENCY_MAP_OUTPUT_NAME, has_xai
-from openvino_xai.methods.white_box.torch import (  # DetClassProbabilityMap,;
+from openvino_xai.methods.white_box.torch import (
     ActivationMap,
-    TorchMethod,
     ReciproCAM,
-    #ViTReciproCAM,
+    TorchMethod,
+    ViTReciproCAM,
 )
 
 
@@ -45,7 +44,24 @@ class DummyCNN(torch.nn.Module):
         x = self.neck(x)
         x = x.view(x.shape[0], -1)
         x = self.output(x)
-        return torch.nn.functional.softmax(x)
+        return torch.nn.functional.softmax(x, dim=1)
+
+
+class DummyVIT(torch.nn.Module):
+    def __init__(self, num_classes: int = 2):
+        super().__init__()
+        self.num_classes = num_classes
+        self.feature = torch.nn.Identity()
+        self.output = torch.nn.LazyLinear(out_features=num_classes)
+
+    def forward(self, x: torch.Tensor):
+        b, c, h, w = x.shape
+        x = x.reshape(b, c, h * w)
+        x = x.transpose(1, 2)
+        x = torch.cat([torch.rand((b, 1, c)), x], dim=1)
+        x = self.feature(x)
+        x = self.output(x[:, 0])
+        return torch.nn.functional.softmax(x, dim=1)
 
 
 def test_torch_method():
@@ -118,50 +134,20 @@ def test_reciprocam(optimize_gap: bool) -> None:
     assert saliency_maps.dtype == np.uint8
 
 
-#def test_vitreciprocam() -> None:
-#    batch_size = 2
-#    num_classes = 3
-#    model = DummyCNN(num_classes=num_classes)
-#    method = ViTReciproCAM(model=model, target_layer="feature", optimize_gap=optimize_gap)
-#    model_xai = method.prepare_model()
-#    assert has_xai(model_xai)
-#    data = np.random.rand(batch_size, 4, 5, 5)
-#    output = method.model_forward(data)
-#    assert type(output) == dict
-#    saliency_maps = output[SALIENCY_MAP_OUTPUT_NAME]
-#    assert saliency_maps.shape == torch.Size([batch_size, num_classes, 5, 5])
-#    assert np.all(saliency_maps >= 0)
-#    assert np.all(saliency_maps <= 255)
-#    assert saliency_maps.dtype == np.uint8
-#
-#    def cls_head_forward_fn(_) -> None:
-#        return torch.zeros((196, 2))
-#
-#    num_classes = 2
-#    explain_algo = ViTReciproCAM(
-#        cls_head_forward_fn,
-#        num_classes=num_classes,
-#    )
-#
-#    assert explain_algo._norm_saliency_maps
-#
-#    feature_map = torch.zeros((1, 197, 192))
-#
-#    saliency_maps = explain_algo.func(feature_map)
-#    assert saliency_maps.size() == torch.Size([1, 2, 14, 14])
-
-
-# def test_detclassprob() -> None:
-#     num_classes = 2
-#     num_anchors = [1] * 10
-#     explain_algo = DetClassProbabilityMap(
-#         num_classes=num_classes,
-#         num_anchors=num_anchors,
-#     )
-#
-#     assert explain_algo._norm_saliency_maps
-#
-#     backbone_out = torch.zeros((1, 5, 2, 2, 2))
-#
-#     saliency_maps = explain_algo.func(backbone_out)
-#     assert saliency_maps.size() == torch.Size([5, 2, 2, 2])
+@pytest.mark.parametrize("use_gaussian", [True, False])
+@pytest.mark.parametrize("use_cls_token", [True, False])
+def test_vitreciprocam(use_gaussian: bool, use_cls_token: bool) -> None:
+    batch_size = 2
+    num_classes = 3
+    model = DummyVIT(num_classes=num_classes)
+    method = ViTReciproCAM(model=model, target_layer="feature", use_gaussian=use_gaussian, use_cls_token=use_cls_token)
+    model_xai = method.prepare_model()
+    assert has_xai(model_xai)
+    data = np.random.rand(batch_size, 4, 5, 5)
+    output = method.model_forward(data)
+    assert type(output) == dict
+    saliency_maps = output[SALIENCY_MAP_OUTPUT_NAME]
+    assert saliency_maps.shape == torch.Size([batch_size, num_classes, 5, 5])
+    assert np.all(saliency_maps >= 0)
+    assert np.all(saliency_maps <= 255)
+    assert saliency_maps.dtype == np.uint8

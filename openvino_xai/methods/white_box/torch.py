@@ -47,6 +47,7 @@ class TorchMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
         self._embed_scaling = embed_scaling
 
     def prepare_model(self, load_model: bool = True) -> torch.nn.Module:
+        """Return XAI inserted model."""
         model = copy.deepcopy(self._model)
         # Feature
         feature_layer = model.get_submodule(self._target_layer)
@@ -59,6 +60,7 @@ class TorchMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
         return model
 
     def model_forward(self, x: np.ndarray, preprocess: bool = True) -> Mapping:
+        """Process numpy input, return numpy output."""
         if not self._model_compiled:
             raise RuntimeError("Model is not compiled. Call prepare_model() first.")
 
@@ -80,15 +82,14 @@ class TorchMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
         self._feature_map = output
         return output
 
-    def _output_hook(
-        self, module: torch.nn.Module, inputs: Any, output: torch.Tensor
-    ) -> Dict[str, torch.Tensor]:
+    def _output_hook(self, module: torch.nn.Module, inputs: Any, output: torch.Tensor) -> Dict[str, torch.Tensor]:
         return {
             "prediction": output,
             SALIENCY_MAP_OUTPUT_NAME: torch.empty_like(output),
         }
 
     def generate_saliency_map(self, data: np.ndarray) -> np.ndarray:
+        """Return saliency map."""
         model_output = self.model_forward(data)
         return model_output[SALIENCY_MAP_OUTPUT_NAME]
 
@@ -104,9 +105,7 @@ class TorchMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
 class ActivationMap(TorchMethod):
     """ActivationMap. Mean of the feature map along the channel dimension."""
 
-    def _output_hook(
-        self, module: torch.nn.Module, inputs: Any, output: torch.Tensor
-    ) -> Dict[str, torch.Tensor]:
+    def _output_hook(self, module: torch.nn.Module, inputs: Any, output: torch.Tensor) -> Dict[str, torch.Tensor]:
         feature_map = self._feature_map
         batch_size, _, h, w = feature_map.shape
         activation_map = torch.mean(feature_map, dim=1)
@@ -124,7 +123,11 @@ class ReciproCAM(TorchMethod):
     """Implementation of Recipro-CAM for class-wise saliency map.
 
     Recipro-CAM: gradient-free reciprocal class activation map (https://arxiv.org/pdf/2209.14074.pdf)
+
+    :param optimize_gap: Whether to optimize out Global Average Pooling operation
+    :type optimizae_gap: bool
     """
+
     def __init__(self, *args, optimize_gap: bool = False, **kwargs):
         super().__init__(*args, **kwargs)
         self._optimize_gap = optimize_gap
@@ -141,9 +144,7 @@ class ReciproCAM(TorchMethod):
             feature_maps.append(mosaic_feature_map)
         return torch.cat(feature_maps)
 
-    def _output_hook(
-        self, module: torch.nn.Module, inputs: Any, output: torch.Tensor
-    ) -> Dict[str, torch.Tensor]:
+    def _output_hook(self, module: torch.nn.Module, inputs: Any, output: torch.Tensor) -> Dict[str, torch.Tensor]:
         batch_size, _, h, w = self._feature_shape
         num_classes = output.shape[1]
         predictions = output[:batch_size]
@@ -170,161 +171,86 @@ class ReciproCAM(TorchMethod):
         else:
             feature_map_repeated = feature_map.repeat(h * w, 1, 1, 1)
             mosaic_feature_map_mask = torch.zeros(h * w, c, h, w).to(feature_map.device)
-            spacial_order = torch.arange(h * w).reshape(h, w)
+            spatial_order = torch.arange(h * w).reshape(h, w)
             for i in range(h):
                 for j in range(w):
-                    k = spacial_order[i, j]
+                    k = spatial_order[i, j]
                     mosaic_feature_map_mask[k, :, i, j] = torch.ones(c).to(feature_map.device)
             mosaic_feature_map = feature_map_repeated * mosaic_feature_map_mask
         return mosaic_feature_map
 
 
-# class ViTReciproCAM(TorchMethod):
-#    """Implementation of ViTRecipro-CAM for class-wise saliency map for transformer-based classifiers.
-#
-#    Args:
-#        head_forward_fn (callable): Forward pass function for the top of the model.
-#        num_classes (int): Number of classes.
-#        use_gaussian (bool): Defines kernel type for mosaic feature map generation.
-#        If True, use gaussian 3x3 kernel. If False, use 1x1 kernel.
-#        cls_token (bool): If True, includes classification token into the mosaic feature map.
-#        normalize (bool): If True, Normalizes saliency maps.
-#    """
-#
-#    def __init__(
-#        self,
-#        head_forward_fn: HeadForwardFn,
-#        num_classes: int,
-#        use_gaussian: bool = True,
-#        cls_token: bool = True,
-#        normalize: bool = True,
-#    ) -> None:
-#        super().__init__(head_forward_fn, normalize)
-#        self._num_classes = num_classes
-#        self._use_gaussian = use_gaussian
-#        self._cls_token = cls_token
-#
-#    def func(self, feature_map: torch.Tensor, _: int = -1) -> torch.Tensor:
-#        """Generate the class-wise saliency maps using ViTRecipro-CAM and then normalizing to (0, 255).
-#
-#        Args:
-#            feature_map (torch.Tensor): feature maps from target layernorm layer.
-#
-#        Returns:
-#            torch.Tensor: Class-wise Saliency Maps. One saliency map per each class - [batch, class_id, H, W]
-#        """
-#        batch_size, token_number, _ = feature_map.size()
-#        h = w = int((token_number - 1) ** 0.5)
-#        saliency_map = torch.empty(batch_size, self._num_classes, h, w)
-#        for i in range(batch_size):
-#            mosaic_feature_map = self._get_mosaic_feature_map(feature_map[i])
-#            mosaic_prediction = self._predict_from_feature_map(mosaic_feature_map)
-#            saliency_map[i] = mosaic_prediction.transpose(1, 0).reshape((self._num_classes, h, w))
-#
-#        if self._norm_saliency_maps:
-#            saliency_map = saliency_map.reshape((batch_size, self._num_classes, h * w))
-#            saliency_map = self._normalize_map(saliency_map)
-#        return saliency_map.reshape((batch_size, self._num_classes, h, w))
-#
-#    def _get_mosaic_feature_map(self, feature_map: torch.Tensor) -> torch.Tensor:
-#        token_number, dim = feature_map.size()
-#        mosaic_feature_map = torch.zeros(token_number - 1, token_number, dim).to(feature_map.device)
-#        h = w = int((token_number - 1) ** 0.5)
-#
-#        if self._use_gaussian:
-#            if self._cls_token:
-#                mosaic_feature_map[:, 0, :] = feature_map[0, :]
-#            feature_map_spacial = feature_map[1:, :].reshape(1, h, w, dim)
-#            feature_map_spacial_repeated = feature_map_spacial.repeat(h * w, 1, 1, 1)  # 196, 14, 14, 192
-#
-#            spacial_order = torch.arange(h * w).reshape(h, w)
-#            gaussian = torch.tensor(
-#                [[1 / 16.0, 1 / 8.0, 1 / 16.0], [1 / 8.0, 1 / 4.0, 1 / 8.0], [1 / 16.0, 1 / 8.0, 1 / 16.0]],
-#            ).to(feature_map.device)
-#            mosaic_feature_map_mask_padded = torch.zeros(h * w, h + 2, w + 2).to(feature_map.device)
-#            for i in range(h):
-#                for j in range(w):
-#                    k = spacial_order[i, j]
-#                    i_pad = i + 1
-#                    j_pad = j + 1
-#                    mosaic_feature_map_mask_padded[k, i_pad - 1 : i_pad + 2, j_pad - 1 : j_pad + 2] = gaussian
-#            mosaic_feature_map_mask = mosaic_feature_map_mask_padded[:, 1:-1, 1:-1]
-#            mosaic_feature_map_mask = torch.tensor(mosaic_feature_map_mask.unsqueeze(3).repeat(1, 1, 1, dim))
-#
-#            mosaic_fm_wo_cls_token = feature_map_spacial_repeated * mosaic_feature_map_mask
-#            mosaic_feature_map[:, 1:, :] = mosaic_fm_wo_cls_token.reshape(h * w, h * w, dim)
-#        else:
-#            feature_map_repeated = feature_map.unsqueeze(0).repeat(h * w, 1, 1)
-#            mosaic_feature_map_mask = torch.zeros(h * w, token_number).to(feature_map.device)
-#            for i in range(h * w):
-#                mosaic_feature_map_mask[i, i + 1] = torch.ones(1).to(feature_map.device)
-#            if self._cls_token:
-#                mosaic_feature_map_mask[:, 0] = torch.ones(1).to(feature_map.device)
-#            mosaic_feature_map_mask = torch.tensor(mosaic_feature_map_mask.unsqueeze(2).repeat(1, 1, dim))
-#            mosaic_feature_map = feature_map_repeated * mosaic_feature_map_mask
-#
-#        return mosaic_feature_map
-#
-#
-# class DetClassProbabilityMap(TorchMethod):
-#    """Saliency map generation algo for object detection models."""
-#
-#    def __init__(
-#        self,
-#        num_classes: int,
-#        num_anchors: list[int],
-#        normalize: bool = True,
-#        use_cls_softmax: bool = True,
-#    ) -> None:
-#        super().__init__(head_forward_fn=None, normalize=normalize)
-#        # SSD-like heads also have background class
-#        self._num_classes = num_classes
-#        self._num_anchors = num_anchors
-#        # Should be switched off for tiling
-#        self.use_cls_softmax = use_cls_softmax
-#
-#    def func(
-#        self,
-#        cls_scores: FeatureMapType,
-#        _: int = -1,
-#    ) -> torch.Tensor:
-#        """Generate the saliency map from raw classification head output, then normalizing to (0, 255).
-#
-#        Args:
-#            cls_scores (FeatureMapType): Classification scores from cls_head.
-#
-#        Returns:
-#            torch.Tensor: Class-wise Saliency Maps. One saliency map per each class - [batch, class_id, H, W]
-#        """
-#        middle_idx = len(cls_scores) // 2
-#        # Resize to the middle feature map
-#        batch_size, _, height, width = cls_scores[middle_idx].size()
-#        saliency_map = torch.empty(batch_size, self._num_classes, height, width)
-#        for batch_idx in range(batch_size):
-#            cls_scores_anchorless = []
-#            for scale_idx, cls_scores_per_scale in enumerate(cls_scores):
-#                cls_scores_anchor_grouped = cls_scores_per_scale[batch_idx].reshape(
-#                    self._num_anchors[scale_idx],
-#                    (self._num_classes),
-#                    *cls_scores_per_scale.shape[-2:],
-#                )
-#                cls_scores_out, _ = cls_scores_anchor_grouped.max(dim=0)
-#                cls_scores_anchorless.append(cls_scores_out.unsqueeze(0))
-#
-#            cls_scores_anchorless_resized = [
-#                torch.nn.functional.interpolate(cls_scores_anchorless_per_level, (height, width), mode="bilinear")
-#                for cls_scores_anchorless_per_level in cls_scores_anchorless
-#            ]
-#
-#            saliency_map[batch_idx] = torch.cat(cls_scores_anchorless_resized, dim=0).mean(dim=0)
-#
-#        # Don't use softmax for tiles in tiling detection, if the tile doesn't contain objects,
-#        # it would highlight one of the class maps as a background class
-#        if self.use_cls_softmax:
-#            saliency_map = torch.stack([torch.softmax(b, dim=0) for b in saliency_map])
-#
-#        if self._norm_saliency_maps:
-#            saliency_map = saliency_map.reshape((batch_size, self._num_classes, -1))
-#            saliency_map = self._normalize_map(saliency_map)
-#
-#        return saliency_map.reshape((batch_size, self._num_classes, height, width))
+class ViTReciproCAM(ReciproCAM):
+    """Implementation of ViTRecipro-CAM for class-wise saliency map for transformer-based classifiers.
+
+    ViT-ReciproCAM: Gradient and Attention-Free Visual Explanations for Vision Transformer
+    (https://arxiv.org/abs/2310.02588)
+
+    :param use_gaussian: Defines kernel type for mosaic feature map generation.
+        If True, use gaussian 3x3 kernel. If False, use 1x1 kernel.
+    :type use_gaussian: bool
+    :param use_cls_token: If True, includes classification token into the mosaic feature map.
+    :type use_cls_token: bool
+    """
+
+    def __init__(
+        self,
+        *args,
+        use_gaussian: bool = True,
+        use_cls_token: bool = True,
+        normalize: bool = True,
+        **kwargs,
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        self._use_gaussian = use_gaussian
+        self._use_cls_token = use_cls_token
+
+    def _feature_hook(self, module: torch.nn.Module, inputs: Any, output: torch.Tensor) -> torch.Tensor:
+        """feature_maps -> vertical stack of feature_maps + mosaic_feature_maps."""
+        feature_map = output
+        batch_size, num_tokens, dim = feature_map.shape
+        h = w = int((num_tokens - 1) ** 0.5)
+        feature_maps = [feature_map]
+        self._feature_shape = (batch_size, dim, h, w)
+        for i in range(batch_size):
+            mosaic_feature_map = self._get_mosaic_feature_map(feature_map[i], dim, h, w)
+            feature_maps.append(mosaic_feature_map)
+        return torch.cat(feature_maps)
+
+    def _get_mosaic_feature_map(self, feature_map: torch.Tensor, c: int, h: int, w: int) -> torch.Tensor:
+        num_tokens = h * w + 1
+        mosaic_feature_map = torch.zeros(h * w, num_tokens, c).to(feature_map.device)
+
+        if self._use_gaussian:
+            if self._use_cls_token:
+                mosaic_feature_map[:, 0, :] = feature_map[0, :]
+            feature_map_spacial = feature_map[1:, :].reshape(1, h, w, c)
+            feature_map_spacial_repeated = feature_map_spacial.repeat(h * w, 1, 1, 1)  # 196, 14, 14, 192
+
+            spatial_order = torch.arange(h * w).reshape(h, w)
+            gaussian = torch.tensor(
+                [[1 / 16.0, 1 / 8.0, 1 / 16.0], [1 / 8.0, 1 / 4.0, 1 / 8.0], [1 / 16.0, 1 / 8.0, 1 / 16.0]],
+            ).to(feature_map.device)
+            mosaic_feature_map_mask_padded = torch.zeros(h * w, h + 2, w + 2).to(feature_map.device)
+            for i in range(h):
+                for j in range(w):
+                    k = spatial_order[i, j]
+                    i_pad = i + 1
+                    j_pad = j + 1
+                    mosaic_feature_map_mask_padded[k, i_pad - 1 : i_pad + 2, j_pad - 1 : j_pad + 2] = gaussian
+            mosaic_feature_map_mask = mosaic_feature_map_mask_padded[:, 1:-1, 1:-1]
+            mosaic_feature_map_mask = mosaic_feature_map_mask.unsqueeze(3).repeat(1, 1, 1, c)
+
+            mosaic_fm_wo_cls_token = feature_map_spacial_repeated * mosaic_feature_map_mask
+            mosaic_feature_map[:, 1:, :] = mosaic_fm_wo_cls_token.reshape(h * w, h * w, c)
+        else:
+            feature_map_repeated = feature_map.unsqueeze(0).repeat(h * w, 1, 1)
+            mosaic_feature_map_mask = torch.zeros(h * w, num_tokens).to(feature_map.device)
+            for i in range(h * w):
+                mosaic_feature_map_mask[i, i + 1] = torch.ones(1).to(feature_map.device)
+            if self._use_cls_token:
+                mosaic_feature_map_mask[:, 0] = torch.ones(1).to(feature_map.device)
+            mosaic_feature_map_mask = mosaic_feature_map_mask.unsqueeze(2).repeat(1, 1, c)
+            mosaic_feature_map = feature_map_repeated * mosaic_feature_map_mask
+
+        return mosaic_feature_map
