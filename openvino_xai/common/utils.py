@@ -61,8 +61,8 @@ def retrieve_otx_model(data_dir: str | Path, model_name: str, dir_url=None) -> N
             )
 
 
-def scaling(saliency_map: np.ndarray, cast_to_uint8: bool = True) -> np.ndarray:
-    """Scaling saliency maps to [0, 255] range."""
+def scaling(saliency_map: np.ndarray, cast_to_uint8: bool = True, max_value: int = 255) -> np.ndarray:
+    """Scaling saliency maps to [0, max_value] range."""
     original_num_dims = saliency_map.ndim
     if original_num_dims == 2:
         # If input map is 2D array, add dim so that below code would work
@@ -73,7 +73,7 @@ def scaling(saliency_map: np.ndarray, cast_to_uint8: bool = True) -> np.ndarray:
     saliency_map = saliency_map.reshape((num_maps, h * w))
 
     min_values, max_values = get_min_max(saliency_map)
-    saliency_map = 255 * (saliency_map - min_values[:, None]) / (max_values - min_values + 1e-12)[:, None]
+    saliency_map = max_value * (saliency_map - min_values[:, None]) / (max_values - min_values + 1e-12)[:, None]
     saliency_map = saliency_map.reshape(num_maps, h, w)
 
     if original_num_dims == 2:

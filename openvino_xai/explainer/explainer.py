@@ -222,6 +222,7 @@ class Explainer:
             saliency_map=saliency_map,
             targets=targets,
             label_names=label_names,
+            metadata=self.method.metadata,
         )
         return self._visualize(
             original_input_image,

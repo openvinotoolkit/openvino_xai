@@ -1,11 +1,12 @@
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 import cv2
 import numpy as np
 
+from openvino_xai.common.parameters import Task
 from openvino_xai.common.utils import format_to_bhwc, infer_size_from_image, scaling
 from openvino_xai.explainer.explanation import (
     COLOR_MAPPED_LAYOUTS,
@@ -66,7 +67,7 @@ def overlay(
 
 class Visualizer:
     """
-    Visualizer implements post-processing for the saliency map in explanation result.
+    Visualizer implements post-processing for the saliency maps in explanation.
     """
 
     def __call__(
@@ -130,7 +131,7 @@ class Visualizer:
             original_input_image = format_to_bhwc(original_input_image)
 
         saliency_map_dict = explanation.saliency_map
-        class_idx_to_return = list(saliency_map_dict.keys())
+        indices_to_return = list(saliency_map_dict.keys())
 
         # Convert to numpy array to use vectorized scale (0 ~ 255) operation and speed up lots of classes scenario
         saliency_map_np = np.array(list(saliency_map_dict.values()))
@@ -146,6 +147,7 @@ class Visualizer:
             saliency_map_np = self._apply_overlay(
                 explanation, saliency_map_np, original_input_image, output_size, overlay_weight
             )
+            saliency_map_np = self._apply_metadata(explanation.metadata, saliency_map_np, indices_to_return)
         else:
             if resize:
                 if original_input_image is None and output_size is None:
@@ -157,7 +159,30 @@ class Visualizer:
                 saliency_map_np = self._apply_colormap(explanation, saliency_map_np)
 
         # Convert back to dict
-        return self._update_explanation_with_processed_sal_map(explanation, saliency_map_np, class_idx_to_return)
+        return self._update_explanation_with_processed_sal_map(explanation, saliency_map_np, indices_to_return)
+
+    @staticmethod
+    def _apply_metadata(metadata: Dict[Task, Any], saliency_map_np: np.ndarray, indices: List[int | str]):
+        # TODO (negvet): support when indices are strings
+        if metadata:
+            if Task.DETECTION in metadata:
+                for smap_i, target_index in zip(range(len(saliency_map_np)), indices):
+                    saliency_map = saliency_map_np[smap_i]
+                    box, score, label_index = metadata[Task.DETECTION][target_index]
+                    x1, y1, x2, y2 = box
+                    cv2.rectangle(saliency_map, (int(x1), int(y1)), (int(x2), int(y2)), color=(255, 0, 0), thickness=2)
+                    box_label = f"{label_index}|{score:.2f}"
+                    box_label_loc = int(x1), int(y1 - 5)
+                    cv2.putText(
+                        saliency_map,
+                        box_label,
+                        org=box_label_loc,
+                        fontFace=1,
+                        fontScale=1,
+                        color=(255, 0, 0),
+                        thickness=2,
+                    )
+        return saliency_map_np
 
     @staticmethod
     def _apply_scaling(explanation: Explanation, saliency_map_np: np.ndarray) -> np.ndarray:
@@ -222,15 +247,15 @@ class Visualizer:
     def _update_explanation_with_processed_sal_map(
         explanation: Explanation,
         saliency_map_np: np.ndarray,
-        class_idx: List,
+        target_indices: List,
     ) -> Explanation:
         dict_sal_map: Dict[int | str, np.ndarray] = {}
         if explanation.layout in ONE_MAP_LAYOUTS:
             dict_sal_map["per_image_map"] = saliency_map_np[0]
             saliency_map_np = dict_sal_map
         elif explanation.layout in MULTIPLE_MAP_LAYOUTS:
-            for idx, class_sal in zip(class_idx, saliency_map_np):
-                dict_sal_map[idx] = class_sal
+            for index, sal_map in zip(target_indices, saliency_map_np):
+                dict_sal_map[index] = sal_map
         else:
             raise ValueError
         explanation.saliency_map = dict_sal_map

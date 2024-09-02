@@ -10,12 +10,15 @@ from tqdm import tqdm
 
 from openvino_xai.common.utils import IdentityPreprocessFN, is_bhwc_layout, scaling
 from openvino_xai.methods.black_box.base import BlackBoxXAIMethod, Preset
+from openvino_xai.methods.black_box.utils import check_classification_output
 
 
 class RISE(BlackBoxXAIMethod):
     """RISE explains classification models in black-box mode using
     'RISE: Randomized Input Sampling for Explanation of Black-box Models' paper
     (https://arxiv.org/abs/1806.07421).
+
+    postprocess_fn expected to return one container with scores. With batch dimention equals to one.
 
     :param model: OpenVINO model.
     :type model: ov.Model
@@ -149,6 +152,7 @@ class RISE(BlackBoxXAIMethod):
 
             forward_output = self.model_forward(masked, preprocess=False)
             raw_scores = self.postprocess_fn(forward_output)
+            check_classification_output(raw_scores)
 
             sal = self._get_scored_mask(raw_scores, mask, target_classes)
             saliency_maps += sal

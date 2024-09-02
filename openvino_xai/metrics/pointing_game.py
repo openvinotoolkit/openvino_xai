@@ -29,6 +29,9 @@ class PointingGame(BaseMetric):
            (2018) 126:1084-1102.
     """
 
+    def __init__(self):
+        pass
+
     @staticmethod
     def __call__(saliency_map: np.ndarray, image_gt_bboxes: List[Tuple[int, int, int, int]]) -> Dict[str, float]:
         """

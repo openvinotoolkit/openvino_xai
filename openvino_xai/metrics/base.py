@@ -13,12 +13,14 @@ class BaseMetric(ABC):
 
     def __init__(
         self,
-        model_compiled: ov.CompiledModel = None,
+        model: ov.Model = None,
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         postprocess_fn: Callable[[np.ndarray], np.ndarray] = None,
+        device_name: str = "CPU",
     ):
         # Pass model_predict to class initialization directly?
-        self.model_compiled = model_compiled
+        self.model = model
+        self.model_compiled = ov.Core().compile_model(model=model, device_name=device_name)
         self.preprocess_fn = preprocess_fn
         self.postprocess_fn = postprocess_fn
 

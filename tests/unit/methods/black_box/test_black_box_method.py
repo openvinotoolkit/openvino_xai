@@ -11,10 +11,16 @@ import pytest
 
 from openvino_xai.common.utils import retrieve_otx_model
 from openvino_xai.explainer.utils import get_postprocess_fn, get_preprocess_fn
-from openvino_xai.methods.black_box.aise import AISE
+from openvino_xai.methods.black_box.aise.classification import AISEClassification
+from openvino_xai.methods.black_box.aise.detection import AISEDetection
 from openvino_xai.methods.black_box.base import Preset
 from openvino_xai.methods.black_box.rise import RISE
+from openvino_xai.methods.black_box.utils import (
+    check_classification_output,
+    check_detection_output,
+)
 from tests.intg.test_classification import DEFAULT_CLS_MODEL
+from tests.intg.test_detection import DEFAULT_DET_MODEL
 
 
 class InputSampling:
@@ -26,9 +32,15 @@ class InputSampling:
     )
     postprocess_fn = get_postprocess_fn()
 
-    def get_model(self, fxt_data_root):
+    def get_cls_model(self, fxt_data_root):
         retrieve_otx_model(fxt_data_root, DEFAULT_CLS_MODEL)
         model_path = fxt_data_root / "otx_models" / (DEFAULT_CLS_MODEL + ".xml")
+        return ov.Core().read_model(model_path)
+
+    def get_det_model(self, fxt_data_root):
+        detection_model = "det_yolox_bccd"
+        retrieve_otx_model(fxt_data_root, detection_model)
+        model_path = fxt_data_root / "otx_models" / (detection_model + ".xml")
         return ov.Core().read_model(model_path)
 
     def _generate_with_preset(self, method, preset):
@@ -38,13 +50,25 @@ class InputSampling:
             preset=preset,
         )
 
+    @staticmethod
+    def preprocess_det_fn(x: np.ndarray) -> np.ndarray:
+        x = cv2.resize(src=x, dsize=(416, 416))  # OTX YOLOX
+        x = x.transpose((2, 0, 1))
+        x = np.expand_dims(x, 0)
+        return x
 
-class TestAISE(InputSampling):
+    @staticmethod
+    def postprocess_det_fn(x) -> np.ndarray:
+        """Returns boxes, scores, labels."""
+        return x["boxes"][:, :, :4], x["boxes"][:, :, 4], x["labels"]
+
+
+class TestAISEClassification(InputSampling):
     @pytest.mark.parametrize("target_indices", [[0], [0, 1]])
     def test_run(self, target_indices, fxt_data_root: Path):
-        model = self.get_model(fxt_data_root)
+        model = self.get_cls_model(fxt_data_root)
 
-        aise_method = AISE(model, self.postprocess_fn, self.preprocess_fn)
+        aise_method = AISEClassification(model, self.postprocess_fn, self.preprocess_fn)
         saliency_map = aise_method.generate_saliency_map(
             data=self.image,
             target_indices=target_indices,
@@ -70,8 +94,73 @@ class TestAISE(InputSampling):
         assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
 
     def test_preset(self, fxt_data_root: Path):
-        model = self.get_model(fxt_data_root)
-        method = AISE(model, self.postprocess_fn, self.preprocess_fn)
+        model = self.get_cls_model(fxt_data_root)
+        method = AISEClassification(model, self.postprocess_fn, self.preprocess_fn)
+
+        tic = time.time()
+        self._generate_with_preset(method, Preset.SPEED)
+        toc = time.time()
+        time_speed = toc - tic
+
+        tic = time.time()
+        self._generate_with_preset(method, Preset.BALANCE)
+        toc = time.time()
+        time_balance = toc - tic
+
+        tic = time.time()
+        self._generate_with_preset(method, Preset.QUALITY)
+        toc = time.time()
+        time_quality = toc - tic
+
+        assert time_speed < time_balance < time_quality
+
+
+class TestAISEDetection(InputSampling):
+    @pytest.mark.parametrize("target_indices", [[0], [0, 1]])
+    def test_run(self, target_indices, fxt_data_root: Path):
+        model = self.get_det_model(fxt_data_root)
+
+        aise_method = AISEDetection(model, self.postprocess_det_fn, self.preprocess_det_fn)
+        saliency_map = aise_method.generate_saliency_map(
+            data=self.image,
+            target_indices=target_indices,
+            preset=Preset.SPEED,
+            num_iterations_per_kernel=10,
+            divisors=[5],
+        )
+        assert aise_method.num_iterations_per_kernel == 10
+        assert aise_method.divisors == [5]
+
+        assert isinstance(saliency_map, dict)
+        assert len(saliency_map) == len(target_indices)
+        for target in target_indices:
+            assert target in saliency_map
+
+        ref_target = 0
+        assert saliency_map[ref_target].dtype == np.uint8
+        assert saliency_map[ref_target].shape == (416, 416)
+        assert (saliency_map[ref_target] >= 0).all() and (saliency_map[ref_target] <= 255).all()
+
+        actual_sal_vals = saliency_map[0][150, 240:250].astype(np.int16)
+        ref_sal_vals = np.array([152, 168, 184, 199, 213, 225, 235, 243, 247, 249], dtype=np.uint8)
+        assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
+
+    def test_target_none(self, fxt_data_root: Path):
+        model = self.get_det_model(fxt_data_root)
+
+        aise_method = AISEDetection(model, self.postprocess_det_fn, self.preprocess_det_fn)
+        saliency_map = aise_method.generate_saliency_map(
+            data=self.image,
+            target_indices=None,
+            preset=Preset.SPEED,
+            num_iterations_per_kernel=1,
+            divisors=[5],
+        )
+        assert len(saliency_map) == 56
+
+    def test_preset(self, fxt_data_root: Path):
+        model = self.get_det_model(fxt_data_root)
+        method = AISEDetection(model, self.postprocess_det_fn, self.preprocess_det_fn)
 
         tic = time.time()
         self._generate_with_preset(method, Preset.SPEED)
@@ -94,7 +183,7 @@ class TestAISE(InputSampling):
 class TestRISE(InputSampling):
     @pytest.mark.parametrize("target_indices", [[0], None])
     def test_run(self, target_indices, fxt_data_root: Path):
-        model = self.get_model(fxt_data_root)
+        model = self.get_cls_model(fxt_data_root)
 
         rise_method = RISE(model, self.postprocess_fn, self.preprocess_fn)
         saliency_map = rise_method.generate_saliency_map(
@@ -123,7 +212,7 @@ class TestRISE(InputSampling):
             assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
 
     def test_preset(self, fxt_data_root: Path):
-        model = self.get_model(fxt_data_root)
+        model = self.get_cls_model(fxt_data_root)
         method = RISE(model, self.postprocess_fn, self.preprocess_fn)
 
         tic = time.time()
@@ -142,3 +231,55 @@ class TestRISE(InputSampling):
         time_quality = toc - tic
 
         assert time_speed < time_balance < time_quality
+
+
+def test_check_classification_output():
+    with pytest.raises(Exception) as exc_info:
+        x = 1
+        check_classification_output(x)
+    assert str(exc_info.value) == "Postprocess function should return numpy array."
+
+    with pytest.raises(Exception) as exc_info:
+        x = np.zeros((2, 2, 2))
+        check_classification_output(x)
+    assert str(exc_info.value) == "Postprocess function should return two dimentional numpy array with batch size of 1."
+
+
+def test_check_detection_output():
+    with pytest.raises(Exception) as exc_info:
+        x = 1
+        check_detection_output(x)
+    assert str(exc_info.value) == "Postprocess function should return sized object."
+
+    with pytest.raises(Exception) as exc_info:
+        x = 1, 2
+        check_detection_output(x)
+    assert (
+        str(exc_info.value)
+        == "Postprocess function should return three containers: boxes (format: [x1, y1, x2, y2]), scores, labels."
+    )
+
+    with pytest.raises(Exception) as exc_info:
+        x = np.array([1]), np.array([1]), 1
+        check_detection_output(x)
+    assert str(exc_info.value) == "Postprocess function should return numpy arrays."
+
+    with pytest.raises(Exception) as exc_info:
+        x = np.ones((1, 2)), np.ones((1, 2)), np.ones((2, 2))
+        check_detection_output(x)
+    assert str(exc_info.value) == "Postprocess function should return numpy arrays with batch size of 1."
+
+    with pytest.raises(Exception) as exc_info:
+        x = np.ones((1, 2)), np.ones((1)), np.ones((1, 2, 3))
+        check_detection_output(x)
+    assert str(exc_info.value) == "Boxes should be three-dimentional [Batch, NumBoxes, BoxCoords]."
+
+    with pytest.raises(Exception) as exc_info:
+        x = np.ones((1, 2, 4)), np.ones((1)), np.ones((1, 2, 3))
+        check_detection_output(x)
+    assert str(exc_info.value) == "Scores should be two-dimentional [Batch, Scores]."
+
+    with pytest.raises(Exception) as exc_info:
+        x = np.ones((1, 2, 4)), np.ones((1, 2)), np.ones((1, 2, 3))
+        check_detection_output(x)
+    assert str(exc_info.value) == "Labels should be two-dimentional  [Batch, Labels]."

@@ -1,0 +1,4 @@
+# label:color_rgb:parts:actions
+background:0,0,0::
+cheetah:38,81,142::
+person:155,93,229::

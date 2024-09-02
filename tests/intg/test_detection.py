@@ -14,7 +14,8 @@ from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import retrieve_otx_model
 from openvino_xai.explainer.explainer import Explainer, ExplainMode
 from openvino_xai.explainer.utils import get_preprocess_fn
-from openvino_xai.methods.factory import WhiteBoxMethodFactory
+from openvino_xai.methods.black_box.aise.detection import AISEDetection
+from openvino_xai.methods.factory import BlackBoxMethodFactory, WhiteBoxMethodFactory
 from openvino_xai.methods.white_box.det_class_probability_map import (
     DetClassProbabilityMap,
 )
@@ -57,6 +58,7 @@ MODEL_CONFIGS = addict.Addict(
 MODELS = list(MODEL_CONFIGS.keys())
 
 DEFAULT_DET_MODEL = "det_mobilenetv2_atss_bccd"
+FAST_DET_MODEL = "det_mobilenetv2_atss_bccd"
 
 EXPLAIN_ALL_CLASSES = [
     True,
@@ -66,11 +68,11 @@ EXPLAIN_ALL_CLASSES = [
 
 class TestDetWB:
     """
-    Tests detection models in WB mode.
+    Tests detection models in white-box mode.
     """
 
     image = cv2.imread("tests/assets/blood.jpg")
-    _ref_sal_maps_reciprocam = {
+    _ref_sal_maps = {
         "det_mobilenetv2_atss_bccd": np.array([222, 243, 232, 229, 221, 217, 237, 246, 252, 255], dtype=np.uint8),
         "det_mobilenetv2_ssd_bccd": np.array([83, 93, 61, 48, 110, 109, 78, 128, 158, 111], dtype=np.uint8),
         "det_yolox_bccd": np.array([17, 13, 15, 60, 94, 52, 61, 47, 8, 40], dtype=np.uint8),
@@ -120,7 +122,7 @@ class TestDetWB:
             assert explanation.saliency_map[0].shape == self._sal_map_size
 
             actual_sal_vals = explanation.saliency_map[0][0, :10].astype(np.int16)
-            ref_sal_vals = self._ref_sal_maps_reciprocam[model_name].astype(np.uint8)
+            ref_sal_vals = self._ref_sal_maps[model_name].astype(np.uint8)
             if embed_scaling:
                 # Reference values generated with embed_scaling=True
                 assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
@@ -198,7 +200,7 @@ class TestDetWB:
         )
 
         actual_sal_vals = explanation.saliency_map[0][0, :10].astype(np.int16)
-        ref_sal_vals = self._ref_sal_maps_reciprocam[DEFAULT_DET_MODEL].astype(np.uint8)
+        ref_sal_vals = self._ref_sal_maps[DEFAULT_DET_MODEL].astype(np.uint8)
         # Reference values generated with embed_scaling=True
         assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
 
@@ -232,6 +234,108 @@ class TestDetWB:
         model_path = self.data_dir / "otx_models" / (DEFAULT_DET_MODEL + ".xml")
         model = ov.Core().read_model(model_path)
         return model
+
+
+class TestDetBB:
+    """
+    Tests detection models in black-box mode.
+    """
+
+    image = cv2.imread("tests/assets/blood.jpg")
+
+    @pytest.fixture(autouse=True)
+    def setup(self, fxt_data_root):
+        self.data_dir = fxt_data_root
+
+    @pytest.mark.parametrize("model_name", MODELS)
+    def test_aisedetection(self, model_name):
+        retrieve_otx_model(self.data_dir, model_name)
+        model_path = self.data_dir / "otx_models" / (model_name + ".xml")
+        model = ov.Core().read_model(model_path)
+
+        preprocess_fn = get_preprocess_fn(
+            input_size=MODEL_CONFIGS[model_name].input_size,
+            hwc_to_chw=True,
+        )
+        explainer = Explainer(
+            model=model,
+            task=Task.DETECTION,
+            preprocess_fn=preprocess_fn,
+            postprocess_fn=self.postprocess_fn,
+            explain_mode=ExplainMode.BLACKBOX,  # defaults to AUTO
+            num_iterations_per_kernel=5,
+            divisors=[5],
+        )
+
+        target_list = [1]
+        explanation = explainer(
+            self.image,
+            targets=target_list,
+            resize=False,
+            colormap=False,
+        )
+        assert explanation is not None
+
+        target_class = target_list[0]
+        assert target_class in explanation.saliency_map
+        assert len(explanation.saliency_map) == len(target_list)
+        assert explanation.saliency_map[target_class].ndim == 2
+
+    def test_detection_visualizing(self):
+        model = self.get_default_model()
+
+        preprocess_fn = get_preprocess_fn(
+            input_size=MODEL_CONFIGS[FAST_DET_MODEL].input_size,
+            hwc_to_chw=True,
+        )
+        explainer = Explainer(
+            model=model,
+            task=Task.DETECTION,
+            preprocess_fn=preprocess_fn,
+            postprocess_fn=self.postprocess_fn,
+            explain_mode=ExplainMode.BLACKBOX,  # defaults to AUTO
+            num_iterations_per_kernel=5,
+            divisors=[5],
+        )
+
+        target_list = [1]
+        explanation = explainer(
+            self.image,
+            targets=target_list,
+            overlay=True,
+        )
+        assert explanation is not None
+        assert explanation.shape == (480, 640, 3)
+
+        target_class = target_list[0]
+        assert len(explanation.saliency_map) == len(target_list)
+        assert target_class in explanation.saliency_map
+
+    def test_create_aise_detection_method(self):
+        """Test create_white_box_detection_method."""
+        model = self.get_default_model()
+
+        preprocess_fn = get_preprocess_fn(
+            input_size=MODEL_CONFIGS[FAST_DET_MODEL].input_size,
+            hwc_to_chw=True,
+        )
+        det_xai_method = BlackBoxMethodFactory.create_method(
+            Task.DETECTION,
+            model,
+            preprocess_fn,
+        )
+        assert isinstance(det_xai_method, AISEDetection)
+
+    def get_default_model(self):
+        retrieve_otx_model(self.data_dir, FAST_DET_MODEL)
+        model_path = self.data_dir / "otx_models" / (FAST_DET_MODEL + ".xml")
+        model = ov.Core().read_model(model_path)
+        return model
+
+    @staticmethod
+    def postprocess_fn(x) -> np.ndarray:
+        """Returns boxes, scores, labels."""
+        return x["boxes"][:, :, :4], x["boxes"][:, :, 4], x["labels"]
 
 
 class TestExample:

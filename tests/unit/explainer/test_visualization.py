@@ -4,6 +4,7 @@
 import numpy as np
 import pytest
 
+from openvino_xai.common.parameters import Task
 from openvino_xai.common.utils import get_min_max, scaling
 from openvino_xai.explainer.explanation import Explanation
 from openvino_xai.explainer.visualizer import Visualizer, colormap, overlay, resize
@@ -11,6 +12,10 @@ from openvino_xai.explainer.visualizer import Visualizer, colormap, overlay, res
 SALIENCY_MAPS = [
     (np.random.rand(1, 5, 5) * 255).astype(np.uint8),
     (np.random.rand(1, 2, 5, 5) * 255).astype(np.uint8),
+    {
+        0: (np.random.rand(5, 5) * 255).astype(np.uint8),
+        1: (np.random.rand(5, 5) * 255).astype(np.uint8),
+    },
 ]
 
 EXPLAIN_ALL_CLASSES = [
@@ -98,7 +103,7 @@ class TestVisualizer:
     @pytest.mark.parametrize("colormap", [True, False])
     @pytest.mark.parametrize("overlay", [True, False])
     @pytest.mark.parametrize("overlay_weight", [0.5, 0.3])
-    def test_Visualizer(
+    def test_visualizer(
         self,
         saliency_maps,
         explain_all_classes,
@@ -142,7 +147,7 @@ class TestVisualizer:
             for map_ in explanation.saliency_map.values():
                 assert map_.shape[:2] == original_input_image.shape[:2]
 
-        if saliency_maps.ndim == 3 and not overlay:
+        if isinstance(saliency_maps, np.ndarray) and saliency_maps.ndim == 3 and not overlay:
             explanation = Explanation(saliency_maps, targets=-1)
             visualizer = Visualizer()
             explanation_output_size = visualizer(
@@ -157,3 +162,23 @@ class TestVisualizer:
             maps_data = explanation.saliency_map
             maps_size = explanation_output_size.saliency_map
             assert np.all(maps_data["per_image_map"] == maps_size["per_image_map"])
+
+        if isinstance(saliency_maps, dict):
+            metadata = {
+                Task.DETECTION: {
+                    0: ([5, 0, 7, 4], 0.5, 0),
+                    1: ([2, 5, 9, 7], 0.5, 0),
+                }
+            }
+            explanation = Explanation(saliency_maps, targets=-1, metadata=metadata)
+            visualizer = Visualizer()
+            explanation_output_size = visualizer(
+                explanation=explanation,
+                original_input_image=original_input_image,
+                output_size=(20, 20),
+                scaling=scaling,
+                resize=resize,
+                colormap=colormap,
+                overlay=overlay,
+                overlay_weight=overlay_weight,
+            )

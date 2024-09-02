@@ -1,13 +1,15 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import collections
 from abc import ABC, abstractmethod
-from typing import Callable, Dict, Generic, Mapping, TypeAlias, TypeVar
+from typing import Any, Callable, Dict, Generic, Mapping, TypeAlias, TypeVar
 
 import numpy as np
 import openvino as ov
 import torch
 
+from openvino_xai.common.parameters import Task
 from openvino_xai.common.utils import IdentityPreprocessFN
 
 Model = TypeVar("Model", ov.Model, torch.nn.Module)
@@ -40,6 +42,7 @@ class MethodBase(ABC, Generic[Model, CompiledModel]):
         self._model_compiled = None
         self.preprocess_fn = preprocess_fn
         self._device_name = device_name
+        self.metadata: Dict[Task, Any] = collections.defaultdict(dict)
 
     @property
     def model_compiled(self) -> CompiledModel | None:

@@ -12,6 +12,7 @@ import openvino.runtime as ov
 import openvino_xai as xai
 from openvino_xai.common.utils import logger
 from openvino_xai.explainer.explainer import ExplainMode
+from openvino_xai.methods.black_box.base import Preset
 
 
 def get_argument_parser():
@@ -31,20 +32,23 @@ def preprocess_fn(x: np.ndarray) -> np.ndarray:
     return x
 
 
-def main(argv):
+def postprocess_fn(x) -> np.ndarray:
+    """Returns boxes, scores, labels."""
+    return x["boxes"][:, :, :4], x["boxes"][:, :, 4], x["labels"]
+
+
+def explain_white_box(args):
     """
     White-box scenario.
-    Insertion of the XAI branch into the Model API wrapper, thus Model API wrapper has additional 'saliency_map' output.
+    Per-class saliency map generation for single-stage detection models (using DetClassProbabilityMap).
+    Insertion of the XAI branch into the model, thus model has additional 'saliency_map' output.
     """
-
-    parser = get_argument_parser()
-    args = parser.parse_args(argv)
 
     # Create ov.Model
     model: ov.Model
     model = ov.Core().read_model(args.model_path)
 
-    # OTX YOLOX
+    # # OTX YOLOX
     # cls_head_output_node_names = [
     #     "/bbox_head/multi_level_conv_cls.0/Conv/WithoutBiases",
     #     "/bbox_head/multi_level_conv_cls.1/Conv/WithoutBiases",
@@ -75,6 +79,7 @@ def main(argv):
     explanation = explainer(
         image,
         targets=[0, 1, 2],  # target classes to explain
+        overlay=True,
     )
 
     logger.info(
@@ -86,6 +91,55 @@ def main(argv):
     if args.output is not None:
         output = Path(args.output) / "detection"
         explanation.save(output, Path(args.image_path).stem)
+
+
+def explain_black_box(args):
+    """
+    Black-box scenario.
+    Per-box saliency map generation for all detection models (using AISEDetection).
+    """
+
+    # Create ov.Model
+    model: ov.Model
+    model = ov.Core().read_model(args.model_path)
+
+    # Create explainer object
+    explainer = xai.Explainer(
+        model=model,
+        task=xai.Task.DETECTION,
+        preprocess_fn=preprocess_fn,
+        postprocess_fn=postprocess_fn,
+        explain_mode=ExplainMode.BLACKBOX,  # defaults to AUTO
+    )
+
+    # Prepare input image and explanation parameters, can be different for each explain call
+    image = cv2.imread(args.image_path)
+
+    # Generate explanation
+    explanation = explainer(
+        image,
+        targets=[0],  # target boxes to explain
+        overlay=True,
+        preset=Preset.SPEED,
+    )
+
+    logger.info(
+        f"Generated {len(explanation.saliency_map)} detection "
+        f"saliency maps of layout {explanation.layout} with shape {explanation.shape}."
+    )
+
+    # Save saliency maps for visual inspection
+    if args.output is not None:
+        output = Path(args.output) / "detection_black_box"
+        explanation.save(output, f"{Path(args.image_path).stem}_")
+
+
+def main(argv):
+    parser = get_argument_parser()
+    args = parser.parse_args(argv)
+
+    explain_white_box(args)
+    explain_black_box(args)
 
 
 if __name__ == "__main__":

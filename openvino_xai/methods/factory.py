@@ -11,7 +11,8 @@ import torch
 from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import IdentityPreprocessFN, logger
 from openvino_xai.methods.base import MethodBase
-from openvino_xai.methods.black_box.aise import AISE
+from openvino_xai.methods.black_box.aise.classification import AISEClassification
+from openvino_xai.methods.black_box.aise.detection import AISEDetection
 from openvino_xai.methods.black_box.base import BlackBoxXAIMethod
 from openvino_xai.methods.black_box.rise import RISE
 from openvino_xai.methods.white_box.activation_map import ActivationMap
@@ -233,11 +234,18 @@ class BlackBoxMethodFactory(MethodFactory):
         :type device_name: str
         """
         if explain_method is None or explain_method == Method.AISE:
-            return AISE(model, postprocess_fn, preprocess_fn, device_name, **kwargs)
+            return AISEClassification(model, postprocess_fn, preprocess_fn, device_name, **kwargs)
         elif explain_method == Method.RISE:
             return RISE(model, postprocess_fn, preprocess_fn, device_name, **kwargs)
         raise ValueError(f"Requested explanation method {explain_method} is not implemented.")
 
     @staticmethod
-    def create_detection_method(*args, **kwargs) -> BlackBoxXAIMethod:
-        raise ValueError("Detection models are not supported in black-box mode yet.")
+    def create_detection_method(
+        model: ov.Model,
+        postprocess_fn: Callable[[Mapping], np.ndarray],
+        preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
+        explain_method: Method | None = None,
+        device_name: str = "CPU",
+        **kwargs,
+    ) -> BlackBoxXAIMethod:
+        return AISEDetection(model, postprocess_fn, preprocess_fn, device_name, **kwargs)

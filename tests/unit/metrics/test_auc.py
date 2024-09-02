@@ -34,8 +34,7 @@ class TestAUC:
         model_path = self.data_dir / "otx_models" / (MODEL_NAME + ".xml")
         core = ov.Core()
         model = core.read_model(model_path)
-        compiled_model = core.compile_model(model=model, device_name="AUTO")
-        self.auc = InsertionDeletionAUC(compiled_model, self.preprocess_fn, self.postprocess_fn)
+        self.auc = InsertionDeletionAUC(model, self.preprocess_fn, self.postprocess_fn)
 
         self.explainer = Explainer(
             model=model,
