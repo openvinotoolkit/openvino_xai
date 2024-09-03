@@ -13,6 +13,7 @@ from openvino_xai.common.utils import retrieve_otx_model
 from openvino_xai.explainer.utils import get_postprocess_fn, get_preprocess_fn
 from openvino_xai.methods.black_box.aise.classification import AISEClassification
 from openvino_xai.methods.factory import BlackBoxMethodFactory, WhiteBoxMethodFactory
+from openvino_xai.methods.white_box import torch as torch_method
 from openvino_xai.methods.white_box.activation_map import ActivationMap
 from openvino_xai.methods.white_box.det_class_probability_map import (
     DetClassProbabilityMap,
@@ -151,15 +152,36 @@ def test_create_wb_det_cnn_method(fxt_data_root: Path):
 
 
 def test_create_torch_method():
-    model = torch.nn.Module()
-    with pytest.raises(NotImplementedError):
-        explain_method = BlackBoxMethodFactory.create_method(Task.CLASSIFICATION, model, get_postprocess_fn())
     model = {}
     with pytest.raises(ValueError):
         explain_method = BlackBoxMethodFactory.create_method(Task.CLASSIFICATION, model, get_postprocess_fn())
     model = torch.nn.Module()
     with pytest.raises(NotImplementedError):
-        explain_method = WhiteBoxMethodFactory.create_method(Task.CLASSIFICATION, model, get_postprocess_fn())
+        explain_method = BlackBoxMethodFactory.create_method(Task.CLASSIFICATION, model, get_postprocess_fn())
+    with pytest.raises(NotImplementedError):
+        explain_method = BlackBoxMethodFactory.create_method(
+            Task.DETECTION, model, get_postprocess_fn(), target_layer=""
+        )
+
     model = {}
     with pytest.raises(ValueError):
         explain_method = WhiteBoxMethodFactory.create_method(Task.CLASSIFICATION, model, get_postprocess_fn())
+    model = torch.nn.Module()
+    with pytest.raises(NotImplementedError):
+        explain_method = WhiteBoxMethodFactory.create_method(
+            Task.DETECTION, model, get_postprocess_fn(), target_layer=""
+        )
+
+    model = torch.nn.Module()
+    explain_method = WhiteBoxMethodFactory.create_method(
+        Task.CLASSIFICATION, model, get_postprocess_fn(), explain_method=Method.ACTIVATIONMAP
+    )
+    assert isinstance(explain_method, torch_method.ActivationMap)
+    explain_method = WhiteBoxMethodFactory.create_method(
+        Task.CLASSIFICATION, model, get_postprocess_fn(), explain_method=Method.RECIPROCAM
+    )
+    assert isinstance(explain_method, torch_method.ReciproCAM)
+    explain_method = WhiteBoxMethodFactory.create_method(
+        Task.CLASSIFICATION, model, get_postprocess_fn(), explain_method=Method.VITRECIPROCAM
+    )
+    assert isinstance(explain_method, torch_method.ViTReciproCAM)

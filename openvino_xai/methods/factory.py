@@ -171,9 +171,6 @@ class WhiteBoxMethodFactory(MethodFactory):
         :type embed_scaling: bool
         """
 
-        if isinstance(model, torch.nn.Module):
-            raise NotImplementedError("Torch models are not yet supported by detection white box methods.")
-
         if target_layer is None:
             raise ValueError("target_layer is required for the detection.")
 
@@ -194,7 +191,7 @@ class BlackBoxMethodFactory(MethodFactory):
     def create_method(
         cls,
         task: Task,
-        model: ov.Model,
+        model: ov.Model | torch.nn.Module,
         postprocess_fn: Callable[[Mapping], np.ndarray],
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         explain_method: Method | None = None,
@@ -213,7 +210,7 @@ class BlackBoxMethodFactory(MethodFactory):
 
     @staticmethod
     def create_classification_method(
-        model: ov.Model,
+        model: ov.Model | torch.nn.Module,
         postprocess_fn: Callable[[Mapping], np.ndarray],
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         explain_method: Method | None = None,
@@ -224,7 +221,7 @@ class BlackBoxMethodFactory(MethodFactory):
         Using AISE as a default method.
 
         :param model: Input model.
-        :type model: ov.Model
+        :type model: ov.Model | torch.nn.Module
         :param postprocess_fn: Preprocessing function that extract scores from model output.
         :type postprocess_fn: Callable[[Mapping], np.ndarray]
         :param preprocess_fn: Preprocessing function, identity function by default
@@ -241,7 +238,7 @@ class BlackBoxMethodFactory(MethodFactory):
 
     @staticmethod
     def create_detection_method(
-        model: ov.Model,
+        model: ov.Model | torch.nn.Module,
         postprocess_fn: Callable[[Mapping], np.ndarray],
         preprocess_fn: Callable[[np.ndarray], np.ndarray] = IdentityPreprocessFN(),
         explain_method: Method | None = None,

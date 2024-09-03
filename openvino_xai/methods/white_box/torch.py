@@ -41,6 +41,7 @@ class TorchMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
         target_layer: str | None = None,
         embed_scaling: bool = True,
         device_name: str = "CPU",
+        **kwargs,
     ):
         super().__init__(model=model, preprocess_fn=preprocess_fn, device_name=device_name)
         self._target_layer = target_layer
@@ -224,8 +225,8 @@ class ViTReciproCAM(ReciproCAM):
         if self._use_gaussian:
             if self._use_cls_token:
                 mosaic_feature_map[:, 0, :] = feature_map[0, :]
-            feature_map_spacial = feature_map[1:, :].reshape(1, h, w, c)
-            feature_map_spacial_repeated = feature_map_spacial.repeat(h * w, 1, 1, 1)  # 196, 14, 14, 192
+            feature_map_spatial = feature_map[1:, :].reshape(1, h, w, c)
+            feature_map_spatial_repeated = feature_map_spatial.repeat(h * w, 1, 1, 1)  # 196, 14, 14, 192
 
             spatial_order = torch.arange(h * w).reshape(h, w)
             gaussian = torch.tensor(
@@ -241,7 +242,7 @@ class ViTReciproCAM(ReciproCAM):
             mosaic_feature_map_mask = mosaic_feature_map_mask_padded[:, 1:-1, 1:-1]
             mosaic_feature_map_mask = mosaic_feature_map_mask.unsqueeze(3).repeat(1, 1, 1, c)
 
-            mosaic_fm_wo_cls_token = feature_map_spacial_repeated * mosaic_feature_map_mask
+            mosaic_fm_wo_cls_token = feature_map_spatial_repeated * mosaic_feature_map_mask
             mosaic_feature_map[:, 1:, :] = mosaic_fm_wo_cls_token.reshape(h * w, h * w, c)
         else:
             feature_map_repeated = feature_map.unsqueeze(0).repeat(h * w, 1, 1)

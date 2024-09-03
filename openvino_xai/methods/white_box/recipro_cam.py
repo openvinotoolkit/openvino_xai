@@ -7,6 +7,7 @@ from typing import Callable, List, Tuple
 
 import numpy as np
 import openvino.runtime as ov
+import torch
 from openvino.runtime import opset10 as opset
 
 from openvino_xai.common.utils import IdentityPreprocessFN
@@ -77,6 +78,18 @@ class ReciproCAM(FeatureMapPerturbationBase):
     :param prepare_model: Loading (compiling) the model prior to inference.
     :type prepare_model: bool
     """
+
+    def __new__(
+        cls,
+        model: ov.Model | torch.nn.Module | None = None,
+        *args,
+        **kwargs,
+    ):
+        if isinstance(model, torch.nn.Module):
+            from .torch import ReciproCAM as TorchReciproCAM
+
+            return TorchReciproCAM(model, *args, **kwargs)
+        return super().__new__(cls)
 
     def __init__(
         self,
@@ -170,6 +183,18 @@ class ViTReciproCAM(FeatureMapPerturbationBase):
     :param prepare_model: Loading (compiling) the model prior to inference.
     :type prepare_model: bool
     """
+
+    def __new__(
+        cls,
+        model: ov.Model | torch.nn.Module | None = None,
+        *args,
+        **kwargs,
+    ):
+        if isinstance(model, torch.nn.Module):
+            from .torch import ViTReciproCAM as TorchViTReciproCAM
+
+            return TorchViTReciproCAM(model, *args, **kwargs)
+        return super().__new__(cls)
 
     def __init__(
         self,

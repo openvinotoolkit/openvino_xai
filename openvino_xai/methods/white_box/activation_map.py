@@ -5,6 +5,7 @@ from typing import Callable
 
 import numpy as np
 import openvino.runtime as ov
+import torch
 from openvino.runtime import opset10 as opset
 
 from openvino_xai.common.utils import IdentityPreprocessFN
@@ -30,6 +31,18 @@ class ActivationMap(WhiteBoxMethod):
     :param prepare_model: Loading (compiling) the model prior to inference.
     :type prepare_model: bool
     """
+
+    def __new__(
+        cls,
+        model: ov.Model | torch.nn.Module | None = None,
+        *args,
+        **kwargs,
+    ):
+        if isinstance(model, torch.nn.Module):
+            from .torch import ActivationMap as TorchActivationMap
+
+            return TorchActivationMap(model, *args, **kwargs)
+        return super().__new__(cls)
 
     def __init__(
         self,
