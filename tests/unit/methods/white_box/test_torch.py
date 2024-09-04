@@ -66,6 +66,14 @@ class DummyVIT(torch.nn.Module):
 
 def test_torch_method():
     model = DummyCNN()
+
+    with pytest.raises(ValueError):
+        method = TorchWhiteBoxMethod(model=model, target_layer=None)
+        model_xai = method.prepare_model()
+    with pytest.raises(ValueError):
+        method = TorchWhiteBoxMethod(model=model, target_layer="something_else")
+        model_xai = method.prepare_model()
+
     method = TorchWhiteBoxMethod(model=model, target_layer="feature")
     model_xai = method.prepare_model()
     assert has_xai(model_xai)

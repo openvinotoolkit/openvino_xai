@@ -56,8 +56,8 @@ class TorchWhiteBoxMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
 
         model = copy.deepcopy(self._model)
         # Feature
-        feature_layer = model.get_submodule(self._target_layer)
-        feature_layer.register_forward_hook(self._feature_hook)
+        feature_module = self._find_feature_module(model, self._target_layer)
+        feature_module.register_forward_hook(self._feature_hook)
         # Output
         model.register_forward_hook(self._output_hook)
         setattr(model, "has_xai", True)
@@ -85,6 +85,17 @@ class TorchWhiteBoxMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
                 data = torch.tensor(data)
             output[name] = data.numpy(force=True)
         return output
+
+    def _find_feature_module(self, model: torch.nn.Module, target_name: str | None):
+        if target_name is None:
+            raise ValueError("Target layer name should be specified")
+        target_module = None
+        for name, module in model.named_modules():
+            if target_name in name:
+                target_module = module
+        if target_module is None:
+            raise ValueError(f"{target_name} not found in the torch model")
+        return target_module
 
     def _feature_hook(self, module: torch.nn.Module, inputs: Any, output: torch.Tensor) -> torch.Tensor:
         self._feature_map = output
