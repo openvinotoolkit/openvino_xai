@@ -399,20 +399,20 @@ document.write(`
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 
 <span class="kn">import</span> <span class="nn">collections</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
 <span class="kn">from</span> <span class="nn">openvino.runtime.utils.data_helpers.wrappers</span> <span class="kn">import</span> <span class="n">OVDict</span>
 <span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">Bounds</span>
 
-<span class="kn">from</span> <span class="nn">openvino_xai.common.parameters</span> <span class="kn">import</span> <span class="n">Task</span>
 <span class="kn">from</span> <span class="nn">openvino_xai.common.utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">IdentityPreprocessFN</span><span class="p">,</span>
     <span class="n">infer_size_from_image</span><span class="p">,</span>
     <span class="n">logger</span><span class="p">,</span>
     <span class="n">scaling</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span> <span class="nn">openvino_xai.methods.base</span> <span class="kn">import</span> <span class="n">Prediction</span>
 <span class="kn">from</span> <span class="nn">openvino_xai.methods.black_box.aise.base</span> <span class="kn">import</span> <span class="n">AISEBase</span><span class="p">,</span> <span class="n">GaussianPerturbationMask</span>
 <span class="kn">from</span> <span class="nn">openvino_xai.methods.black_box.base</span> <span class="kn">import</span> <span class="n">Preset</span>
 <span class="kn">from</span> <span class="nn">openvino_xai.methods.black_box.utils</span> <span class="kn">import</span> <span class="n">check_detection_output</span>
@@ -455,6 +455,7 @@ document.write(`
             <span class="n">prepare_model</span><span class="o">=</span><span class="n">prepare_model</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">deletion</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">predictions</span> <span class="o">=</span> <span class="p">{}</span>
 
 <div class="viewcode-block" id="AISEDetection.generate_saliency_map">
 <a class="viewcode-back" href="../../../../../api-manual.html#openvino_xai.methods.AISEDetection.generate_saliency_map">[docs]</a>
@@ -521,7 +522,7 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">_mask_generator</span> <span class="o">=</span> <span class="n">GaussianPerturbationMask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">)</span>
 
         <span class="n">saliency_maps</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Task</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">predictions</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">target_indices</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">target_box</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[</span><span class="n">target</span><span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">target_label</span> <span class="o">=</span> <span class="n">labels</span><span class="p">[</span><span class="n">target</span><span class="p">]</span>
@@ -538,7 +539,7 @@ document.write(`
                 <span class="n">saliency_map_per_target</span> <span class="o">=</span> <span class="n">scaling</span><span class="p">(</span><span class="n">saliency_map_per_target</span><span class="p">)</span>
             <span class="n">saliency_maps</span><span class="p">[</span><span class="n">target</span><span class="p">]</span> <span class="o">=</span> <span class="n">saliency_map_per_target</span>
 
-            <span class="bp">self</span><span class="o">.</span><span class="n">_update_metadata</span><span class="p">(</span><span class="n">boxes</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">original_size</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_predictions</span><span class="p">(</span><span class="n">boxes</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">original_size</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">saliency_maps</span></div>
 
 
@@ -607,7 +608,7 @@ document.write(`
         <span class="n">area2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">box2</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="o">-</span> <span class="n">box2</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">intersection</span> <span class="o">/</span> <span class="p">(</span><span class="n">area1</span> <span class="o">+</span> <span class="n">area2</span> <span class="o">-</span> <span class="n">intersection</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_update_metadata</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_update_predictions</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">boxes</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="n">List</span><span class="p">,</span>
         <span class="n">scores</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
@@ -620,7 +621,11 @@ document.write(`
         <span class="n">height_scale</span> <span class="o">=</span> <span class="n">original_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span> <span class="o">=</span> <span class="n">x1</span> <span class="o">*</span> <span class="n">width_scale</span><span class="p">,</span> <span class="n">x2</span> <span class="o">*</span> <span class="n">width_scale</span>
         <span class="n">y1</span><span class="p">,</span> <span class="n">y2</span> <span class="o">=</span> <span class="n">y1</span> <span class="o">*</span> <span class="n">height_scale</span><span class="p">,</span> <span class="n">y2</span> <span class="o">*</span> <span class="n">height_scale</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="n">Task</span><span class="o">.</span><span class="n">DETECTION</span><span class="p">][</span><span class="n">target</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">],</span> <span class="n">scores</span><span class="p">[</span><span class="n">target</span><span class="p">],</span> <span class="n">labels</span><span class="p">[</span><span class="n">target</span><span class="p">]</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">predictions</span><span class="p">[</span><span class="n">target</span><span class="p">]</span> <span class="o">=</span> <span class="n">Prediction</span><span class="p">(</span>
+            <span class="n">label</span><span class="o">=</span><span class="n">labels</span><span class="p">[</span><span class="n">target</span><span class="p">],</span>
+            <span class="n">score</span><span class="o">=</span><span class="n">scores</span><span class="p">[</span><span class="n">target</span><span class="p">],</span>
+            <span class="n">bounding_box</span><span class="o">=</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">),</span>
+        <span class="p">)</span></div>
 
 </pre></div>
 

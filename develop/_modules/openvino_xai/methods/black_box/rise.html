@@ -406,6 +406,7 @@ document.write(`
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
 
 <span class="kn">from</span> <span class="nn">openvino_xai.common.utils</span> <span class="kn">import</span> <span class="n">IdentityPreprocessFN</span><span class="p">,</span> <span class="n">is_bhwc_layout</span><span class="p">,</span> <span class="n">scaling</span>
+<span class="kn">from</span> <span class="nn">openvino_xai.methods.base</span> <span class="kn">import</span> <span class="n">Prediction</span>
 <span class="kn">from</span> <span class="nn">openvino_xai.methods.black_box.base</span> <span class="kn">import</span> <span class="n">BlackBoxXAIMethod</span><span class="p">,</span> <span class="n">Preset</span>
 <span class="kn">from</span> <span class="nn">openvino_xai.methods.black_box.utils</span> <span class="kn">import</span> <span class="n">check_classification_output</span>
 
@@ -440,8 +441,9 @@ document.write(`
         <span class="n">device_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;CPU&quot;</span><span class="p">,</span>
         <span class="n">prepare_model</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">preprocess_fn</span><span class="o">=</span><span class="n">preprocess_fn</span><span class="p">,</span> <span class="n">device_name</span><span class="o">=</span><span class="n">device_name</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">postprocess_fn</span> <span class="o">=</span> <span class="n">postprocess_fn</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">postprocess_fn</span><span class="o">=</span><span class="n">postprocess_fn</span><span class="p">,</span> <span class="n">preprocess_fn</span><span class="o">=</span><span class="n">preprocess_fn</span><span class="p">,</span> <span class="n">device_name</span><span class="o">=</span><span class="n">device_name</span>
+        <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">prepare_model</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">prepare_model</span><span class="p">()</span>
@@ -534,9 +536,10 @@ document.write(`
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="n">input_size</span> <span class="o">=</span> <span class="n">data_preprocessed</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="k">if</span> <span class="n">is_bhwc_layout</span><span class="p">(</span><span class="n">data_preprocessed</span><span class="p">)</span> <span class="k">else</span> <span class="n">data_preprocessed</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
 
-        <span class="n">num_classes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_num_classes</span><span class="p">(</span><span class="n">data_preprocessed</span><span class="p">)</span>
+        <span class="n">logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_logits</span><span class="p">(</span><span class="n">data_preprocessed</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">target_classes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">num_classes</span> <span class="o">=</span> <span class="n">logits</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
             <span class="n">num_targets</span> <span class="o">=</span> <span class="n">num_classes</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">num_targets</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">target_classes</span><span class="p">)</span>
@@ -561,6 +564,11 @@ document.write(`
 
         <span class="k">if</span> <span class="n">target_classes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">saliency_maps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reformat_as_dict</span><span class="p">(</span><span class="n">saliency_maps</span><span class="p">,</span> <span class="n">target_classes</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">target_classes</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">predictions</span><span class="p">[</span><span class="n">target</span><span class="p">]</span> <span class="o">=</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="n">label</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
+                    <span class="n">score</span><span class="o">=</span><span class="n">logits</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">target</span><span class="p">],</span>
+                <span class="p">)</span>
         <span class="k">return</span> <span class="n">saliency_maps</span>
 
     <span class="nd">@staticmethod</span>

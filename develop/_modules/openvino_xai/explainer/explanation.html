@@ -401,7 +401,7 @@ document.write(`
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span>
 
 <span class="kn">import</span> <span class="nn">cv2</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
@@ -414,6 +414,7 @@ document.write(`
     <span class="n">explains_all</span><span class="p">,</span>
     <span class="n">get_target_indices</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span> <span class="nn">openvino_xai.methods.base</span> <span class="kn">import</span> <span class="n">Prediction</span>
 
 
 <div class="viewcode-block" id="Explanation">
@@ -427,16 +428,21 @@ document.write(`
 <span class="sd">    :param targets: List of custom labels to explain, optional. Can be list of integer indices (int),</span>
 <span class="sd">        or list of names (str) from label_names.</span>
 <span class="sd">    :type targets: np.ndarray | List[int | str] | int | str</span>
+<span class="sd">    :param task: Type of the task: CLASSIFICATION or DETECTION.</span>
+<span class="sd">    :type task: Task</span>
 <span class="sd">    :param label_names: List of all label names.</span>
 <span class="sd">    :type label_names: List[str] | None</span>
+<span class="sd">    :param predictions: Per-target model prediction (available only for black-box methods).</span>
+<span class="sd">    :type predictions: Dict[int, Prediction] | None</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">saliency_map</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
         <span class="n">targets</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">task</span><span class="p">:</span> <span class="n">Task</span><span class="p">,</span>
         <span class="n">label_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">metadata</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Task</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">predictions</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Prediction</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="n">targets</span> <span class="o">=</span> <span class="n">convert_targets_to_numpy</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span>
 
@@ -456,10 +462,12 @@ document.write(`
             <span class="bp">self</span><span class="o">.</span><span class="n">layout</span> <span class="o">=</span> <span class="n">Layout</span><span class="o">.</span><span class="n">MULTIPLE_MAPS_PER_IMAGE_GRAY</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">explains_all</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span> <span class="o">==</span> <span class="n">Layout</span><span class="o">.</span><span class="n">ONE_MAP_PER_IMAGE_GRAY</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_saliency_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_select_target_saliency_maps</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="n">label_names</span><span class="p">)</span>
+            <span class="n">label_names_</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">task</span> <span class="o">==</span> <span class="n">Task</span><span class="o">.</span><span class="n">DETECTION</span> <span class="k">else</span> <span class="n">label_names</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_saliency_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_select_target_saliency_maps</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="n">label_names_</span><span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="n">task</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">label_names</span> <span class="o">=</span> <span class="n">label_names</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">predictions</span> <span class="o">=</span> <span class="n">predictions</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">saliency_map</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
@@ -581,7 +589,7 @@ document.write(`
             <span class="n">map_to_save</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">map_to_save</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_RGB2BGR</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target_idx</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
                 <span class="n">target_name</span> <span class="o">=</span> <span class="s2">&quot;activation_map&quot;</span>
-            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_names</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target_idx</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">):</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_names</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target_idx</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">!=</span> <span class="n">Task</span><span class="o">.</span><span class="n">DETECTION</span><span class="p">:</span>
                 <span class="n">target_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_names</span><span class="p">[</span><span class="n">target_idx</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">target_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">target_idx</span><span class="p">)</span>

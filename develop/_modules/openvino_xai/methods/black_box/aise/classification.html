@@ -413,6 +413,7 @@ document.write(`
     <span class="n">scaling</span><span class="p">,</span>
     <span class="n">sigmoid</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span> <span class="nn">openvino_xai.methods.base</span> <span class="kn">import</span> <span class="n">Prediction</span>
 <span class="kn">from</span> <span class="nn">openvino_xai.methods.black_box.aise.base</span> <span class="kn">import</span> <span class="n">AISEBase</span><span class="p">,</span> <span class="n">GaussianPerturbationMask</span>
 <span class="kn">from</span> <span class="nn">openvino_xai.methods.black_box.base</span> <span class="kn">import</span> <span class="n">Preset</span>
 <span class="kn">from</span> <span class="nn">openvino_xai.methods.black_box.utils</span> <span class="kn">import</span> <span class="n">check_classification_output</span>
@@ -492,11 +493,12 @@ document.write(`
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data_preprocessed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">preprocess_fn</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
+        <span class="n">logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_logits</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_preprocessed</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">target_indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">num_classes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_num_classes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_preprocessed</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">num_classes</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;num_classes = </span><span class="si">{</span><span class="n">num_classes</span><span class="si">}</span><span class="s2">, which might take significant time to process.&quot;</span><span class="p">)</span>
+            <span class="n">num_classes</span> <span class="o">=</span> <span class="n">logits</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
             <span class="n">target_indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_classes</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">target_indices</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">target_indices</span><span class="p">)</span><span class="si">}</span><span class="s2"> targets to process, which might take significant time.&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">num_iterations_per_kernel</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel_widths</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preset_parameters</span><span class="p">(</span>
             <span class="n">preset</span><span class="p">,</span>
@@ -511,6 +513,7 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">_mask_generator</span> <span class="o">=</span> <span class="n">GaussianPerturbationMask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">)</span>
 
         <span class="n">saliency_maps</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">predictions</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">target_indices</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">kernel_params_hist</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">pred_score_hist</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
@@ -520,6 +523,10 @@ document.write(`
             <span class="k">if</span> <span class="n">scale_output</span><span class="p">:</span>
                 <span class="n">saliency_map_per_target</span> <span class="o">=</span> <span class="n">scaling</span><span class="p">(</span><span class="n">saliency_map_per_target</span><span class="p">)</span>
             <span class="n">saliency_maps</span><span class="p">[</span><span class="n">target</span><span class="p">]</span> <span class="o">=</span> <span class="n">saliency_map_per_target</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">predictions</span><span class="p">[</span><span class="n">target</span><span class="p">]</span> <span class="o">=</span> <span class="n">Prediction</span><span class="p">(</span>
+                <span class="n">label</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
+                <span class="n">score</span><span class="o">=</span><span class="n">logits</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">target</span><span class="p">],</span>
+            <span class="p">)</span>
         <span class="k">return</span> <span class="n">saliency_maps</span></div>
 
 
