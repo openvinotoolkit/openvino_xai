@@ -398,33 +398,36 @@ document.write(`
 <span></span><span class="c1"># Copyright (C) 2024 Intel Corporation</span>
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">TypeVar</span>
 
 <span class="kn">import</span> <span class="nn">openvino</span> <span class="k">as</span> <span class="nn">ov</span>
+<span class="kn">import</span> <span class="nn">torch</span>
 
 <span class="kn">from</span> <span class="nn">openvino_xai.common.parameters</span> <span class="kn">import</span> <span class="n">Method</span><span class="p">,</span> <span class="n">Task</span>
 <span class="kn">from</span> <span class="nn">openvino_xai.common.utils</span> <span class="kn">import</span> <span class="n">IdentityPreprocessFN</span><span class="p">,</span> <span class="n">has_xai</span><span class="p">,</span> <span class="n">logger</span>
 <span class="kn">from</span> <span class="nn">openvino_xai.methods.factory</span> <span class="kn">import</span> <span class="n">WhiteBoxMethodFactory</span>
 
+<span class="n">Model</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;Model&quot;</span><span class="p">,</span> <span class="n">ov</span><span class="o">.</span><span class="n">Model</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span>
+
 
 <div class="viewcode-block" id="insert_xai">
 <a class="viewcode-back" href="../../../api-manual.html#openvino_xai.api.insert_xai">[docs]</a>
 <span class="k">def</span> <span class="nf">insert_xai</span><span class="p">(</span>
-    <span class="n">model</span><span class="p">:</span> <span class="n">ov</span><span class="o">.</span><span class="n">Model</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span>
     <span class="n">task</span><span class="p">:</span> <span class="n">Task</span><span class="p">,</span>
     <span class="n">explain_method</span><span class="p">:</span> <span class="n">Method</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">target_layer</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">embed_scaling</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ov</span><span class="o">.</span><span class="n">Model</span><span class="p">:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Model</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Function that inserts XAI branch into IR.</span>
+<span class="sd">    Inserts XAI branch into the given model.</span>
 
 <span class="sd">    Usage:</span>
 <span class="sd">        model_xai = openvino_xai.insert_xai(model, task=Task.CLASSIFICATION)</span>
 
-<span class="sd">    :param model: Original IR.</span>
-<span class="sd">    :type model: ov.Model | str</span>
+<span class="sd">    :param model: Original model.</span>
+<span class="sd">    :type model: ov.Model | torch.nn.Module</span>
 <span class="sd">    :param task: Type of the task: CLASSIFICATION or DETECTION.</span>
 <span class="sd">    :type task: Task</span>
 <span class="sd">    :parameter explain_method: Explain method to use for model explanation.</span>
@@ -436,7 +439,7 @@ document.write(`
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">has_xai</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Provided IR model already contains XAI branch, return it as-is.&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Provided model already contains XAI branch, return it as-is.&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">model</span>
 
     <span class="n">method</span> <span class="o">=</span> <span class="n">WhiteBoxMethodFactory</span><span class="o">.</span><span class="n">create_method</span><span class="p">(</span>

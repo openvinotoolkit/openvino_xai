@@ -407,7 +407,8 @@ document.write(`
 <span class="kn">from</span> <span class="nn">urllib.request</span> <span class="kn">import</span> <span class="n">urlretrieve</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
+<span class="kn">import</span> <span class="nn">openvino</span> <span class="k">as</span> <span class="nn">ov</span>
+<span class="kn">import</span> <span class="nn">torch</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;openvino_xai&quot;</span><span class="p">)</span>
 <span class="n">handler</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">()</span>
@@ -422,20 +423,23 @@ document.write(`
 
 <div class="viewcode-block" id="has_xai">
 <a class="viewcode-back" href="../../../api-manual.html#openvino_xai.common.has_xai">[docs]</a>
-<span class="k">def</span> <span class="nf">has_xai</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">ov</span><span class="o">.</span><span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">has_xai</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">ov</span><span class="o">.</span><span class="n">Model</span> <span class="o">|</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Function checks if the model contains XAI branch.</span>
 
-<span class="sd">    :param model: OV IR model.</span>
-<span class="sd">    :type model: ov.Model</span>
+<span class="sd">    :param model: Input model for inspect.</span>
+<span class="sd">    :type model: ov.Model | torch.nn.Module</span>
 <span class="sd">    :return: True is the model has XAI branch and saliency_map output, False otherwise.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">ov</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Input model has to be ov.Model instance, but got</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">SALIENCY_MAP_OUTPUT_NAME</span> <span class="ow">in</span> <span class="n">output</span><span class="o">.</span><span class="n">get_names</span><span class="p">():</span>
-            <span class="k">return</span> <span class="kc">True</span>
-    <span class="k">return</span> <span class="kc">False</span></div>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">ov</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">SALIENCY_MAP_OUTPUT_NAME</span> <span class="ow">in</span> <span class="n">output</span><span class="o">.</span><span class="n">get_names</span><span class="p">():</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;has_xai&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Input model has to be openvino.Model or torch.nn.Module instance, but got</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span></div>
 
 
 

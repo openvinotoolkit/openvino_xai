@@ -418,7 +418,7 @@ document.write(`
 
 <div class="viewcode-block" id="WhiteBoxMethod">
 <a class="viewcode-back" href="../../../../api-manual.html#openvino_xai.methods.WhiteBoxMethod">[docs]</a>
-<span class="k">class</span> <span class="nc">WhiteBoxMethod</span><span class="p">(</span><span class="n">MethodBase</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">WhiteBoxMethod</span><span class="p">(</span><span class="n">MethodBase</span><span class="p">[</span><span class="n">ov</span><span class="o">.</span><span class="n">Model</span><span class="p">,</span> <span class="n">ov</span><span class="o">.</span><span class="n">CompiledModel</span><span class="p">]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for white-box XAI methods.</span>
 
@@ -471,7 +471,7 @@ document.write(`
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Provided IR model already contains XAI branch.&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_ori</span>
             <span class="k">if</span> <span class="n">load_model</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">load_model</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_model_compiled</span> <span class="o">=</span> <span class="n">ov</span><span class="o">.</span><span class="n">Core</span><span class="p">()</span><span class="o">.</span><span class="n">compile_model</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span> <span class="n">device_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_device_name</span><span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span>
 
         <span class="n">xai_output_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_xai_branch</span><span class="p">()</span>
@@ -479,7 +479,7 @@ document.write(`
         <span class="k">if</span> <span class="ow">not</span> <span class="n">has_xai</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Insertion of the XAI branch into the model was not successful.&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">load_model</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">load_model</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_model_compiled</span> <span class="o">=</span> <span class="n">ov</span><span class="o">.</span><span class="n">Core</span><span class="p">()</span><span class="o">.</span><span class="n">compile_model</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span> <span class="n">device_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_device_name</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span></div>
 
 
