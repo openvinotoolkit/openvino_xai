@@ -7,6 +7,7 @@ import os
 import numpy as np
 import pytest
 
+from openvino_xai.common.parameters import Task
 from openvino_xai.explainer.explanation import Explanation
 from tests.unit.explainer.test_explanation_utils import VOC_NAMES
 
@@ -20,6 +21,7 @@ class TestExplanation:
         explanation_indices = Explanation(
             SALIENCY_MAPS,
             targets=explain_targets,
+            task=Task.CLASSIFICATION,
             label_names=VOC_NAMES,
         )
 
@@ -27,6 +29,7 @@ class TestExplanation:
         explanation_names = Explanation(
             SALIENCY_MAPS,
             targets=explain_targets,
+            task=Task.CLASSIFICATION,
             label_names=VOC_NAMES,
         )
 
@@ -80,6 +83,7 @@ class TestExplanation:
         explanation = Explanation(
             saliency_maps,
             targets=explain_targets,
+            task=Task.CLASSIFICATION,
             label_names=label_names,
         )
         return explanation

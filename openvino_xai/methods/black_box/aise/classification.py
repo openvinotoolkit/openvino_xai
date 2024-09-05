@@ -16,6 +16,7 @@ from openvino_xai.common.utils import (
     scaling,
     sigmoid,
 )
+from openvino_xai.methods.base import Prediction
 from openvino_xai.methods.black_box.aise.base import AISEBase, GaussianPerturbationMask
 from openvino_xai.methods.black_box.base import Preset
 from openvino_xai.methods.black_box.utils import check_classification_output
@@ -91,11 +92,12 @@ class AISEClassification(AISEBase):
         """
         self.data_preprocessed = self.preprocess_fn(data)
 
+        logits = self.get_logits(self.data_preprocessed)
         if target_indices is None:
-            num_classes = self.get_num_classes(self.data_preprocessed)
-            if num_classes > 10:
-                logger.info(f"num_classes = {num_classes}, which might take significant time to process.")
+            num_classes = logits.shape[1]
             target_indices = list(range(num_classes))
+            if len(target_indices) > 10:
+                logger.info(f"{len(target_indices)} targets to process, which might take significant time.")
 
         self.num_iterations_per_kernel, self.kernel_widths = self._preset_parameters(
             preset,
@@ -110,6 +112,7 @@ class AISEClassification(AISEBase):
         self._mask_generator = GaussianPerturbationMask(self.input_size)
 
         saliency_maps = {}
+        self.predictions = {}
         for target in target_indices:
             self.kernel_params_hist = collections.defaultdict(list)
             self.pred_score_hist = collections.defaultdict(list)
@@ -119,6 +122,10 @@ class AISEClassification(AISEBase):
             if scale_output:
                 saliency_map_per_target = scaling(saliency_map_per_target)
             saliency_maps[target] = saliency_map_per_target
+            self.predictions[target] = Prediction(
+                label=target,
+                score=logits[0][target],
+            )
         return saliency_maps
 
     @staticmethod

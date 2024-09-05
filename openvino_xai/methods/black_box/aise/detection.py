@@ -2,20 +2,20 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import collections
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Callable, Dict, List, Tuple
 
 import numpy as np
 import openvino.runtime as ov
 from openvino.runtime.utils.data_helpers.wrappers import OVDict
 from scipy.optimize import Bounds
 
-from openvino_xai.common.parameters import Task
 from openvino_xai.common.utils import (
     IdentityPreprocessFN,
     infer_size_from_image,
     logger,
     scaling,
 )
+from openvino_xai.methods.base import Prediction
 from openvino_xai.methods.black_box.aise.base import AISEBase, GaussianPerturbationMask
 from openvino_xai.methods.black_box.base import Preset
 from openvino_xai.methods.black_box.utils import check_detection_output
@@ -56,6 +56,7 @@ class AISEDetection(AISEBase):
             prepare_model=prepare_model,
         )
         self.deletion = False
+        self.predictions = {}
 
     def generate_saliency_map(  # type: ignore
         self,
@@ -120,7 +121,7 @@ class AISEDetection(AISEBase):
         self._mask_generator = GaussianPerturbationMask(self.input_size)
 
         saliency_maps = {}
-        self.metadata: Dict[Task, Any] = collections.defaultdict(dict)
+        self.predictions = {}
         for target in target_indices:
             self.target_box = boxes[target]
             self.target_label = labels[target]
@@ -137,7 +138,7 @@ class AISEDetection(AISEBase):
                 saliency_map_per_target = scaling(saliency_map_per_target)
             saliency_maps[target] = saliency_map_per_target
 
-            self._update_metadata(boxes, scores, labels, target, original_size)
+            self._update_predictions(boxes, scores, labels, target, original_size)
         return saliency_maps
 
     @staticmethod
@@ -205,7 +206,7 @@ class AISEDetection(AISEBase):
         area2 = np.prod(box2[2:] - box2[:2])
         return intersection / (area1 + area2 - intersection)
 
-    def _update_metadata(
+    def _update_predictions(
         self,
         boxes: np.ndarray | List,
         scores: np.ndarray | List[float],
@@ -218,4 +219,8 @@ class AISEDetection(AISEBase):
         height_scale = original_size[0] / self.input_size[0]
         x1, x2 = x1 * width_scale, x2 * width_scale
         y1, y2 = y1 * height_scale, y2 * height_scale
-        self.metadata[Task.DETECTION][target] = [x1, y1, x2, y2], scores[target], labels[target]
+        self.predictions[target] = Prediction(
+            label=labels[target],
+            score=scores[target],
+            bounding_box=(x1, y1, x2, y2),
+        )

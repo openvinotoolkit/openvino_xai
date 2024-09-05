@@ -57,7 +57,10 @@ class TestAUC:
     def test_evaluate(self):
         input_images = [np.random.rand(224, 224, 3) for _ in range(5)]
         explanations = [
-            Explanation({0: np.random.rand(224, 224), 1: np.random.rand(224, 224)}, targets=[0, 1]) for _ in range(5)
+            Explanation(
+                {0: np.random.rand(224, 224), 1: np.random.rand(224, 224)}, targets=[0, 1], task=Task.CLASSIFICATION
+            )
+            for _ in range(5)
         ]
 
         insertion, deletion, delta = self.auc.evaluate(explanations, input_images, self.steps).values()

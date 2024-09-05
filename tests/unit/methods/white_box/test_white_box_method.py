@@ -39,6 +39,7 @@ class TestActivationMap:
         assert xai_method.embed_scaling
         assert not xai_method.per_class
         assert xai_method._target_layer == self.target_layer
+        assert xai_method.predictions == {}
 
     def test_generate_xai_branch(self):
         """Test that ActivationMap creates a proper XAI branch node."""
@@ -96,6 +97,7 @@ class TestReciproCAM:
         assert reciprocam_xai_method.embed_scaling
         assert reciprocam_xai_method.per_class
         assert reciprocam_xai_method._target_layer == self.target_layer
+        assert reciprocam_xai_method.predictions == {}
 
     def test_generate_xai_branch(self):
         """Test that ReciproCAM creates a proper XAI branch node."""
@@ -153,6 +155,7 @@ class TestViTReciproCAM:
         assert reciprocam_xai_method.embed_scaling
         assert reciprocam_xai_method.per_class
         assert reciprocam_xai_method._target_layer == self.target_layer
+        assert reciprocam_xai_method.predictions == {}
 
     @pytest.mark.parametrize("use_gaussian", [True, False])
     def test_generate_xai_branch(self, use_gaussian):
@@ -233,6 +236,7 @@ class TestDetProbMapXAI:
         assert detection_xai_method._target_layer == self.target_layer
         assert detection_xai_method._num_anchors == self.num_anchors
         assert detection_xai_method._saliency_map_size == (23, 23)
+        assert detection_xai_method.predictions == {}
 
     def test_generate_xai_branch(self):
         """Test that DetClassProbabilityMap creates a proper XAI branch node."""

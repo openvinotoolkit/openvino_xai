@@ -221,8 +221,9 @@ class Explainer:
         explanation = Explanation(
             saliency_map=saliency_map,
             targets=targets,
+            task=self.task,
             label_names=label_names,
-            metadata=self.method.metadata,
+            predictions=self.method.predictions,
         )
         return self._visualize(
             original_input_image,

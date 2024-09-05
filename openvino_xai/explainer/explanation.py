@@ -4,7 +4,7 @@
 import os
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Dict, List
 
 import cv2
 import matplotlib.pyplot as plt
@@ -17,6 +17,7 @@ from openvino_xai.explainer.utils import (
     explains_all,
     get_target_indices,
 )
+from openvino_xai.methods.base import Prediction
 
 
 class Explanation:
@@ -28,16 +29,21 @@ class Explanation:
     :param targets: List of custom labels to explain, optional. Can be list of integer indices (int),
         or list of names (str) from label_names.
     :type targets: np.ndarray | List[int | str] | int | str
+    :param task: Type of the task: CLASSIFICATION or DETECTION.
+    :type task: Task
     :param label_names: List of all label names.
     :type label_names: List[str] | None
+    :param predictions: Per-target model prediction (available only for black-box methods).
+    :type predictions: Dict[int, Prediction] | None
     """
 
     def __init__(
         self,
         saliency_map: np.ndarray | Dict[int | str, np.ndarray],
         targets: np.ndarray | List[int | str] | int | str,
+        task: Task,
         label_names: List[str] | None = None,
-        metadata: Dict[Task, Any] | None = None,
+        predictions: Dict[int, Prediction] | None = None,
     ):
         targets = convert_targets_to_numpy(targets)
 
@@ -57,10 +63,12 @@ class Explanation:
             self.layout = Layout.MULTIPLE_MAPS_PER_IMAGE_GRAY
 
         if not explains_all(targets) and not self.layout == Layout.ONE_MAP_PER_IMAGE_GRAY:
-            self._saliency_map = self._select_target_saliency_maps(targets, label_names)
+            label_names_ = None if task == Task.DETECTION else label_names
+            self._saliency_map = self._select_target_saliency_maps(targets, label_names_)
 
+        self.task = task
         self.label_names = label_names
-        self.metadata = metadata
+        self.predictions = predictions
 
     @property
     def saliency_map(self) -> Dict[int | str, np.ndarray]:
@@ -180,7 +188,7 @@ class Explanation:
             map_to_save = cv2.cvtColor(map_to_save, code=cv2.COLOR_RGB2BGR)
             if isinstance(target_idx, str):
                 target_name = "activation_map"
-            elif self.label_names and isinstance(target_idx, np.int64):
+            elif self.label_names and isinstance(target_idx, np.int64) and self.task != Task.DETECTION:
                 target_name = self.label_names[target_idx]
             else:
                 target_name = str(target_idx)

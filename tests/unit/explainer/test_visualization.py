@@ -8,6 +8,7 @@ from openvino_xai.common.parameters import Task
 from openvino_xai.common.utils import get_min_max, scaling
 from openvino_xai.explainer.explanation import Explanation
 from openvino_xai.explainer.visualizer import Visualizer, colormap, overlay, resize
+from openvino_xai.methods.base import Prediction
 
 SALIENCY_MAPS = [
     (np.random.rand(1, 5, 5) * 255).astype(np.uint8),
@@ -98,6 +99,7 @@ def test_overlay():
 class TestVisualizer:
     @pytest.mark.parametrize("saliency_maps", SALIENCY_MAPS)
     @pytest.mark.parametrize("explain_all_classes", EXPLAIN_ALL_CLASSES)
+    @pytest.mark.parametrize("task", [Task.CLASSIFICATION, Task.DETECTION])
     @pytest.mark.parametrize("scaling", [True, False])
     @pytest.mark.parametrize("resize", [True, False])
     @pytest.mark.parametrize("colormap", [True, False])
@@ -107,6 +109,7 @@ class TestVisualizer:
         self,
         saliency_maps,
         explain_all_classes,
+        task,
         scaling,
         resize,
         colormap,
@@ -118,7 +121,7 @@ class TestVisualizer:
         else:
             explain_targets = [0]
 
-        explanation = Explanation(saliency_maps, targets=explain_targets)
+        explanation = Explanation(saliency_maps, targets=explain_targets, task=Task.CLASSIFICATION)
 
         raw_sal_map_dims = len(explanation.shape)
         original_input_image = np.ones((20, 20, 3))
@@ -148,7 +151,7 @@ class TestVisualizer:
                 assert map_.shape[:2] == original_input_image.shape[:2]
 
         if isinstance(saliency_maps, np.ndarray) and saliency_maps.ndim == 3 and not overlay:
-            explanation = Explanation(saliency_maps, targets=-1)
+            explanation = Explanation(saliency_maps, targets=-1, task=Task.CLASSIFICATION)
             visualizer = Visualizer()
             explanation_output_size = visualizer(
                 explanation=explanation,
@@ -164,13 +167,11 @@ class TestVisualizer:
             assert np.all(maps_data["per_image_map"] == maps_size["per_image_map"])
 
         if isinstance(saliency_maps, dict):
-            metadata = {
-                Task.DETECTION: {
-                    0: ([5, 0, 7, 4], 0.5, 0),
-                    1: ([2, 5, 9, 7], 0.5, 0),
-                }
+            predictions = {
+                0: Prediction(bounding_box=[5, 0, 7, 4], score=0.5, label=0),
+                1: Prediction(bounding_box=[2, 5, 9, 7], score=0.5, label=0),
             }
-            explanation = Explanation(saliency_maps, targets=-1, metadata=metadata)
+            explanation = Explanation(saliency_maps, targets=-1, task=task, predictions=predictions)
             visualizer = Visualizer()
             explanation_output_size = visualizer(
                 explanation=explanation,

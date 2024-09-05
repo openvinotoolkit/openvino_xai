@@ -3,6 +3,7 @@ import logging
 import numpy as np
 import pytest
 
+from openvino_xai.common.parameters import Task
 from openvino_xai.explainer.explanation import Explanation
 from openvino_xai.metrics.pointing_game import PointingGame
 
@@ -29,6 +30,7 @@ class TestPointingGame:
         explanation = Explanation(
             label_names=["cat", "dog"],
             targets=[0, 1],
+            task=Task.CLASSIFICATION,
             saliency_map={0: [[0, 1], [2, 3]], 1: [[0, 0], [0, 1]]},
         )
         explanations = [explanation]
@@ -58,6 +60,7 @@ class TestPointingGame:
         explanation = Explanation(
             label_names=None,
             targets=[0, 1],
+            task=Task.CLASSIFICATION,
             saliency_map={0: [[0, 1], [2, 3]], 1: [[0, 0], [0, 1]]},
         )
         explanations = [explanation]

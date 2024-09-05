@@ -11,6 +11,7 @@ import pytest
 
 from openvino_xai.common.utils import retrieve_otx_model
 from openvino_xai.explainer.utils import get_postprocess_fn, get_preprocess_fn
+from openvino_xai.methods.base import Prediction
 from openvino_xai.methods.black_box.aise.classification import AISEClassification
 from openvino_xai.methods.black_box.aise.detection import AISEDetection
 from openvino_xai.methods.black_box.base import Preset
@@ -83,6 +84,8 @@ class TestAISEClassification(InputSampling):
         assert len(saliency_map) == len(target_indices)
         for target in target_indices:
             assert target in saliency_map
+            assert target in aise_method.predictions
+            assert isinstance(aise_method.predictions[target], Prediction)
 
         ref_target = 0
         assert saliency_map[ref_target].dtype == np.uint8
@@ -135,6 +138,8 @@ class TestAISEDetection(InputSampling):
         assert len(saliency_map) == len(target_indices)
         for target in target_indices:
             assert target in saliency_map
+            assert target in aise_method.predictions
+            assert isinstance(aise_method.predictions[target], Prediction)
 
         ref_target = 0
         assert saliency_map[ref_target].dtype == np.uint8
@@ -201,6 +206,9 @@ class TestRISE(InputSampling):
             actual_sal_vals = saliency_map[0][0, :10].astype(np.int16)
             ref_sal_vals = np.array([246, 241, 236, 231, 226, 221, 216, 211, 205, 197], dtype=np.uint8)
             assert np.all(np.abs(actual_sal_vals - ref_sal_vals) <= 1)
+
+            assert target_indices[0] in rise_method.predictions
+            assert isinstance(rise_method.predictions[target_indices[0]], Prediction)
         else:
             isinstance(saliency_map, np.ndarray)
             assert saliency_map.dtype == np.uint8

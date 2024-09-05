@@ -9,6 +9,7 @@ import openvino.runtime as ov
 from tqdm import tqdm
 
 from openvino_xai.common.utils import IdentityPreprocessFN, is_bhwc_layout, scaling
+from openvino_xai.methods.base import Prediction
 from openvino_xai.methods.black_box.base import BlackBoxXAIMethod, Preset
 from openvino_xai.methods.black_box.utils import check_classification_output
 
@@ -41,8 +42,9 @@ class RISE(BlackBoxXAIMethod):
         device_name: str = "CPU",
         prepare_model: bool = True,
     ):
-        super().__init__(model=model, preprocess_fn=preprocess_fn, device_name=device_name)
-        self.postprocess_fn = postprocess_fn
+        super().__init__(
+            model=model, postprocess_fn=postprocess_fn, preprocess_fn=preprocess_fn, device_name=device_name
+        )
 
         if prepare_model:
             self.prepare_model()
@@ -132,9 +134,10 @@ class RISE(BlackBoxXAIMethod):
     ) -> np.ndarray:
         input_size = data_preprocessed.shape[1:3] if is_bhwc_layout(data_preprocessed) else data_preprocessed.shape[2:4]
 
-        num_classes = self.get_num_classes(data_preprocessed)
+        logits = self.get_logits(data_preprocessed)
 
         if target_classes is None:
+            num_classes = logits.shape[1]
             num_targets = num_classes
         else:
             num_targets = len(target_classes)
@@ -159,6 +162,11 @@ class RISE(BlackBoxXAIMethod):
 
         if target_classes is not None:
             saliency_maps = self._reformat_as_dict(saliency_maps, target_classes)
+            for target in target_classes:
+                self.predictions[target] = Prediction(
+                    label=target,
+                    score=logits[0][target],
+                )
         return saliency_maps
 
     @staticmethod

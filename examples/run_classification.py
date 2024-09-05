@@ -70,7 +70,7 @@ def explain_auto(args):
     # Save saliency maps for visual inspection
     if args.output is not None:
         output = Path(args.output) / "explain_auto"
-        explanation.save(output, Path(args.image_path).stem)
+        explanation.save(output, f"{Path(args.image_path).stem}_")
 
 
 def explain_white_box(args):
@@ -117,7 +117,7 @@ def explain_white_box(args):
     # Save saliency maps for visual inspection
     if args.output is not None:
         output = Path(args.output) / "explain_white_box"
-        explanation.save(output, Path(args.image_path).stem)
+        explanation.save(output, f"{Path(args.image_path).stem}_")
 
 
 def explain_black_box(args):
@@ -160,7 +160,7 @@ def explain_black_box(args):
     # Save saliency maps for visual inspection
     if args.output is not None:
         output = Path(args.output) / "explain_black_box"
-        explanation.save(output, Path(args.image_path).stem)
+        explanation.save(output, f"{Path(args.image_path).stem}_")
 
 
 def explain_white_box_multiple_images(args):
@@ -203,7 +203,7 @@ def explain_white_box_multiple_images(args):
     # Save saliency maps for visual inspection
     if args.output is not None:
         output = Path(args.output) / "explain_white_box_multiple_images"
-        explanation[0].save(output, Path(args.image_path).stem)
+        explanation[0].save(output, f"{Path(args.image_path).stem}_")
 
 
 def explain_white_box_vit(args):
@@ -241,7 +241,7 @@ def explain_white_box_vit(args):
     # Save saliency maps for visual inspection
     if args.output is not None:
         output = Path(args.output) / "explain_white_box_vit"
-        explanation.save(output, Path(args.image_path).stem)
+        explanation.save(output, f"{Path(args.image_path).stem}_")
 
 
 def insert_xai(args):
