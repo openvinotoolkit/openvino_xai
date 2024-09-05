@@ -11,21 +11,21 @@ import torch
 
 from openvino_xai.common.utils import SALIENCY_MAP_OUTPUT_NAME, has_xai
 from openvino_xai.methods.white_box.torch import (
-    ActivationMap,
-    ReciproCAM,
-    TorchMethod,
-    ViTReciproCAM,
+    TorchActivationMap,
+    TorchReciproCAM,
+    TorchViTReciproCAM,
+    TorchWhiteBoxMethod,
 )
 
 
 def test_normalize():
     x = torch.rand((2, 2)) * 100
-    y = TorchMethod._normalize_map(x)
+    y = TorchWhiteBoxMethod._normalize_map(x)
     assert x.shape == y.shape
     assert torch.all(y >= 0)
     assert torch.all(y <= 255)
     x = torch.rand((2, 2, 2)) * 100
-    y = TorchMethod._normalize_map(x)
+    y = TorchWhiteBoxMethod._normalize_map(x)
     assert x.shape == y.shape
     assert torch.all(y >= 0)
     assert torch.all(y <= 255)
@@ -66,7 +66,7 @@ class DummyVIT(torch.nn.Module):
 
 def test_torch_method():
     model = DummyCNN()
-    method = TorchMethod(model=model, target_layer="feature")
+    method = TorchWhiteBoxMethod(model=model, target_layer="feature")
     model_xai = method.prepare_model()
     assert has_xai(model_xai)
     data = np.zeros((1, 3, 5, 5))
@@ -74,7 +74,7 @@ def test_torch_method():
     assert type(output) == dict
     assert SALIENCY_MAP_OUTPUT_NAME in output
 
-    class DummyMethod(TorchMethod):
+    class DummyMethod(TorchWhiteBoxMethod):
         def _feature_hook(self, module: torch.nn.Module, inputs: Any, output: torch.Tensor) -> torch.Tensor:
             output = torch.cat((output, output), dim=0)
             return super()._feature_hook(module, inputs, output)
@@ -99,11 +99,28 @@ def test_torch_method():
     assert np.all(saliency_maps == prediction)
 
 
+def test_prepare_model():
+    model = DummyCNN()
+    method = TorchWhiteBoxMethod(model=model, target_layer="feature")
+    model_xai = method.prepare_model(load_model=False)
+    assert method._model_compiled is None
+    assert model is not model_xai
+
+    model_xai = method.prepare_model(load_model=True)
+    assert method._model_compiled is not None
+    assert model is not model_xai
+
+    model.has_xai = True
+    method = TorchWhiteBoxMethod(model=model, target_layer="feature")
+    model_xai = method.prepare_model(load_model=False)
+    assert model_xai == model
+
+
 def test_activationmap() -> None:
     batch_size = 2
     num_classes = 3
     model = DummyCNN(num_classes=num_classes)
-    method = ActivationMap(model=model, target_layer="feature")
+    method = TorchActivationMap(model=model, target_layer="feature")
     model_xai = method.prepare_model()
     assert has_xai(model_xai)
     data = np.random.rand(batch_size, 3, 5, 5)
@@ -121,7 +138,7 @@ def test_reciprocam(optimize_gap: bool) -> None:
     batch_size = 2
     num_classes = 3
     model = DummyCNN(num_classes=num_classes)
-    method = ReciproCAM(model=model, target_layer="feature", optimize_gap=optimize_gap)
+    method = TorchReciproCAM(model=model, target_layer="feature", optimize_gap=optimize_gap)
     model_xai = method.prepare_model()
     assert has_xai(model_xai)
     data = np.random.rand(batch_size, 4, 5, 5)
@@ -140,7 +157,9 @@ def test_vitreciprocam(use_gaussian: bool, use_cls_token: bool) -> None:
     batch_size = 2
     num_classes = 3
     model = DummyVIT(num_classes=num_classes)
-    method = ViTReciproCAM(model=model, target_layer="feature", use_gaussian=use_gaussian, use_cls_token=use_cls_token)
+    method = TorchViTReciproCAM(
+        model=model, target_layer="feature", use_gaussian=use_gaussian, use_cls_token=use_cls_token
+    )
     model_xai = method.prepare_model()
     assert has_xai(model_xai)
     data = np.random.rand(batch_size, 4, 5, 5)

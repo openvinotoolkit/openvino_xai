@@ -64,12 +64,6 @@ class MethodBase(ABC, Generic[Model, CompiledModel]):
         """Saliency map generation."""
 
 
-class OVMethod(MethodBase[ov.Model, ov.CompiledModel]):
-    def load_model(self) -> None:
-        core = ov.Core()
-        self._model_compiled = core.compile_model(model=self._model, device_name=self._device_name)
-
-
 @dataclass
 class Prediction:
     label: int | None = None

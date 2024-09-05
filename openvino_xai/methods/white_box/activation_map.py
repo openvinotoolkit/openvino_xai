@@ -39,7 +39,7 @@ class ActivationMap(WhiteBoxMethod):
         **kwargs,
     ):
         if isinstance(model, torch.nn.Module):
-            from .torch import ActivationMap as TorchActivationMap
+            from .torch import TorchActivationMap
 
             return TorchActivationMap(model, *args, **kwargs)
         return super().__new__(cls)

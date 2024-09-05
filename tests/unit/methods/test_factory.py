@@ -176,12 +176,12 @@ def test_create_torch_method():
     explain_method = WhiteBoxMethodFactory.create_method(
         Task.CLASSIFICATION, model, get_postprocess_fn(), explain_method=Method.ACTIVATIONMAP
     )
-    assert isinstance(explain_method, torch_method.ActivationMap)
+    assert isinstance(explain_method, torch_method.TorchActivationMap)
     explain_method = WhiteBoxMethodFactory.create_method(
         Task.CLASSIFICATION, model, get_postprocess_fn(), explain_method=Method.RECIPROCAM
     )
-    assert isinstance(explain_method, torch_method.ReciproCAM)
+    assert isinstance(explain_method, torch_method.TorchReciproCAM)
     explain_method = WhiteBoxMethodFactory.create_method(
         Task.CLASSIFICATION, model, get_postprocess_fn(), explain_method=Method.VITRECIPROCAM
     )
-    assert isinstance(explain_method, torch_method.ViTReciproCAM)
+    assert isinstance(explain_method, torch_method.TorchViTReciproCAM)

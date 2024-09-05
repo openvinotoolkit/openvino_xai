@@ -86,7 +86,7 @@ class ReciproCAM(FeatureMapPerturbationBase):
         **kwargs,
     ):
         if isinstance(model, torch.nn.Module):
-            from .torch import ReciproCAM as TorchReciproCAM
+            from .torch import TorchReciproCAM
 
             return TorchReciproCAM(model, *args, **kwargs)
         return super().__new__(cls)
@@ -191,7 +191,7 @@ class ViTReciproCAM(FeatureMapPerturbationBase):
         **kwargs,
     ):
         if isinstance(model, torch.nn.Module):
-            from .torch import ViTReciproCAM as TorchViTReciproCAM
+            from .torch import TorchViTReciproCAM
 
             return TorchViTReciproCAM(model, *args, **kwargs)
         return super().__new__(cls)

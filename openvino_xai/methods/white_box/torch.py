@@ -10,11 +10,11 @@ from typing import Any, Callable, Dict, Mapping
 import numpy as np
 import torch
 
-from openvino_xai.common.utils import SALIENCY_MAP_OUTPUT_NAME
+from openvino_xai.common.utils import SALIENCY_MAP_OUTPUT_NAME, has_xai
 from openvino_xai.methods.base import IdentityPreprocessFN, MethodBase
 
 
-class TorchMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
+class TorchWhiteBoxMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
     """
     Base class for Torch-based methods.
 
@@ -49,6 +49,11 @@ class TorchMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
 
     def prepare_model(self, load_model: bool = True) -> torch.nn.Module:
         """Return XAI inserted model."""
+        if has_xai(self._model):
+            if load_model:
+                self._model_compiled = self._model
+            return self._model
+
         model = copy.deepcopy(self._model)
         # Feature
         feature_layer = model.get_submodule(self._target_layer)
@@ -57,7 +62,9 @@ class TorchMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
         model.register_forward_hook(self._output_hook)
         setattr(model, "has_xai", True)
         model.eval()
-        self._model_compiled = model
+
+        if load_model:
+            self._model_compiled = model
         return model
 
     def model_forward(self, x: np.ndarray, preprocess: bool = True) -> Mapping:
@@ -103,7 +110,7 @@ class TorchMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
         return saliency_map.to(torch.uint8)
 
 
-class ActivationMap(TorchMethod):
+class TorchActivationMap(TorchWhiteBoxMethod):
     """ActivationMap. Mean of the feature map along the channel dimension."""
 
     def _output_hook(self, module: torch.nn.Module, inputs: Any, output: torch.Tensor) -> Dict[str, torch.Tensor]:
@@ -120,7 +127,7 @@ class ActivationMap(TorchMethod):
         }
 
 
-class ReciproCAM(TorchMethod):
+class TorchReciproCAM(TorchWhiteBoxMethod):
     """Implementation of Recipro-CAM for class-wise saliency map.
 
     Recipro-CAM: gradient-free reciprocal class activation map (https://arxiv.org/pdf/2209.14074.pdf)
@@ -181,7 +188,7 @@ class ReciproCAM(TorchMethod):
         return mosaic_feature_map
 
 
-class ViTReciproCAM(ReciproCAM):
+class TorchViTReciproCAM(TorchReciproCAM):
     """Implementation of ViTRecipro-CAM for class-wise saliency map for transformer-based classifiers.
 
     ViT-ReciproCAM: Gradient and Attention-Free Visual Explanations for Vision Transformer

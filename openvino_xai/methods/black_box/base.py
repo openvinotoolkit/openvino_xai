@@ -8,11 +8,11 @@ import numpy as np
 import openvino.runtime as ov
 
 from openvino_xai.common.utils import IdentityPreprocessFN
-from openvino_xai.methods.base import OVMethod
+from openvino_xai.methods.base import MethodBase
 from openvino_xai.methods.black_box.utils import check_classification_output
 
 
-class BlackBoxXAIMethod(OVMethod):
+class BlackBoxXAIMethod(MethodBase[ov.Model, ov.CompiledModel]):
     """Base class for methods that explain model in Black-Box mode."""
 
     def __init__(
@@ -28,7 +28,7 @@ class BlackBoxXAIMethod(OVMethod):
     def prepare_model(self, load_model: bool = True) -> ov.Model:
         """Load model prior to inference."""
         if load_model:
-            self.load_model()
+            self._model_compiled = ov.Core().compile_model(model=self._model, device_name=self._device_name)
         return self._model
 
     def get_logits(self, data_preprocessed: np.ndarray) -> np.ndarray:
