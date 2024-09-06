@@ -53,13 +53,17 @@ class DummyVIT(torch.nn.Module):
         self.num_classes = num_classes
         self.feature = torch.nn.Identity()
         self.output = torch.nn.LazyLinear(out_features=num_classes)
+        self.norm = None
 
     def forward(self, x: torch.Tensor):
         b, c, h, w = x.shape
+        if not self.norm:
+            self.norm = torch.nn.LayerNorm(c)
         x = x.reshape(b, c, h * w)
         x = x.transpose(1, 2)
         x = torch.cat([torch.rand((b, 1, c)), x], dim=1)
         x = self.feature(x)
+        x = x + self.norm(x)
         x = self.output(x[:, 0])
         return torch.nn.functional.softmax(x, dim=1)
 
@@ -67,9 +71,6 @@ class DummyVIT(torch.nn.Module):
 def test_torch_method():
     model = DummyCNN()
 
-    with pytest.raises(ValueError):
-        method = TorchWhiteBoxMethod(model=model, target_layer=None)
-        model_xai = method.prepare_model()
     with pytest.raises(ValueError):
         method = TorchWhiteBoxMethod(model=model, target_layer="something_else")
         model_xai = method.prepare_model()
@@ -122,6 +123,19 @@ def test_prepare_model():
     method = TorchWhiteBoxMethod(model=model, target_layer="feature")
     model_xai = method.prepare_model(load_model=False)
     assert model_xai == model
+
+
+def test_lazy_detect_feature_layer():
+    model = DummyCNN()
+    method = TorchWhiteBoxMethod(model=model, target_layer=None)
+    model_xai = method.prepare_model()
+    assert hasattr(method, "_detect_hook_handle")
+    assert has_xai(model_xai)
+    data = np.random.rand(1, 3, 5, 5)
+    output = method.model_forward(data)
+    assert not hasattr(method, "_detect_hook_handle")
+    assert type(output) == dict
+    assert method._feature_module is model_xai.feature
 
 
 def test_activationmap() -> None:
