@@ -35,7 +35,12 @@ class DummyCNN(torch.nn.Module):
     def __init__(self, num_classes: int = 2):
         super().__init__()
         self.num_classes = num_classes
-        self.feature = torch.nn.Identity()
+        self.feature = torch.nn.Sequential(
+            torch.nn.Identity(),
+            torch.nn.Identity(),
+            torch.nn.Identity(),
+            torch.nn.Identity(),
+        )
         self.neck = torch.nn.AdaptiveAvgPool2d((1, 1))
         self.output = torch.nn.LazyLinear(out_features=num_classes)
 
@@ -51,19 +56,33 @@ class DummyVIT(torch.nn.Module):
     def __init__(self, num_classes: int = 2):
         super().__init__()
         self.num_classes = num_classes
-        self.feature = torch.nn.Identity()
+        self.pre = torch.nn.Sequential(
+            torch.nn.Identity(),
+            torch.nn.Identity(),
+        )
+        self.feature = torch.nn.Sequential(
+            torch.nn.Identity(),
+            torch.nn.Identity(),
+            torch.nn.Identity(),
+            torch.nn.Identity(),
+        )
         self.output = torch.nn.LazyLinear(out_features=num_classes)
-        self.norm = None
+        self.norm1 = None
 
     def forward(self, x: torch.Tensor):
         b, c, h, w = x.shape
-        if not self.norm:
-            self.norm = torch.nn.LayerNorm(c)
+        if not self.norm1:
+            self.norm1 = torch.nn.LayerNorm(c)
+            self.norm2 = torch.nn.LayerNorm(c)
+            self.norm3 = torch.nn.LayerNorm(c)
+        x = self.pre(x)
         x = x.reshape(b, c, h * w)
         x = x.transpose(1, 2)
         x = torch.cat([torch.rand((b, 1, c)), x], dim=1)
         x = self.feature(x)
-        x = x + self.norm(x)
+        x = x + self.norm1(x)
+        x = x + self.norm2(x)
+        x = x + self.norm3(x)
         x = self.output(x[:, 0])
         return torch.nn.functional.softmax(x, dim=1)
 
@@ -136,6 +155,31 @@ def test_lazy_detect_feature_layer():
     assert not hasattr(method, "_detect_hook_handle")
     assert type(output) == dict
     assert method._feature_module is model_xai.feature
+    output = method.model_forward(data)
+    assert type(output) == dict  # still good for 2nd forward
+
+    model = DummyVIT()
+    method = TorchWhiteBoxMethod(model=model, target_layer=None)
+    model_xai = method.prepare_model()
+    assert hasattr(method, "_detect_hook_handle")
+    assert has_xai(model_xai)
+    data = np.random.rand(1, 3, 5, 5)
+    with pytest.raises(RuntimeError):
+        # 4D feature map search should fail for ViTs
+        output = method.model_forward(data)
+
+    model = DummyVIT()
+    method = TorchViTReciproCAM(model=model, target_layer=None)
+    model_xai = method.prepare_model()
+    assert hasattr(method, "_detect_hook_handle")
+    assert has_xai(model_xai)
+    data = np.random.rand(1, 3, 5, 5)
+    output = method.model_forward(data)
+    assert not hasattr(method, "_detect_hook_handle")
+    assert type(output) == dict
+    assert method._feature_modules[-3] is model_xai.norm1
+    output = method.model_forward(data)
+    assert type(output) == dict  # still good for 2nd forward
 
 
 def test_activationmap() -> None:

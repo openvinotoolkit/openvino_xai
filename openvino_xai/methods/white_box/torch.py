@@ -116,18 +116,27 @@ class TorchWhiteBoxMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
 
         # Find the last layer that outputs 4D tensor during temp forward pass
         self._feature_module = None
+        self._num_modules = 0
+
         def _detect_hook(module: torch.nn.Module, inputs: Any, output: Any) -> None:
             if isinstance(output, torch.Tensor):
+                module.index = self._num_modules
+                self._num_modules += 1
                 shape = output.shape
                 if len(shape) == 4 and shape[2] > 1 and shape[3] > 1:
                     self._feature_module = module
+
         global_hook_handle = torch.nn.modules.module.register_module_forward_hook(_detect_hook)
         try:
             module.forward(*inputs)
         finally:
             global_hook_handle.remove()
         if self._feature_module is None:
-            raise RuntimeError(f"Feature module with 4D output not found in the torch model")
+            raise RuntimeError("Feature module with 4D output not found in the torch model")
+        if self._feature_module.index / self._num_modules < 0.5:  # Check if ViT-like architectures
+            raise RuntimeError(
+                f"Modules with 4D output end in early-half stages: {100 * self._feature_module.index / self._num_modules}%"
+            )
 
         # Set feature hook
         self._feature_module.register_forward_hook(self._feature_hook)
@@ -256,6 +265,31 @@ class TorchViTReciproCAM(TorchReciproCAM):
         super().__init__(*args, **kwargs)
         self._use_gaussian = use_gaussian
         self._use_cls_token = use_cls_token
+
+    def _lazy_detect_hook(self, module: torch.nn.Module, inputs: Any) -> Any:
+        """Detect feature module in the first foward pass and register feature hook."""
+        # Make sure this hook called only 1 time
+        if detect_hook_handle := getattr(self, "_detect_hook_handle", None):
+            detect_hook_handle.remove()
+            delattr(self, "_detect_hook_handle")
+
+        # Find the 3rd last LayerNorm module during temp forward pass
+        self._feature_modules: list[torch.nn.Module] = []
+
+        def _detect_hook(module: torch.nn.Module, inputs: Any, output: Any) -> None:
+            if isinstance(module, torch.nn.LayerNorm):
+                self._feature_modules.append(module)
+
+        global_hook_handle = torch.nn.modules.module.register_module_forward_hook(_detect_hook)
+        try:
+            module.forward(*inputs)
+        finally:
+            global_hook_handle.remove()
+        if len(self._feature_modules) < 3:
+            raise RuntimeError("Feature modules with LayerNorm is less than 3 in the torch model")
+
+        # Set feature hook
+        self._feature_modules[-3].register_forward_hook(self._feature_hook)
 
     def _feature_hook(self, module: torch.nn.Module, inputs: Any, output: torch.Tensor) -> torch.Tensor:
         """feature_maps -> vertical stack of feature_maps + mosaic_feature_maps."""
