@@ -454,7 +454,8 @@ class TestImageClassificationTimm:
             "deit_tiny_patch16_224.fb_in1k",
         ],
     )
-    def test_torch_insert_xai_with_layer(self, model_id: str):
+    @pytest.mark.parametrize("detect", ["auto", "name"])
+    def test_torch_insert_xai_with_layer(self, model_id: str, detect: str):
         xai_cfg = {
             "resnet18.a1_in1k": ("layer4", Method.RECIPROCAM),
             "efficientnet_b0.ra_in1k": ("bn2", Method.RECIPROCAM),
@@ -464,6 +465,9 @@ class TestImageClassificationTimm:
 
         model_dir = self.data_dir / "timm_models" / "converted_models"
         model, model_cfg = self.get_timm_model(model_id, model_dir)
+
+        target_layer = xai_cfg[model_id][0] if detect == "name" else None
+        explain_method = xai_cfg[model_id][1]
 
         image = cv2.imread("tests/assets/cheetah_person.jpg")
         image = cv2.resize(image, dsize=model_cfg["input_size"][1:])
@@ -478,8 +482,8 @@ class TestImageClassificationTimm:
         xai_model: torch.nn.Module = insert_xai(
             model,
             task=Task.CLASSIFICATION,
-            target_layer=xai_cfg[model_id][0],
-            explain_method=xai_cfg[model_id][1],
+            target_layer=target_layer,
+            explain_method=explain_method,
         )
 
         with torch.no_grad():

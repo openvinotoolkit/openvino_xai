@@ -41,11 +41,15 @@ class TorchWhiteBoxMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
         target_layer: str | None = None,
         embed_scaling: bool = True,
         device_name: str = "CPU",
+        prepare_model: bool = True,
         **kwargs,
     ):
         super().__init__(model=model, preprocess_fn=preprocess_fn, device_name=device_name)
         self._target_layer = target_layer
         self._embed_scaling = embed_scaling
+
+        if prepare_model:
+            self.prepare_model()
 
     def prepare_model(self, load_model: bool = True) -> torch.nn.Module:
         """Return XAI inserted model."""
@@ -53,15 +57,17 @@ class TorchWhiteBoxMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
             if load_model:
                 self._model_compiled = self._model
             return self._model
+        if self._model_compiled is not None:
+            return self._model_compiled
 
         model = copy.deepcopy(self._model)
 
         # Feature
         if self._target_layer:
             feature_module = self._find_module_by_name(model, self._target_layer)
-            feature_module.register_forward_hook(self._feature_hook)
         else:
-            self._detect_hook_handle = model.register_forward_pre_hook(self._lazy_detect_hook, prepend=True)
+            feature_module = self._find_feature_module(model)
+        feature_module.register_forward_hook(self._feature_hook)
 
         # Output
         model.register_forward_hook(self._output_hook)
@@ -102,18 +108,8 @@ class TorchWhiteBoxMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
             raise ValueError(f"{target_name} not found in the torch model")
         return target_module
 
-    def _feature_hook(self, module: torch.nn.Module, inputs: Any, output: torch.Tensor) -> torch.Tensor:
-        """Maipulate feature map for saliency map generation."""
-        self._feature_map = output
-        return output
-
-    def _lazy_detect_hook(self, module: torch.nn.Module, inputs: Any) -> Any:
-        """Detect feature module in the first foward pass and register feature hook."""
-        # Make sure this hook called only 1 time
-        if detect_hook_handle := getattr(self, "_detect_hook_handle", None):
-            detect_hook_handle.remove()
-            delattr(self, "_detect_hook_handle")
-
+    def _find_feature_module(self, module: torch.nn.Module) -> torch.nn.Module:
+        """Detect feature module in the model."""
         # Find the last layer that outputs 4D tensor during temp forward pass
         self._feature_module = None
         self._num_modules = 0
@@ -128,7 +124,7 @@ class TorchWhiteBoxMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
 
         global_hook_handle = torch.nn.modules.module.register_module_forward_hook(_detect_hook)
         try:
-            module.forward(*inputs)
+            module.forward(torch.zeros((1, 3, 128, 128)))
         finally:
             global_hook_handle.remove()
         if self._feature_module is None:
@@ -138,8 +134,12 @@ class TorchWhiteBoxMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
                 f"Modules with 4D output end in early-half stages: {100 * self._feature_module.index / self._num_modules}%"
             )
 
-        # Set feature hook
-        self._feature_module.register_forward_hook(self._feature_hook)
+        return self._feature_module
+
+    def _feature_hook(self, module: torch.nn.Module, inputs: Any, output: torch.Tensor) -> torch.Tensor:
+        """Maipulate feature map for saliency map generation."""
+        self._feature_map = output
+        return output
 
     def _output_hook(self, module: torch.nn.Module, inputs: Any, output: torch.Tensor) -> Dict[str, torch.Tensor]:
         """Split combined output B0xC into BxC precition and BxCxHxW saliency map."""
@@ -189,8 +189,8 @@ class TorchReciproCAM(TorchWhiteBoxMethod):
     """
 
     def __init__(self, *args, optimize_gap: bool = False, **kwargs):
-        super().__init__(*args, **kwargs)
         self._optimize_gap = optimize_gap
+        super().__init__(*args, **kwargs)
 
     def _feature_hook(self, module: torch.nn.Module, inputs: Any, output: torch.Tensor) -> torch.Tensor:
         """feature_maps -> vertical stack of feature_maps + mosaic_feature_maps."""
@@ -262,34 +262,24 @@ class TorchViTReciproCAM(TorchReciproCAM):
         normalize: bool = True,
         **kwargs,
     ) -> None:
-        super().__init__(*args, **kwargs)
         self._use_gaussian = use_gaussian
         self._use_cls_token = use_cls_token
+        super().__init__(*args, **kwargs)
 
-    def _lazy_detect_hook(self, module: torch.nn.Module, inputs: Any) -> Any:
-        """Detect feature module in the first foward pass and register feature hook."""
-        # Make sure this hook called only 1 time
-        if detect_hook_handle := getattr(self, "_detect_hook_handle", None):
-            detect_hook_handle.remove()
-            delattr(self, "_detect_hook_handle")
+    def _find_feature_module(self, module: torch.nn.Module) -> torch.nn.Module:
+        """Detect feature module in the model."""
+        # Find the 3rd last LayerNorm module
+        self._feature_module = None
+        feature_modules: list[torch.nn.Module] = []
+        for _, submodule in module.named_modules():
+            if isinstance(submodule, torch.nn.LayerNorm):
+                feature_modules.append(submodule)
 
-        # Find the 3rd last LayerNorm module during temp forward pass
-        self._feature_modules: list[torch.nn.Module] = []
-
-        def _detect_hook(module: torch.nn.Module, inputs: Any, output: Any) -> None:
-            if isinstance(module, torch.nn.LayerNorm):
-                self._feature_modules.append(module)
-
-        global_hook_handle = torch.nn.modules.module.register_module_forward_hook(_detect_hook)
-        try:
-            module.forward(*inputs)
-        finally:
-            global_hook_handle.remove()
-        if len(self._feature_modules) < 3:
+        if len(feature_modules) < 3:
             raise RuntimeError("Feature modules with LayerNorm is less than 3 in the torch model")
 
-        # Set feature hook
-        self._feature_modules[-3].register_forward_hook(self._feature_hook)
+        self._feature_module = feature_modules[-3]
+        return self._feature_module
 
     def _feature_hook(self, module: torch.nn.Module, inputs: Any, output: torch.Tensor) -> torch.Tensor:
         """feature_maps -> vertical stack of feature_maps + mosaic_feature_maps."""

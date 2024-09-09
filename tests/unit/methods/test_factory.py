@@ -151,7 +151,7 @@ def test_create_wb_det_cnn_method(fxt_data_root: Path):
     assert str(exc_info.value) == "Requested explanation method abc is not implemented."
 
 
-def test_create_torch_method():
+def test_create_torch_method(mocker: MockerFixture):
     model = {}
     with pytest.raises(ValueError):
         explain_method = BlackBoxMethodFactory.create_method(Task.CLASSIFICATION, model, get_postprocess_fn())
@@ -171,6 +171,10 @@ def test_create_torch_method():
         explain_method = WhiteBoxMethodFactory.create_method(
             Task.DETECTION, model, get_postprocess_fn(), target_layer=""
         )
+
+    mocker.patch.object(torch_method.TorchActivationMap, "prepare_model")
+    mocker.patch.object(torch_method.TorchReciproCAM, "prepare_model")
+    mocker.patch.object(torch_method.TorchViTReciproCAM, "prepare_model")
 
     model = torch.nn.Module()
     explain_method = WhiteBoxMethodFactory.create_method(

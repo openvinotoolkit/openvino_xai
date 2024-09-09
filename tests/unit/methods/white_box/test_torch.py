@@ -53,9 +53,10 @@ class DummyCNN(torch.nn.Module):
 
 
 class DummyVIT(torch.nn.Module):
-    def __init__(self, num_classes: int = 2):
+    def __init__(self, num_classes: int = 2, dim: int = 3):
         super().__init__()
         self.num_classes = num_classes
+        self.dim = dim
         self.pre = torch.nn.Sequential(
             torch.nn.Identity(),
             torch.nn.Identity(),
@@ -66,15 +67,13 @@ class DummyVIT(torch.nn.Module):
             torch.nn.Identity(),
             torch.nn.Identity(),
         )
+        self.norm1 = torch.nn.LayerNorm(dim)
+        self.norm2 = torch.nn.LayerNorm(dim)
+        self.norm3 = torch.nn.LayerNorm(dim)
         self.output = torch.nn.LazyLinear(out_features=num_classes)
-        self.norm1 = None
 
     def forward(self, x: torch.Tensor):
         b, c, h, w = x.shape
-        if not self.norm1:
-            self.norm1 = torch.nn.LayerNorm(c)
-            self.norm2 = torch.nn.LayerNorm(c)
-            self.norm3 = torch.nn.LayerNorm(c)
         x = self.pre(x)
         x = x.reshape(b, c, h * w)
         x = x.transpose(1, 2)
@@ -129,7 +128,9 @@ def test_torch_method():
 
 def test_prepare_model():
     model = DummyCNN()
-    method = TorchWhiteBoxMethod(model=model, target_layer="feature")
+    method = TorchWhiteBoxMethod(model=model, target_layer="feature", prepare_model=False)
+    model_xai = method.prepare_model(load_model=False)
+    assert method._model_compiled is None
     model_xai = method.prepare_model(load_model=False)
     assert method._model_compiled is None
     assert model is not model_xai
@@ -144,40 +145,31 @@ def test_prepare_model():
     assert model_xai == model
 
 
-def test_lazy_detect_feature_layer():
+def test_detect_feature_layer():
     model = DummyCNN()
     method = TorchWhiteBoxMethod(model=model, target_layer=None)
     model_xai = method.prepare_model()
-    assert hasattr(method, "_detect_hook_handle")
     assert has_xai(model_xai)
     data = np.random.rand(1, 3, 5, 5)
     output = method.model_forward(data)
-    assert not hasattr(method, "_detect_hook_handle")
     assert type(output) == dict
     assert method._feature_module is model_xai.feature
     output = method.model_forward(data)
     assert type(output) == dict  # still good for 2nd forward
 
     model = DummyVIT()
-    method = TorchWhiteBoxMethod(model=model, target_layer=None)
-    model_xai = method.prepare_model()
-    assert hasattr(method, "_detect_hook_handle")
-    assert has_xai(model_xai)
-    data = np.random.rand(1, 3, 5, 5)
     with pytest.raises(RuntimeError):
         # 4D feature map search should fail for ViTs
-        output = method.model_forward(data)
+        method = TorchWhiteBoxMethod(model=model, target_layer=None)
 
     model = DummyVIT()
     method = TorchViTReciproCAM(model=model, target_layer=None)
     model_xai = method.prepare_model()
-    assert hasattr(method, "_detect_hook_handle")
     assert has_xai(model_xai)
     data = np.random.rand(1, 3, 5, 5)
     output = method.model_forward(data)
-    assert not hasattr(method, "_detect_hook_handle")
     assert type(output) == dict
-    assert method._feature_modules[-3] is model_xai.norm1
+    assert method._feature_module is model_xai.norm1
     output = method.model_forward(data)
     assert type(output) == dict  # still good for 2nd forward
 
@@ -222,13 +214,14 @@ def test_reciprocam(optimize_gap: bool) -> None:
 def test_vitreciprocam(use_gaussian: bool, use_cls_token: bool) -> None:
     batch_size = 2
     num_classes = 3
-    model = DummyVIT(num_classes=num_classes)
+    dim = 3
+    model = DummyVIT(num_classes=num_classes, dim=dim)
     method = TorchViTReciproCAM(
         model=model, target_layer="feature", use_gaussian=use_gaussian, use_cls_token=use_cls_token
     )
     model_xai = method.prepare_model()
     assert has_xai(model_xai)
-    data = np.random.rand(batch_size, 4, 5, 5)
+    data = np.random.rand(batch_size, dim, 5, 5)
     output = method.model_forward(data)
     assert type(output) == dict
     saliency_maps = output[SALIENCY_MAP_OUTPUT_NAME]
