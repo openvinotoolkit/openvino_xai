@@ -64,9 +64,9 @@ class TorchWhiteBoxMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
 
         # Feature
         if self._target_layer:
-            feature_module = self._find_module_by_name(model, self._target_layer)
+            feature_module = self._find_feature_module_by_name(model, self._target_layer)
         else:
-            feature_module = self._find_feature_module(model)
+            feature_module = self._find_feature_module_auto(model)
         feature_module.register_forward_hook(self._feature_hook)
 
         # Output
@@ -98,17 +98,17 @@ class TorchWhiteBoxMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
             output[name] = data.numpy(force=True)
         return output
 
-    def _find_module_by_name(self, model: torch.nn.Module, target_name: str) -> torch.nn.Module:
-        """Search layer by name sub string match."""
+    def _find_feature_module_by_name(self, model: torch.nn.Module, target_name: str) -> torch.nn.Module:
+        """Search the last layer by name sub string match."""
         target_module = None
         for name, module in model.named_modules():
             if target_name in name:
                 target_module = module
         if target_module is None:
-            raise ValueError(f"{target_name} not found in the torch model")
+            raise ValueError(f"{target_name} is not found in the torch model")
         return target_module
 
-    def _find_feature_module(self, module: torch.nn.Module) -> torch.nn.Module:
+    def _find_feature_module_auto(self, module: torch.nn.Module) -> torch.nn.Module:
         """Detect feature module in the model."""
         # Find the last layer that outputs 4D tensor during temp forward pass
         self._feature_module = None
@@ -128,7 +128,7 @@ class TorchWhiteBoxMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
         finally:
             global_hook_handle.remove()
         if self._feature_module is None:
-            raise RuntimeError("Feature module with 4D output not found in the torch model")
+            raise RuntimeError("Feature module with 4D output is not found in the torch model")
         if self._feature_module.index / self._num_modules < 0.5:  # Check if ViT-like architectures
             raise RuntimeError(
                 f"Modules with 4D output end in early-half stages: {100 * self._feature_module.index / self._num_modules}%"
@@ -137,7 +137,7 @@ class TorchWhiteBoxMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
         return self._feature_module
 
     def _feature_hook(self, module: torch.nn.Module, inputs: Any, output: torch.Tensor) -> torch.Tensor:
-        """Maipulate feature map for saliency map generation."""
+        """Manipulate feature map for saliency map generation."""
         self._feature_map = output
         return output
 
@@ -266,19 +266,15 @@ class TorchViTReciproCAM(TorchReciproCAM):
         self._use_cls_token = use_cls_token
         super().__init__(*args, **kwargs)
 
-    def _find_feature_module(self, module: torch.nn.Module) -> torch.nn.Module:
-        """Detect feature module in the model."""
-        # Find the 3rd last LayerNorm module
+    def _find_feature_module_auto(self, module: torch.nn.Module) -> torch.nn.Module:
+        """Detect feature module in the model by finding the 3rd last LayerNorm module."""
         self._feature_module = None
-        feature_modules: list[torch.nn.Module] = []
-        for _, submodule in module.named_modules():
-            if isinstance(submodule, torch.nn.LayerNorm):
-                feature_modules.append(submodule)
+        norm_modules = [m for _, m in module.named_modules() if isinstance(m, torch.nn.LayerNorm)]
 
-        if len(feature_modules) < 3:
-            raise RuntimeError("Feature modules with LayerNorm is less than 3 in the torch model")
+        if len(norm_modules) < 3:
+            raise RuntimeError("Feature modules with LayerNorm are less than 3 in the torch model")
 
-        self._feature_module = feature_modules[-3]
+        self._feature_module = norm_modules[-3]
         return self._feature_module
 
     def _feature_hook(self, module: torch.nn.Module, inputs: Any, output: torch.Tensor) -> torch.Tensor:
