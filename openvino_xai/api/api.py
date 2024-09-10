@@ -50,7 +50,6 @@ def insert_xai(
         explain_method=explain_method,
         target_layer=target_layer,
         embed_scaling=embed_scaling,
-        prepare_model=False,
         **kwargs,
     )
 

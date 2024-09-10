@@ -96,10 +96,10 @@ def sigmoid(x: np.ndarray) -> np.ndarray:
     return 1 / (1 + np.exp(-x))
 
 
-def softmax(x: np.ndarray) -> np.ndarray:
+def softmax(x: np.ndarray, axis=-1) -> np.ndarray:
     """Compute softmax values of x."""
-    e_x = np.exp(x - np.max(x))
-    return e_x / e_x.sum()
+    e_x = np.exp(x - np.max(x, axis=axis))
+    return e_x / e_x.sum(axis=axis)
 
 
 class IdentityPreprocessFN:
