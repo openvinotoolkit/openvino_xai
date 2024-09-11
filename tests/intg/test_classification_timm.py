@@ -4,6 +4,7 @@
 import csv
 import os
 import shutil
+import subprocess  # nosec B404 (not a part of product)
 from pathlib import Path
 
 import cv2
@@ -605,3 +606,22 @@ class TestImageClassificationTimm:
         if bool_string == "False":
             return 0
         raise ValueError
+
+
+class TestExample:
+    """Test sanity of examples/run_torch_onnx.py."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self, fxt_data_root):
+        self.data_dir = fxt_data_root
+
+    def test_torch_onnx(self, tmp_path_factory: pytest.TempPathFactory):
+        output_root = tmp_path_factory.mktemp("openvino_xai")
+        output_dir = Path(output_root) / "example"
+        cmd = [
+            "python",
+            "examples/run_torch_onnx.py",
+            "--output_dir",
+            output_dir,
+        ]
+        subprocess.run(cmd, check=True)  # noqa: S603, PLW1510
