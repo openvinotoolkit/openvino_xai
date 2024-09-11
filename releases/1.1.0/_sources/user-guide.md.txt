@@ -22,7 +22,10 @@ Content:
   - [White-Box mode](#white-box-mode)
   - [Black-Box mode](#black-box-mode)
   - [XAI insertion (white-box usage)](#xai-insertion-white-box-usage)
-  - [XAI method overview](#xai-method-overview)
+  - [XAI methods](#xai-methods)
+    - [Overview](#overview)
+    - [White-box methods](#white-box-methods)
+    - [Black-box methods](#black-box-methods)
   - [Plot saliency maps](#plot-saliency-maps)
   - [Saving saliency maps](#saving-saliency-maps)
   - [Example scripts](#example-scripts)
@@ -333,7 +336,9 @@ model_xai = xai.insert_xai(
 # ***** Downstream task: user's code that infers model_xai and picks 'saliency_map' output *****
 ```
 
-## XAI method overview
+## XAI methods
+
+### Overview
 
 At the moment, the following XAI methods are supported:
 
@@ -358,7 +363,7 @@ Target layer is the part of the model graph where XAI branch will be inserted (a
 
 All supported methods are gradient-free, which suits deployment framework settings (e.g. OpenVINO™), where the model is in optimized or compiled representation.
 
-## White-Box methods
+### White-Box methods
 
 When to use?
 - When model architecture follows standard CNN-based or ViT-based design (OV-XAI [support](../../README.md#supported-explainable-models) 1000+ CNN and ViT models).
@@ -367,7 +372,7 @@ When to use?
 
 All white-box methods require access to model internal state. To generate saliency map, supported white-box methods potentially change and process internal model activations in a way that fosters compute efficiency.
 
-### Activation Map
+#### Activation Map
 
 Suitable for:
 - Binary classification problems (e.g. inspecting model reasoning when predicting a positive class).
@@ -379,7 +384,7 @@ Below saliency map was obtained for [ResNet-18](https://huggingface.co/timm/resn
 
 ![OpenVINO XAI Architecture](_static/map_samples/ActivationMap_resnet18.a1_in1k_activation_map.jpg)
 
-### Recipro-CAM (ViT Recipro-CAM for ViT models)
+#### Recipro-CAM (ViT Recipro-CAM for ViT models)
 
 Suitable for:
 - Almost all CNN-based architectures.
@@ -398,7 +403,7 @@ Below saliency map was obtained for [ResNet-18](https://huggingface.co/timm/resn
 
 ![OpenVINO XAI Architecture](_static/map_samples/ReciproCAM_resnet18.a1_in1k_293.jpg)
 
-### DetClassProbabilityMap
+#### DetClassProbabilityMap
 
 Suitable for:
 - Single-stage object detection models.
@@ -412,7 +417,7 @@ Below saliency map was obtained for `YOLOX` trained in-house on PASCAL VOC datas
 
 ![OpenVINO XAI Architecture](_static/map_samples/DetClassProbabilityMap.jpg)
 
-## Black-Box methods
+### Black-Box methods
 
 When to use?
 - When custom models are used and/or white-box methods fail (e.g. Swin-based transformers).
@@ -425,7 +430,7 @@ Usually, for high quality saliency map, hundreds or thousands of model inference
 Given that the quality of the saliency maps usually correlates with the number of available inferences, we propose the following presets for the black-box methods: `Preset.SPEED`, `Preset.BALANCE`, `Preset.QUALITY` (`Preset.BALANCE` is used by default).
 Apart from that, methods parameters can be defined directly via Explainer or Method API.
 
-### RISE
+#### RISE
 
 Suitable for:
 - All classification models which can generate per-class prediction scores.
@@ -447,7 +452,7 @@ Below saliency map was obtained for [ResNet-18](https://huggingface.co/timm/resn
 
 It is possible to see, that some grass-related pixels from the left cheetah also contribute to the cheetah prediction, which might indicates that model learned cheetah features in combination with grass (which makes sense).
 
-### AISEClassification
+#### AISEClassification
 
 Suitable for:
 - All classification models which can generate per-class prediction scores.
@@ -462,7 +467,7 @@ Below saliency map was obtained for [ResNet-18](https://huggingface.co/timm/resn
 
 ![OpenVINO XAI Architecture](_static/map_samples/AISE_resnet18.a1_in1k_293.jpg)
 
-### AISEDetection
+#### AISEDetection
 
 Suitable for:
 - All detection models which can generate bounding boxes, labels and scores.

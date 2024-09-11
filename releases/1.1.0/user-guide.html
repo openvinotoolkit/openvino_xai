@@ -346,9 +346,7 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="#white-box-mode">White-Box mode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#black-box-mode">Black-Box mode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#xai-insertion-white-box-usage">XAI insertion (white-box usage)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#xai-method-overview">XAI method overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#white-box-methods">White-Box methods</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#black-box-methods">Black-Box methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#xai-methods">XAI methods</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#plot-saliency-maps">Plot saliency maps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#saving-saliency-maps">Saving saliency maps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#example-scripts">Example scripts</a></li>
@@ -437,7 +435,13 @@ which is useful for analyzing model’s performance.</p>
 <li><p><a class="reference internal" href="#white-box-mode"><span class="xref myst">White-Box mode</span></a></p></li>
 <li><p><a class="reference internal" href="#black-box-mode"><span class="xref myst">Black-Box mode</span></a></p></li>
 <li><p><a class="reference internal" href="#xai-insertion-white-box-usage"><span class="xref myst">XAI insertion (white-box usage)</span></a></p></li>
-<li><p><a class="reference internal" href="#xai-method-overview"><span class="xref myst">XAI method overview</span></a></p></li>
+<li><p><a class="reference internal" href="#xai-methods"><span class="xref myst">XAI methods</span></a></p>
+<ul>
+<li><p><a class="reference internal" href="#overview"><span class="std std-ref">Overview</span></a></p></li>
+<li><p><a class="reference internal" href="#white-box-methods"><span class="xref myst">White-box methods</span></a></p></li>
+<li><p><a class="reference internal" href="#black-box-methods"><span class="xref myst">Black-box methods</span></a></p></li>
+</ul>
+</li>
 <li><p><a class="reference internal" href="#plot-saliency-maps"><span class="xref myst">Plot saliency maps</span></a></p></li>
 <li><p><a class="reference internal" href="#saving-saliency-maps"><span class="xref myst">Saving saliency maps</span></a></p></li>
 <li><p><a class="reference internal" href="#example-scripts"><span class="xref myst">Example scripts</span></a></p></li>
@@ -729,8 +733,10 @@ Cons:</p></li>
 </pre></div>
 </div>
 </section>
-<section id="xai-method-overview">
-<h2>XAI method overview<a class="headerlink" href="#xai-method-overview" title="Link to this heading">#</a></h2>
+<section id="xai-methods">
+<h2>XAI methods<a class="headerlink" href="#xai-methods" title="Link to this heading">#</a></h2>
+<section id="overview">
+<h3>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h3>
 <p>At the moment, the following XAI methods are supported:</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
@@ -806,7 +812,7 @@ The rest of the white-box methods support automatic detection of the target laye
 <p>All supported methods are gradient-free, which suits deployment framework settings (e.g. OpenVINO™), where the model is in optimized or compiled representation.</p>
 </section>
 <section id="white-box-methods">
-<h2>White-Box methods<a class="headerlink" href="#white-box-methods" title="Link to this heading">#</a></h2>
+<h3>White-Box methods<a class="headerlink" href="#white-box-methods" title="Link to this heading">#</a></h3>
 <p>When to use?</p>
 <ul class="simple">
 <li><p>When model architecture follows standard CNN-based or ViT-based design (OV-XAI <span class="xref myst">support</span> 1000+ CNN and ViT models).</p></li>
@@ -815,7 +821,7 @@ The rest of the white-box methods support automatic detection of the target laye
 </ul>
 <p>All white-box methods require access to model internal state. To generate saliency map, supported white-box methods potentially change and process internal model activations in a way that fosters compute efficiency.</p>
 <section id="activation-map">
-<h3>Activation Map<a class="headerlink" href="#activation-map" title="Link to this heading">#</a></h3>
+<h4>Activation Map<a class="headerlink" href="#activation-map" title="Link to this heading">#</a></h4>
 <p>Suitable for:</p>
 <ul class="simple">
 <li><p>Binary classification problems (e.g. inspecting model reasoning when predicting a positive class).</p></li>
@@ -826,7 +832,7 @@ The rest of the white-box methods support automatic detection of the target laye
 <p><img alt="OpenVINO XAI Architecture" src="_images/ActivationMap_resnet18.a1_in1k_activation_map.jpg" /></p>
 </section>
 <section id="recipro-cam-vit-recipro-cam-for-vit-models">
-<h3>Recipro-CAM (ViT Recipro-CAM for ViT models)<a class="headerlink" href="#recipro-cam-vit-recipro-cam-for-vit-models" title="Link to this heading">#</a></h3>
+<h4>Recipro-CAM (ViT Recipro-CAM for ViT models)<a class="headerlink" href="#recipro-cam-vit-recipro-cam-for-vit-models" title="Link to this heading">#</a></h4>
 <p>Suitable for:</p>
 <ul class="simple">
 <li><p>Almost all CNN-based architectures.</p></li>
@@ -841,7 +847,7 @@ The main weak point is that saliency for each pixel in the feature map space is 
 <p><img alt="OpenVINO XAI Architecture" src="_images/ReciproCAM_resnet18.a1_in1k_293.jpg" /></p>
 </section>
 <section id="detclassprobabilitymap">
-<h3>DetClassProbabilityMap<a class="headerlink" href="#detclassprobabilitymap" title="Link to this heading">#</a></h3>
+<h4>DetClassProbabilityMap<a class="headerlink" href="#detclassprobabilitymap" title="Link to this heading">#</a></h4>
 <p>Suitable for:</p>
 <ul class="simple">
 <li><p>Single-stage object detection models.</p></li>
@@ -854,7 +860,7 @@ The main weak point is that saliency for each pixel in the feature map space is 
 </section>
 </section>
 <section id="black-box-methods">
-<h2>Black-Box methods<a class="headerlink" href="#black-box-methods" title="Link to this heading">#</a></h2>
+<h3>Black-Box methods<a class="headerlink" href="#black-box-methods" title="Link to this heading">#</a></h3>
 <p>When to use?</p>
 <ul class="simple">
 <li><p>When custom models are used and/or white-box methods fail (e.g. Swin-based transformers).</p></li>
@@ -866,7 +872,7 @@ Usually, for high quality saliency map, hundreds or thousands of model inference
 <p>Given that the quality of the saliency maps usually correlates with the number of available inferences, we propose the following presets for the black-box methods: <code class="docutils literal notranslate"><span class="pre">Preset.SPEED</span></code>, <code class="docutils literal notranslate"><span class="pre">Preset.BALANCE</span></code>, <code class="docutils literal notranslate"><span class="pre">Preset.QUALITY</span></code> (<code class="docutils literal notranslate"><span class="pre">Preset.BALANCE</span></code> is used by default).
 Apart from that, methods parameters can be defined directly via Explainer or Method API.</p>
 <section id="rise">
-<h3>RISE<a class="headerlink" href="#rise" title="Link to this heading">#</a></h3>
+<h4>RISE<a class="headerlink" href="#rise" title="Link to this heading">#</a></h4>
 <p>Suitable for:</p>
 <ul class="simple">
 <li><p>All classification models which can generate per-class prediction scores.</p></li>
@@ -884,7 +890,7 @@ Number of cells defines granularity of the saliency map (usually, the higher the
 <p>It is possible to see, that some grass-related pixels from the left cheetah also contribute to the cheetah prediction, which might indicates that model learned cheetah features in combination with grass (which makes sense).</p>
 </section>
 <section id="aiseclassification">
-<h3>AISEClassification<a class="headerlink" href="#aiseclassification" title="Link to this heading">#</a></h3>
+<h4>AISEClassification<a class="headerlink" href="#aiseclassification" title="Link to this heading">#</a></h4>
 <p>Suitable for:</p>
 <ul class="simple">
 <li><p>All classification models which can generate per-class prediction scores.</p></li>
@@ -897,7 +903,7 @@ Number of cells defines granularity of the saliency map (usually, the higher the
 <p><img alt="OpenVINO XAI Architecture" src="_images/AISE_resnet18.a1_in1k_293.jpg" /></p>
 </section>
 <section id="aisedetection">
-<h3>AISEDetection<a class="headerlink" href="#aisedetection" title="Link to this heading">#</a></h3>
+<h4>AISEDetection<a class="headerlink" href="#aisedetection" title="Link to this heading">#</a></h4>
 <p>Suitable for:</p>
 <ul class="simple">
 <li><p>All detection models which can generate bounding boxes, labels and scores.</p></li>
@@ -907,6 +913,7 @@ Number of cells defines granularity of the saliency map (usually, the higher the
 <p><a class="reference download internal" download="" href="_downloads/2b14cd654176fc7e07a5993fa4444c01/detection.py"><span class="xref download myst">AISEDetection</span></a> is designed for detection models and support per-bounding box saliency maps.</p>
 <p>Below saliency map was obtained for <code class="docutils literal notranslate"><span class="pre">YOLOX</span></code> trained in-house on PASCAL VOC dataset (with default parameters, <code class="docutils literal notranslate"><span class="pre">Preset.BALANCE</span></code>):</p>
 <p><img alt="OpenVINO XAI Architecture" src="_images/AISEDetection.jpg" /></p>
+</section>
 </section>
 </section>
 <section id="plot-saliency-maps">
@@ -1131,17 +1138,20 @@ Number of cells defines granularity of the saliency map (usually, the higher the
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#white-box-mode">White-Box mode</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#black-box-mode">Black-Box mode</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#xai-insertion-white-box-usage">XAI insertion (white-box usage)</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#xai-method-overview">XAI method overview</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#white-box-methods">White-Box methods</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#activation-map">Activation Map</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#recipro-cam-vit-recipro-cam-for-vit-models">Recipro-CAM (ViT Recipro-CAM for ViT models)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#detclassprobabilitymap">DetClassProbabilityMap</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#xai-methods">XAI methods</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#white-box-methods">White-Box methods</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#activation-map">Activation Map</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#recipro-cam-vit-recipro-cam-for-vit-models">Recipro-CAM (ViT Recipro-CAM for ViT models)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#detclassprobabilitymap">DetClassProbabilityMap</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#black-box-methods">Black-Box methods</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rise">RISE</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#aiseclassification">AISEClassification</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#aisedetection">AISEDetection</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#black-box-methods">Black-Box methods</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#rise">RISE</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#aiseclassification">AISEClassification</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#aisedetection">AISEDetection</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plot-saliency-maps">Plot saliency maps</a></li>

@@ -55,7 +55,7 @@ class RISE(BlackBoxXAIMethod):
         target_indices: List[int] | None = None,
         preset: Preset = Preset.BALANCE,
         num_masks: int | None = None,
-        num_cells: int = 8,
+        num_cells: int | None = None,
         prob: float = 0.5,
         seed: int = 0,
         scale_output: bool = True,
@@ -84,7 +84,7 @@ class RISE(BlackBoxXAIMethod):
         """
         data_preprocessed = self.preprocess_fn(data)
 
-        num_masks = self._preset_parameters(preset, num_masks)
+        num_masks, num_cells = self._preset_parameters(preset, num_masks, num_cells)
 
         saliency_maps = self._run_synchronous_explanation(
             data_preprocessed,
@@ -109,19 +109,26 @@ class RISE(BlackBoxXAIMethod):
     def _preset_parameters(
         preset: Preset,
         num_masks: int | None = None,
-    ) -> int:
-        # TODO (negvet): preset num_cells
-        if num_masks is not None:
-            return num_masks
-
+        num_cells: int | None = None,
+    ) -> Tuple[int, int]:
         if preset == Preset.SPEED:
-            return 2000
+            num_masks_ = 1000
+            num_cells_ = 4
         elif preset == Preset.BALANCE:
-            return 5000
+            num_masks_ = 5000
+            num_cells_ = 8
         elif preset == Preset.QUALITY:
-            return 8000
+            num_masks_ = 10000
+            num_cells_ = 12
         else:
             raise ValueError(f"Preset {preset} is not supported.")
+
+        if num_masks is None:
+            num_masks = num_masks_
+        if num_cells is None:
+            num_cells = num_cells_
+
+        return num_masks, num_cells
 
     def _run_synchronous_explanation(
         self,

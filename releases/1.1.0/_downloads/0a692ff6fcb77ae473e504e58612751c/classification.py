@@ -135,14 +135,14 @@ class AISEClassification(AISEBase):
         kernel_widths: List[float] | np.ndarray | None,
     ) -> Tuple[int, np.ndarray]:
         if preset == Preset.SPEED:
-            iterations = 25
+            iterations = 20
             widths = np.linspace(0.1, 0.25, 3)
         elif preset == Preset.BALANCE:
             iterations = 50
             widths = np.linspace(0.1, 0.25, 3)
         elif preset == Preset.QUALITY:
-            iterations = 85
-            widths = np.linspace(0.075, 0.25, 4)
+            iterations = 50
+            widths = np.linspace(0.075, 0.25, 5)
         else:
             raise ValueError(f"Preset {preset} is not supported.")
 
