@@ -53,7 +53,6 @@ def main(argv: list[str]):
     # Torch model inference
     model.eval()
     with torch.no_grad():
-        model.eval()
         logits = model(torch.from_numpy(image_norm))
         probs = torch.softmax(logits, dim=-1)  # BxC
         label = probs.argmax(dim=-1)[0]
@@ -65,15 +64,14 @@ def main(argv: list[str]):
     # Torch XAI model inference
     xai_model.eval()
     with torch.no_grad():
-        xai_model.eval()
         outputs = xai_model(torch.from_numpy(image_norm))
         logits = outputs["prediction"]  # BxC
+        saliency_maps = outputs["saliency_map"]  # BxCxhxw
         probs = torch.softmax(logits, dim=-1)
         label = probs.argmax(dim=-1)[0]
     logger.info(f"Torch XAI model prediction: classes ({probs.shape[-1]}) -> label ({label}) -> prob ({probs[0, label]})")
 
     # Torch XAI model saliency map
-    saliency_maps = outputs["saliency_map"]  # BxCxhxw
     saliency_maps = saliency_maps.numpy(force=True).squeeze(0)  # Cxhxw
     mask = saliency_maps[label]  # hxw mask for the label
     mask = colormap(mask[None, :])  # 1xhxw
@@ -100,12 +98,12 @@ def main(argv: list[str]):
     ov_model = ov.Core().compile_model(ov_model, device_name="CPU")
     outputs = ov_model(image_norm)
     logits = outputs["prediction"]  # BxC
+    saliency_maps = outputs["saliency_map"]  # BxCxhxw
     probs = softmax(logits)
     label = probs.argmax(axis=-1)[0]
     logger.info(f"OpenVINO XAI model prediction: classes ({probs.shape[-1]}) -> label ({label}) -> prob ({probs[0, label]})")
 
     # OpenVINO XAI model saliency map
-    saliency_maps = outputs["saliency_map"]  # BxCxhxw
     saliency_maps = saliency_maps.squeeze(0)  # Cxhxw
     mask = saliency_maps[label]  # hxw mask for the label
     mask = colormap(mask[None, :])  # 1xhxw
@@ -119,7 +117,8 @@ def main(argv: list[str]):
 
     # ONNX import
     try:
-        onnxruntime = importlib.import_module("onnxruntime")
+        import onnx
+        import onnxruntime
     except Exception:
         logger.info("Please install onnx and onnxruntime package to run ONNX XAI example.")
         sys.exit(0)
