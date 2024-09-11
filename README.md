@@ -68,15 +68,17 @@ Please refer to the [change logs](CHANGELOG.md) for the full release history.
 At the moment, *Image Classification* and *Object Detection* tasks are supported for the *Computer Vision* domain.
 *Black-Box* (model agnostic but slow) methods and *White-Box* (model specific but fast) methods are supported:
 
-| Domain          | Task                 | Type      | Algorithm           | Links |
-|-----------------|----------------------|-----------|---------------------|-------|
-| Computer Vision | Image Classification | White-Box | ReciproCAM          | [arxiv](https://arxiv.org/abs/2209.14074) / [src](openvino_xai/methods/white_box/recipro_cam.py) |
-|                 |                      |           | VITReciproCAM       | [arxiv](https://arxiv.org/abs/2310.02588) / [src](openvino_xai/methods/white_box/recipro_cam.py) |
-|                 |                      |           | ActivationMap       | experimental / [src](openvino_xai/methods/white_box/activation_map.py)                           |
-|                 |                      | Black-Box | AISEClassification  | [src](openvino_xai/methods/black_box/aise.py)                                                    |
-|                 |                      |           | RISE                | [arxiv](https://arxiv.org/abs/1806.07421v3) / [src](openvino_xai/methods/black_box/rise.py)      |
-|                 | Object Detection     | White-Box | ClassProbabilityMap | experimental / [src](openvino_xai/methods/white_box/det_class_probability_map.py)                |
-|                 |                      | Black-Box | AISEDetection       | [src](openvino_xai/methods/black_box/aise.py)                                                    |
+| Domain          | Task                 | Type      | Algorithm              | Links |
+|-----------------|----------------------|-----------|------------------------|-------|
+| Computer Vision | Image Classification | White-Box | ReciproCAM             | [arxiv](https://arxiv.org/abs/2209.14074) / [src](openvino_xai/methods/white_box/recipro_cam.py) |
+|                 |                      |           | VITReciproCAM          | [arxiv](https://arxiv.org/abs/2310.02588) / [src](openvino_xai/methods/white_box/recipro_cam.py) |
+|                 |                      |           | ActivationMap          | experimental / [src](openvino_xai/methods/white_box/activation_map.py)                           |
+|                 |                      | Black-Box | AISEClassification     | [src](openvino_xai/methods/black_box/aise/classification.py)                                     |
+|                 |                      |           | RISE                   | [arxiv](https://arxiv.org/abs/1806.07421v3) / [src](openvino_xai/methods/black_box/rise.py)      |
+|                 | Object Detection     | White-Box | DetClassProbabilityMap | experimental / [src](openvino_xai/methods/white_box/det_class_probability_map.py)                |
+|                 |                      | Black-Box | AISEDetection          | [src](openvino_xai/methods/black_box/aise/detection.py)                                          |
+
+See more method comparison at the [User Guide](docs/source/user-guide.md).
 
 ### Supported explainable models
 
