@@ -315,21 +315,44 @@ As mentioned above, saliency map generation requires model inference. In the abo
 ```python
 import openvino.runtime as ov
 import openvino_xai as xai
+from openvino_xai.common.utils import softmax
+from openvino_xai.explainer.visualizer colormap, overlay
 
 
 # Create an ov.Model
-model = ov.Core().read_model("path/to/model.xml")  # type: ov.Model
+model: ov.Model = ov.Core().read_model("path/to/model.xml")
 
 # Insert XAI branch into the model graph
-model_xai = xai.insert_xai(
+xai_model: ov.Model = xai.insert_xai(
     model=model,
     task=xai.Task.CLASSIFICATION,
-    # target_layer="last_conv_node_name",  # target_layer - the node after which the XAI branch will be inserted, usually the last convolutional layer in the backbone
+    # target_layer="last_conv_node_name",  # target_layer - the node after which the XAI branch will be inserted, usually the last convolutional layer in the backbone. Defaults to None, by which the target layer is automatically detected
     embed_scaling=True,  # True by default. If set to True, the saliency map scale (0 ~ 255) operation is embedded in the model
     explain_method=xai.Method.RECIPROCAM,  # ReciproCAM is the default XAI method for CNNs
-)  # type: ov.Model
+)
 
-# ***** Downstream task: user's code that infers model_xai and picks 'saliency_map' output *****
+# For PyTorch models, XAI head is inserted using the module hook mechanism internally
+# so that users could get additional saliency map without major changes in original inference pipeline.
+model: torch.nn.Module
+
+# Insert XAI head
+xai_model: torch.nn.Module = insert_xai(model=model, task=xai.Task.CLASSIFICATION)
+
+# Torch XAI model inference
+xai_model.eval()
+with torch.no_grad():
+    outputs = xai_model(torch.from_numpy(image_norm))
+    logits = outputs["prediction"]  # BxC: original model prediction
+    saliency_maps = outputs["saliency_map"]  # BxCxhxw: additional per-class saliency map
+    probs = torch.softmax(logits, dim=-1)
+    label = probs.argmax(dim=-1)[0]
+
+# Torch XAI model saliency map
+saliency_maps = saliency_maps.numpy(force=True).squeeze(0)  # Cxhxw
+mask = saliency_maps[label]  # hxw mask for the label
+mask = colormap(mask[None, :])  # 1xhxw
+mask = cv2.resize(mask.squeeze(0), dsize=input_size)  # HxW
+result = overlay(mask, image)
 ```
 
 ## Plot saliency maps
