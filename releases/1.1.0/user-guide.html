@@ -346,6 +346,9 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="#white-box-mode">White-Box mode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#black-box-mode">Black-Box mode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#xai-insertion-white-box-usage">XAI insertion (white-box usage)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#xai-method-overview">XAI method overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#white-box-methods">White-Box methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#black-box-methods">Black-Box methods</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#plot-saliency-maps">Plot saliency maps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#saving-saliency-maps">Saving saliency maps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#example-scripts">Example scripts</a></li>
@@ -434,6 +437,7 @@ which is useful for analyzing model’s performance.</p>
 <li><p><a class="reference internal" href="#white-box-mode"><span class="xref myst">White-Box mode</span></a></p></li>
 <li><p><a class="reference internal" href="#black-box-mode"><span class="xref myst">Black-Box mode</span></a></p></li>
 <li><p><a class="reference internal" href="#xai-insertion-white-box-usage"><span class="xref myst">XAI insertion (white-box usage)</span></a></p></li>
+<li><p><a class="reference internal" href="#xai-method-overview"><span class="xref myst">XAI method overview</span></a></p></li>
 <li><p><a class="reference internal" href="#plot-saliency-maps"><span class="xref myst">Plot saliency maps</span></a></p></li>
 <li><p><a class="reference internal" href="#saving-saliency-maps"><span class="xref myst">Saving saliency maps</span></a></p></li>
 <li><p><a class="reference internal" href="#example-scripts"><span class="xref myst">Example scripts</span></a></p></li>
@@ -725,6 +729,186 @@ Cons:</p></li>
 </pre></div>
 </div>
 </section>
+<section id="xai-method-overview">
+<h2>XAI method overview<a class="headerlink" href="#xai-method-overview" title="Link to this heading">#</a></h2>
+<p>At the moment, the following XAI methods are supported:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Using model internals</p></th>
+<th class="head"><p>Per-target support</p></th>
+<th class="head"><p>Single-shot</p></th>
+<th class="head"><p>#Model inferences</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>White-Box</p></td>
+<td><p></p></td>
+<td><p></p></td>
+<td><p></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p>Activation Map</p></td>
+<td><p>Yes</p></td>
+<td><p>No</p></td>
+<td><p>Yes</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p>Recipro-CAM</p></td>
+<td><p>Yes</p></td>
+<td><p>Yes (class)</p></td>
+<td><p>Yes*</p></td>
+<td><p>1*</p></td>
+</tr>
+<tr class="row-odd"><td><p>ViT Recipro-CAM</p></td>
+<td><p>Yes</p></td>
+<td><p>Yes (class)</p></td>
+<td><p>Yes*</p></td>
+<td><p>1*</p></td>
+</tr>
+<tr class="row-even"><td><p>DetClassProbabilityMap</p></td>
+<td><p>Yes**</p></td>
+<td><p>Yes (class)</p></td>
+<td><p>Yes</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p>Black-Box</p></td>
+<td><p></p></td>
+<td><p></p></td>
+<td><p></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p>RISE</p></td>
+<td><p>No</p></td>
+<td><p>Yes (class)</p></td>
+<td><p>No</p></td>
+<td><p>1000-10000</p></td>
+</tr>
+<tr class="row-odd"><td><p>AISEClassification</p></td>
+<td><p>No</p></td>
+<td><p>Yes (class)</p></td>
+<td><p>No</p></td>
+<td><p>120-500</p></td>
+</tr>
+<tr class="row-even"><td><p>AISEDetection</p></td>
+<td><p>No</p></td>
+<td><p>Yes (bbox)</p></td>
+<td><p>No</p></td>
+<td><p>60-250</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>* Recipro-CAM re-infers part of the graph (usually neck + head or last transformer block) H*W times, where HxW – feature map size of the target layer.</p>
+<p>** DetClassProbabilityMap requires explicit definition of the target layers.
+The rest of the white-box methods support automatic detection of the target layer.</p>
+<p>Target layer is the part of the model graph where XAI branch will be inserted (applicable for white-box methods).</p>
+<p>All supported methods are gradient-free, which suits deployment framework settings (e.g. OpenVINO™), where the model is in optimized or compiled representation.</p>
+</section>
+<section id="white-box-methods">
+<h2>White-Box methods<a class="headerlink" href="#white-box-methods" title="Link to this heading">#</a></h2>
+<p>When to use?</p>
+<ul class="simple">
+<li><p>When model architecture follows standard CNN-based or ViT-based design (OV-XAI <span class="xref myst">support</span> 1000+ CNN and ViT models).</p></li>
+<li><p>When speed matters. White-box methods are fast - it takes ~one model inference to generate saliency map.</p></li>
+<li><p>When it is required to obtain saliency map together with model prediction at the inference server environment. White-box methods update model graph, so that the XAI branch and saliency map output added to the model. Therefore, with a minor compute overhead, it is possible to generate both model predictions and saliency maps.</p></li>
+</ul>
+<p>All white-box methods require access to model internal state. To generate saliency map, supported white-box methods potentially change and process internal model activations in a way that fosters compute efficiency.</p>
+<section id="activation-map">
+<h3>Activation Map<a class="headerlink" href="#activation-map" title="Link to this heading">#</a></h3>
+<p>Suitable for:</p>
+<ul class="simple">
+<li><p>Binary classification problems (e.g. inspecting model reasoning when predicting a positive class).</p></li>
+<li><p>Visualization of the global (class-agnostic) model attention (e.g. inspecting which input pixels are the most salient for the model).</p></li>
+</ul>
+<p>Activation Map is the most basic and naive approach. It takes the outputs of the model’s feature extractor (backbone) and averages it in the channel dimension. The results highly rely on the backbone and ignore neck and head computations. Basically, it gives a relatively good and fast result, which highlight the most activated features from the backbone perspective.</p>
+<p>Below saliency map was obtained for <a class="reference external" href="https://huggingface.co/timm/resnet18.a1_in1k">ResNet-18</a> from <a class="reference external" href="https://huggingface.co/timm">timm</a>:</p>
+<p><img alt="OpenVINO XAI Architecture" src="_images/ActivationMap_resnet18.a1_in1k_activation_map.jpg" /></p>
+</section>
+<section id="recipro-cam-vit-recipro-cam-for-vit-models">
+<h3>Recipro-CAM (ViT Recipro-CAM for ViT models)<a class="headerlink" href="#recipro-cam-vit-recipro-cam-for-vit-models" title="Link to this heading">#</a></h3>
+<p>Suitable for:</p>
+<ul class="simple">
+<li><p>Almost all CNN-based architectures.</p></li>
+<li><p>Many ViT-based architectures.</p></li>
+</ul>
+<p><a class="reference download internal" download="" href="_downloads/bf0a086155a09e7733279dc08c5ed41b/recipro_cam.py"><span class="xref download myst">Recipro-CAM</span></a> involves spatially masking of the extracted feature maps to exploit the correlation between activation maps and model predictions for target classes. It is perturbation-based method which perturbs internal model activations.</p>
+<p>Assume 7x7 feature map which is extracted by the CNN backbone. One location of the feature map is preserved (e.g. at index [0, 0]), while the rest feature map values is masked out with e.g. zeros (perturbation is the same across channel dimension). Perturbed feature map inferred through the model head. The the model prediction scores are used as saliency scores for index [0, 0]. This is repeated for all 49 spatial location. The final saliency map obtained after resizing and scaling. See <a class="reference external" href="https://arxiv.org/abs/2209.14074">paper</a> for more details.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Recipro-CAM</span></code> is an efficient XAI method.
+The main weak point is that saliency for each pixel in the feature map space is estimated in isolation, without taking into account joint contribution of different pixels/features.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Recipro-CAM</span></code> is the default method for the classification task. <a class="reference download internal" download="" href="_downloads/bf0a086155a09e7733279dc08c5ed41b/recipro_cam.py"><span class="xref download myst">ViT Recipro-CAM</span></a> is a modification of Recipro-CAM for ViT-based models.</p>
+<p>Below saliency map was obtained for <a class="reference external" href="https://huggingface.co/timm/resnet18.a1_in1k">ResNet-18</a> from <a class="reference external" href="https://huggingface.co/timm">timm</a> and “cheetah” class:</p>
+<p><img alt="OpenVINO XAI Architecture" src="_images/ReciproCAM_resnet18.a1_in1k_293.jpg" /></p>
+</section>
+<section id="detclassprobabilitymap">
+<h3>DetClassProbabilityMap<a class="headerlink" href="#detclassprobabilitymap" title="Link to this heading">#</a></h3>
+<p>Suitable for:</p>
+<ul class="simple">
+<li><p>Single-stage object detection models.</p></li>
+<li><p>When it is enough to estimate saliency maps per-class.</p></li>
+</ul>
+<p><a class="reference download internal" download="" href="_downloads/4d8133226dd2252c94af18a88705d36c/det_class_probability_map.py"><span class="xref download myst">DetClassProbabilityMap</span></a> takes the raw classification head output and uses class probability maps to calculate regions of interest for each class. So, it creates different salience maps for each class. This algorithm is implemented for single-stage detectors only and required explicit list of target layers.</p>
+<p>The main limitation of this method is that, due to the training loss design of most single-stage detectors, activation values drift towards the center of the object while propagating through the network. Many object detectors, while being designed to precisely estimate location of the objects, might mess up spatial location of object features in the latent space.</p>
+<p>Below saliency map was obtained for <code class="docutils literal notranslate"><span class="pre">YOLOX</span></code> trained in-house on PASCAL VOC dataset:</p>
+<p><img alt="OpenVINO XAI Architecture" src="_images/DetClassProbabilityMap.jpg" /></p>
+</section>
+</section>
+<section id="black-box-methods">
+<h2>Black-Box methods<a class="headerlink" href="#black-box-methods" title="Link to this heading">#</a></h2>
+<p>When to use?</p>
+<ul class="simple">
+<li><p>When custom models are used and/or white-box methods fail (e.g. Swin-based transformers).</p></li>
+<li><p>When more advanced model explanation is required. See more details below (e.g. in the RISE overview).</p></li>
+<li><p>When spacial location of the features is messed up in the latent space (e.g. some single-stage object detection models).</p></li>
+</ul>
+<p>All black-box methods are perturbation-based - they perturb the input and register the change in the output.
+Usually, for high quality saliency map, hundreds or thousands of model inferences required. That is the reason for them to be compute-inefficient. On the other hand, black box methods are model-agnostic.</p>
+<p>Given that the quality of the saliency maps usually correlates with the number of available inferences, we propose the following presets for the black-box methods: <code class="docutils literal notranslate"><span class="pre">Preset.SPEED</span></code>, <code class="docutils literal notranslate"><span class="pre">Preset.BALANCE</span></code>, <code class="docutils literal notranslate"><span class="pre">Preset.QUALITY</span></code> (<code class="docutils literal notranslate"><span class="pre">Preset.BALANCE</span></code> is used by default).
+Apart from that, methods parameters can be defined directly via Explainer or Method API.</p>
+<section id="rise">
+<h3>RISE<a class="headerlink" href="#rise" title="Link to this heading">#</a></h3>
+<p>Suitable for:</p>
+<ul class="simple">
+<li><p>All classification models which can generate per-class prediction scores.</p></li>
+<li><p>More flexibility and more advanced use cases (e.g. control of granularity of the saliency map).</p></li>
+</ul>
+<p><a class="reference download internal" download="" href="_downloads/76561b11d66ce9f1c7ee1b3402ba9d23/rise.py"><span class="xref download myst">RISE</span></a> probes a model by sub-sampling the input image via random masks and records its response to each of them.
+RISE creates random masks from down-scaled space (e.g. 7×7 grid) and adds random translation shifts for the pixel-level explanation with further up-sampling. Weighted sum of all sampled masks used to generate the fine-grained saliency map.
+Since it approximates the true saliency map with Monte Carlo sampling, it requires multiple thousands of forward passes to generate a fine-grained saliency map. RISE is a non-deterministic method.
+See <a class="reference external" href="https://arxiv.org/abs/1806.07421v3">paper</a> for more details.</p>
+<p><code class="docutils literal notranslate"><span class="pre">RISE</span></code> generates saliency maps for all classes at once, although indices of target classes can be provided (which might bring some performance boost).</p>
+<p><code class="docutils literal notranslate"><span class="pre">RISE</span></code> has two main hyperparameter: <code class="docutils literal notranslate"><span class="pre">num_cells</span></code> (define the resolution of the grid for the masks) and <code class="docutils literal notranslate"><span class="pre">num_masks</span></code> (defines number of inferences).
+Number of cells defines granularity of the saliency map (usually, the higher the granularity - the better). Higher number of cells require more masks to converge. Going from <code class="docutils literal notranslate"><span class="pre">Preset.SPEED</span></code> to <code class="docutils literal notranslate"><span class="pre">Preset.QUALITY</span></code>, the number of masks (compute budget) increases.</p>
+<p>Below saliency map was obtained for <a class="reference external" href="https://huggingface.co/timm/resnet18.a1_in1k">ResNet-18</a> from <a class="reference external" href="https://huggingface.co/timm">timm</a> and “cheetah” class (default parameters).</p>
+<p><img alt="OpenVINO XAI Architecture" src="_images/RISE_resnet18.a1_in1k_293.jpg" /></p>
+<p>It is possible to see, that some grass-related pixels from the left cheetah also contribute to the cheetah prediction, which might indicates that model learned cheetah features in combination with grass (which makes sense).</p>
+</section>
+<section id="aiseclassification">
+<h3>AISEClassification<a class="headerlink" href="#aiseclassification" title="Link to this heading">#</a></h3>
+<p>Suitable for:</p>
+<ul class="simple">
+<li><p>All classification models which can generate per-class prediction scores.</p></li>
+<li><p>Cases when speed matters.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">AISE</span></code> formulates saliency map generation as a kernel density estimation (KDE) problem, and adaptively sample input masks using a derivative-free optimizer to maximize mask saliency score. KDE requires a proper kernel width, which is not known. A set of pre-defined kernel widths is used simultaneously, and the result is them aggregated. This adaptive sampling mechanism improves the efficiency of input mask generation and thus increases convergence speed. AISE is designed to be task-agnostic and can be applied to a wide range of classification and object detection architectures.
+<code class="docutils literal notranslate"><span class="pre">AISE</span></code> is optimized for generating saliency map for a specific class (or a few classes). To specify target classes, use targets argument.</p>
+<p><a class="reference download internal" download="" href="_downloads/0a692ff6fcb77ae473e504e58612751c/classification.py"><span class="xref download myst">AISEClassification</span></a> is designed for classification models.</p>
+<p>Below saliency map was obtained for <a class="reference external" href="https://huggingface.co/timm/resnet18.a1_in1k">ResNet-18</a> from <a class="reference external" href="https://huggingface.co/timm">timm</a> and “cheetah” class:</p>
+<p><img alt="OpenVINO XAI Architecture" src="_images/AISE_resnet18.a1_in1k_293.jpg" /></p>
+</section>
+<section id="aisedetection">
+<h3>AISEDetection<a class="headerlink" href="#aisedetection" title="Link to this heading">#</a></h3>
+<p>Suitable for:</p>
+<ul class="simple">
+<li><p>All detection models which can generate bounding boxes, labels and scores.</p></li>
+<li><p>When speed matters.</p></li>
+<li><p>When it is required to get per-box saliency map.</p></li>
+</ul>
+<p><a class="reference download internal" download="" href="_downloads/2b14cd654176fc7e07a5993fa4444c01/detection.py"><span class="xref download myst">AISEDetection</span></a> is designed for detection models and support per-bounding box saliency maps.</p>
+<p>Below saliency map was obtained for <code class="docutils literal notranslate"><span class="pre">YOLOX</span></code> trained in-house on PASCAL VOC dataset (with default parameters, <code class="docutils literal notranslate"><span class="pre">Preset.BALANCE</span></code>):</p>
+<p><img alt="OpenVINO XAI Architecture" src="_images/AISEDetection.jpg" /></p>
+</section>
+</section>
 <section id="plot-saliency-maps">
 <h2>Plot saliency maps<a class="headerlink" href="#plot-saliency-maps" title="Link to this heading">#</a></h2>
 <p>To visualize saliency maps, use the <code class="docutils literal notranslate"><span class="pre">explanation.plot</span></code> function.</p>
@@ -947,6 +1131,19 @@ Cons:</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#white-box-mode">White-Box mode</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#black-box-mode">Black-Box mode</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#xai-insertion-white-box-usage">XAI insertion (white-box usage)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#xai-method-overview">XAI method overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#white-box-methods">White-Box methods</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#activation-map">Activation Map</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#recipro-cam-vit-recipro-cam-for-vit-models">Recipro-CAM (ViT Recipro-CAM for ViT models)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#detclassprobabilitymap">DetClassProbabilityMap</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#black-box-methods">Black-Box methods</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rise">RISE</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#aiseclassification">AISEClassification</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#aisedetection">AISEDetection</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plot-saliency-maps">Plot saliency maps</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#saving-saliency-maps">Saving saliency maps</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-scripts">Example scripts</a></li>
