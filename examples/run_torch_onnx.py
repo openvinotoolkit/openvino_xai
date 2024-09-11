@@ -41,7 +41,7 @@ def main(argv: list[str]):
     input_size = model.default_cfg["input_size"][1:]  # (H, W)
     input_mean = np.array(model.default_cfg["mean"])
     input_std = np.array(model.default_cfg["std"])
-    
+
     # Load image
     image = cv2.imread("tests/assets/cheetah_person.jpg")
     image = cv2.resize(image, dsize=input_size)
@@ -117,8 +117,8 @@ def main(argv: list[str]):
 
     # ONNX import
     try:
-        import onnx
-        import onnxruntime
+        importlib.import_module("onnx")
+        onnxruntime = importlib.import_module("onnxruntime")
     except Exception:
         logger.info("Please install onnx and onnxruntime package to run ONNX XAI example.")
         sys.exit(0)
