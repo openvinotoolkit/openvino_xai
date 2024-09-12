@@ -195,7 +195,7 @@ We can see that model is focusing on the body or skin area of the animals to tel
 
 ### Insert XAI head to your models
 
-Using the `insert_xai` API, we can insert XAI head to existing OpenVINO or PyTorch models directly and get additional saliency map output in the same inference pipeline.
+Using the `insert_xai` API, we can insert XAI head to existing OpenVINO or PyTorch models directly and get additional "saliency_map" output in the same inference pipeline.
 
 ```python
 import torch
