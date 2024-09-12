@@ -323,7 +323,7 @@ from openvino_xai.explainer.visualizer colormap, overlay
 # Create an ov.Model
 model: ov.Model = ov.Core().read_model("path/to/model.xml")
 
-# Insert XAI branch into the model graph
+# Insert XAI branch into the OpenVINO model graph (IR)
 xai_model: ov.Model = xai.insert_xai(
     model=model,
     task=xai.Task.CLASSIFICATION,
