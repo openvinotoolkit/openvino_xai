@@ -354,7 +354,7 @@ saliency_maps = saliency_maps.numpy(force=True).squeeze(0)  # Cxhxw
 saliency_map = saliency_maps[label]  # hxw saliency_map for the label
 saliency_map = colormap(saliency_map[None, :])  # 1xhxw
 saliency_map = cv2.resize(saliency_map.squeeze(0), dsize=input_size)  # HxW
-saliency_image = overlay(saliency_map, image)
+result_image = overlay(saliency_map, image)
 ```
 
 ## XAI method overview
