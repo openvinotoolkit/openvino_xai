@@ -480,7 +480,7 @@ class TestImageClassificationTimm:
         image_norm = image_norm[None, :]  # CHW -> 1CHW
         target_class = self.supported_num_classes[model_cfg["num_classes"]]
 
-        xai_model: torch.nn.Module = insert_xai(
+        model_xai: torch.nn.Module = insert_xai(
             model,
             task=Task.CLASSIFICATION,
             target_layer=target_layer,
@@ -488,15 +488,15 @@ class TestImageClassificationTimm:
         )
 
         with torch.no_grad():
-            xai_model.eval()
-            xai_output = xai_model(torch.from_numpy(image_norm).float())
-            xai_logit = xai_output["prediction"]
-            xai_prob = torch.softmax(xai_logit, dim=-1)
-            xai_label = xai_prob.argmax(dim=-1)[0]
-        assert xai_label.item() == target_class
-        assert xai_prob[0, xai_label].item() > 0.0
+            model_xai.eval()
+            outputs = model_xai(torch.from_numpy(image_norm).float())
+            logits = outputs["prediction"]
+            probs = torch.softmax(logits, dim=-1)
+            label = probs.argmax(dim=-1)[0]
+        assert label.item() == target_class
+        assert probs[0, label].item() > 0.0
 
-        saliency_map: np.ndarray = xai_output["saliency_map"].numpy(force=True)
+        saliency_map: np.ndarray = outputs["saliency_map"].numpy(force=True)
         saliency_map = saliency_map.squeeze(0)
         assert saliency_map.shape[-1] > 1 and saliency_map.shape[-2] > 1
         assert saliency_map.min() < saliency_map.max()

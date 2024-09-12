@@ -59,12 +59,12 @@ def main(argv: list[str]):
     logger.info(f"Torch model prediction: classes ({probs.shape[-1]}) -> label ({label}) -> prob ({probs[0, label]})")
 
     # Insert XAI head
-    xai_model: torch.nn.Module = insert_xai(model, Task.CLASSIFICATION)
+    model_xai: torch.nn.Module = insert_xai(model, Task.CLASSIFICATION)
 
     # Torch XAI model inference
-    xai_model.eval()
+    model_xai.eval()
     with torch.no_grad():
-        outputs = xai_model(torch.from_numpy(image_norm))
+        outputs = model_xai(torch.from_numpy(image_norm))
         logits = outputs["prediction"]  # BxC
         saliency_maps = outputs["saliency_map"]  # BxCxhxw
         probs = torch.softmax(logits, dim=-1)
@@ -73,19 +73,19 @@ def main(argv: list[str]):
 
     # Torch XAI model saliency map
     saliency_maps = saliency_maps.numpy(force=True).squeeze(0)  # Cxhxw
-    mask = saliency_maps[label]  # hxw mask for the label
-    mask = colormap(mask[None, :])  # 1xhxw
-    mask = cv2.resize(mask.squeeze(0), dsize=input_size)  # HxW
-    result = overlay(mask, image)
-    result = cv2.cvtColor(result, code=cv2.COLOR_RGB2BGR)
-    result_path = Path(args.output_dir) / "xai-torch.png"
-    result_path.parent.mkdir(parents=True, exist_ok=True)
-    cv2.imwrite(result_path, result)
-    logger.info(f"Torch XAI model saliency map: {result_path}")
+    saliency_map = saliency_maps[label]  # hxw saliency_map for the label
+    saliency_map = colormap(saliency_map[None, :])  # 1xhxw
+    saliency_map = cv2.resize(saliency_map.squeeze(0), dsize=input_size)  # HxW
+    saliency_image = overlay(saliency_map, image)
+    saliency_image = cv2.cvtColor(saliency_image, code=cv2.COLOR_RGB2BGR)
+    saliency_image_path = Path(args.output_dir) / "xai-torch.png"
+    saliency_image_path.parent.mkdir(parents=True, exist_ok=True)
+    cv2.imwrite(saliency_image_path, saliency_image)
+    logger.info(f"Torch XAI model saliency map: {saliency_image_path}")
 
     # OpenVINO model conversion
     ov_model = ov.convert_model(
-        xai_model,
+        model_xai,
         example_input=torch.from_numpy(image_norm),
         input=(ov.PartialShape([-1, *image_norm.shape[1:]],))
     )
@@ -105,15 +105,15 @@ def main(argv: list[str]):
 
     # OpenVINO XAI model saliency map
     saliency_maps = saliency_maps.squeeze(0)  # Cxhxw
-    mask = saliency_maps[label]  # hxw mask for the label
-    mask = colormap(mask[None, :])  # 1xhxw
-    mask = cv2.resize(mask.squeeze(0), dsize=input_size)  # HxW
-    result = overlay(mask, image)
-    result = cv2.cvtColor(result, code=cv2.COLOR_RGB2BGR)
-    result_path = Path(args.output_dir) / "xai-openvino.png"
-    result_path.parent.mkdir(parents=True, exist_ok=True)
-    cv2.imwrite(result_path, result)
-    logger.info(f"OpenVINO XAI model saliency map: {result_path}")
+    saliency_map = saliency_maps[label]  # hxw saliency_map for the label
+    saliency_map = colormap(saliency_map[None, :])  # 1xhxw
+    saliency_map = cv2.resize(saliency_map.squeeze(0), dsize=input_size)  # HxW
+    saliency_image = overlay(saliency_map, image)
+    saliency_image = cv2.cvtColor(saliency_image, code=cv2.COLOR_RGB2BGR)
+    saliency_image_path = Path(args.output_dir) / "xai-openvino.png"
+    saliency_image_path.parent.mkdir(parents=True, exist_ok=True)
+    cv2.imwrite(saliency_image_path, saliency_image)
+    logger.info(f"OpenVINO XAI model saliency map: {saliency_image_path}")
 
     # ONNX import
     try:
@@ -127,7 +127,7 @@ def main(argv: list[str]):
     model_path = Path(args.output_dir) / "model.onnx"
     model_path.parent.mkdir(parents=True, exist_ok=True)
     torch.onnx.export(
-        xai_model,
+        model_xai,
         torch.from_numpy(image_norm),
         model_path,
         input_names=["input"],
@@ -148,15 +148,15 @@ def main(argv: list[str]):
 
     # ONNX model saliency map
     saliency_maps = saliency_maps.squeeze(0)  # Cxhxw
-    mask = saliency_maps[label]  # hxw mask for the label
-    mask = colormap(mask[None, :])  # 1xhxw
-    mask = cv2.resize(mask.squeeze(0), dsize=input_size)  # HxW
-    result = overlay(mask, image)
-    result = cv2.cvtColor(result, code=cv2.COLOR_RGB2BGR)
-    result_path = Path(args.output_dir) / "xai-onnx.png"
-    result_path.parent.mkdir(parents=True, exist_ok=True)
-    cv2.imwrite(result_path, result)
-    logger.info(f"ONNX XAI model saliency map: {result_path}")
+    saliency_map = saliency_maps[label]  # hxw saliency_map for the label
+    saliency_map = colormap(saliency_map[None, :])  # 1xhxw
+    saliency_map = cv2.resize(saliency_map.squeeze(0), dsize=input_size)  # HxW
+    saliency_image = overlay(saliency_map, image)
+    saliency_image = cv2.cvtColor(saliency_image, code=cv2.COLOR_RGB2BGR)
+    saliency_image_path = Path(args.output_dir) / "xai-onnx.png"
+    saliency_image_path.parent.mkdir(parents=True, exist_ok=True)
+    cv2.imwrite(saliency_image_path, saliency_image)
+    logger.info(f"ONNX XAI model saliency map: {saliency_image_path}")
 
 
 if __name__ == "__main__":

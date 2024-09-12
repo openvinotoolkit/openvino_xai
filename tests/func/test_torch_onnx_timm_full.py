@@ -114,12 +114,12 @@ class TestTorchOnnxTimm:
         image_norm = image_norm[None, :]  # CxHxW -> 1xCxHxW
 
         # Insert XAI head
-        xai_model: torch.nn.Module = insert_xai(model, Task.CLASSIFICATION)
+        model_xai: torch.nn.Module = insert_xai(model, Task.CLASSIFICATION)
 
         # Torch XAI model inference
-        xai_model.eval()
+        model_xai.eval()
         with torch.no_grad():
-            outputs = xai_model(torch.from_numpy(image_norm))
+            outputs = model_xai(torch.from_numpy(image_norm))
             logits = outputs["prediction"]  # BxC
             saliency_maps = outputs["saliency_map"]  # BxCxhxw
             probs = torch.softmax(logits, dim=-1)
@@ -137,7 +137,7 @@ class TestTorchOnnxTimm:
         model_path = fxt_output_root / "func" / "onnx" / "model.onnx"
         model_path.parent.mkdir(parents=True, exist_ok=True)
         torch.onnx.export(
-            xai_model,
+            model_xai,
             torch.from_numpy(image_norm),
             model_path,
             input_names=["input"],

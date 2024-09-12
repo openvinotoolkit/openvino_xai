@@ -205,12 +205,12 @@ import timm
 torch_model: torch.nn.Module = timm.create_model("resnet18.a1_in1k", in_chans=3, pretrained=True)
 
 # Insert XAI head
-xai_model: torch.nn.Module = xai.insert_xai(torch_model, xai.Task.CLASSIFICATION)
+model_xai: torch.nn.Module = xai.insert_xai(torch_model, xai.Task.CLASSIFICATION)
 
 # Torch XAI model inference
-xai_model.eval()
+model_xai.eval()
 with torch.no_grad():
-    outputs = xai_model(torch.from_numpy(image_norm))
+    outputs = model_xai(torch.from_numpy(image_norm))
     logits = outputs["prediction"]  # BxC
     saliency_maps = outputs["saliency_map"]  # BxCxHxW: per-class saliency map
 ```

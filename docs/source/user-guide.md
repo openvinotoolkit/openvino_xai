@@ -133,7 +133,7 @@ preprocessed_image = np.expand_dims(preprocessed_image, 0)
 # Run explanation
 explanation = explainer(
     preprocessed_image,
-    target_explain_labels=[11, 14],  # indices or string labels to explain
+    targets=[11, 14],  # indices or string labels to explain
     overlay=True,  # False by default
     original_input_image=image,  # to apply overlay on the original image instead of the preprocessed one that was used for the explainer
 )
@@ -182,7 +182,7 @@ image = cv2.imread("path/to/image.jpg")
 # Run explanation
 explanation = explainer(
     image,
-    target_explain_labels=[11, 14],  # indices or string labels to explain
+    targets=[11, 14],  # indices or string labels to explain
 )
 
 # Save saliency maps
@@ -239,7 +239,7 @@ explanation = explainer(
     embed_scaling=True,  # True by default. If set to True, the saliency map scale (0 ~ 255) operation is embedded in the model
     explain_method=xai.Method.RECIPROCAM,  # ReciproCAM is the default XAI method for CNNs
     label_names=voc_labels,
-    target_explain_labels=[11, 14],  # target classes to explain, also ['dog', 'person'] is a valid input, since label_names are provided
+    targets=[11, 14],  # target classes to explain, also ['dog', 'person'] is a valid input, since label_names are provided
     overlay=True,  # False by default
 )
 
@@ -294,8 +294,8 @@ image = cv2.imread("path/to/image.jpg")
 explanation = explainer(
     image,
     explain_mode=ExplainMode.BLACKBOX,
-    target_explain_labels=[11, 14],  # target classes to explain
-    # target_explain_labels=-1,  # explain all classes
+    targets=[11, 14],  # target classes to explain
+    # targets=-1,  # explain all classes
     overlay=True,  # False by default
 )
 
@@ -324,7 +324,7 @@ from openvino_xai.explainer.visualizer colormap, overlay
 model: ov.Model = ov.Core().read_model("path/to/model.xml")
 
 # Insert XAI branch into the model graph
-xai_model: ov.Model = xai.insert_xai(
+model_xai: ov.Model = xai.insert_xai(
     model=model,
     task=xai.Task.CLASSIFICATION,
     # target_layer="last_conv_node_name",  # target_layer - the node after which the XAI branch will be inserted, usually the last convolutional layer in the backbone. Defaults to None, by which the target layer is automatically detected
@@ -337,12 +337,12 @@ xai_model: ov.Model = xai.insert_xai(
 model: torch.nn.Module
 
 # Insert XAI head
-xai_model: torch.nn.Module = insert_xai(model=model, task=xai.Task.CLASSIFICATION)
+model_xai: torch.nn.Module = insert_xai(model=model, task=xai.Task.CLASSIFICATION)
 
 # Torch XAI model inference
-xai_model.eval()
+model_xai.eval()
 with torch.no_grad():
-    outputs = xai_model(torch.from_numpy(image_norm))
+    outputs = model_xai(torch.from_numpy(image_norm))
     logits = outputs["prediction"]  # BxC: original model prediction
     saliency_maps = outputs["saliency_map"]  # BxCxhxw: additional per-class saliency map
     probs = torch.softmax(logits, dim=-1)
@@ -350,10 +350,10 @@ with torch.no_grad():
 
 # Torch XAI model saliency map
 saliency_maps = saliency_maps.numpy(force=True).squeeze(0)  # Cxhxw
-mask = saliency_maps[label]  # hxw mask for the label
-mask = colormap(mask[None, :])  # 1xhxw
-mask = cv2.resize(mask.squeeze(0), dsize=input_size)  # HxW
-result = overlay(mask, image)
+saliency_map = saliency_maps[label]  # hxw saliency_map for the label
+saliency_map = colormap(saliency_map[None, :])  # 1xhxw
+saliency_map = cv2.resize(saliency_map.squeeze(0), dsize=input_size)  # HxW
+saliency_image = overlay(saliency_map, image)
 ```
 
 ## XAI method overview
@@ -544,7 +544,7 @@ explanation = explainer(
     image,
     explain_mode=ExplainMode.WHITEBOX,
     label_names=voc_labels,
-    target_explain_labels=[7, 11],  # ['cat', 'dog'] also possible as target classes to explain
+    targets=[7, 11],  # ['cat', 'dog'] also possible as target classes to explain
 )
 
 # Use matplotlib (recommended for Jupyter) - default backend
@@ -634,7 +634,7 @@ explanation = explainer(
     image,
     explain_mode=ExplainMode.WHITEBOX,
     label_names=voc_labels,
-    target_explain_labels=result_idxs,  # target classes to explain
+    targets=result_idxs,  # target classes to explain
 )
 
 # Save saliency maps flexibly
