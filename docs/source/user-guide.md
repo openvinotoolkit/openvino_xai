@@ -332,8 +332,9 @@ xai_model: ov.Model = xai.insert_xai(
     explain_method=xai.Method.RECIPROCAM,  # ReciproCAM is the default XAI method for CNNs
 )
 
-# For PyTorch models, XAI head is inserted using the module hook mechanism internally
-# so that users could get additional saliency map without major changes in original inference pipeline.
+# Insert XAI branch into the Pytorch model
+# XAI head is inserted using the module hook mechanism internally
+# so that users could get additional saliency map without major changes in the original inference pipeline.
 model: torch.nn.Module
 
 # Insert XAI head
