@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>OpenVINO™ Explainable AI Toolkit User Guide &#8212; OpenVINO™ XAI 1.0.0 documentation</title>
+    <title>OpenVINO™ Explainable AI Toolkit User Guide &#8212; OpenVINO™ XAI 1.1.0 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=8d563738"></script>
+    <script src="_static/documentation_options.js?v=fc837d61"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -125,7 +125,7 @@
   
   
   
-    <p class="title logo__title">OpenVINO™ XAI 1.0.0 documentation</p>
+    <p class="title logo__title">OpenVINO™ XAI 1.1.0 documentation</p>
   
 </a></div>
     
@@ -543,7 +543,7 @@ The OpenVINO Runtime supports loading and inference of the ONNX models, and so d
 <span class="c1"># Run explanation</span>
 <span class="n">explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span>
     <span class="n">preprocessed_image</span><span class="p">,</span>
-    <span class="n">target_explain_labels</span><span class="o">=</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">],</span>  <span class="c1"># indices or string labels to explain</span>
+    <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">],</span>  <span class="c1"># indices or string labels to explain</span>
     <span class="n">overlay</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># False by default</span>
     <span class="n">original_input_image</span><span class="o">=</span><span class="n">image</span><span class="p">,</span>  <span class="c1"># to apply overlay on the original image instead of the preprocessed one that was used for the explainer</span>
 <span class="p">)</span>
@@ -591,7 +591,7 @@ The OpenVINO Runtime supports loading and inference of the ONNX models, and so d
 <span class="c1"># Run explanation</span>
 <span class="n">explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span>
     <span class="n">image</span><span class="p">,</span>
-    <span class="n">target_explain_labels</span><span class="o">=</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">],</span>  <span class="c1"># indices or string labels to explain</span>
+    <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">],</span>  <span class="c1"># indices or string labels to explain</span>
 <span class="p">)</span>
 
 <span class="c1"># Save saliency maps</span>
@@ -645,7 +645,7 @@ The OpenVINO Runtime supports loading and inference of the ONNX models, and so d
     <span class="n">embed_scaling</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># True by default. If set to True, the saliency map scale (0 ~ 255) operation is embedded in the model</span>
     <span class="n">explain_method</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Method</span><span class="o">.</span><span class="n">RECIPROCAM</span><span class="p">,</span>  <span class="c1"># ReciproCAM is the default XAI method for CNNs</span>
     <span class="n">label_names</span><span class="o">=</span><span class="n">voc_labels</span><span class="p">,</span>
-    <span class="n">target_explain_labels</span><span class="o">=</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">],</span>  <span class="c1"># target classes to explain, also [&#39;dog&#39;, &#39;person&#39;] is a valid input, since label_names are provided</span>
+    <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">],</span>  <span class="c1"># target classes to explain, also [&#39;dog&#39;, &#39;person&#39;] is a valid input, since label_names are provided</span>
     <span class="n">overlay</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># False by default</span>
 <span class="p">)</span>
 
@@ -697,8 +697,8 @@ Cons:</p></li>
 <span class="n">explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span>
     <span class="n">image</span><span class="p">,</span>
     <span class="n">explain_mode</span><span class="o">=</span><span class="n">ExplainMode</span><span class="o">.</span><span class="n">BLACKBOX</span><span class="p">,</span>
-    <span class="n">target_explain_labels</span><span class="o">=</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">],</span>  <span class="c1"># target classes to explain</span>
-    <span class="c1"># target_explain_labels=-1,  # explain all classes</span>
+    <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">],</span>  <span class="c1"># target classes to explain</span>
+    <span class="c1"># targets=-1,  # explain all classes</span>
     <span class="n">overlay</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># False by default</span>
 <span class="p">)</span>
 
@@ -715,21 +715,45 @@ Cons:</p></li>
 <p><strong>Note</strong>: The original model outputs are not affected, and the model should be inferable by the original inference pipeline.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
 <span class="kn">import</span> <span class="nn">openvino_xai</span> <span class="k">as</span> <span class="nn">xai</span>
+<span class="kn">from</span> <span class="nn">openvino_xai.common.utils</span> <span class="kn">import</span> <span class="n">softmax</span>
+<span class="kn">from</span> <span class="nn">openvino_xai.explainer.visualizer</span> <span class="n">colormap</span><span class="p">,</span> <span class="n">overlay</span>
 
 
 <span class="c1"># Create an ov.Model</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">ov</span><span class="o">.</span><span class="n">Core</span><span class="p">()</span><span class="o">.</span><span class="n">read_model</span><span class="p">(</span><span class="s2">&quot;path/to/model.xml&quot;</span><span class="p">)</span>  <span class="c1"># type: ov.Model</span>
+<span class="n">model</span><span class="p">:</span> <span class="n">ov</span><span class="o">.</span><span class="n">Model</span> <span class="o">=</span> <span class="n">ov</span><span class="o">.</span><span class="n">Core</span><span class="p">()</span><span class="o">.</span><span class="n">read_model</span><span class="p">(</span><span class="s2">&quot;path/to/model.xml&quot;</span><span class="p">)</span>
 
-<span class="c1"># Insert XAI branch into the model graph</span>
-<span class="n">model_xai</span> <span class="o">=</span> <span class="n">xai</span><span class="o">.</span><span class="n">insert_xai</span><span class="p">(</span>
+<span class="c1"># Insert XAI branch into the OpenVINO model graph (IR)</span>
+<span class="n">model_xai</span><span class="p">:</span> <span class="n">ov</span><span class="o">.</span><span class="n">Model</span> <span class="o">=</span> <span class="n">xai</span><span class="o">.</span><span class="n">insert_xai</span><span class="p">(</span>
     <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
     <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">,</span>
-    <span class="c1"># target_layer=&quot;last_conv_node_name&quot;,  # target_layer - the node after which the XAI branch will be inserted, usually the last convolutional layer in the backbone</span>
+    <span class="c1"># target_layer=&quot;last_conv_node_name&quot;,  # target_layer - the node after which the XAI branch will be inserted, usually the last convolutional layer in the backbone. Defaults to None, by which the target layer is automatically detected</span>
     <span class="n">embed_scaling</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># True by default. If set to True, the saliency map scale (0 ~ 255) operation is embedded in the model</span>
     <span class="n">explain_method</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Method</span><span class="o">.</span><span class="n">RECIPROCAM</span><span class="p">,</span>  <span class="c1"># ReciproCAM is the default XAI method for CNNs</span>
-<span class="p">)</span>  <span class="c1"># type: ov.Model</span>
+<span class="p">)</span>
 
-<span class="c1"># ***** Downstream task: user&#39;s code that infers model_xai and picks &#39;saliency_map&#39; output *****</span>
+<span class="c1"># Insert XAI branch into the Pytorch model</span>
+<span class="c1"># XAI head is inserted using the module hook mechanism internally</span>
+<span class="c1"># so that users could get additional saliency map without major changes in the original inference pipeline.</span>
+<span class="n">model</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span>
+
+<span class="c1"># Insert XAI head</span>
+<span class="n">model_xai</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span> <span class="o">=</span> <span class="n">insert_xai</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">)</span>
+
+<span class="c1"># Torch XAI model inference</span>
+<span class="n">model_xai</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+    <span class="n">outputs</span> <span class="o">=</span> <span class="n">model_xai</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">image_norm</span><span class="p">))</span>
+    <span class="n">logits</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;prediction&quot;</span><span class="p">]</span>  <span class="c1"># BxC: original model prediction</span>
+    <span class="n">saliency_maps</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;saliency_map&quot;</span><span class="p">]</span>  <span class="c1"># BxCxhxw: additional per-class saliency map</span>
+    <span class="n">probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="n">probs</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="c1"># Torch XAI model saliency map</span>
+<span class="n">saliency_maps</span> <span class="o">=</span> <span class="n">saliency_maps</span><span class="o">.</span><span class="n">numpy</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Cxhxw</span>
+<span class="n">saliency_map</span> <span class="o">=</span> <span class="n">saliency_maps</span><span class="p">[</span><span class="n">label</span><span class="p">]</span>  <span class="c1"># hxw saliency_map for the label</span>
+<span class="n">saliency_map</span> <span class="o">=</span> <span class="n">colormap</span><span class="p">(</span><span class="n">saliency_map</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:])</span>  <span class="c1"># 1xhxw</span>
+<span class="n">saliency_map</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">saliency_map</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">dsize</span><span class="o">=</span><span class="n">input_size</span><span class="p">)</span>  <span class="c1"># HxW</span>
+<span class="n">result_image</span> <span class="o">=</span> <span class="n">overlay</span><span class="p">(</span><span class="n">saliency_map</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -958,7 +982,7 @@ Number of cells defines granularity of the saliency map (usually, the higher the
     <span class="n">image</span><span class="p">,</span>
     <span class="n">explain_mode</span><span class="o">=</span><span class="n">ExplainMode</span><span class="o">.</span><span class="n">WHITEBOX</span><span class="p">,</span>
     <span class="n">label_names</span><span class="o">=</span><span class="n">voc_labels</span><span class="p">,</span>
-    <span class="n">target_explain_labels</span><span class="o">=</span><span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">11</span><span class="p">],</span>  <span class="c1"># [&#39;cat&#39;, &#39;dog&#39;] also possible as target classes to explain</span>
+    <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">11</span><span class="p">],</span>  <span class="c1"># [&#39;cat&#39;, &#39;dog&#39;] also possible as target classes to explain</span>
 <span class="p">)</span>
 
 <span class="c1"># Use matplotlib (recommended for Jupyter) - default backend</span>
@@ -1043,7 +1067,7 @@ Number of cells defines granularity of the saliency map (usually, the higher the
     <span class="n">image</span><span class="p">,</span>
     <span class="n">explain_mode</span><span class="o">=</span><span class="n">ExplainMode</span><span class="o">.</span><span class="n">WHITEBOX</span><span class="p">,</span>
     <span class="n">label_names</span><span class="o">=</span><span class="n">voc_labels</span><span class="p">,</span>
-    <span class="n">target_explain_labels</span><span class="o">=</span><span class="n">result_idxs</span><span class="p">,</span>  <span class="c1"># target classes to explain</span>
+    <span class="n">targets</span><span class="o">=</span><span class="n">result_idxs</span><span class="p">,</span>  <span class="c1"># target classes to explain</span>
 <span class="p">)</span>
 
 <span class="c1"># Save saliency maps flexibly</span>

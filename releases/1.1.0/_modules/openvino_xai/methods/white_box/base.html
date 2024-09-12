@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>openvino_xai.methods.white_box.base &#8212; OpenVINO™ XAI 1.0.0 documentation</title>
+    <title>openvino_xai.methods.white_box.base &#8212; OpenVINO™ XAI 1.1.0 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../../../_static/documentation_options.js?v=8d563738"></script>
+    <script src="../../../../_static/documentation_options.js?v=fc837d61"></script>
     <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -123,7 +123,7 @@
   
   
   
-    <p class="title logo__title">OpenVINO™ XAI 1.0.0 documentation</p>
+    <p class="title logo__title">OpenVINO™ XAI 1.1.0 documentation</p>
   
 </a></div>
     
@@ -442,7 +442,6 @@ document.write(`
     <span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">preprocess_fn</span><span class="o">=</span><span class="n">preprocess_fn</span><span class="p">,</span> <span class="n">device_name</span><span class="o">=</span><span class="n">device_name</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_model_ori</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">preprocess_fn</span> <span class="o">=</span> <span class="n">preprocess_fn</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">embed_scaling</span> <span class="o">=</span> <span class="n">embed_scaling</span>
 
     <span class="nd">@property</span>
@@ -467,18 +466,16 @@ document.write(`
 <div class="viewcode-block" id="WhiteBoxMethod.prepare_model">
 <a class="viewcode-back" href="../../../../api-manual.html#openvino_xai.methods.WhiteBoxMethod.prepare_model">[docs]</a>
     <span class="k">def</span> <span class="nf">prepare_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">load_model</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ov</span><span class="o">.</span><span class="n">Model</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">has_xai</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_ori</span><span class="p">):</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Provided IR model already contains XAI branch.&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_ori</span>
-            <span class="k">if</span> <span class="n">load_model</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_model_compiled</span> <span class="o">=</span> <span class="n">ov</span><span class="o">.</span><span class="n">Core</span><span class="p">()</span><span class="o">.</span><span class="n">compile_model</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span> <span class="n">device_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_device_name</span><span class="p">)</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span>
-
-        <span class="n">xai_output_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_xai_branch</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="n">insert_xai_branch_into_model</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_ori</span><span class="p">,</span> <span class="n">xai_output_node</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">embed_scaling</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_xai</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Insertion of the XAI branch into the model was not successful.&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">load_model</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">has_xai</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_ori</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Provided IR model already contains XAI branch.&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_ori</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">xai_output_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_xai_branch</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="n">insert_xai_branch_into_model</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_ori</span><span class="p">,</span> <span class="n">xai_output_node</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">embed_scaling</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">has_xai</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Insertion of the XAI branch into the model was not successful.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">load_model</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_compiled</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_model_compiled</span> <span class="o">=</span> <span class="n">ov</span><span class="o">.</span><span class="n">Core</span><span class="p">()</span><span class="o">.</span><span class="n">compile_model</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span> <span class="n">device_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_device_name</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span></div>
 
