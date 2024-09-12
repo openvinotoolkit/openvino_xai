@@ -11,6 +11,7 @@
 * Upgrade OpenVINO to 2024.3.0
 * Add saliency map visualization with explanation.plot()
 * Enable flexible naming for saved saliency maps and include confidence scores
+* Add XAI method documentation
 
 ### What's Changed
 
@@ -27,6 +28,8 @@
 * Add [Insertion-Deletion AUC](https://arxiv.org/abs/1806.07421) saliency map quality metric by @GalyaZalesskaya in https://github.com/openvinotoolkit/openvino_xai/pull/56
 * Add [ADCC](https://arxiv.org/abs/2104.10252) saliency map quality metric by @GalyaZalesskaya in https://github.com/openvinotoolkit/openvino_xai/pull/57
 * Enable AISE for detection: Adaptive Input Sampling for Explanation of Black-box Models by @negvet in https://github.com/openvinotoolkit/openvino_xai/pull/55
+* Enable prediction attribute for methods that is used for enhancing saliency map overlay by @negvet in https://github.com/openvinotoolkit/openvino_xai/pull/62
+* Add documentation per-method, including summary and usage guide by @negvet in https://github.com/openvinotoolkit/openvino_xai/pull/63
 * Support Pytorch models for `insert_xai` API by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/61
 * Auto-detect feature layer for Pytorch models by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/64
 
