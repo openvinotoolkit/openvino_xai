@@ -323,7 +323,7 @@ from openvino_xai.explainer.visualizer colormap, overlay
 # Create an ov.Model
 model: ov.Model = ov.Core().read_model("path/to/model.xml")
 
-# Insert XAI branch into the model graph
+# Insert XAI branch into the OpenVINO model graph (IR)
 model_xai: ov.Model = xai.insert_xai(
     model=model,
     task=xai.Task.CLASSIFICATION,
@@ -332,8 +332,9 @@ model_xai: ov.Model = xai.insert_xai(
     explain_method=xai.Method.RECIPROCAM,  # ReciproCAM is the default XAI method for CNNs
 )
 
-# For PyTorch models, XAI head is inserted using the module hook mechanism internally
-# so that users could get additional saliency map without major changes in original inference pipeline.
+# Insert XAI branch into the Pytorch model
+# XAI head is inserted using the module hook mechanism internally
+# so that users could get additional saliency map without major changes in the original inference pipeline.
 model: torch.nn.Module
 
 # Insert XAI head
