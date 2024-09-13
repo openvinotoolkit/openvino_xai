@@ -9,12 +9,17 @@ from pathlib import Path
 import cv2
 import numpy as np
 import openvino as ov
-import timm
-import torch
 
 from openvino_xai import Task, insert_xai
 from openvino_xai.common.utils import logger, softmax
 from openvino_xai.explainer.visualizer import colormap, overlay
+
+try:
+    torch = importlib.import_module("torch")
+    timm = importlib.import_module("timm")
+except ImportError:
+    logger.error("Please install torch and timm package to run this example.")
+    exit(-1)
 
 
 def get_argument_parser():
@@ -90,7 +95,7 @@ def run_insert_xai_torch_to_onnx(args: list[str]):
     try:
         importlib.import_module("onnx")
         onnxruntime = importlib.import_module("onnxruntime")
-    except Exception:
+    except ImportError:
         logger.info("Please install onnx and onnxruntime package to run ONNX XAI example.")
         return
 

@@ -7,12 +7,12 @@ from typing import Callable, List, Tuple
 
 import numpy as np
 import openvino.runtime as ov
-import torch
 from openvino.runtime import opset10 as opset
 
 from openvino_xai.common.utils import IdentityPreprocessFN
 from openvino_xai.inserter.model_parser import IRParserCls, ModelType
 from openvino_xai.methods.white_box.base import WhiteBoxMethod
+from openvino_xai.utils.torch import torch
 
 
 class FeatureMapPerturbationBase(WhiteBoxMethod):

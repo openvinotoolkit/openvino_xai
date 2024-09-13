@@ -4,7 +4,6 @@
 import copy
 from abc import abstractmethod
 from typing import Callable
-from venv import logger
 
 import numpy as np
 import openvino.runtime as ov
@@ -14,6 +13,7 @@ from openvino_xai.common.utils import (
     SALIENCY_MAP_OUTPUT_NAME,
     IdentityPreprocessFN,
     has_xai,
+    logger,
 )
 from openvino_xai.inserter.inserter import insert_xai_branch_into_model
 from openvino_xai.methods.base import MethodBase

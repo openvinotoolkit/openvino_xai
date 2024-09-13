@@ -4,11 +4,11 @@
 from typing import List, TypeVar
 
 import openvino as ov
-import torch
 
 from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import IdentityPreprocessFN, has_xai, logger
 from openvino_xai.methods.factory import WhiteBoxMethodFactory
+from openvino_xai.utils.torch import torch
 
 Model = TypeVar("Model", ov.Model, torch.nn.Module)
 

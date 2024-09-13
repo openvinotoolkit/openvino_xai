@@ -7,9 +7,9 @@ from typing import Callable, Dict, Generic, List, Mapping, Tuple, TypeAlias, Typ
 
 import numpy as np
 import openvino as ov
-import torch
 
 from openvino_xai.common.utils import IdentityPreprocessFN
+from openvino_xai.utils.torch import torch
 
 Model = TypeVar("Model", ov.Model, torch.nn.Module)
 CompiledModel = TypeVar("CompiledModel", ov.CompiledModel, torch.nn.Module)

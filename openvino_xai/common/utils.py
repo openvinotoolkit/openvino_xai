@@ -11,7 +11,8 @@ from urllib.request import urlretrieve
 
 import numpy as np
 import openvino as ov
-import torch
+
+from openvino_xai.utils.torch import torch
 
 logger = logging.getLogger("openvino_xai")
 handler = logging.StreamHandler()

@@ -8,10 +8,15 @@ import copy
 from typing import Any, Callable, Dict, Mapping
 
 import numpy as np
-import torch
 
-from openvino_xai.common.utils import SALIENCY_MAP_OUTPUT_NAME, has_xai
+from openvino_xai.common.utils import SALIENCY_MAP_OUTPUT_NAME, has_xai, logger
 from openvino_xai.methods.base import IdentityPreprocessFN, MethodBase
+
+try:
+    import torch
+except ImportError as e:
+    logger.error("Please install pytorch to enable PyTorch model support.")
+    raise e
 
 
 class TorchWhiteBoxMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
