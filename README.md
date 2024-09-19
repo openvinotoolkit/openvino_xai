@@ -139,7 +139,7 @@ You can enjoy the PyTorch XAI feature if the PyTorch is installed along with the
 
 ```bash
 # Install PyTorch (CPU version as example)
-pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+pip3 install torch --index-url https://download.pytorch.org/whl/cpu
 ```
 Please refer to the [PyTorch Installation Guide](https://pytorch.org/get-started/locally/) for other options.
 </details>
