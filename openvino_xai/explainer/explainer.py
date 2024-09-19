@@ -34,6 +34,7 @@ class ExplainMode(Enum):
     Contains the following values:
         WHITEBOX - The model is explained in white box mode, i.e. XAI branch is getting inserted into the model graph.
         BLACKBOX - The model is explained in black box model.
+        AUTO - The model is explained in the white-box mode first, if fails - black-box mode will run.
     """
 
     WHITEBOX = "whitebox"

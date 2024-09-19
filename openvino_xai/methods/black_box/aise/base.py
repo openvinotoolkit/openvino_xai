@@ -10,7 +10,7 @@ import numpy as np
 import openvino.runtime as ov
 from scipy.optimize import direct
 
-from openvino_xai.common.utils import IdentityPreprocessFN
+from openvino_xai.common.utils import IdentityPreprocessFN, is_bhwc_layout
 from openvino_xai.methods.black_box.base import BlackBoxXAIMethod
 
 
@@ -92,6 +92,8 @@ class AISEBase(BlackBoxXAIMethod, ABC):
 
         kernel_mask = self._mask_generator.generate_kernel_mask(kernel_params)
         kernel_mask = np.clip(kernel_mask, 0, 1)
+        if is_bhwc_layout(self.data_preprocessed):
+            kernel_mask = np.expand_dims(kernel_mask, 2)
 
         pred_loss_preserve = 0.0
         if self.preservation:

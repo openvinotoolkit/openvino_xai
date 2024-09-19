@@ -10,6 +10,11 @@ from openvino_xai.explainer.explanation import Explanation
 from openvino_xai.explainer.visualizer import Visualizer, colormap, overlay, resize
 from openvino_xai.methods.base import Prediction
 
+ORIGINAL_INPUT_IMAGE = [
+    np.ones((100, 100, 3)),
+    np.ones((10, 10, 3)),
+]
+
 SALIENCY_MAPS = [
     (np.random.rand(1, 5, 5) * 255).astype(np.uint8),
     (np.random.rand(1, 2, 5, 5) * 255).astype(np.uint8),
@@ -97,6 +102,7 @@ def test_overlay():
 
 
 class TestVisualizer:
+    @pytest.mark.parametrize("original_input_image", ORIGINAL_INPUT_IMAGE)
     @pytest.mark.parametrize("saliency_maps", SALIENCY_MAPS)
     @pytest.mark.parametrize("explain_all_classes", EXPLAIN_ALL_CLASSES)
     @pytest.mark.parametrize("task", [Task.CLASSIFICATION, Task.DETECTION])
@@ -107,6 +113,7 @@ class TestVisualizer:
     @pytest.mark.parametrize("overlay_weight", [0.5, 0.3])
     def test_visualizer(
         self,
+        original_input_image,
         saliency_maps,
         explain_all_classes,
         task,
@@ -124,7 +131,6 @@ class TestVisualizer:
         explanation = Explanation(saliency_maps, targets=explain_targets, task=Task.CLASSIFICATION)
 
         raw_sal_map_dims = len(explanation.shape)
-        original_input_image = np.ones((20, 20, 3))
         visualizer = Visualizer()
         explanation = visualizer(
             explanation=explanation,

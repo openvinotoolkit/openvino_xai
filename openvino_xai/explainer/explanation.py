@@ -188,7 +188,7 @@ class Explanation:
             map_to_save = cv2.cvtColor(map_to_save, code=cv2.COLOR_RGB2BGR)
             if isinstance(target_idx, str):
                 target_name = "activation_map"
-            elif self.label_names and isinstance(target_idx, np.int64) and self.task != Task.DETECTION:
+            elif self.label_names and isinstance(target_idx, (int, np.int64)) and self.task != Task.DETECTION:
                 target_name = self.label_names[target_idx]
             else:
                 target_name = str(target_idx)
@@ -261,7 +261,12 @@ class Explanation:
 
             map_to_plot = self.saliency_map[target_index]
 
-            axes[i].imshow(map_to_plot)
+            if map_to_plot.ndim == 3:
+                axes[i].imshow(map_to_plot)
+            elif map_to_plot.ndim == 2:
+                axes[i].imshow(map_to_plot, cmap="gray")
+            else:
+                raise ValueError(f"Saliency map expected to be 3 or 2-dimensional, but got {map_to_plot.ndim}.")
             axes[i].axis("off")  # Hide the axis
             axes[i].set_title(f"Class {label_name}")
 
