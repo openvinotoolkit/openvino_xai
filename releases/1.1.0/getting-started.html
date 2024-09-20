@@ -567,6 +567,15 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 </div>
 </details>
 <details>
+<summary>(Optional) Enable PyTorch support</summary>
+<p>You can enjoy the PyTorch XAI feature if the PyTorch is installed along with the OpenVINO XAI.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install PyTorch (CPU version as example)</span>
+pip3<span class="w"> </span>install<span class="w"> </span>torch<span class="w"> </span>--index-url<span class="w"> </span>https://download.pytorch.org/whl/cpu
+</pre></div>
+</div>
+<p>Please refer to the <a class="reference external" href="https://pytorch.org/get-started/locally/">PyTorch Installation Guide</a> for other options.</p>
+</details>
+<details>
 <summary>Verify installation</summary>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Run tests</span>
 pytest<span class="w"> </span>-v<span class="w"> </span>-s<span class="w"> </span>./tests/unit

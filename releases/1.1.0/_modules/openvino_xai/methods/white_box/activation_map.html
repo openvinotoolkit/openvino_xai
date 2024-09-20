@@ -402,12 +402,12 @@ document.write(`
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
-<span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">openvino.runtime</span> <span class="kn">import</span> <span class="n">opset10</span> <span class="k">as</span> <span class="n">opset</span>
 
 <span class="kn">from</span> <span class="nn">openvino_xai.common.utils</span> <span class="kn">import</span> <span class="n">IdentityPreprocessFN</span>
 <span class="kn">from</span> <span class="nn">openvino_xai.inserter.model_parser</span> <span class="kn">import</span> <span class="n">IRParserCls</span><span class="p">,</span> <span class="n">ModelType</span>
 <span class="kn">from</span> <span class="nn">openvino_xai.methods.white_box.base</span> <span class="kn">import</span> <span class="n">WhiteBoxMethod</span>
+<span class="kn">from</span> <span class="nn">openvino_xai.utils.torch</span> <span class="kn">import</span> <span class="n">torch</span>
 
 
 <div class="viewcode-block" id="ActivationMap">

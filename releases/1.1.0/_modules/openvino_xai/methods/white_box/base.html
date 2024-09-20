@@ -401,7 +401,6 @@ document.write(`
 <span class="kn">import</span> <span class="nn">copy</span>
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span>
-<span class="kn">from</span> <span class="nn">venv</span> <span class="kn">import</span> <span class="n">logger</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
@@ -411,6 +410,7 @@ document.write(`
     <span class="n">SALIENCY_MAP_OUTPUT_NAME</span><span class="p">,</span>
     <span class="n">IdentityPreprocessFN</span><span class="p">,</span>
     <span class="n">has_xai</span><span class="p">,</span>
+    <span class="n">logger</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">openvino_xai.inserter.inserter</span> <span class="kn">import</span> <span class="n">insert_xai_branch_into_model</span>
 <span class="kn">from</span> <span class="nn">openvino_xai.methods.base</span> <span class="kn">import</span> <span class="n">MethodBase</span>
