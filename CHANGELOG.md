@@ -8,7 +8,7 @@
 * Support OpenVINO IR (.xml) / ONNX (.onnx) model files for `Explainer`
 * Enable AISE method: Adaptive Input Sampling for Explanation of Black-box Models
 * Add Pointing Game, Insertion-Deletion AUC and ADCC quality metrics for saliency maps
-* Upgrade OpenVINO to 2024.3.0
+* Upgrade OpenVINO to 2024.4.0
 * Add saliency map visualization with explanation.plot()
 * Enable flexible naming for saved saliency maps and include confidence scores
 * Add XAI method documentation
@@ -32,6 +32,7 @@
 * Add documentation per-method, including summary and usage guide by @negvet in https://github.com/openvinotoolkit/openvino_xai/pull/63
 * Support Pytorch models for `insert_xai` API by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/61
 * Auto-detect feature layer for Pytorch models by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/64
+* Upgrade OpenVINO to 2024.4.0 by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/72
 
 ### Known Issues
 
