@@ -8,10 +8,10 @@
 [Install](#installation) •
 [Quick Start](#quick-start) •
 [License](#license) •
-[Documentation](https://openvinotoolkit.github.io/openvino_xai/releases/1.0.0)
+[Documentation](https://openvinotoolkit.github.io/openvino_xai/releases/1.1.0)
 
 ![Python](https://img.shields.io/badge/python-3.10%2B-green)
-[![OpenVINO](https://img.shields.io/badge/openvino-2024.2-purple)](https://pypi.org/project/openvino/)
+[![OpenVINO](https://img.shields.io/badge/openvino-2024.4-purple)](https://pypi.org/project/openvino/)
 [![codecov](https://codecov.io/gh/openvinotoolkit/openvino_xai/graph/badge.svg?token=NR0Z0CWDK9)](https://codecov.io/gh/openvinotoolkit/openvino_xai)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![PyPI](https://img.shields.io/pypi/v/openvino_xai)](https://pypi.org/project/openvino_xai)
@@ -57,7 +57,7 @@ for i, image in enumerate(images):
 * Support OpenVINO IR (.xml) / ONNX (.onnx) model files for `Explainer`
 * Enable AISE method: Adaptive Input Sampling for Explanation of Black-box Models
 * Add Pointing Game, Insertion-Deletion AUC and ADCC quality metrics for saliency maps
-* Upgrade OpenVINO to 2024.3.0
+* Upgrade OpenVINO to 2024.4.0
 * Add saliency map visualization with explanation.plot()
 * Enable flexible naming for saved saliency maps and include confidence scores
 
