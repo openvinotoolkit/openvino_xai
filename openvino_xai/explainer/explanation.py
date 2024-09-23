@@ -177,7 +177,6 @@ class Explanation:
             :type postfix: str
             :param confidence_scores: Dict with confidence scores for each class index. Default is None.
             :type confidence_scores: Dict[int, float] | None
-
         """
 
         os.makedirs(dir_path, exist_ok=True)

@@ -144,6 +144,12 @@ class TestImageClassificationTimm:
         21843: 2441,  # 2441 is a cheetah class_id in the ImageNet-21k dataset
         11821: 1652,  # 1652 is a cheetah class_id in the ImageNet-12k dataset
     }
+    reference_maps_names = {
+        (ExplainMode.WHITEBOX, Method.RECIPROCAM): Path("resnet18.a1_in1k_reciprocam.npy"),
+        (ExplainMode.WHITEBOX, Method.ACTIVATIONMAP): Path("resnet18.a1_in1k_activationmap.npy"),
+        (ExplainMode.BLACKBOX, Method.AISE): Path("resnet18.a1_in1k_aise.npy"),
+        (ExplainMode.BLACKBOX, Method.RISE): Path("resnet18.a1_in1k_rise.npy"),
+    }
 
     @pytest.fixture(autouse=True)
     def setup(self, fxt_data_root, fxt_output_root, fxt_clear_cache):
@@ -503,6 +509,62 @@ class TestImageClassificationTimm:
         assert saliency_map.dtype == np.uint8
 
         self.clear_cache()
+
+    @pytest.mark.parametrize(
+        "explain_mode, explain_method",
+        [
+            (ExplainMode.WHITEBOX, Method.RECIPROCAM),
+            (ExplainMode.WHITEBOX, Method.ACTIVATIONMAP),
+            (ExplainMode.BLACKBOX, Method.AISE),
+            (ExplainMode.BLACKBOX, Method.RISE),
+        ],
+    )
+    def test_reference_map(self, explain_mode, explain_method):
+        model_id = "resnet18.a1_in1k"
+        model_dir = self.data_dir / "timm_models" / "converted_models"
+        _, model_cfg = self.get_timm_model(model_id, model_dir)
+
+        ir_path = model_dir / model_id / "model_fp32.xml"
+        model = ov.Core().read_model(ir_path)
+
+        mean_values = [(item * 255) for item in model_cfg["mean"]]
+        scale_values = [(item * 255) for item in model_cfg["std"]]
+        preprocess_fn = get_preprocess_fn(
+            change_channel_order=True,
+            input_size=model_cfg["input_size"][1:],
+            mean=mean_values,
+            std=scale_values,
+            hwc_to_chw=True,
+        )
+
+        explainer = Explainer(
+            model=model,
+            task=Task.CLASSIFICATION,
+            preprocess_fn=preprocess_fn,
+            postprocess_fn=get_postprocess_fn(),
+            explain_mode=explain_mode,
+            explain_method=explain_method,
+            embed_scaling=False,
+        )
+
+        target_class = self.supported_num_classes[model_cfg["num_classes"]]
+        image = cv2.imread("tests/assets/cheetah_person.jpg")
+        explanation = explainer(
+            image,
+            original_input_image=image,
+            targets=[target_class],
+            resize=False,
+            colormap=False,
+        )
+
+        if explain_method == Method.ACTIVATIONMAP:
+            generated_map = explanation.saliency_map["per_image_map"]
+        else:
+            generated_map = explanation.saliency_map[target_class]
+
+        reference_maps_path = Path("tests/assets/reference_maps")
+        reference_map = np.load(reference_maps_path / self.reference_maps_names[(explain_mode, explain_method)])
+        assert np.all(np.abs(generated_map.astype(np.int16) - reference_map.astype(np.int16)) <= 3)
 
     def check_for_saved_map(self, model_id, directory):
         for target in self.supported_num_classes.values():

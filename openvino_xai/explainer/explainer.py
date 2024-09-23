@@ -149,6 +149,7 @@ class Explainer:
         colormap: bool = True,
         overlay: bool = False,
         overlay_weight: float = 0.5,
+        overlay_prediction: bool = True,
         **kwargs,
     ) -> Explanation:
         return self.explain(
@@ -162,6 +163,7 @@ class Explainer:
             colormap,
             overlay,
             overlay_weight,
+            overlay_prediction,
             **kwargs,
         )
 
@@ -177,6 +179,7 @@ class Explainer:
         colormap: bool = True,
         overlay: bool = False,
         overlay_weight: float = 0.5,
+        overlay_prediction: bool = True,
         **kwargs,
     ) -> Explanation:
         """
@@ -203,6 +206,8 @@ class Explainer:
         :type overlay: bool
         :parameter overlay_weight: Weight of the saliency map when overlaying the input data with the saliency map.
         :type overlay_weight: float
+        :parameter overlay_prediction: If True, plot model prediction over the overlay.
+        :type overlay_prediction: bool
         """
         targets = convert_targets_to_numpy(targets)
 
@@ -236,6 +241,7 @@ class Explainer:
             colormap,
             overlay,
             overlay_weight,
+            overlay_prediction,
         )
 
     def model_forward(self, x: np.ndarray, preprocess: bool = True) -> Mapping:
@@ -281,6 +287,7 @@ class Explainer:
         colormap: bool,
         overlay: bool,
         overlay_weight: float,
+        overlay_prediction: bool,
     ) -> Explanation:
         if output_size is None:
             reference_image = data if original_input_image is None else original_input_image
@@ -295,5 +302,6 @@ class Explainer:
             colormap=colormap,
             overlay=overlay,
             overlay_weight=overlay_weight,
+            overlay_prediction=overlay_prediction,
         )
         return explanation

@@ -111,6 +111,7 @@ class TestVisualizer:
     @pytest.mark.parametrize("colormap", [True, False])
     @pytest.mark.parametrize("overlay", [True, False])
     @pytest.mark.parametrize("overlay_weight", [0.5, 0.3])
+    @pytest.mark.parametrize("overlay_prediction", [True, False])
     def test_visualizer(
         self,
         original_input_image,
@@ -122,6 +123,7 @@ class TestVisualizer:
         colormap,
         overlay,
         overlay_weight,
+        overlay_prediction,
     ):
         if explain_all_classes:
             explain_targets = -1
@@ -140,6 +142,7 @@ class TestVisualizer:
             colormap=colormap,
             overlay=overlay,
             overlay_weight=overlay_weight,
+            overlay_prediction=overlay_prediction,
         )
 
         assert explanation is not None
@@ -167,6 +170,7 @@ class TestVisualizer:
                 colormap=colormap,
                 overlay=overlay,
                 overlay_weight=overlay_weight,
+                overlay_prediction=overlay_prediction,
             )
             maps_data = explanation.saliency_map
             maps_size = explanation_output_size.saliency_map
@@ -178,14 +182,21 @@ class TestVisualizer:
                 1: Prediction(bounding_box=[2, 5, 9, 7], score=0.5, label=0),
             }
             explanation = Explanation(saliency_maps, targets=-1, task=task, predictions=predictions)
+
             visualizer = Visualizer()
-            explanation_output_size = visualizer(
+            explanation = visualizer(
                 explanation=explanation,
                 original_input_image=original_input_image,
-                output_size=(20, 20),
                 scaling=scaling,
                 resize=resize,
                 colormap=colormap,
                 overlay=overlay,
                 overlay_weight=overlay_weight,
+                overlay_prediction=overlay_prediction,
             )
+
+            if task == Task.CLASSIFICATION and original_input_image.shape[0] == 100 and overlay:
+                if overlay_prediction:
+                    assert np.all(explanation.saliency_map[0][10, 6] == np.array([255, 0, 0], dtype=np.uint8))
+                else:
+                    assert np.any(explanation.saliency_map[0][10, 6] != np.array([255, 0, 0], dtype=np.uint8))
