@@ -32,6 +32,7 @@ TEST_MODELS = timm.list_models(pretrained=True)
 SUPPORTED_BUT_FAILED_BY_BB_MODELS = {}
 
 NOT_SUPPORTED_BY_BB_MODELS = {
+    "convit": "RuntimeError: Couldn't get TorchScript module by tracing.",
     "repvit": "urllib.error.HTTPError: HTTP Error 404: Not Found",
     "tf_efficientnet_cc": "torch.onnx.errors.SymbolicValueError: Unsupported: ONNX export of convolution for kernel of unknown shape.",
     "vit_base_r50_s16_224.orig_in21k": "RuntimeError: Error(s) in loading state_dict for VisionTransformer",
