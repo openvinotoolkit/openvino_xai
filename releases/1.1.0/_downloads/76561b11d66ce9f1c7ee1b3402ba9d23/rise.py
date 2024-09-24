@@ -45,6 +45,8 @@ class RISE(BlackBoxXAIMethod):
         super().__init__(
             model=model, postprocess_fn=postprocess_fn, preprocess_fn=preprocess_fn, device_name=device_name
         )
+        self.num_masks: int | None = None
+        self.num_cells: int | None = None
 
         if prepare_model:
             self.prepare_model()
@@ -84,13 +86,11 @@ class RISE(BlackBoxXAIMethod):
         """
         data_preprocessed = self.preprocess_fn(data)
 
-        num_masks, num_cells = self._preset_parameters(preset, num_masks, num_cells)
+        self.num_masks, self.num_cells = self._preset_parameters(preset, num_masks, num_cells)
 
         saliency_maps = self._run_synchronous_explanation(
             data_preprocessed,
             target_indices,
-            num_masks,
-            num_cells,
             prob,
             seed,
         )
@@ -134,8 +134,6 @@ class RISE(BlackBoxXAIMethod):
         self,
         data_preprocessed: np.ndarray,
         target_classes: List[int] | None,
-        num_masks: int,
-        num_cells: int,
         prob: float,
         seed: int,
     ) -> np.ndarray:
@@ -152,8 +150,8 @@ class RISE(BlackBoxXAIMethod):
         rand_generator = np.random.default_rng(seed=seed)
 
         saliency_maps = np.zeros((num_targets, input_size[0], input_size[1]))
-        for _ in tqdm(range(0, num_masks), desc="Explaining in synchronous mode"):
-            mask = self._generate_mask(input_size, num_cells, prob, rand_generator)
+        for _ in tqdm(range(0, self.num_masks), desc="Explaining in synchronous mode"):
+            mask = self._generate_mask(input_size, self.num_cells, prob, rand_generator)
             # Add channel dimensions for masks
             if is_bhwc_layout(data_preprocessed):
                 masked = np.expand_dims(mask, 2) * data_preprocessed

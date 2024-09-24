@@ -57,6 +57,8 @@ class AISEClassification(AISEBase):
             prepare_model=prepare_model,
         )
         self.bounds = Bounds([0.0, 0.0], [1.0, 1.0])
+        self.num_iterations_per_kernel: int | None = None
+        self.kernel_widths: List[float] | np.ndarray | None = None
 
     def generate_saliency_map(  # type: ignore
         self,

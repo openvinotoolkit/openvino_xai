@@ -444,6 +444,8 @@ document.write(`
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">postprocess_fn</span><span class="o">=</span><span class="n">postprocess_fn</span><span class="p">,</span> <span class="n">preprocess_fn</span><span class="o">=</span><span class="n">preprocess_fn</span><span class="p">,</span> <span class="n">device_name</span><span class="o">=</span><span class="n">device_name</span>
         <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_masks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_cells</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">if</span> <span class="n">prepare_model</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">prepare_model</span><span class="p">()</span>
@@ -485,13 +487,11 @@ document.write(`
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">data_preprocessed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">preprocess_fn</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
-        <span class="n">num_masks</span><span class="p">,</span> <span class="n">num_cells</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preset_parameters</span><span class="p">(</span><span class="n">preset</span><span class="p">,</span> <span class="n">num_masks</span><span class="p">,</span> <span class="n">num_cells</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_masks</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cells</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preset_parameters</span><span class="p">(</span><span class="n">preset</span><span class="p">,</span> <span class="n">num_masks</span><span class="p">,</span> <span class="n">num_cells</span><span class="p">)</span>
 
         <span class="n">saliency_maps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_synchronous_explanation</span><span class="p">(</span>
             <span class="n">data_preprocessed</span><span class="p">,</span>
             <span class="n">target_indices</span><span class="p">,</span>
-            <span class="n">num_masks</span><span class="p">,</span>
-            <span class="n">num_cells</span><span class="p">,</span>
             <span class="n">prob</span><span class="p">,</span>
             <span class="n">seed</span><span class="p">,</span>
         <span class="p">)</span>
@@ -536,8 +536,6 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">data_preprocessed</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
         <span class="n">target_classes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">num_masks</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">num_cells</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">prob</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -554,8 +552,8 @@ document.write(`
         <span class="n">rand_generator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
 
         <span class="n">saliency_maps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_targets</span><span class="p">,</span> <span class="n">input_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">input_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
-        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_masks</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Explaining in synchronous mode&quot;</span><span class="p">):</span>
-            <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_mask</span><span class="p">(</span><span class="n">input_size</span><span class="p">,</span> <span class="n">num_cells</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">rand_generator</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_masks</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Explaining in synchronous mode&quot;</span><span class="p">):</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_mask</span><span class="p">(</span><span class="n">input_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cells</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">rand_generator</span><span class="p">)</span>
             <span class="c1"># Add channel dimensions for masks</span>
             <span class="k">if</span> <span class="n">is_bhwc_layout</span><span class="p">(</span><span class="n">data_preprocessed</span><span class="p">):</span>
                 <span class="n">masked</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">data_preprocessed</span>
