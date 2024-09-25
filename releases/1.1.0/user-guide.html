@@ -349,6 +349,7 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="#xai-methods">XAI methods</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#plot-saliency-maps">Plot saliency maps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#saving-saliency-maps">Saving saliency maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#measure-quiality-metrics-of-saliency-maps">Measure quiality metrics of saliency maps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#example-scripts">Example scripts</a></li>
 </ul>
 </li>
@@ -627,6 +628,7 @@ The OpenVINO Runtime supports loading and inference of the ONNX models, and so d
     <span class="n">model</span><span class="p">,</span>
     <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">,</span>
     <span class="n">preprocess_fn</span><span class="o">=</span><span class="n">preprocess_fn</span><span class="p">,</span>
+    <span class="n">explain_mode</span><span class="o">=</span><span class="n">ExplainMode</span><span class="o">.</span><span class="n">WHITEBOX</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="c1"># Generate and process saliency maps (as many as required, sequentially)</span>
@@ -640,7 +642,6 @@ The OpenVINO Runtime supports loading and inference of the ONNX models, and so d
 <span class="c1"># Run explanation</span>
 <span class="n">explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span>
     <span class="n">image</span><span class="p">,</span>
-    <span class="n">explain_mode</span><span class="o">=</span><span class="n">ExplainMode</span><span class="o">.</span><span class="n">WHITEBOX</span><span class="p">,</span>
     <span class="c1"># target_layer=&quot;last_conv_node_name&quot;,  # target_layer - node after which the XAI branch will be inserted, usually the last convolutional layer in the backbone</span>
     <span class="n">embed_scaling</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># True by default. If set to True, the saliency map scale (0 ~ 255) operation is embedded in the model</span>
     <span class="n">explain_method</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Method</span><span class="o">.</span><span class="n">RECIPROCAM</span><span class="p">,</span>  <span class="c1"># ReciproCAM is the default XAI method for CNNs</span>
@@ -688,6 +689,7 @@ Cons:</p></li>
     <span class="n">model</span><span class="p">,</span>
     <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">,</span>
     <span class="n">preprocess_fn</span><span class="o">=</span><span class="n">preprocess_fn</span><span class="p">,</span>
+    <span class="n">explain_mode</span><span class="o">=</span><span class="n">ExplainMode</span><span class="o">.</span><span class="n">BLACKBOX</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="c1"># Generate and process saliency maps (as many as required, sequentially)</span>
@@ -696,7 +698,6 @@ Cons:</p></li>
 <span class="c1"># Run explanation</span>
 <span class="n">explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span>
     <span class="n">image</span><span class="p">,</span>
-    <span class="n">explain_mode</span><span class="o">=</span><span class="n">ExplainMode</span><span class="o">.</span><span class="n">BLACKBOX</span><span class="p">,</span>
     <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">],</span>  <span class="c1"># target classes to explain</span>
     <span class="c1"># targets=-1,  # explain all classes</span>
     <span class="n">overlay</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># False by default</span>
@@ -713,14 +714,18 @@ Cons:</p></li>
 <p>As mentioned above, saliency map generation requires model inference. In the above use cases, OpenVINO XAI performs model inference using provided processing functions. An alternative approach is to use XAI to insert the XAI branch into the model and infer it in the original pipeline.</p>
 <p><code class="docutils literal notranslate"><span class="pre">insert_xai()</span></code> API is used for insertion.</p>
 <p><strong>Note</strong>: The original model outputs are not affected, and the model should be inferable by the original inference pipeline.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
 <span class="kn">import</span> <span class="nn">openvino_xai</span> <span class="k">as</span> <span class="nn">xai</span>
-<span class="kn">from</span> <span class="nn">openvino_xai.common.utils</span> <span class="kn">import</span> <span class="n">softmax</span>
-<span class="kn">from</span> <span class="nn">openvino_xai.explainer.visualizer</span> <span class="n">colormap</span><span class="p">,</span> <span class="n">overlay</span>
+<span class="kn">from</span> <span class="nn">openvino_xai.explainer.visualizer</span> <span class="kn">import</span> <span class="n">colormap</span><span class="p">,</span> <span class="n">overlay</span>
 
 
 <span class="c1"># Create an ov.Model</span>
 <span class="n">model</span><span class="p">:</span> <span class="n">ov</span><span class="o">.</span><span class="n">Model</span> <span class="o">=</span> <span class="n">ov</span><span class="o">.</span><span class="n">Core</span><span class="p">()</span><span class="o">.</span><span class="n">read_model</span><span class="p">(</span><span class="s2">&quot;path/to/model.xml&quot;</span><span class="p">)</span>
+
+<span class="c1"># Get and preprocess image</span>
+<span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="s2">&quot;path/to/image.jpg&quot;</span><span class="p">)</span>
+<span class="n">image_norm</span> <span class="o">=</span> <span class="n">preprocess_fn</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
 
 <span class="c1"># Insert XAI branch into the OpenVINO model graph (IR)</span>
 <span class="n">model_xai</span><span class="p">:</span> <span class="n">ov</span><span class="o">.</span><span class="n">Model</span> <span class="o">=</span> <span class="n">xai</span><span class="o">.</span><span class="n">insert_xai</span><span class="p">(</span>
@@ -734,10 +739,11 @@ Cons:</p></li>
 <span class="c1"># Insert XAI branch into the Pytorch model</span>
 <span class="c1"># XAI head is inserted using the module hook mechanism internally</span>
 <span class="c1"># so that users could get additional saliency map without major changes in the original inference pipeline.</span>
+<span class="kn">import</span> <span class="nn">torch</span>
 <span class="n">model</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span>
 
 <span class="c1"># Insert XAI head</span>
-<span class="n">model_xai</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span> <span class="o">=</span> <span class="n">insert_xai</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">)</span>
+<span class="n">model_xai</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span> <span class="o">=</span> <span class="n">xai</span><span class="o">.</span><span class="n">insert_xai</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">)</span>
 
 <span class="c1"># Torch XAI model inference</span>
 <span class="n">model_xai</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
@@ -751,9 +757,9 @@ Cons:</p></li>
 <span class="c1"># Torch XAI model saliency map</span>
 <span class="n">saliency_maps</span> <span class="o">=</span> <span class="n">saliency_maps</span><span class="o">.</span><span class="n">numpy</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Cxhxw</span>
 <span class="n">saliency_map</span> <span class="o">=</span> <span class="n">saliency_maps</span><span class="p">[</span><span class="n">label</span><span class="p">]</span>  <span class="c1"># hxw saliency_map for the label</span>
-<span class="n">saliency_map</span> <span class="o">=</span> <span class="n">colormap</span><span class="p">(</span><span class="n">saliency_map</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:])</span>  <span class="c1"># 1xhxw</span>
-<span class="n">saliency_map</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">saliency_map</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">dsize</span><span class="o">=</span><span class="n">input_size</span><span class="p">)</span>  <span class="c1"># HxW</span>
-<span class="n">result_image</span> <span class="o">=</span> <span class="n">overlay</span><span class="p">(</span><span class="n">saliency_map</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span>
+<span class="n">saliency_map</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">saliency_map</span><span class="p">,</span> <span class="n">dsize</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># HxW</span>
+<span class="n">saliency_map</span> <span class="o">=</span> <span class="n">colormap</span><span class="p">(</span><span class="n">saliency_map</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:])</span>  <span class="c1"># 1xHxWx3</span>
+<span class="n">result_image</span> <span class="o">=</span> <span class="n">overlay</span><span class="p">(</span><span class="n">saliency_map</span><span class="p">,</span> <span class="n">image</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># HxWx3</span>
 </pre></div>
 </div>
 </section>
@@ -967,6 +973,7 @@ Number of cells defines granularity of the saliency map (usually, the higher the
     <span class="n">model</span><span class="p">,</span>
     <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">,</span>
     <span class="n">preprocess_fn</span><span class="o">=</span><span class="n">preprocess_fn</span><span class="p">,</span>
+    <span class="n">explain_mode</span><span class="o">=</span><span class="n">ExplainMode</span><span class="o">.</span><span class="n">WHITEBOX</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">voc_labels</span> <span class="o">=</span> <span class="p">[</span>
@@ -980,7 +987,6 @@ Number of cells defines granularity of the saliency map (usually, the higher the
 <span class="c1"># Run explanation</span>
 <span class="n">explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span>
     <span class="n">image</span><span class="p">,</span>
-    <span class="n">explain_mode</span><span class="o">=</span><span class="n">ExplainMode</span><span class="o">.</span><span class="n">WHITEBOX</span><span class="p">,</span>
     <span class="n">label_names</span><span class="o">=</span><span class="n">voc_labels</span><span class="p">,</span>
     <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">11</span><span class="p">],</span>  <span class="c1"># [&#39;cat&#39;, &#39;dog&#39;] also possible as target classes to explain</span>
 <span class="p">)</span>
@@ -1043,6 +1049,7 @@ Number of cells defines granularity of the saliency map (usually, the higher the
     <span class="n">model</span><span class="p">,</span>
     <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">,</span>
     <span class="n">preprocess_fn</span><span class="o">=</span><span class="n">preprocess_fn</span><span class="p">,</span>
+    <span class="n">explain_mode</span><span class="o">=</span><span class="n">ExplainMode</span><span class="o">.</span><span class="n">WHITEBOX</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">voc_labels</span> <span class="o">=</span> <span class="p">[</span>
@@ -1065,7 +1072,6 @@ Number of cells defines granularity of the saliency map (usually, the higher the
 <span class="c1"># Run explanation</span>
 <span class="n">explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span>
     <span class="n">image</span><span class="p">,</span>
-    <span class="n">explain_mode</span><span class="o">=</span><span class="n">ExplainMode</span><span class="o">.</span><span class="n">WHITEBOX</span><span class="p">,</span>
     <span class="n">label_names</span><span class="o">=</span><span class="n">voc_labels</span><span class="p">,</span>
     <span class="n">targets</span><span class="o">=</span><span class="n">result_idxs</span><span class="p">,</span>  <span class="c1"># target classes to explain</span>
 <span class="p">)</span>
@@ -1082,6 +1088,77 @@ Number of cells defines granularity of the saliency map (usually, the higher the
 <span class="n">explanation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
     <span class="n">OUTPUT_PATH</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;image_name_&quot;</span><span class="p">,</span> <span class="n">postfix</span><span class="o">=</span><span class="s2">&quot;_conf_&quot;</span><span class="p">,</span> <span class="n">confidence_scores</span><span class="o">=</span><span class="n">scores_dict</span>
 <span class="p">)</span>  <span class="c1"># image_name_aeroplane_conf_0.85.jpg</span>
+</pre></div>
+</div>
+</section>
+<section id="measure-quiality-metrics-of-saliency-maps">
+<h2>Measure quiality metrics of saliency maps<a class="headerlink" href="#measure-quiality-metrics-of-saliency-maps" title="Link to this heading">#</a></h2>
+<p>To compare different saliency maps, you can use the implemented quality metrics: Pointing Game, Insertion-Deletion AUC, and ADCC.</p>
+<ul class="simple">
+<li><p><strong>ADCC (Average Drop-Coherence-Complexity)</strong> (<a class="reference external" href="https://arxiv.org/abs/2104.10252">paper</a>/<a class="reference external" href="https://github.com/aimagelab/ADCC/">impl</a>) - averages three submetrics:</p>
+<ul>
+<li><p><strong>Average Drop</strong> - The percentage drop in confidence when the model sees only the explanation map (image masked with the saliency map) instead of the full image.</p></li>
+<li><p><strong>Coherence</strong> - The coherency between the saliency map on the input image and saliency map on the explanation map (image masked with the saliency map). Requires generating an extra explanation (can be time-consuming for black box methods).</p></li>
+<li><p><strong>Complexity</strong> - Measures the L1 norm of the saliency map (average value per pixel). Fewer important pixels -&gt; less complexity -&gt; better saliency map.</p></li>
+</ul>
+</li>
+<li><p><strong>Insertion-Deletion AUC</strong> (<a class="reference external" href="https://arxiv.org/abs/1806.07421">paper</a>) - Measures the AUC of the curve of model confidence when important pixels are sequentially inserted or deleted. Time-consuming, requires 60 model inferences: 30 steps of the insertion and deletion process.</p></li>
+<li><p><strong>Pointing Game</strong> (<a class="reference external" href="https://arxiv.org/abs/1608.00507">paper</a>/<a class="reference external" href="https://github.com/understandable-machine-intelligence-lab/Quantus/blob/main/quantus/metrics/localisation/pointing_game.py">impl</a>) - Returns True if the most important saliency map pixel falls into the object ground truth bounding box. Requires ground truth annotation, so it is convenient to use on public datasets (COCO, VOC, ILSVRC) rather than individual images (check <a class="reference download internal" download="" href="_downloads/959b21439550740fb32540e68430cfbe/test_accuracy.py"><span class="xref download myst">accuracy_tests</span></a> for examples).</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Mapping</span>
+
+<span class="kn">import</span> <span class="nn">openvino_xai</span> <span class="k">as</span> <span class="nn">xai</span>
+<span class="kn">from</span> <span class="nn">openvino_xai.explainer</span> <span class="kn">import</span> <span class="n">ExplainMode</span>
+<span class="kn">from</span> <span class="nn">openvino_xai.metrics</span> <span class="kn">import</span> <span class="n">ADCC</span><span class="p">,</span> <span class="n">InsertionDeletionAUC</span>
+
+
+<span class="k">def</span> <span class="nf">preprocess_fn</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Preprocess the input image.&quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">image</span><span class="p">,</span> <span class="n">dsize</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">))</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">transpose</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">processed_image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">processed_image</span>
+
+<span class="k">def</span> <span class="nf">postprocess_fn</span><span class="p">(</span><span class="n">output</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Postprocess the model output.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">softmax</span><span class="p">(</span><span class="n">output</span><span class="p">[</span><span class="s2">&quot;logits&quot;</span><span class="p">])</span> 
+
+<span class="k">def</span> <span class="nf">softmax</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute softmax values of x.&quot;&quot;&quot;</span>
+    <span class="n">e_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">e_x</span> <span class="o">/</span> <span class="n">e_x</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+<span class="n">IMAGE_PATH</span> <span class="o">=</span> <span class="s2">&quot;path/to/image.jpg&quot;</span>
+<span class="n">MODEL_PATH</span> <span class="o">=</span> <span class="s2">&quot;path/to/model.xml&quot;</span>
+
+<span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">IMAGE_PATH</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ov</span><span class="o">.</span><span class="n">Core</span><span class="p">()</span><span class="o">.</span><span class="n">read_model</span><span class="p">(</span><span class="n">MODEL_PATH</span><span class="p">)</span>
+
+<span class="n">explainer</span> <span class="o">=</span> <span class="n">xai</span><span class="o">.</span><span class="n">Explainer</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">,</span>
+    <span class="n">preprocess_fn</span><span class="o">=</span><span class="n">preprocess_fn</span><span class="p">,</span>
+    <span class="n">explain_mode</span><span class="o">=</span><span class="n">ExplainMode</span><span class="o">.</span><span class="n">WHITEBOX</span><span class="p">,</span>
+    <span class="n">explain_method</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Method</span><span class="o">.</span><span class="n">RECIPROCAM</span> <span class="c1"># Also VITRECIPROCAM, AISE, RISE, ACTIVATIONMAP are supported</span>
+<span class="p">)</span>
+
+<span class="c1"># Generate explanation (if several targets are passed, metrics for all saliency maps will be aggregated)</span>
+<span class="n">explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">colormap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">overlay</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">resize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Calculate InsertionDeletionAUC metric over the list of explanations and input images</span>
+<span class="n">auc</span> <span class="o">=</span> <span class="n">InsertionDeletionAUC</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">preprocess_fn</span><span class="p">,</span> <span class="n">postprocess_fn</span><span class="p">)</span>
+<span class="n">auc_score</span> <span class="o">=</span> <span class="n">auc</span><span class="o">.</span><span class="n">evaluate</span><span class="p">([</span><span class="n">explanation</span><span class="p">],</span> <span class="p">[</span><span class="n">image</span><span class="p">],</span> <span class="n">steps</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="c1"># {&#39;insertion&#39;: 0.43, &#39;deletion&#39;: 0.09, &#39;delta&#39;: 0.34}</span>
+<span class="n">insertion</span><span class="p">,</span> <span class="n">deletion</span><span class="p">,</span> <span class="n">delta</span> <span class="o">=</span> <span class="n">auc_score</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Insertion </span><span class="si">{</span><span class="n">deletion</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">, Deletion </span><span class="si">{</span><span class="n">insertion</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">, Delta </span><span class="si">{</span><span class="n">delta</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Calculate ADCC metric over the list of explanations and input images</span>
+<span class="n">adcc</span> <span class="o">=</span> <span class="n">ADCC</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">preprocess_fn</span><span class="p">,</span> <span class="n">postprocess_fn</span><span class="p">,</span> <span class="n">explainer</span><span class="p">)</span>
+<span class="n">adcc_score</span> <span class="o">=</span> <span class="n">adcc</span><span class="o">.</span><span class="n">evaluate</span><span class="p">([</span><span class="n">explanation</span><span class="p">],</span> <span class="p">[</span><span class="n">image</span><span class="p">])</span> <span class="c1"># {&#39;adcc&#39;: 0.95, &#39;coherency&#39;: 0.99, &#39;complexity&#39;: 0.13, &#39;average_drop&#39;: 0.0}</span>
+<span class="n">adcc</span><span class="p">,</span> <span class="n">coherency</span><span class="p">,</span> <span class="n">complexity</span><span class="p">,</span> <span class="n">average_drop</span> <span class="o">=</span> <span class="n">adcc_score</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ADCC </span><span class="si">{</span><span class="n">adcc</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">, Coherency </span><span class="si">{</span><span class="n">coherency</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">, Complexity </span><span class="si">{</span><span class="n">complexity</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">, Average drop </span><span class="si">{</span><span class="n">average_drop</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -1180,6 +1257,7 @@ Number of cells defines granularity of the saliency map (usually, the higher the
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plot-saliency-maps">Plot saliency maps</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#saving-saliency-maps">Saving saliency maps</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#measure-quiality-metrics-of-saliency-maps">Measure quiality metrics of saliency maps</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-scripts">Example scripts</a></li>
 </ul>
   </nav></div>
