@@ -23,6 +23,7 @@ from openvino_xai.explainer.utils import (
 )
 from openvino_xai.explainer.visualizer import Visualizer
 from openvino_xai.utils.model_export import export_to_ir, export_to_onnx
+from openvino_xai.methods.black_box.base import Preset
 
 timm = pytest.importorskip("timm")
 torch = pytest.importorskip("torch")
@@ -52,7 +53,7 @@ def seed_everything(seed: int):
     np.random.seed(seed)
 
 
-class TestPerfClassificationTimm:
+class TestEfficiency:
     clear_cache_converted_models = False
     clear_cache_hf_models = False
     supported_num_classes = {
@@ -147,12 +148,13 @@ class TestPerfClassificationTimm:
             records.append(record)
 
         df = pd.DataFrame(records)
-        df.to_csv(self.output_dir / f"perf-raw-wb-{model_id}.csv")
+        df.to_csv(self.output_dir / f"perf-raw-wb-{model_id}-{explain_method}.csv")
 
         self.clear_cache()
 
     @pytest.mark.parametrize("model_id", TEST_MODELS)
-    def test_classification_black_box(self, model_id, fxt_num_repeat: int, fxt_num_masks: int, fxt_tags: dict):
+    @pytest.mark.parametrize("method", [Method.AISE, Method.RISE])
+    def test_classification_black_box(self, model_id, method, fxt_num_repeat: int, fxt_preset: str, fxt_tags: dict):
         timm_model, model_cfg = self.get_timm_model(model_id)
 
         onnx_path = self.data_dir / "timm_models" / "converted_models" / model_id / "model_fp32.onnx"
@@ -188,9 +190,9 @@ class TestPerfClassificationTimm:
 
             record = fxt_tags.copy()
             record["model"] = model_id
-            record["method"] = Method.RISE
+            record["method"] = method
             record["seed"] = seed
-            record["num_masks"] = fxt_num_masks
+            record["preset"] = fxt_preset
 
             start_time = time()
 
@@ -200,6 +202,7 @@ class TestPerfClassificationTimm:
                 preprocess_fn=preprocess_fn,
                 postprocess_fn=postprocess_fn,
                 explain_mode=ExplainMode.BLACKBOX,  # defaults to AUTO
+                explain_method=method,  # defaults to AISE
             )
             explanation = explainer(
                 image,
@@ -207,7 +210,7 @@ class TestPerfClassificationTimm:
                 resize=True,
                 colormap=True,
                 overlay=True,
-                num_masks=fxt_num_masks,  # kwargs of the RISE algo
+                preset=Preset(fxt_preset),  # kwargs of the black box algo
             )
 
             explain_time = time() - start_time
@@ -219,7 +222,7 @@ class TestPerfClassificationTimm:
             records.append(record)
 
         df = pd.DataFrame(records)
-        df.to_csv(self.output_dir / f"perf-raw-bb-{model_id}.csv", index=False)
+        df.to_csv(self.output_dir / f"perf-raw-bb-{model_id}-{method}.csv", index=False)
 
         self.clear_cache()
 
