@@ -57,6 +57,8 @@ class AISEDetection(AISEBase):
         )
         self.deletion = False
         self.predictions = {}
+        self.num_iterations_per_kernel: int | None = None
+        self.divisors: List[float] | np.ndarray | None = None
 
     def generate_saliency_map(  # type: ignore
         self,

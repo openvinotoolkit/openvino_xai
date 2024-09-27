@@ -244,6 +244,7 @@ Please find more options and scenarios in the following links:
 * [OpenVINO XAI User Guide](docs/source/user-guide.md)
 * [OpenVINO Notebook - XAI Basic](https://github.com/openvinotoolkit/openvino_notebooks/blob/latest/notebooks/explainable-ai-1-basic/explainable-ai-1-basic.ipynb)
 * [OpenVINO Notebook - XAI Deep Dive](https://github.com/openvinotoolkit/openvino_notebooks/blob/latest/notebooks/explainable-ai-2-deep-dive/explainable-ai-2-deep-dive.ipynb)
+* [OpenVINO Notebook - Saliency Map Interpretation](https://github.com/openvinotoolkit/openvino_notebooks/blob/latest/notebooks/explainable-ai-3-map-interpretation/explainable-ai-3-map-interpretation.ipynb)
 
 ### Playing with the examples
 

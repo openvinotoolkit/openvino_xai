@@ -12,12 +12,14 @@ from openvino_xai.metrics.base import BaseMetric
 
 class ADCC(BaseMetric):
     """
-    Implementation of the e Average Drop-Coherence-Complexity (ADCC) metric by Poppi, Samuele, et al 2021.
+    Implementation of the Average Drop-Coherence-Complexity (ADCC) metric by Poppi, Samuele, et al 2021.
 
     References:
-        Poppi, Samuele, et al. "Revisiting the evaluation of class activation mapping for explainability:
-        A novel metric and experimental analysis." Proceedings of the IEEE/CVF Conference on
-        Computer Vision and Pattern Recognition. 2021.
+        1) Poppi, Samuele, et al. "Revisiting the evaluation of class activation mapping for explainability:
+            A novel metric and experimental analysis." Proceedings of the IEEE/CVF Conference on
+            Computer Vision and Pattern Recognition. 2021.
+        2) Reference implementation:
+            https://github.com/aimagelab/ADCC/
     """
 
     def __init__(self, model, preprocess_fn, postprocess_fn, explainer=None, device_name="CPU"):
@@ -52,7 +54,8 @@ class ADCC(BaseMetric):
 
     def coherency(self, saliency_map: np.ndarray, class_idx: int, image: np.ndarray) -> float:
         """
-        Measures the coherency of the saliency map. The explanation map (image masked with saliency map) should contain all the relevant features that explain a prediction and should remove useless features in a coherent way.
+        Measures the coherency of the saliency map. The explanation map (image masked with saliency map) should
+        contain all the relevant features that explain a prediction and should remove useless features in a coherent way.
         Saliency map and saliency map of exlanation map should be similar.
         The more the better.
         """

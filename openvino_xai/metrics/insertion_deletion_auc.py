@@ -62,6 +62,9 @@ class InsertionDeletionAUC(BaseMetric):
         :return: A dictionary containing the AUC scores for insertion and deletion scores.
         :rtype: Dict[str, float]
         """
+
+        class_idx = np.argmax(self.model_predict(input_image)) if class_idx is None else class_idx
+
         # Sort pixels by descending importance to find the most important pixels
         sorted_indices = np.argsort(-saliency_map.flatten())
         sorted_indices = np.unravel_index(sorted_indices, saliency_map.shape)

@@ -224,6 +224,7 @@ explainer = xai.Explainer(
     model,
     task=xai.Task.CLASSIFICATION,
     preprocess_fn=preprocess_fn,
+    explain_mode=ExplainMode.WHITEBOX,
 )
 
 # Generate and process saliency maps (as many as required, sequentially)
@@ -237,7 +238,6 @@ voc_labels = [
 # Run explanation
 explanation = explainer(
     image,
-    explain_mode=ExplainMode.WHITEBOX,
     # target_layer="last_conv_node_name",  # target_layer - node after which the XAI branch will be inserted, usually the last convolutional layer in the backbone
     embed_scaling=True,  # True by default. If set to True, the saliency map scale (0 ~ 255) operation is embedded in the model
     explain_method=xai.Method.RECIPROCAM,  # ReciproCAM is the default XAI method for CNNs
@@ -288,6 +288,7 @@ explainer = xai.Explainer(
     model,
     task=xai.Task.CLASSIFICATION,
     preprocess_fn=preprocess_fn,
+    explain_mode=ExplainMode.BLACKBOX,
 )
 
 # Generate and process saliency maps (as many as required, sequentially)
@@ -296,7 +297,6 @@ image = cv2.imread("path/to/image.jpg")
 # Run explanation
 explanation = explainer(
     image,
-    explain_mode=ExplainMode.BLACKBOX,
     targets=[11, 14],  # target classes to explain
     # targets=-1,  # explain all classes
     overlay=True,  # False by default
@@ -317,14 +317,18 @@ As mentioned above, saliency map generation requires model inference. In the abo
 **Note**: The original model outputs are not affected, and the model should be inferable by the original inference pipeline.
 
 ```python
+import cv2
 import openvino.runtime as ov
 import openvino_xai as xai
-from openvino_xai.common.utils import softmax
-from openvino_xai.explainer.visualizer colormap, overlay
+from openvino_xai.explainer.visualizer import colormap, overlay
 
 
 # Create an ov.Model
 model: ov.Model = ov.Core().read_model("path/to/model.xml")
+
+# Get and preprocess image
+image = cv2.imread("path/to/image.jpg")
+image_norm = preprocess_fn(image)
 
 # Insert XAI branch into the OpenVINO model graph (IR)
 model_xai: ov.Model = xai.insert_xai(
@@ -338,10 +342,11 @@ model_xai: ov.Model = xai.insert_xai(
 # Insert XAI branch into the Pytorch model
 # XAI head is inserted using the module hook mechanism internally
 # so that users could get additional saliency map without major changes in the original inference pipeline.
+import torch
 model: torch.nn.Module
 
 # Insert XAI head
-model_xai: torch.nn.Module = insert_xai(model=model, task=xai.Task.CLASSIFICATION)
+model_xai: torch.nn.Module = xai.insert_xai(model=model, task=xai.Task.CLASSIFICATION)
 
 # Torch XAI model inference
 model_xai.eval()
@@ -355,9 +360,9 @@ with torch.no_grad():
 # Torch XAI model saliency map
 saliency_maps = saliency_maps.numpy(force=True).squeeze(0)  # Cxhxw
 saliency_map = saliency_maps[label]  # hxw saliency_map for the label
-saliency_map = colormap(saliency_map[None, :])  # 1xhxw
-saliency_map = cv2.resize(saliency_map.squeeze(0), dsize=input_size)  # HxW
-result_image = overlay(saliency_map, image)
+saliency_map = cv2.resize(saliency_map, dsize=image.shape[::-1])  # HxW
+saliency_map = colormap(saliency_map[None, :])  # 1xHxWx3
+result_image = overlay(saliency_map, image)[0] # HxWx3
 ```
 
 ## XAI methods
@@ -535,6 +540,7 @@ explainer = xai.Explainer(
     model,
     task=xai.Task.CLASSIFICATION,
     preprocess_fn=preprocess_fn,
+    explain_mode=ExplainMode.WHITEBOX,
 )
 
 voc_labels = [
@@ -548,7 +554,6 @@ image = cv2.imread("path/to/image.jpg")
 # Run explanation
 explanation = explainer(
     image,
-    explain_mode=ExplainMode.WHITEBOX,
     label_names=voc_labels,
     targets=[7, 11],  # ['cat', 'dog'] also possible as target classes to explain
 )
@@ -616,6 +621,7 @@ explainer = xai.Explainer(
     model,
     task=xai.Task.CLASSIFICATION,
     preprocess_fn=preprocess_fn,
+    explain_mode=ExplainMode.WHITEBOX,
 )
 
 voc_labels = [
@@ -638,7 +644,6 @@ scores_dict = {i: score for i, score in zip(result_idxs, result_scores)}
 # Run explanation
 explanation = explainer(
     image,
-    explain_mode=ExplainMode.WHITEBOX,
     label_names=voc_labels,
     targets=result_idxs,  # target classes to explain
 )
@@ -655,6 +660,77 @@ explanation.save(OUTPUT_PATH, prefix="image_name_", postfix="_class_map")  # ima
 explanation.save(
     OUTPUT_PATH, prefix="image_name_", postfix="_conf_", confidence_scores=scores_dict
 )  # image_name_aeroplane_conf_0.85.jpg
+```
+
+## Measure quiality metrics of saliency maps
+
+To compare different saliency maps, you can use the implemented quality metrics: Pointing Game, Insertion-Deletion AUC, and ADCC.
+
+- **ADCC (Average Drop-Coherence-Complexity)** ([paper](https://arxiv.org/abs/2104.10252)/[impl](https://github.com/aimagelab/ADCC/)) - averages three submetrics:
+  - **Average Drop** - The percentage drop in confidence when the model sees only the explanation map (image masked with the saliency map) instead of the full image.
+  - **Coherence** - The coherency between the saliency map on the input image and saliency map on the explanation map (image masked with the saliency map). Requires generating an extra explanation (can be time-consuming for black box methods).
+  - **Complexity** - Measures the L1 norm of the saliency map (average value per pixel). Fewer important pixels -> less complexity -> better saliency map.
+
+- **Insertion-Deletion AUC** ([paper](https://arxiv.org/abs/1806.07421)) - Measures the AUC of the curve of model confidence when important pixels are sequentially inserted or deleted. Time-consuming, requires 60 model inferences: 30 steps of the insertion and deletion process.
+
+- **Pointing Game** ([paper](https://arxiv.org/abs/1608.00507)/[impl](https://github.com/understandable-machine-intelligence-lab/Quantus/blob/main/quantus/metrics/localisation/pointing_game.py)) - Returns True if the most important saliency map pixel falls into the object ground truth bounding box. Requires ground truth annotation, so it is convenient to use on public datasets (COCO, VOC, ILSVRC) rather than individual images (check [accuracy_tests](../../tests/perf/test_accuracy.py) for examples).
+
+
+```python
+import cv2
+import numpy as np
+import openvino.runtime as ov
+from typing import Mapping
+
+import openvino_xai as xai
+from openvino_xai.explainer import ExplainMode
+from openvino_xai.metrics import ADCC, InsertionDeletionAUC
+
+
+def preprocess_fn(image: np.ndarray) -> np.ndarray:
+    """Preprocess the input image."""
+    x = cv2.resize(src=image, dsize=(224, 224))
+    x = x.transpose((2, 0, 1))
+    processed_image = np.expand_dims(x, 0)
+    return processed_image
+
+def postprocess_fn(output: Mapping):
+    """Postprocess the model output."""
+    return softmax(output["logits"]) 
+
+def softmax(x: np.ndarray) -> np.ndarray:
+    """Compute softmax values of x."""
+    e_x = np.exp(x - np.max(x))
+    return e_x / e_x.sum()
+
+IMAGE_PATH = "path/to/image.jpg"
+MODEL_PATH = "path/to/model.xml"
+
+image = cv2.imread(IMAGE_PATH)
+model = ov.Core().read_model(MODEL_PATH)
+
+explainer = xai.Explainer(
+    model,
+    task=xai.Task.CLASSIFICATION,
+    preprocess_fn=preprocess_fn,
+    explain_mode=ExplainMode.WHITEBOX,
+    explain_method=xai.Method.RECIPROCAM # Also VITRECIPROCAM, AISE, RISE, ACTIVATIONMAP are supported
+)
+
+# Generate explanation (if several targets are passed, metrics for all saliency maps will be aggregated)
+explanation = explainer(image, targets=14, colormap=False, overlay=False, resize=True)
+
+# Calculate InsertionDeletionAUC metric over the list of explanations and input images
+auc = InsertionDeletionAUC(model, preprocess_fn, postprocess_fn)
+auc_score = auc.evaluate([explanation], [image], steps=30) # {'insertion': 0.43, 'deletion': 0.09, 'delta': 0.34}
+insertion, deletion, delta = auc_score.values()
+print(f"Insertion {deletion:.2f}, Deletion {insertion:.2f}, Delta {delta:.2f}")
+
+# Calculate ADCC metric over the list of explanations and input images
+adcc = ADCC(model, preprocess_fn, postprocess_fn, explainer)
+adcc_score = adcc.evaluate([explanation], [image]) # {'adcc': 0.95, 'coherency': 0.99, 'complexity': 0.13, 'average_drop': 0.0}
+adcc, coherency, complexity, average_drop = adcc_score.values()
+print(f"ADCC {adcc:.2f}, Coherency {coherency:.2f}, Complexity {complexity:.2f}, Average drop {average_drop:.2f}")
 ```
 
 ## Example scripts
