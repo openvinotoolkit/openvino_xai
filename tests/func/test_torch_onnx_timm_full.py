@@ -21,61 +21,46 @@ onnxruntime = pytest.importorskip("onnxruntime")
 
 TEST_MODELS = timm.list_models(pretrained=True)
 
-NOT_SUPPORTED_BY_BB_MODELS = {
+SUPPORTED_BUT_FAILED_BY_TORCH_MODELS = {
+    # "swin": "Only two outputs of the between block Add node supported, but got 1. Try to use black-box.",
+    # "vit_base_patch16_rpn_224": "Number of normalization outputs > 1",
+    # "vit_relpos_medium_patch16_rpn_224": "ValueError in openvino_xai/methods/white_box/recipro_cam.py:215",
+}
+
+NOT_SUPPORTED_BY_TORCH_MODELS = {
     "repvit": "urllib.error.HTTPError: HTTP Error 404: Not Found",
     "tf_efficientnet_cc": "torch.onnx.errors.SymbolicValueError: Unsupported: ONNX export of convolution for kernel of unknown shape.",
     "vit_base_r50_s16_224.orig_in21k": "RuntimeError: Error(s) in loading state_dict for VisionTransformer",
-    "vit_gigantic_patch16_224_ijepa.in22k": "RuntimeError: shape '[1, 13, 13, -1]' is invalid for input of size 274560",
     "vit_huge_patch14_224.orig_in21k": "RuntimeError: Error(s) in loading state_dict for VisionTransformer",
     "vit_large_patch32_224.orig_in21k": "RuntimeError: Error(s) in loading state_dict for VisionTransformer",
-    "volo_": "RuntimeError: Exception from src/core/src/dimension.cpp:227: Cannot get length of dynamic dimension",
-}
-
-SUPPORTED_BUT_FAILED_BY_WB_MODELS = {
-    "swin": "Only two outputs of the between block Add node supported, but got 1. Try to use black-box.",
-    "vit_base_patch16_rpn_224": "Number of normalization outputs > 1",
-    "vit_relpos_medium_patch16_rpn_224": "ValueError in openvino_xai/methods/white_box/recipro_cam.py:215",
-}
-
-NOT_SUPPORTED_BY_WB_MODELS = {
-    **NOT_SUPPORTED_BY_BB_MODELS,
-    # Killed on WB
-    "beit_large_patch16_512": "Failed to allocate 94652825600 bytes of memory",
-    "convmixer_1536_20": "OOM Killed",
-    "eva_large_patch14_336": "OOM Killed",
-    "eva02_base_patch14_448": "OOM Killed",
-    "eva02_large_patch14_448": "OOM Killed",
-    "mobilevit_": "Segmentation fault",
-    "mobilevit_xxs": "Segmentation fault",
-    "mvitv2_base.fb_in1k": "Segmentation fault",
-    "mvitv2_large": "OOM Killed",
-    "mvitv2_small": "Segmentation fault",
-    "mvitv2_tiny": "Segmentation fault",
-    "pit_": "Segmentation fault",
-    "pvt_": "Segmentation fault",
-    "tf_efficientnet_l2.ns_jft_in1k": "OOM Killed",
-    "xcit_large": "Failed to allocate 81581875200 bytes of memory",
-    "xcit_medium_24_p8_384": "OOM Killed",
-    "xcit_small_12_p8_384": "OOM Killed",
-    "xcit_small_24_p8_384": "OOM Killed",
+    # "vit_gigantic_patch16_224_ijepa.in22k": "RuntimeError: shape '[1, 13, 13, -1]' is invalid for input of size 274560",
+    # "volo_": "RuntimeError: Exception from src/core/src/dimension.cpp:227: Cannot get length of dynamic dimension",
+    # "beit_large_patch16_512": "Failed to allocate 94652825600 bytes of memory",
+    # "convmixer_1536_20": "OOM Killed",
+    # "eva_large_patch14_336": "OOM Killed",
+    # "eva02_base_patch14_448": "OOM Killed",
+    # "eva02_large_patch14_448": "OOM Killed",
+    # "mobilevit_": "Segmentation fault",
+    # "mobilevit_xxs": "Segmentation fault",
+    # "mvitv2_base.fb_in1k": "Segmentation fault",
+    # "mvitv2_large": "OOM Killed",
+    # "mvitv2_small": "Segmentation fault",
+    # "mvitv2_tiny": "Segmentation fault",
+    # "pit_": "Segmentation fault",
+    # "pvt_": "Segmentation fault",
+    # "tf_efficientnet_l2.ns_jft_in1k": "OOM Killed",
+    # "xcit_large": "Failed to allocate 81581875200 bytes of memory",
+    # "xcit_medium_24_p8_384": "OOM Killed",
+    # "xcit_small_12_p8_384": "OOM Killed",
+    # "xcit_small_24_p8_384": "OOM Killed",
     # Not expected to work for now
-    "cait_": "Cannot create an empty Constant. Please provide valid data.",
-    "coat_": "Only two outputs of the between block Add node supported, but got 1.",
-    "crossvit": "One (and only one) of the nodes has to be Add type. But got StridedSlice and StridedSlice.",
-    # work in CNN mode -> "davit": "Only two outputs of the between block Add node supported, but got 1.",
-    # work in CNN mode -> "efficientformer": "Cannot find output backbone_node in auto mode.",
-    # work in CNN mode -> "focalnet": "Cannot find output backbone_node in auto mode, please provide target_layer.",
-    # work in CNN mode -> "gcvit": "Cannot find output backbone_node in auto mode, please provide target_layer.",
-    "levit_": "Check 'TRShape::merge_into(output_shape, in_copy)' failed",
-    # work in CNN mode -> "maxvit": "Cannot find output backbone_node in auto mode, please provide target_layer.",
-    # work in CNN mode -> "maxxvit": "Cannot find output backbone_node in auto mode, please provide target_layer.",
-    # work in CNN mode -> "mobilevitv2": "Cannot find output backbone_node in auto mode, please provide target_layer.",
-    # work in CNN mode -> "nest_": "Cannot find output backbone_node in auto mode, please provide target_layer.",
-    # work in CNN mode -> "poolformer": "Cannot find output backbone_node in auto mode, please provide target_layer.",
-    "sequencer2d": "Cannot find output backbone_node in auto mode, please provide target_layer.",
-    "tnt_s_patch16_224": "Only two outputs of the between block Add node supported, but got 1.",
-    "twins": "One (and only one) of the nodes has to be Add type. But got ShapeOf and Transpose.",
-    # work in CNN mode -> "visformer": "Cannot find output backbone_node in auto mode, please provide target_layer",
+    # "cait_": "Cannot create an empty Constant. Please provide valid data.",
+    # "coat_": "Only two outputs of the between block Add node supported, but got 1.",
+    # "crossvit": "One (and only one) of the nodes has to be Add type. But got StridedSlice and StridedSlice.",
+    # "levit_": "Check 'TRShape::merge_into(output_shape, in_copy)' failed",
+    # "sequencer2d": "Cannot find output backbone_node in auto mode, please provide target_layer.",
+    # "tnt_s_patch16_224": "Only two outputs of the between block Add node supported, but got 1.",
+    # "twins": "One (and only one) of the nodes has to be Add type. But got ShapeOf and Transpose.",
 }
 
 
@@ -89,15 +74,14 @@ class TestTorchOnnxTimm:
         self.clear_cache_converted_models = fxt_clear_cache
 
     @pytest.mark.parametrize("model_id", TEST_MODELS)
-    # @pytest.mark.parametrize("model_id", ["resnet18.a1_in1k"])
     def test_insert_xai(self, model_id, fxt_output_root: Path):
-        # for skipped_model in NOT_SUPPORTED_BY_WB_MODELS.keys():
-        #    if skipped_model in model_id:
-        #        pytest.skip(reason=NOT_SUPPORTED_BY_WB_MODELS[skipped_model])
+        for skipped_model in NOT_SUPPORTED_BY_TORCH_MODELS.keys():
+           if skipped_model in model_id:
+               pytest.skip(reason=NOT_SUPPORTED_BY_TORCH_MODELS[skipped_model])
 
-        # for failed_model in SUPPORTED_BUT_FAILED_BY_WB_MODELS.keys():
-        #    if failed_model in model_id:
-        #        pytest.xfail(reason=SUPPORTED_BUT_FAILED_BY_WB_MODELS[failed_model])
+        for failed_model in SUPPORTED_BUT_FAILED_BY_TORCH_MODELS.keys():
+           if failed_model in model_id:
+               pytest.xfail(reason=SUPPORTED_BUT_FAILED_BY_TORCH_MODELS[failed_model])
 
         # Load Torch model from timm
         model = timm.create_model(model_id, in_chans=3, pretrained=True)
@@ -114,7 +98,7 @@ class TestTorchOnnxTimm:
         image_norm = image_norm[None, :]  # CxHxW -> 1xCxHxW
 
         # Insert XAI head
-        model_xai: torch.nn.Module = insert_xai(model, Task.CLASSIFICATION)
+        model_xai: torch.nn.Module = insert_xai(model, Task.CLASSIFICATION, input_size=input_size)
 
         # Torch XAI model inference
         model_xai.eval()
@@ -164,6 +148,7 @@ class TestTorchOnnxTimm:
         assert saliency_map.dtype == np.uint8
 
         # Clean up
+        model_path.unlink()
         self.clear_cache()
 
     def clear_cache(self):

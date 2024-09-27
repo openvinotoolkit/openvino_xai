@@ -63,7 +63,7 @@ def run_insert_xai_torch(args: list[str]):
     logger.info(f"Torch model prediction: classes ({probs.shape[-1]}) -> label ({label}) -> prob ({probs[0, label]})")
 
     # Insert XAI head
-    model_xai: torch.nn.Module = insert_xai(model, Task.CLASSIFICATION)
+    model_xai: torch.nn.Module = insert_xai(model, Task.CLASSIFICATION, input_size=input_size)  # Optional input size arg to help insertion
 
     # Torch XAI model inference
     model_xai.eval()
@@ -121,7 +121,7 @@ def run_insert_xai_torch_to_onnx(args: list[str]):
     image_norm = image_norm[None, :]  # CxHxW -> 1xCxHxW
 
     # Insert XAI head
-    model_xai: torch.nn.Module = insert_xai(model, Task.CLASSIFICATION)
+    model_xai: torch.nn.Module = insert_xai(model, Task.CLASSIFICATION, input_size=input_size)
 
     # ONNX model conversion
     model_path = Path(args.output_dir) / "model.onnx"
@@ -184,7 +184,7 @@ def run_insert_xai_torch_to_openvino(args: list[str]):
     image_norm = image_norm[None, :]  # CxHxW -> 1xCxHxW
 
     # Insert XAI head
-    model_xai: torch.nn.Module = insert_xai(model, Task.CLASSIFICATION)
+    model_xai: torch.nn.Module = insert_xai(model, Task.CLASSIFICATION, input_size=input_size)
 
     # OpenVINO model conversion
     ov_model = ov.convert_model(

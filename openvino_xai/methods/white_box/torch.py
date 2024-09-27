@@ -47,11 +47,13 @@ class TorchWhiteBoxMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
         embed_scaling: bool = True,
         device_name: str = "CPU",
         prepare_model: bool = True,
+        input_size: tuple[int, int] = (224, 224),  # For fixed input size models like ViT
         **kwargs,
     ):
         super().__init__(model=model, preprocess_fn=preprocess_fn, device_name=device_name)
         self._target_layer = target_layer
         self._embed_scaling = embed_scaling
+        self._input_size = input_size
 
         if prepare_model:
             self.prepare_model()
@@ -66,6 +68,7 @@ class TorchWhiteBoxMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
             return self._model_compiled
 
         model = copy.deepcopy(self._model)
+        model.eval()
 
         # Feature
         if self._target_layer:
@@ -78,7 +81,6 @@ class TorchWhiteBoxMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
         model.register_forward_hook(self._output_hook)
 
         setattr(model, "has_xai", True)
-        model.eval()
 
         if load_model:
             self._model_compiled = model
@@ -129,7 +131,7 @@ class TorchWhiteBoxMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
 
         global_hook_handle = torch.nn.modules.module.register_module_forward_hook(_detect_hook)
         try:
-            module.forward(torch.zeros((1, 3, 128, 128)))
+            module.forward(torch.zeros((1, 3, *self._input_size)))
         finally:
             global_hook_handle.remove()
         if self._feature_module is None:
@@ -274,10 +276,13 @@ class TorchViTReciproCAM(TorchReciproCAM):
     def _find_feature_module_auto(self, module: torch.nn.Module) -> torch.nn.Module:
         """Detect feature module in the model by finding the 3rd last LayerNorm module."""
         self._feature_module = None
-        norm_modules = [m for _, m in module.named_modules() if isinstance(m, torch.nn.LayerNorm)]
+        norm_modules = []
+        for name, sub_module in module.named_modules():
+            if "LayerNorm" in type(sub_module).__name__ or "BatchNorm" in type(sub_module).__name__ or "norm1" in name:
+                norm_modules.append(sub_module)
 
         if len(norm_modules) < 3:
-            raise RuntimeError("Feature modules with LayerNorm are less than 3 in the torch model")
+            raise RuntimeError("Feature modules with LayerNorm or BatchNorm are less than 3 in the torch model")
 
         self._feature_module = norm_modules[-3]
         return self._feature_module
