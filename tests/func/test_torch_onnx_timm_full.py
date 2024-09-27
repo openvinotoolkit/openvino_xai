@@ -21,18 +21,18 @@ onnxruntime = pytest.importorskip("onnxruntime")
 
 TEST_MODELS = timm.list_models(pretrained=True)
 
-SUPPORTED_BUT_FAILED_BY_TORCH_MODELS = {
-    # "swin": "Only two outputs of the between block Add node supported, but got 1. Try to use black-box.",
-    # "vit_base_patch16_rpn_224": "Number of normalization outputs > 1",
-    # "vit_relpos_medium_patch16_rpn_224": "ValueError in openvino_xai/methods/white_box/recipro_cam.py:215",
-}
-
 NOT_SUPPORTED_BY_TORCH_MODELS = {
     "repvit": "urllib.error.HTTPError: HTTP Error 404: Not Found",
     "tf_efficientnet_cc": "torch.onnx.errors.SymbolicValueError: Unsupported: ONNX export of convolution for kernel of unknown shape.",
     "vit_base_r50_s16_224.orig_in21k": "RuntimeError: Error(s) in loading state_dict for VisionTransformer",
     "vit_huge_patch14_224.orig_in21k": "RuntimeError: Error(s) in loading state_dict for VisionTransformer",
     "vit_large_patch32_224.orig_in21k": "RuntimeError: Error(s) in loading state_dict for VisionTransformer",
+
+    # "coat_": "Batch size cannot be adjusted in module hooks.",
+    # "convmixer": "Batch size cannot be adjusted in module hooks.",
+    # "convnext": "Batch size cannot be adjusted in module hooks.",
+    # "crossvit": "Batch size cannot be adjusted in module hooks.",
+
     # "vit_gigantic_patch16_224_ijepa.in22k": "RuntimeError: shape '[1, 13, 13, -1]' is invalid for input of size 274560",
     # "volo_": "RuntimeError: Exception from src/core/src/dimension.cpp:227: Cannot get length of dynamic dimension",
     # "beit_large_patch16_512": "Failed to allocate 94652825600 bytes of memory",
@@ -78,10 +78,6 @@ class TestTorchOnnxTimm:
         for skipped_model in NOT_SUPPORTED_BY_TORCH_MODELS.keys():
            if skipped_model in model_id:
                pytest.skip(reason=NOT_SUPPORTED_BY_TORCH_MODELS[skipped_model])
-
-        for failed_model in SUPPORTED_BUT_FAILED_BY_TORCH_MODELS.keys():
-           if failed_model in model_id:
-               pytest.xfail(reason=SUPPORTED_BUT_FAILED_BY_TORCH_MODELS[failed_model])
 
         # Load Torch model from timm
         model = timm.create_model(model_id, in_chans=3, pretrained=True)

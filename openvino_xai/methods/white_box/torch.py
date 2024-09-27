@@ -121,13 +121,23 @@ class TorchWhiteBoxMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
         self._feature_module = None
         self._num_modules = 0
 
+        def _has_spatial_dim(shape: torch.Size):
+            if len(shape) != 4:  # BxCxHxW
+                return False
+            if shape[2] <= 1 or shape[3] <=1:  # H > 1 and W > 1
+                return False
+            if shape[1] <= shape[2] or shape[1] <= shape[3]:  # H < C and H < C for feature maps generally
+                return False
+            return True
+
         def _detect_hook(module: torch.nn.Module, inputs: Any, output: Any) -> None:
             if isinstance(output, torch.Tensor):
                 module.index = self._num_modules
                 self._num_modules += 1
                 shape = output.shape
-                if len(shape) == 4 and shape[2] > 1 and shape[3] > 1:
+                if _has_spatial_dim(shape):
                     self._feature_module = module
+                    # print(shape, type(module))
 
         global_hook_handle = torch.nn.modules.module.register_module_forward_hook(_detect_hook)
         try:
@@ -140,6 +150,7 @@ class TorchWhiteBoxMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
             raise RuntimeError(
                 f"Modules with 4D output end in early-half stages: {100 * self._feature_module.index / self._num_modules}%"
             )
+        # print(self._feature_module.index, self._num_modules, self._feature_module.index / self._num_modules)
 
         return self._feature_module
 
