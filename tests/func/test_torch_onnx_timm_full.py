@@ -42,8 +42,8 @@ class TestTorchOnnxTimm:
     @pytest.mark.parametrize("model_id", TEST_MODELS)
     def test_insert_xai(self, model_id, fxt_output_root: Path):
         for skipped_model in SKIPPED_MODELS.keys():
-           if skipped_model in model_id:
-               pytest.skip(reason=SKIPPED_MODELS[skipped_model])
+            if skipped_model in model_id:
+                pytest.skip(reason=SKIPPED_MODELS[skipped_model])
 
         # Load Torch model from timm
         model = timm.create_model(model_id, in_chans=3, pretrained=True)

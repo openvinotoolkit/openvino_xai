@@ -124,7 +124,7 @@ class TorchWhiteBoxMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
         def _has_spatial_dim(shape: torch.Size):
             if len(shape) != 4:  # BxCxHxW
                 return False
-            if shape[2] <= 1 or shape[3] <=1:  # H > 1 and W > 1
+            if shape[2] <= 1 or shape[3] <= 1:  # H > 1 and W > 1
                 return False
             if shape[1] <= shape[2] or shape[1] <= shape[3]:  # H < C and H < C for feature maps generally
                 return False

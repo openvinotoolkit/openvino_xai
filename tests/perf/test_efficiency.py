@@ -22,8 +22,8 @@ from openvino_xai.explainer.utils import (
     get_score,
 )
 from openvino_xai.explainer.visualizer import Visualizer
-from openvino_xai.utils.model_export import export_to_ir, export_to_onnx
 from openvino_xai.methods.black_box.base import Preset
+from openvino_xai.utils.model_export import export_to_ir, export_to_onnx
 
 timm = pytest.importorskip("timm")
 torch = pytest.importorskip("torch")
