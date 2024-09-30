@@ -24,10 +24,12 @@ Content:
   - [XAI insertion (white-box usage)](#xai-insertion-white-box-usage)
   - [XAI methods](#xai-methods)
     - [Overview](#overview)
+    - [Methods performance-accuracy comparison](#methods-performance-accuracy-comparison)
     - [White-box methods](#white-box-methods)
     - [Black-box methods](#black-box-methods)
   - [Plot saliency maps](#plot-saliency-maps)
   - [Saving saliency maps](#saving-saliency-maps)
+  - [Measure quality metrics of saliency maps](#measure-quality-metrics-of-saliency-maps)
   - [Example scripts](#example-scripts)
 
 
@@ -372,7 +374,7 @@ result_image = overlay(saliency_map, image)[0] # HxWx3
 At the moment, the following XAI methods are supported:
 
 | Method                 | Using model internals | Per-target support | Single-shot | #Model inferences |
-|------------------------|-----------------------|--------------------|-------------|-------------------|
+|:-----------------------|:---------------------:|:------------------:|:-----------:|:-----------------:|
 | White-Box              |                       |                    |             |                   |
 | Activation Map         | Yes                   | No                 | Yes         | 1                 |
 | Recipro-CAM            | Yes                   | Yes (class)        | Yes*        | 1*                |
@@ -391,6 +393,27 @@ The rest of the white-box methods support automatic detection of the target laye
 Target layer is the part of the model graph where XAI branch will be inserted (applicable for white-box methods).
 
 All supported methods are gradient-free, which suits deployment framework settings (e.g. OpenVINO™), where the model is in optimized or compiled representation.
+
+## Methods performance-accuracy comparison
+
+The table below compares accuracy and performace of different models and explain methods (learn more about [Quality Metrics](#measure-quality-metrics-of-saliency-maps)).
+
+Metrics were measured on a 10% random subset of the [ILSVRC 2012](https://www.image-net.org/challenges/LSVRC/index.php) validation dataset (5000 images, seed 42).
+
+|            Model            | Explain mode | Explain method | Explain time<br>#Model inferences |   | Pointing game |   | Insertion | Deletion |   |   ADCC   | Coherency | Complexity | Average Drop |
+|:---------------------------:|:------------:|:--------------:|:---------------------------------:|---|:-------------:|---|:---------:|:--------:|---|:--------:|:---------:|:----------:|:------------:|
+| deit - tiny   (transformer) |   White box  | VIT ReciproCAM |                 1*                |   |    **89.9**   |   |    22.4   |  **4.5** |   |   70.4   |    88.9   |  **38.1**  |     34.3     |
+|                             |              | Activation map |                 1                 |   |      56.6     |   |    7.8    |    7.0   |   |   46.9   |    74.0   |    53.7    |     65.4     |
+|                             |   Black Box  |      AISE      |                 60                |   |      73.9     |   |    15.9   |    8.9   |   |   66.6   |    73.9   |    44.3    |     26.0     |
+|                             |              |      RISE      |                2000               |   |      85.5     |   |  **23.2** |    5.8   |   | **74.8** |  **92.5** |    42.3    |   **16.6**   |
+|                             |              |                |                                   |   |               |   |           |          |   |          |           |            |              |
+|           resnet18          |   White box  |   ReciproCAM   |                 1*                |   |    **89.5**   |   |    33.9   |  **5.9** |   | **77.3** |    91.1   |    30.2    |     25.9     |
+|                             |              | Activation map |                 1                 |   |      87.0     |   |  **36.3** |   10.5   |   |   74.4   |  **97.9** |  **25.2**  |     40.2     |
+|                             |   Black Box  |      AISE      |                 60                |   |      72.0     |   |    22.5   |   12.4   |   |   67.4   |    69.3   |    44.5    |     16.9     |
+|                             |              |      RISE      |                2000               |   |      87.0     |   |    34.6   |    7.1   |   |   77.1   |    93.0   |    42.0    |    **8.3**   |
+
+\* Recipro-CAM re-infers part of the graph (usually neck + head or last transformer block) H*W times, where HxW is the feature map size of the target layer.
+
 
 ### White-Box methods
 
@@ -662,7 +685,7 @@ explanation.save(
 )  # image_name_aeroplane_conf_0.85.jpg
 ```
 
-## Measure quiality metrics of saliency maps
+## Measure quality metrics of saliency maps
 
 To compare different saliency maps, you can use the implemented quality metrics: Pointing Game, Insertion-Deletion AUC, and ADCC.
 
@@ -671,10 +694,23 @@ To compare different saliency maps, you can use the implemented quality metrics:
   - **Coherence** - The coherency between the saliency map on the input image and saliency map on the explanation map (image masked with the saliency map). Requires generating an extra explanation (can be time-consuming for black box methods).
   - **Complexity** - Measures the L1 norm of the saliency map (average value per pixel). Fewer important pixels -> less complexity -> better saliency map.
 
-- **Insertion-Deletion AUC** ([paper](https://arxiv.org/abs/1806.07421)) - Measures the AUC of the curve of model confidence when important pixels are sequentially inserted or deleted. Time-consuming, requires 60 model inferences: 30 steps of the insertion and deletion process.
+- **Insertion-Deletion AUC** ([paper](https://arxiv.org/abs/1806.07421)) - Measures the AUC of the curve of model confidence when important pixels are sequentially inserted or deleted. Time-consuming, requires 60 model inferences: 30 steps for insertion and 30 steps for deletion (number of steps is configurable).
 
 - **Pointing Game** ([paper](https://arxiv.org/abs/1608.00507)/[impl](https://github.com/understandable-machine-intelligence-lab/Quantus/blob/main/quantus/metrics/localisation/pointing_game.py)) - Returns True if the most important saliency map pixel falls into the object ground truth bounding box. Requires ground truth annotation, so it is convenient to use on public datasets (COCO, VOC, ILSVRC) rather than individual images (check [accuracy_tests](../../tests/perf/test_accuracy.py) for examples).
 
+Here is a comparison of the performance time (measured in model inferences) for different accuracy methods. The explain time (also in model inferences) is added along for the better picture.
+
+| Explain mode | Explain method | Explain time** | Pointing Game |                                           Insertion/Deletion AUC                                          |            ADCC            |
+|:------------:|:--------------:|:----------------------------------:|:-------------:|:---------------------------------------------------------------------------------------------------------:|:--------------------------:|
+| White Box    | Activation map |                  1                 |       0       | 30 insertion + 30 deletion + 1 to define predicted class  and check difference in its   score |     2 + 1 explain (1*)     |
+|              |   ReciproCAM   |                 1*                 |       0       |                                   30 insertion + 30 deletion                                  |     2 + 1 explain (1*)     |
+|              | ViT ReciproCAM |                 1*                 |       0       |                                   30 insertion + 30 deletion                                  |     2 + 1 explain (1*)     |
+| Black Box    |    AISE-classification    |               120-500              |       0       |                                  30 insertion + 30 deletion                                  |   2 + 1 explain (120-150)  |
+|              |      RISE      |             1000-10000             |       0       |                                   30 insertion + 30 deletion                                  | 2 + 1 explain (1000-10000) |
+
+\* Recipro-CAM re-infers part of the graph (usually neck + head or last transformer block) H*W times, where HxW is the feature map size of the target layer.
+
+\*\* All time measurements are in number of model inferences.
 
 ```python
 import cv2

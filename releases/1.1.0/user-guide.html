@@ -347,9 +347,10 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="#black-box-mode">Black-Box mode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#xai-insertion-white-box-usage">XAI insertion (white-box usage)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#xai-methods">XAI methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#methods-performance-accuracy-comparison">Methods performance-accuracy comparison</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#plot-saliency-maps">Plot saliency maps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#saving-saliency-maps">Saving saliency maps</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#measure-quiality-metrics-of-saliency-maps">Measure quiality metrics of saliency maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#measure-quality-metrics-of-saliency-maps">Measure quality metrics of saliency maps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#example-scripts">Example scripts</a></li>
 </ul>
 </li>
@@ -439,12 +440,14 @@ which is useful for analyzing model’s performance.</p>
 <li><p><a class="reference internal" href="#xai-methods"><span class="xref myst">XAI methods</span></a></p>
 <ul>
 <li><p><a class="reference internal" href="#overview"><span class="std std-ref">Overview</span></a></p></li>
+<li><p><a class="reference internal" href="#methods-performance-accuracy-comparison"><span class="xref myst">Methods performance-accuracy comparison</span></a></p></li>
 <li><p><a class="reference internal" href="#white-box-methods"><span class="xref myst">White-box methods</span></a></p></li>
 <li><p><a class="reference internal" href="#black-box-methods"><span class="xref myst">Black-box methods</span></a></p></li>
 </ul>
 </li>
 <li><p><a class="reference internal" href="#plot-saliency-maps"><span class="xref myst">Plot saliency maps</span></a></p></li>
 <li><p><a class="reference internal" href="#saving-saliency-maps"><span class="xref myst">Saving saliency maps</span></a></p></li>
+<li><p><a class="reference internal" href="#measure-quality-metrics-of-saliency-maps"><span class="xref myst">Measure quality metrics of saliency maps</span></a></p></li>
 <li><p><a class="reference internal" href="#example-scripts"><span class="xref myst">Example scripts</span></a></p></li>
 </ul>
 </li>
@@ -770,67 +773,67 @@ Cons:</p></li>
 <p>At the moment, the following XAI methods are supported:</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
-<tr class="row-odd"><th class="head"><p>Method</p></th>
-<th class="head"><p>Using model internals</p></th>
-<th class="head"><p>Per-target support</p></th>
-<th class="head"><p>Single-shot</p></th>
-<th class="head"><p>#Model inferences</p></th>
+<tr class="row-odd"><th class="head text-left"><p>Method</p></th>
+<th class="head text-center"><p>Using model internals</p></th>
+<th class="head text-center"><p>Per-target support</p></th>
+<th class="head text-center"><p>Single-shot</p></th>
+<th class="head text-center"><p>#Model inferences</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>White-Box</p></td>
-<td><p></p></td>
-<td><p></p></td>
-<td><p></p></td>
-<td><p></p></td>
+<tr class="row-even"><td class="text-left"><p>White-Box</p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
 </tr>
-<tr class="row-odd"><td><p>Activation Map</p></td>
-<td><p>Yes</p></td>
-<td><p>No</p></td>
-<td><p>Yes</p></td>
-<td><p>1</p></td>
+<tr class="row-odd"><td class="text-left"><p>Activation Map</p></td>
+<td class="text-center"><p>Yes</p></td>
+<td class="text-center"><p>No</p></td>
+<td class="text-center"><p>Yes</p></td>
+<td class="text-center"><p>1</p></td>
 </tr>
-<tr class="row-even"><td><p>Recipro-CAM</p></td>
-<td><p>Yes</p></td>
-<td><p>Yes (class)</p></td>
-<td><p>Yes*</p></td>
-<td><p>1*</p></td>
+<tr class="row-even"><td class="text-left"><p>Recipro-CAM</p></td>
+<td class="text-center"><p>Yes</p></td>
+<td class="text-center"><p>Yes (class)</p></td>
+<td class="text-center"><p>Yes*</p></td>
+<td class="text-center"><p>1*</p></td>
 </tr>
-<tr class="row-odd"><td><p>ViT Recipro-CAM</p></td>
-<td><p>Yes</p></td>
-<td><p>Yes (class)</p></td>
-<td><p>Yes*</p></td>
-<td><p>1*</p></td>
+<tr class="row-odd"><td class="text-left"><p>ViT Recipro-CAM</p></td>
+<td class="text-center"><p>Yes</p></td>
+<td class="text-center"><p>Yes (class)</p></td>
+<td class="text-center"><p>Yes*</p></td>
+<td class="text-center"><p>1*</p></td>
 </tr>
-<tr class="row-even"><td><p>DetClassProbabilityMap</p></td>
-<td><p>Yes**</p></td>
-<td><p>Yes (class)</p></td>
-<td><p>Yes</p></td>
-<td><p>1</p></td>
+<tr class="row-even"><td class="text-left"><p>DetClassProbabilityMap</p></td>
+<td class="text-center"><p>Yes**</p></td>
+<td class="text-center"><p>Yes (class)</p></td>
+<td class="text-center"><p>Yes</p></td>
+<td class="text-center"><p>1</p></td>
 </tr>
-<tr class="row-odd"><td><p>Black-Box</p></td>
-<td><p></p></td>
-<td><p></p></td>
-<td><p></p></td>
-<td><p></p></td>
+<tr class="row-odd"><td class="text-left"><p>Black-Box</p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
 </tr>
-<tr class="row-even"><td><p>RISE</p></td>
-<td><p>No</p></td>
-<td><p>Yes (class)</p></td>
-<td><p>No</p></td>
-<td><p>1000-10000</p></td>
+<tr class="row-even"><td class="text-left"><p>RISE</p></td>
+<td class="text-center"><p>No</p></td>
+<td class="text-center"><p>Yes (class)</p></td>
+<td class="text-center"><p>No</p></td>
+<td class="text-center"><p>1000-10000</p></td>
 </tr>
-<tr class="row-odd"><td><p>AISEClassification</p></td>
-<td><p>No</p></td>
-<td><p>Yes (class)</p></td>
-<td><p>No</p></td>
-<td><p>120-500</p></td>
+<tr class="row-odd"><td class="text-left"><p>AISEClassification</p></td>
+<td class="text-center"><p>No</p></td>
+<td class="text-center"><p>Yes (class)</p></td>
+<td class="text-center"><p>No</p></td>
+<td class="text-center"><p>120-500</p></td>
 </tr>
-<tr class="row-even"><td><p>AISEDetection</p></td>
-<td><p>No</p></td>
-<td><p>Yes (bbox)</p></td>
-<td><p>No</p></td>
-<td><p>60-250</p></td>
+<tr class="row-even"><td class="text-left"><p>AISEDetection</p></td>
+<td class="text-center"><p>No</p></td>
+<td class="text-center"><p>Yes (bbox)</p></td>
+<td class="text-center"><p>No</p></td>
+<td class="text-center"><p>60-250</p></td>
 </tr>
 </tbody>
 </table>
@@ -841,6 +844,169 @@ The rest of the white-box methods support automatic detection of the target laye
 <p>Target layer is the part of the model graph where XAI branch will be inserted (applicable for white-box methods).</p>
 <p>All supported methods are gradient-free, which suits deployment framework settings (e.g. OpenVINO™), where the model is in optimized or compiled representation.</p>
 </section>
+</section>
+<section id="methods-performance-accuracy-comparison">
+<h2>Methods performance-accuracy comparison<a class="headerlink" href="#methods-performance-accuracy-comparison" title="Link to this heading">#</a></h2>
+<p>The table below compares accuracy and performace of different models and explain methods (learn more about <a class="reference internal" href="#measure-quality-metrics-of-saliency-maps"><span class="xref myst">Quality Metrics</span></a>).</p>
+<p>Metrics were measured on a 10% random subset of the <a class="reference external" href="https://www.image-net.org/challenges/LSVRC/index.php">ILSVRC 2012</a> validation dataset (5000 images, seed 42).</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head text-center"><p>Model</p></th>
+<th class="head text-center"><p>Explain mode</p></th>
+<th class="head text-center"><p>Explain method</p></th>
+<th class="head text-center"><p>Explain time<br>#Model inferences</p></th>
+<th class="head"><p></p></th>
+<th class="head text-center"><p>Pointing game</p></th>
+<th class="head"><p></p></th>
+<th class="head text-center"><p>Insertion</p></th>
+<th class="head text-center"><p>Deletion</p></th>
+<th class="head"><p></p></th>
+<th class="head text-center"><p>ADCC</p></th>
+<th class="head text-center"><p>Coherency</p></th>
+<th class="head text-center"><p>Complexity</p></th>
+<th class="head text-center"><p>Average Drop</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-center"><p>deit - tiny   (transformer)</p></td>
+<td class="text-center"><p>White box</p></td>
+<td class="text-center"><p>VIT ReciproCAM</p></td>
+<td class="text-center"><p>1*</p></td>
+<td><p></p></td>
+<td class="text-center"><p><strong>89.9</strong></p></td>
+<td><p></p></td>
+<td class="text-center"><p>22.4</p></td>
+<td class="text-center"><p><strong>4.5</strong></p></td>
+<td><p></p></td>
+<td class="text-center"><p>70.4</p></td>
+<td class="text-center"><p>88.9</p></td>
+<td class="text-center"><p><strong>38.1</strong></p></td>
+<td class="text-center"><p>34.3</p></td>
+</tr>
+<tr class="row-odd"><td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p>Activation map</p></td>
+<td class="text-center"><p>1</p></td>
+<td><p></p></td>
+<td class="text-center"><p>56.6</p></td>
+<td><p></p></td>
+<td class="text-center"><p>7.8</p></td>
+<td class="text-center"><p>7.0</p></td>
+<td><p></p></td>
+<td class="text-center"><p>46.9</p></td>
+<td class="text-center"><p>74.0</p></td>
+<td class="text-center"><p>53.7</p></td>
+<td class="text-center"><p>65.4</p></td>
+</tr>
+<tr class="row-even"><td class="text-center"><p></p></td>
+<td class="text-center"><p>Black Box</p></td>
+<td class="text-center"><p>AISE</p></td>
+<td class="text-center"><p>60</p></td>
+<td><p></p></td>
+<td class="text-center"><p>73.9</p></td>
+<td><p></p></td>
+<td class="text-center"><p>15.9</p></td>
+<td class="text-center"><p>8.9</p></td>
+<td><p></p></td>
+<td class="text-center"><p>66.6</p></td>
+<td class="text-center"><p>73.9</p></td>
+<td class="text-center"><p>44.3</p></td>
+<td class="text-center"><p>26.0</p></td>
+</tr>
+<tr class="row-odd"><td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p>RISE</p></td>
+<td class="text-center"><p>2000</p></td>
+<td><p></p></td>
+<td class="text-center"><p>85.5</p></td>
+<td><p></p></td>
+<td class="text-center"><p><strong>23.2</strong></p></td>
+<td class="text-center"><p>5.8</p></td>
+<td><p></p></td>
+<td class="text-center"><p><strong>74.8</strong></p></td>
+<td class="text-center"><p><strong>92.5</strong></p></td>
+<td class="text-center"><p>42.3</p></td>
+<td class="text-center"><p><strong>16.6</strong></p></td>
+</tr>
+<tr class="row-even"><td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+<td><p></p></td>
+<td class="text-center"><p></p></td>
+<td><p></p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+<td><p></p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+</tr>
+<tr class="row-odd"><td class="text-center"><p>resnet18</p></td>
+<td class="text-center"><p>White box</p></td>
+<td class="text-center"><p>ReciproCAM</p></td>
+<td class="text-center"><p>1*</p></td>
+<td><p></p></td>
+<td class="text-center"><p><strong>89.5</strong></p></td>
+<td><p></p></td>
+<td class="text-center"><p>33.9</p></td>
+<td class="text-center"><p><strong>5.9</strong></p></td>
+<td><p></p></td>
+<td class="text-center"><p><strong>77.3</strong></p></td>
+<td class="text-center"><p>91.1</p></td>
+<td class="text-center"><p>30.2</p></td>
+<td class="text-center"><p>25.9</p></td>
+</tr>
+<tr class="row-even"><td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p>Activation map</p></td>
+<td class="text-center"><p>1</p></td>
+<td><p></p></td>
+<td class="text-center"><p>87.0</p></td>
+<td><p></p></td>
+<td class="text-center"><p><strong>36.3</strong></p></td>
+<td class="text-center"><p>10.5</p></td>
+<td><p></p></td>
+<td class="text-center"><p>74.4</p></td>
+<td class="text-center"><p><strong>97.9</strong></p></td>
+<td class="text-center"><p><strong>25.2</strong></p></td>
+<td class="text-center"><p>40.2</p></td>
+</tr>
+<tr class="row-odd"><td class="text-center"><p></p></td>
+<td class="text-center"><p>Black Box</p></td>
+<td class="text-center"><p>AISE</p></td>
+<td class="text-center"><p>60</p></td>
+<td><p></p></td>
+<td class="text-center"><p>72.0</p></td>
+<td><p></p></td>
+<td class="text-center"><p>22.5</p></td>
+<td class="text-center"><p>12.4</p></td>
+<td><p></p></td>
+<td class="text-center"><p>67.4</p></td>
+<td class="text-center"><p>69.3</p></td>
+<td class="text-center"><p>44.5</p></td>
+<td class="text-center"><p>16.9</p></td>
+</tr>
+<tr class="row-even"><td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p>RISE</p></td>
+<td class="text-center"><p>2000</p></td>
+<td><p></p></td>
+<td class="text-center"><p>87.0</p></td>
+<td><p></p></td>
+<td class="text-center"><p>34.6</p></td>
+<td class="text-center"><p>7.1</p></td>
+<td><p></p></td>
+<td class="text-center"><p>77.1</p></td>
+<td class="text-center"><p>93.0</p></td>
+<td class="text-center"><p>42.0</p></td>
+<td class="text-center"><p><strong>8.3</strong></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>* Recipro-CAM re-infers part of the graph (usually neck + head or last transformer block) H*W times, where HxW is the feature map size of the target layer.</p>
 <section id="white-box-methods">
 <h3>White-Box methods<a class="headerlink" href="#white-box-methods" title="Link to this heading">#</a></h3>
 <p>When to use?</p>
@@ -1091,8 +1257,8 @@ Number of cells defines granularity of the saliency map (usually, the higher the
 </pre></div>
 </div>
 </section>
-<section id="measure-quiality-metrics-of-saliency-maps">
-<h2>Measure quiality metrics of saliency maps<a class="headerlink" href="#measure-quiality-metrics-of-saliency-maps" title="Link to this heading">#</a></h2>
+<section id="measure-quality-metrics-of-saliency-maps">
+<h2>Measure quality metrics of saliency maps<a class="headerlink" href="#measure-quality-metrics-of-saliency-maps" title="Link to this heading">#</a></h2>
 <p>To compare different saliency maps, you can use the implemented quality metrics: Pointing Game, Insertion-Deletion AUC, and ADCC.</p>
 <ul class="simple">
 <li><p><strong>ADCC (Average Drop-Coherence-Complexity)</strong> (<a class="reference external" href="https://arxiv.org/abs/2104.10252">paper</a>/<a class="reference external" href="https://github.com/aimagelab/ADCC/">impl</a>) - averages three submetrics:</p>
@@ -1102,9 +1268,61 @@ Number of cells defines granularity of the saliency map (usually, the higher the
 <li><p><strong>Complexity</strong> - Measures the L1 norm of the saliency map (average value per pixel). Fewer important pixels -&gt; less complexity -&gt; better saliency map.</p></li>
 </ul>
 </li>
-<li><p><strong>Insertion-Deletion AUC</strong> (<a class="reference external" href="https://arxiv.org/abs/1806.07421">paper</a>) - Measures the AUC of the curve of model confidence when important pixels are sequentially inserted or deleted. Time-consuming, requires 60 model inferences: 30 steps of the insertion and deletion process.</p></li>
+<li><p><strong>Insertion-Deletion AUC</strong> (<a class="reference external" href="https://arxiv.org/abs/1806.07421">paper</a>) - Measures the AUC of the curve of model confidence when important pixels are sequentially inserted or deleted. Time-consuming, requires 60 model inferences: 30 steps for insertion and 30 steps for deletion (number of steps is configurable).</p></li>
 <li><p><strong>Pointing Game</strong> (<a class="reference external" href="https://arxiv.org/abs/1608.00507">paper</a>/<a class="reference external" href="https://github.com/understandable-machine-intelligence-lab/Quantus/blob/main/quantus/metrics/localisation/pointing_game.py">impl</a>) - Returns True if the most important saliency map pixel falls into the object ground truth bounding box. Requires ground truth annotation, so it is convenient to use on public datasets (COCO, VOC, ILSVRC) rather than individual images (check <a class="reference download internal" download="" href="_downloads/959b21439550740fb32540e68430cfbe/test_accuracy.py"><span class="xref download myst">accuracy_tests</span></a> for examples).</p></li>
 </ul>
+<p>Here is a comparison of the performance time (measured in model inferences) for different accuracy methods. The explain time (also in model inferences) is added along for the better picture.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head text-center"><p>Explain mode</p></th>
+<th class="head text-center"><p>Explain method</p></th>
+<th class="head text-center"><p>Explain time**</p></th>
+<th class="head text-center"><p>Pointing Game</p></th>
+<th class="head text-center"><p>Insertion/Deletion AUC</p></th>
+<th class="head text-center"><p>ADCC</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-center"><p>White Box</p></td>
+<td class="text-center"><p>Activation map</p></td>
+<td class="text-center"><p>1</p></td>
+<td class="text-center"><p>0</p></td>
+<td class="text-center"><p>30 insertion + 30 deletion + 1 to define predicted class  and check difference in its   score</p></td>
+<td class="text-center"><p>2 + 1 explain (1*)</p></td>
+</tr>
+<tr class="row-odd"><td class="text-center"><p></p></td>
+<td class="text-center"><p>ReciproCAM</p></td>
+<td class="text-center"><p>1*</p></td>
+<td class="text-center"><p>0</p></td>
+<td class="text-center"><p>30 insertion + 30 deletion</p></td>
+<td class="text-center"><p>2 + 1 explain (1*)</p></td>
+</tr>
+<tr class="row-even"><td class="text-center"><p></p></td>
+<td class="text-center"><p>ViT ReciproCAM</p></td>
+<td class="text-center"><p>1*</p></td>
+<td class="text-center"><p>0</p></td>
+<td class="text-center"><p>30 insertion + 30 deletion</p></td>
+<td class="text-center"><p>2 + 1 explain (1*)</p></td>
+</tr>
+<tr class="row-odd"><td class="text-center"><p>Black Box</p></td>
+<td class="text-center"><p>AISE-classification</p></td>
+<td class="text-center"><p>120-500</p></td>
+<td class="text-center"><p>0</p></td>
+<td class="text-center"><p>30 insertion + 30 deletion</p></td>
+<td class="text-center"><p>2 + 1 explain (120-150)</p></td>
+</tr>
+<tr class="row-even"><td class="text-center"><p></p></td>
+<td class="text-center"><p>RISE</p></td>
+<td class="text-center"><p>1000-10000</p></td>
+<td class="text-center"><p>0</p></td>
+<td class="text-center"><p>30 insertion + 30 deletion</p></td>
+<td class="text-center"><p>2 + 1 explain (1000-10000)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>* Recipro-CAM re-infers part of the graph (usually neck + head or last transformer block) H*W times, where HxW is the feature map size of the target layer.</p>
+<p>** All time measurements are in number of model inferences.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
@@ -1241,6 +1459,9 @@ Number of cells defines granularity of the saliency map (usually, the higher the
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#xai-insertion-white-box-usage">XAI insertion (white-box usage)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#xai-methods">XAI methods</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#methods-performance-accuracy-comparison">Methods performance-accuracy comparison</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#white-box-methods">White-Box methods</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#activation-map">Activation Map</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#recipro-cam-vit-recipro-cam-for-vit-models">Recipro-CAM (ViT Recipro-CAM for ViT models)</a></li>
@@ -1257,7 +1478,7 @@ Number of cells defines granularity of the saliency map (usually, the higher the
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plot-saliency-maps">Plot saliency maps</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#saving-saliency-maps">Saving saliency maps</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#measure-quiality-metrics-of-saliency-maps">Measure quiality metrics of saliency maps</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#measure-quality-metrics-of-saliency-maps">Measure quality metrics of saliency maps</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-scripts">Example scripts</a></li>
 </ul>
   </nav></div>
