@@ -137,7 +137,6 @@ class TorchWhiteBoxMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
                 shape = output.shape
                 if _has_spatial_dim(shape):
                     self._feature_module = module
-                    # print(shape, type(module))
 
         global_hook_handle = torch.nn.modules.module.register_module_forward_hook(_detect_hook)
         try:
@@ -150,7 +149,6 @@ class TorchWhiteBoxMethod(MethodBase[torch.nn.Module, torch.nn.Module]):
             raise RuntimeError(
                 f"Modules with 4D output end in early-half stages: {100 * self._feature_module.index / self._num_modules}%"
             )
-        # print(self._feature_module.index, self._num_modules, self._feature_module.index / self._num_modules)
 
         return self._feature_module
 
