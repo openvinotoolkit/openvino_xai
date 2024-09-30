@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Tuple
 import numpy as np
 
 from openvino_xai.common.utils import logger
-from openvino_xai.explainer.explanation import Explanation
+from openvino_xai.explainer.explanation import ONE_MAP_LAYOUTS, Explanation
 from openvino_xai.metrics.base import BaseMetric
 
 
@@ -86,20 +86,25 @@ class PointingGame(BaseMetric):
         hits = 0.0
         num_sal_maps = 0
         for explanation, image_gt_bboxes in zip(explanations, gt_bboxes):
-            label_names = explanation.label_names
-            assert label_names is not None, "Label names are required for pointing game evaluation."
-
             for class_idx, class_sal_map in explanation.saliency_map.items():
-                label_name = label_names[int(class_idx)]
+                if explanation.layout in ONE_MAP_LAYOUTS:
+                    # Activation map
+                    class_gt_bboxes = [
+                        gt_bbox for class_gt_bboxes in image_gt_bboxes.values() for gt_bbox in class_gt_bboxes
+                    ]
+                else:
+                    label_names = explanation.label_names
+                    assert label_names is not None, "Label names are required for pointing game evaluation."
+                    label_name = label_names[int(class_idx)]
 
-                if label_name not in image_gt_bboxes:
-                    logger.info(
-                        f"No ground-truth bbox for {label_name} saliency map. "
-                        f"Skip pointing game evaluation for this saliency map."
-                    )
-                    continue
+                    if label_name not in image_gt_bboxes:
+                        logger.info(
+                            f"No ground-truth bbox for {label_name} saliency map. "
+                            f"Skip pointing game evaluation for this saliency map."
+                        )
+                        continue
+                    class_gt_bboxes = image_gt_bboxes[label_name]
 
-                class_gt_bboxes = image_gt_bboxes[label_name]
                 hits += self(class_sal_map, class_gt_bboxes)["pointing_game"]
                 num_sal_maps += 1
 

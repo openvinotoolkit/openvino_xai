@@ -61,7 +61,7 @@ def fxt_output_root(
 
 
 @pytest.fixture(scope="session")
-def fxt_clear_cache(request: pytest.FixtureRequest) -> Path:
+def fxt_clear_cache(request: pytest.FixtureRequest) -> bool:
     """Data root directory path."""
     clear_cache = bool(request.config.getoption("--clear-cache"))
     msg = f"{clear_cache = }"

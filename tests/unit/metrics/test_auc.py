@@ -64,7 +64,16 @@ class TestAUC:
         ]
 
         insertion, deletion, delta = self.auc.evaluate(explanations, input_images, self.steps).values()
+        for value in [insertion, deletion]:
+            assert isinstance(value, float)
+            assert 0 <= value <= 1
+        assert isinstance(delta, float)
 
+        # Activation map
+        explanations = [
+            Explanation({"per_image_map": np.random.rand(224, 224)}, targets="per_image_map", task=Task.CLASSIFICATION)
+        ]
+        insertion, deletion, delta = self.auc.evaluate(explanations, input_images, self.steps).values()
         for value in [insertion, deletion]:
             assert isinstance(value, float)
             assert 0 <= value <= 1

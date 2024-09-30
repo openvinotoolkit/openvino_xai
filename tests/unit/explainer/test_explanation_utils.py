@@ -1,8 +1,11 @@
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import os
+
 import numpy as np
 import pytest
+import requests
 
 from openvino_xai.common.utils import is_bhwc_layout
 from openvino_xai.explainer.utils import ActivationType, get_score, get_target_indices
@@ -79,3 +82,20 @@ def test_get_score():
 def test_is_bhwc_layout():
     assert is_bhwc_layout(np.empty((1, 224, 224, 3)))
     assert is_bhwc_layout(np.empty((1, 3, 224, 224))) == False
+
+
+def get_imagenet_labels(file_path="imagenet_2012.txt"):
+    url = "https://storage.openvinotoolkit.org/repositories/openvino_notebooks/data/data/datasets/imagenet/imagenet_2012.txt"
+
+    if not os.path.exists(file_path):
+        response = requests.get(url)
+        response.raise_for_status()
+
+        with open(file_path, "w") as f:
+            f.write(response.text)
+
+    with open(file_path, "r") as f:
+        labels = f.read().splitlines()
+
+    labels = [label.split()[0] for label in labels]
+    return labels

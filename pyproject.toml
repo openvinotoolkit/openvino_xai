@@ -49,6 +49,7 @@ dev = [
   "py-cpuinfo",
   "openpyxl",
   "torchvision",
+  "pycocotools",
 ]
 doc = [
   "furo",
