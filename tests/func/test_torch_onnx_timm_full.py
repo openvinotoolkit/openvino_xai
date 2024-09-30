@@ -21,46 +21,12 @@ onnxruntime = pytest.importorskip("onnxruntime")
 
 TEST_MODELS = timm.list_models(pretrained=True)
 
-NOT_SUPPORTED_BY_TORCH_MODELS = {
+SKIPPED_MODELS = {
     "repvit": "urllib.error.HTTPError: HTTP Error 404: Not Found",
     "tf_efficientnet_cc": "torch.onnx.errors.SymbolicValueError: Unsupported: ONNX export of convolution for kernel of unknown shape.",
     "vit_base_r50_s16_224.orig_in21k": "RuntimeError: Error(s) in loading state_dict for VisionTransformer",
     "vit_huge_patch14_224.orig_in21k": "RuntimeError: Error(s) in loading state_dict for VisionTransformer",
     "vit_large_patch32_224.orig_in21k": "RuntimeError: Error(s) in loading state_dict for VisionTransformer",
-
-    # "coat_": "Batch size cannot be adjusted in module hooks.",
-    # "convmixer": "Batch size cannot be adjusted in module hooks.",
-    # "convnext": "Batch size cannot be adjusted in module hooks.",
-    # "crossvit": "Batch size cannot be adjusted in module hooks.",
-
-    # "vit_gigantic_patch16_224_ijepa.in22k": "RuntimeError: shape '[1, 13, 13, -1]' is invalid for input of size 274560",
-    # "volo_": "RuntimeError: Exception from src/core/src/dimension.cpp:227: Cannot get length of dynamic dimension",
-    # "beit_large_patch16_512": "Failed to allocate 94652825600 bytes of memory",
-    # "convmixer_1536_20": "OOM Killed",
-    # "eva_large_patch14_336": "OOM Killed",
-    # "eva02_base_patch14_448": "OOM Killed",
-    # "eva02_large_patch14_448": "OOM Killed",
-    # "mobilevit_": "Segmentation fault",
-    # "mobilevit_xxs": "Segmentation fault",
-    # "mvitv2_base.fb_in1k": "Segmentation fault",
-    # "mvitv2_large": "OOM Killed",
-    # "mvitv2_small": "Segmentation fault",
-    # "mvitv2_tiny": "Segmentation fault",
-    # "pit_": "Segmentation fault",
-    # "pvt_": "Segmentation fault",
-    # "tf_efficientnet_l2.ns_jft_in1k": "OOM Killed",
-    # "xcit_large": "Failed to allocate 81581875200 bytes of memory",
-    # "xcit_medium_24_p8_384": "OOM Killed",
-    # "xcit_small_12_p8_384": "OOM Killed",
-    # "xcit_small_24_p8_384": "OOM Killed",
-    # Not expected to work for now
-    # "cait_": "Cannot create an empty Constant. Please provide valid data.",
-    # "coat_": "Only two outputs of the between block Add node supported, but got 1.",
-    # "crossvit": "One (and only one) of the nodes has to be Add type. But got StridedSlice and StridedSlice.",
-    # "levit_": "Check 'TRShape::merge_into(output_shape, in_copy)' failed",
-    # "sequencer2d": "Cannot find output backbone_node in auto mode, please provide target_layer.",
-    # "tnt_s_patch16_224": "Only two outputs of the between block Add node supported, but got 1.",
-    # "twins": "One (and only one) of the nodes has to be Add type. But got ShapeOf and Transpose.",
 }
 
 
@@ -75,9 +41,9 @@ class TestTorchOnnxTimm:
 
     @pytest.mark.parametrize("model_id", TEST_MODELS)
     def test_insert_xai(self, model_id, fxt_output_root: Path):
-        for skipped_model in NOT_SUPPORTED_BY_TORCH_MODELS.keys():
+        for skipped_model in SKIPPED_MODELS.keys():
            if skipped_model in model_id:
-               pytest.skip(reason=NOT_SUPPORTED_BY_TORCH_MODELS[skipped_model])
+               pytest.skip(reason=SKIPPED_MODELS[skipped_model])
 
         # Load Torch model from timm
         model = timm.create_model(model_id, in_chans=3, pretrained=True)
