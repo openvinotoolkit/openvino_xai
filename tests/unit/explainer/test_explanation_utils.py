@@ -84,8 +84,13 @@ def test_is_bhwc_layout():
     assert is_bhwc_layout(np.empty((1, 3, 224, 224))) == False
 
 
-def get_imagenet_labels(file_path="imagenet_2012.txt"):
-    url = "https://storage.openvinotoolkit.org/repositories/openvino_notebooks/data/data/datasets/imagenet/imagenet_2012.txt"
+def get_imagenet_labels(version="1k"):
+    if version == "1k":
+        url = "https://storage.openvinotoolkit.org/repositories/openvino_notebooks/data/data/datasets/imagenet/imagenet_2012.txt"
+        file_path = "imagenet_2012.txt"
+    elif version == "21k":
+        url = "https://storage.googleapis.com/bit_models/imagenet21k_wordnet_ids.txt"
+        file_path = "imagenet21k_wordnet_ids.txt"
 
     if not os.path.exists(file_path):
         response = requests.get(url)

@@ -394,7 +394,7 @@ Target layer is the part of the model graph where XAI branch will be inserted (a
 
 All supported methods are gradient-free, which suits deployment framework settings (e.g. OpenVINO™), where the model is in optimized or compiled representation.
 
-## Methods performance-accuracy comparison
+### Methods performance-accuracy comparison
 
 The table below compares accuracy and performace of different models and explain methods (learn more about [Quality Metrics](#measure-quality-metrics-of-saliency-maps)).
 
@@ -404,15 +404,17 @@ Metrics were measured on a 10% random subset of the [ILSVRC 2012](https://www.im
 |:---------------------------:|:------------:|:--------------:|:---------------------------------:|---|:-------------:|---|:---------:|:--------:|---|:--------:|:---------:|:----------:|:------------:|
 | deit - tiny   (transformer) |   White box  | VIT ReciproCAM |                 1*                |   |    **89.9**   |   |    22.4   |  **4.5** |   |   70.4   |    88.9   |  **38.1**  |     34.3     |
 |                             |              | Activation map |                 1                 |   |      56.6     |   |    7.8    |    7.0   |   |   46.9   |    74.0   |    53.7    |     65.4     |
-|                             |   Black Box  |      AISE      |                 60                |   |      73.9     |   |    15.9   |    8.9   |   |   66.6   |    73.9   |    44.3    |     26.0     |
+|                             |   Black Box**  |      AISE      |                 60                |   |      73.9     |   |    15.9   |    8.9   |   |   66.6   |    73.9   |    44.3    |     26.0     |
 |                             |              |      RISE      |                2000               |   |      85.5     |   |  **23.2** |    5.8   |   | **74.8** |  **92.5** |    42.3    |   **16.6**   |
 |                             |              |                |                                   |   |               |   |           |          |   |          |           |            |              |
 |           resnet18          |   White box  |   ReciproCAM   |                 1*                |   |    **89.5**   |   |    33.9   |  **5.9** |   | **77.3** |    91.1   |    30.2    |     25.9     |
 |                             |              | Activation map |                 1                 |   |      87.0     |   |  **36.3** |   10.5   |   |   74.4   |  **97.9** |  **25.2**  |     40.2     |
-|                             |   Black Box  |      AISE      |                 60                |   |      72.0     |   |    22.5   |   12.4   |   |   67.4   |    69.3   |    44.5    |     16.9     |
+|                             |   Black Box**  |      AISE      |                 60                |   |      72.0     |   |    22.5   |   12.4   |   |   67.4   |    69.3   |    44.5    |     16.9     |
 |                             |              |      RISE      |                2000               |   |      87.0     |   |    34.6   |    7.1   |   |   77.1   |    93.0   |    42.0    |    **8.3**   |
 
 \* Recipro-CAM re-infers part of the graph (usually neck + head or last transformer block) H*W times, where HxW is the feature map size of the target layer.
+
+\*\* For Black Box Methods preset = `SPEED`
 
 
 ### White-Box methods
