@@ -347,7 +347,6 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="#black-box-mode">Black-Box mode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#xai-insertion-white-box-usage">XAI insertion (white-box usage)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#xai-methods">XAI methods</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#methods-performance-accuracy-comparison">Methods performance-accuracy comparison</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#plot-saliency-maps">Plot saliency maps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#saving-saliency-maps">Saving saliency maps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#measure-quality-metrics-of-saliency-maps">Measure quality metrics of saliency maps</a></li>
@@ -844,9 +843,8 @@ The rest of the white-box methods support automatic detection of the target laye
 <p>Target layer is the part of the model graph where XAI branch will be inserted (applicable for white-box methods).</p>
 <p>All supported methods are gradient-free, which suits deployment framework settings (e.g. OpenVINO™), where the model is in optimized or compiled representation.</p>
 </section>
-</section>
 <section id="methods-performance-accuracy-comparison">
-<h2>Methods performance-accuracy comparison<a class="headerlink" href="#methods-performance-accuracy-comparison" title="Link to this heading">#</a></h2>
+<h3>Methods performance-accuracy comparison<a class="headerlink" href="#methods-performance-accuracy-comparison" title="Link to this heading">#</a></h3>
 <p>The table below compares accuracy and performace of different models and explain methods (learn more about <a class="reference internal" href="#measure-quality-metrics-of-saliency-maps"><span class="xref myst">Quality Metrics</span></a>).</p>
 <p>Metrics were measured on a 10% random subset of the <a class="reference external" href="https://www.image-net.org/challenges/LSVRC/index.php">ILSVRC 2012</a> validation dataset (5000 images, seed 42).</p>
 <div class="pst-scrollable-table-container"><table class="table">
@@ -899,7 +897,7 @@ The rest of the white-box methods support automatic detection of the target laye
 <td class="text-center"><p>65.4</p></td>
 </tr>
 <tr class="row-even"><td class="text-center"><p></p></td>
-<td class="text-center"><p>Black Box</p></td>
+<td class="text-center"><p>Black Box**</p></td>
 <td class="text-center"><p>AISE</p></td>
 <td class="text-center"><p>60</p></td>
 <td><p></p></td>
@@ -974,7 +972,7 @@ The rest of the white-box methods support automatic detection of the target laye
 <td class="text-center"><p>40.2</p></td>
 </tr>
 <tr class="row-odd"><td class="text-center"><p></p></td>
-<td class="text-center"><p>Black Box</p></td>
+<td class="text-center"><p>Black Box**</p></td>
 <td class="text-center"><p>AISE</p></td>
 <td class="text-center"><p>60</p></td>
 <td><p></p></td>
@@ -1007,6 +1005,8 @@ The rest of the white-box methods support automatic detection of the target laye
 </table>
 </div>
 <p>* Recipro-CAM re-infers part of the graph (usually neck + head or last transformer block) H*W times, where HxW is the feature map size of the target layer.</p>
+<p>** For Black Box Methods preset = <code class="docutils literal notranslate"><span class="pre">SPEED</span></code></p>
+</section>
 <section id="white-box-methods">
 <h3>White-Box methods<a class="headerlink" href="#white-box-methods" title="Link to this heading">#</a></h3>
 <p>When to use?</p>
@@ -1459,9 +1459,7 @@ Number of cells defines granularity of the saliency map (usually, the higher the
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#xai-insertion-white-box-usage">XAI insertion (white-box usage)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#xai-methods">XAI methods</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#methods-performance-accuracy-comparison">Methods performance-accuracy comparison</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#methods-performance-accuracy-comparison">Methods performance-accuracy comparison</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#white-box-methods">White-Box methods</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#activation-map">Activation Map</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#recipro-cam-vit-recipro-cam-for-vit-models">Recipro-CAM (ViT Recipro-CAM for ViT models)</a></li>

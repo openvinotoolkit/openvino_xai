@@ -62,7 +62,6 @@ TRANSFORMER_MODELS = [
 ]
 
 TEST_MODELS = IMAGENET_MODELS + VOC_MODELS + TRANSFORMER_MODELS
-IMAGENET_LABELS = get_imagenet_labels()
 EXPLAIN_METHODS = [Method.RECIPROCAM, Method.AISE, Method.RISE, Method.ACTIVATIONMAP]
 
 
@@ -100,8 +99,9 @@ class TestAccuracy:
             return model, None
 
         elif model_name in IMAGENET_MODELS + TRANSFORMER_MODELS:
-            self.dataset_label_list = IMAGENET_LABELS
             _, model_cfg = convert_timm_to_ir(model_name, data_dir, self.supported_num_classes)
+            version = "1k" if model_cfg["num_classes"] == 1000 else "21k"
+            self.dataset_label_list = get_imagenet_labels(version)
             ir_path = data_dir / "timm_models" / "converted_models" / model_name / "model_fp32.xml"
             model = ov.Core().read_model(ir_path)
             return model, model_cfg
@@ -157,7 +157,7 @@ class TestAccuracy:
     def setup(self, fxt_data_root, fxt_output_root, fxt_dataset_parameters):
         self.data_dir = fxt_data_root
         self.output_dir = fxt_output_root
-        self.supported_num_classes = {1000: 1000}
+        self.supported_num_classes = {1000: 1000, 21841: 21841, 21843: 21843}
 
         self.setup_dataset(fxt_dataset_parameters)
         self.dataset_name = self.dataset_type.value
