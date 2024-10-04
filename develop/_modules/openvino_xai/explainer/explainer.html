@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>openvino_xai.explainer.explainer &#8212; OpenVINO™ XAI 1.0.0 documentation</title>
+    <title>openvino_xai.explainer.explainer &#8212; OpenVINO™ XAI 1.2.0 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+    <script src="../../../_static/documentation_options.js?v=6efca38a"></script>
     <script src="../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -123,7 +123,7 @@
   
   
   
-    <p class="title logo__title">OpenVINO™ XAI 1.0.0 documentation</p>
+    <p class="title logo__title">OpenVINO™ XAI 1.2.0 documentation</p>
   
 </a></div>
     
@@ -433,6 +433,7 @@ document.write(`
 <span class="sd">    Contains the following values:</span>
 <span class="sd">        WHITEBOX - The model is explained in white box mode, i.e. XAI branch is getting inserted into the model graph.</span>
 <span class="sd">        BLACKBOX - The model is explained in black box model.</span>
+<span class="sd">        AUTO - The model is explained in the white-box mode first, if fails - black-box mode will run.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">WHITEBOX</span> <span class="o">=</span> <span class="s2">&quot;whitebox&quot;</span>
@@ -555,6 +556,7 @@ document.write(`
         <span class="n">colormap</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">overlay</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">overlay_weight</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+        <span class="n">overlay_prediction</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Explanation</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain</span><span class="p">(</span>
@@ -568,6 +570,7 @@ document.write(`
             <span class="n">colormap</span><span class="p">,</span>
             <span class="n">overlay</span><span class="p">,</span>
             <span class="n">overlay_weight</span><span class="p">,</span>
+            <span class="n">overlay_prediction</span><span class="p">,</span>
             <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
         <span class="p">)</span></div>
 
@@ -586,6 +589,7 @@ document.write(`
         <span class="n">colormap</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">overlay</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">overlay_weight</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+        <span class="n">overlay_prediction</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Explanation</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -612,6 +616,8 @@ document.write(`
 <span class="sd">        :type overlay: bool</span>
 <span class="sd">        :parameter overlay_weight: Weight of the saliency map when overlaying the input data with the saliency map.</span>
 <span class="sd">        :type overlay_weight: float</span>
+<span class="sd">        :parameter overlay_prediction: If True, plot model prediction over the overlay.</span>
+<span class="sd">        :type overlay_prediction: bool</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">targets</span> <span class="o">=</span> <span class="n">convert_targets_to_numpy</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span>
 
@@ -645,6 +651,7 @@ document.write(`
             <span class="n">colormap</span><span class="p">,</span>
             <span class="n">overlay</span><span class="p">,</span>
             <span class="n">overlay_weight</span><span class="p">,</span>
+            <span class="n">overlay_prediction</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
@@ -694,6 +701,7 @@ document.write(`
         <span class="n">colormap</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
         <span class="n">overlay</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
         <span class="n">overlay_weight</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">overlay_prediction</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Explanation</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">output_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">reference_image</span> <span class="o">=</span> <span class="n">data</span> <span class="k">if</span> <span class="n">original_input_image</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">original_input_image</span>
@@ -708,6 +716,7 @@ document.write(`
             <span class="n">colormap</span><span class="o">=</span><span class="n">colormap</span><span class="p">,</span>
             <span class="n">overlay</span><span class="o">=</span><span class="n">overlay</span><span class="p">,</span>
             <span class="n">overlay_weight</span><span class="o">=</span><span class="n">overlay_weight</span><span class="p">,</span>
+            <span class="n">overlay_prediction</span><span class="o">=</span><span class="n">overlay_prediction</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">explanation</span></div>
 

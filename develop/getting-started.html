@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>OpenVINO™ Explainable AI Toolkit - OpenVINO XAI &#8212; OpenVINO™ XAI 1.0.0 documentation</title>
+    <title>OpenVINO™ Explainable AI Toolkit - OpenVINO XAI &#8212; OpenVINO™ XAI 1.2.0 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=8d563738"></script>
+    <script src="_static/documentation_options.js?v=6efca38a"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -125,7 +125,7 @@
   
   
   
-    <p class="title logo__title">OpenVINO™ XAI 1.0.0 documentation</p>
+    <p class="title logo__title">OpenVINO™ XAI 1.2.0 documentation</p>
   
 </a></div>
     
@@ -411,9 +411,9 @@ document.write(`
 <a class="reference internal" href="#installation"><span class="std std-ref">Install</span></a> •
 <a class="reference internal" href="#quick-start"><span class="xref myst">Quick Start</span></a> •
 <a class="reference internal" href="#license"><span class="std std-ref">License</span></a> •
-<a class="reference external" href="https://openvinotoolkit.github.io/openvino_xai/releases/1.0.0">Documentation</a></p>
+<a class="reference external" href="https://openvinotoolkit.github.io/openvino_xai/releases/1.1.0">Documentation</a></p>
 <p><img alt="Python" src="https://img.shields.io/badge/python-3.10%2B-green" />
-<a class="reference external" href="https://pypi.org/project/openvino/"><img alt="OpenVINO" src="https://img.shields.io/badge/openvino-2024.2-purple" /></a>
+<a class="reference external" href="https://pypi.org/project/openvino/"><img alt="OpenVINO" src="https://img.shields.io/badge/openvino-2024.4-purple" /></a>
 <a class="reference external" href="https://codecov.io/gh/openvinotoolkit/openvino_xai"><img alt="codecov" src="https://codecov.io/gh/openvinotoolkit/openvino_xai/graph/badge.svg?token=NR0Z0CWDK9" /></a>
 <a class="reference external" href="https://opensource.org/licenses/Apache-2.0"><img alt="License" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" /></a>
 <a class="reference external" href="https://pypi.org/project/openvino_xai"><img alt="PyPI" src="https://img.shields.io/pypi/v/openvino_xai" /></a>
@@ -422,8 +422,8 @@ document.write(`
 </div>
 <p><img alt="OpenVINO XAI Concept" src="_images/ovxai-concept.svg" /></p>
 <p><strong>OpenVINO™ Explainable AI (XAI) Toolkit</strong> provides a suite of XAI algorithms for visual explanation of
-<a class="reference external" href="https://github.com/openvinotoolkit/openvino"><strong>OpenVINO™</strong></a> Intermediate Representation (IR) models.</p>
-<p>Given <strong>OpenVINO</strong> models and input images, <strong>OpenVINO XAI</strong> generates <strong>saliency maps</strong>
+<a class="reference external" href="https://github.com/openvinotoolkit/openvino"><strong>OpenVINO™</strong></a> as well as <a class="reference external" href="https://pytorch.org"><strong>PyTorch</strong></a> and <a class="reference external" href="https://onnx.ai/"><strong>ONNX</strong></a> models.</p>
+<p>Given AI models and input images, <strong>OpenVINO XAI</strong> generates <strong>saliency maps</strong>
 which highlights regions of the interest in the inputs from the models’ perspective
 to help users understand the reason why the complex AI models output such responses.</p>
 <p>Using this package, you can augment the model analysis &amp; explanation feature
@@ -444,15 +444,16 @@ on top of the existing OpenVINO inference pipeline with a few lines of code.</p>
 <hr class="docutils" />
 <section id="features">
 <h2>Features<a class="headerlink" href="#features" title="Link to this heading">#</a></h2>
-<section id="what-s-new-in-v1-0-0">
-<h3>What’s new in v1.0.0<a class="headerlink" href="#what-s-new-in-v1-0-0" title="Link to this heading">#</a></h3>
+<section id="what-s-new-in-v1-1-0">
+<h3>What’s new in v1.1.0<a class="headerlink" href="#what-s-new-in-v1-1-0" title="Link to this heading">#</a></h3>
 <ul class="simple">
-<li><p>Support generation of classification and detection per-class and per-image saliency maps</p></li>
-<li><p>Enable White-Box (<a class="reference external" href="https://arxiv.org/abs/2209.14074">ReciproCAM</a>) and Black-Box (<a class="reference external" href="https://arxiv.org/abs/1806.07421v3">RISE</a>) eXplainable AI algorithms</p></li>
-<li><p>Support CNNs and Transformer-based architectures (validation on diverse set of <a class="reference external" href="https://github.com/huggingface/pytorch-image-models">timm</a> models)</p></li>
-<li><p>Enable <code class="docutils literal notranslate"><span class="pre">Explainer</span></code> (stateful object) as the main interface for XAI algorithms</p></li>
-<li><p>Support <code class="docutils literal notranslate"><span class="pre">AUTO</span></code> mode by default to detect the best XAI method for given models</p></li>
-<li><p>Expose <code class="docutils literal notranslate"><span class="pre">insert_xai</span></code> functional API to support XAI head insertion for OpenVINO IR models</p></li>
+<li><p>Support PyTorch models with <code class="docutils literal notranslate"><span class="pre">insert_xai()</span></code> API for saliency map generation on PyTorch / ONNX runtime</p></li>
+<li><p>Support OpenVINO IR (.xml) / ONNX (.onnx) model files for <code class="docutils literal notranslate"><span class="pre">Explainer</span></code></p></li>
+<li><p>Enable AISE method: Adaptive Input Sampling for Explanation of Black-box Models</p></li>
+<li><p>Add Pointing Game, Insertion-Deletion AUC and ADCC quality metrics for saliency maps</p></li>
+<li><p>Upgrade OpenVINO to 2024.4.0</p></li>
+<li><p>Add saliency map visualization with explanation.plot()</p></li>
+<li><p>Enable flexible naming for saved saliency maps and include confidence scores</p></li>
 </ul>
 <p>Please refer to the <a class="reference internal" href="#CHANGELOG.md"><span class="xref myst">change logs</span></a> for the full release history.</p>
 </section>
@@ -474,13 +475,13 @@ on top of the existing OpenVINO inference pipeline with a few lines of code.</p>
 <td><p>Image Classification</p></td>
 <td><p>White-Box</p></td>
 <td><p>ReciproCAM</p></td>
-<td><p><a class="reference external" href="https://arxiv.org/abs/2209.14074">arxiv</a> / <a class="reference internal" href="#openvino_xai/methods/white_box/recipro_cam.py"><span class="xref myst">src</span></a></p></td>
+<td><p><a class="reference external" href="https://openaccess.thecvf.com/content/CVPR2024W/XAI4CV/papers/Byun_ReciproCAM_Lightweight_Gradient-free_Class_Activation_Map_for_Post-hoc_Explanations_CVPRW_2024_paper.pdf">paper</a> / <a class="reference internal" href="#openvino_xai/me4thods/white_box/recipro_cam.py"><span class="xref myst">src</span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p></p></td>
 <td><p></p></td>
 <td><p></p></td>
 <td><p>VITReciproCAM</p></td>
-<td><p><a class="reference external" href="https://arxiv.org/abs/2310.02588">arxiv</a> / <a class="reference internal" href="#openvino_xai/methods/white_box/recipro_cam.py"><span class="xref myst">src</span></a></p></td>
+<td><p><a class="reference external" href="https://arxiv.org/abs/2310.02588">paper</a> / <a class="reference internal" href="#openvino_xai/methods/white_box/recipro_cam.py"><span class="xref myst">src</span></a></p></td>
 </tr>
 <tr class="row-even"><td><p></p></td>
 <td><p></p></td>
@@ -492,29 +493,30 @@ on top of the existing OpenVINO inference pipeline with a few lines of code.</p>
 <td><p></p></td>
 <td><p>Black-Box</p></td>
 <td><p>AISEClassification</p></td>
-<td><p><a class="reference internal" href="#openvino_xai/methods/black_box/aise.py"><span class="xref myst">src</span></a></p></td>
+<td><p><a class="reference internal" href="#openvino_xai/methods/black_box/aise/classification.py"><span class="xref myst">src</span></a></p></td>
 </tr>
 <tr class="row-even"><td><p></p></td>
 <td><p></p></td>
 <td><p></p></td>
 <td><p>RISE</p></td>
-<td><p><a class="reference external" href="https://arxiv.org/abs/1806.07421v3">arxiv</a> / <a class="reference internal" href="#openvino_xai/methods/black_box/rise.py"><span class="xref myst">src</span></a></p></td>
+<td><p><a class="reference external" href="https://arxiv.org/abs/1806.07421v3">paper</a> / <a class="reference internal" href="#openvino_xai/methods/black_box/rise.py"><span class="xref myst">src</span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p></p></td>
 <td><p>Object Detection</p></td>
 <td><p>White-Box</p></td>
-<td><p>ClassProbabilityMap</p></td>
+<td><p>DetClassProbabilityMap</p></td>
 <td><p>experimental / <a class="reference internal" href="#openvino_xai/methods/white_box/det_class_probability_map.py"><span class="xref myst">src</span></a></p></td>
 </tr>
 <tr class="row-even"><td><p></p></td>
 <td><p></p></td>
 <td><p>Black-Box</p></td>
 <td><p>AISEDetection</p></td>
-<td><p><a class="reference internal" href="#openvino_xai/methods/black_box/aise.py"><span class="xref myst">src</span></a></p></td>
+<td><p><a class="reference internal" href="#openvino_xai/methods/black_box/aise/detection.py"><span class="xref myst">src</span></a></p></td>
 </tr>
 </tbody>
 </table>
 </div>
+<p>See more method comparison at the <a class="reference internal" href="user-guide.html"><span class="std std-doc">User Guide</span></a>.</p>
 </section>
 <section id="supported-explainable-models">
 <h3>Supported explainable models<a class="headerlink" href="#supported-explainable-models" title="Link to this heading">#</a></h3>
@@ -524,13 +526,6 @@ on top of the existing OpenVINO inference pipeline with a few lines of code.</p>
 <li><p><a class="reference external" href="https://github.com/openvinotoolkit/openvino_xai/issues/29">Runtime error from ONNX / OpenVINO IR models while conversion or inference for XAI (#29)</a></p></li>
 <li><p><a class="reference external" href="https://github.com/openvinotoolkit/openvino_xai/issues/30">Models not supported by white box XAI methods (#30)</a></p></li>
 </ul>
-<blockquote>
-<div><p><strong><em>WARNING:</em></strong>  OpenVINO XAI is fully validated on OpenVINO 2024.2.0. Following issue might be observed if older version of OpenVINO is used.</p>
-<ul class="simple">
-<li><p><a class="reference external" href="https://github.com/openvinotoolkit/openvino_xai/issues/26">OpenVINO IR branch insertion not working for models converted directly from torch models with OVC (#26)</a>
-A simple workaround is to convert Torch models to ONNX models and then convert to OpenVINO models to feed to OpenVINO XAI. Please refer to <a class="reference internal" href="#openvino_xai/utils/model_export.py"><span class="xref myst">the code example</span></a>.</p></li>
-</ul>
-</div></blockquote>
 <blockquote>
 <div><p><strong><em>NOTE:</em></strong>  GenAI / LLMs would be also supported incrementally in the upcoming releases.</p>
 </div></blockquote>
@@ -572,6 +567,15 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 </div>
 </details>
 <details>
+<summary>(Optional) Enable PyTorch support</summary>
+<p>You can enjoy the PyTorch XAI feature if the PyTorch is installed along with the OpenVINO XAI.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install PyTorch (CPU version as example)</span>
+pip3<span class="w"> </span>install<span class="w"> </span>torch<span class="w"> </span>--index-url<span class="w"> </span>https://download.pytorch.org/whl/cpu
+</pre></div>
+</div>
+<p>Please refer to the <a class="reference external" href="https://pytorch.org/get-started/locally/">PyTorch Installation Guide</a> for other options.</p>
+</details>
+<details>
 <summary>Verify installation</summary>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Run tests</span>
 pytest<span class="w"> </span>-v<span class="w"> </span>-s<span class="w"> </span>./tests/unit
@@ -587,7 +591,7 @@ pre-commit<span class="w"> </span>run<span class="w"> </span>--all-files
 <h2>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading">#</a></h2>
 <section id="hello-openvino-xai">
 <h3>Hello, OpenVINO XAI<a class="headerlink" href="#hello-openvino-xai" title="Link to this heading">#</a></h3>
-<p>Let’s imagine the case that our OpenVINO IR model is up and running on a inference pipeline.
+<p>Let’s imagine the case that our OpenVINO model is up and running on a inference pipeline.
 While watching the outputs, we may want to analyze the model’s behavior for debugging or understanding purposes.</p>
 <p>By using the <strong>OpenVINO XAI</strong> <code class="docutils literal notranslate"><span class="pre">Explainer</span></code>, we can visualize why the model gives such responses.
 In this example, we are trying to know the reason why the model outputs a <code class="docutils literal notranslate"><span class="pre">cheetah</span></code> label for the given input image.</p>
@@ -636,6 +640,27 @@ In this example, we are trying to know the reason why the model outputs a <code 
 </div>
 <p>We can see that model is focusing on the body or skin area of the animals to tell if this image contains actual cheetahs.</p>
 </section>
+<section id="insert-xai-head-to-your-models">
+<h3>Insert XAI head to your models<a class="headerlink" href="#insert-xai-head-to-your-models" title="Link to this heading">#</a></h3>
+<p>Using the <code class="docutils literal notranslate"><span class="pre">insert_xai</span></code> API, we can insert XAI head to existing OpenVINO or PyTorch models directly and get additional “saliency_map” output in the same inference pipeline.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">timm</span>
+
+<span class="c1"># Get a PyTorch model from TIMM</span>
+<span class="n">torch_model</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span> <span class="o">=</span> <span class="n">timm</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">&quot;resnet18.a1_in1k&quot;</span><span class="p">,</span> <span class="n">in_chans</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">pretrained</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Insert XAI head</span>
+<span class="n">model_xai</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span> <span class="o">=</span> <span class="n">xai</span><span class="o">.</span><span class="n">insert_xai</span><span class="p">(</span><span class="n">torch_model</span><span class="p">,</span> <span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">)</span>
+
+<span class="c1"># Torch XAI model inference</span>
+<span class="n">model_xai</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+    <span class="n">outputs</span> <span class="o">=</span> <span class="n">model_xai</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">image_norm</span><span class="p">))</span>
+    <span class="n">logits</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;prediction&quot;</span><span class="p">]</span>  <span class="c1"># BxC</span>
+    <span class="n">saliency_maps</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;saliency_map&quot;</span><span class="p">]</span>  <span class="c1"># BxCxHxW: per-class saliency map</span>
+</pre></div>
+</div>
+</section>
 <section id="more-advanced-use-cases">
 <h3>More advanced use-cases<a class="headerlink" href="#more-advanced-use-cases" title="Link to this heading">#</a></h3>
 <p>Users could tweak the basic use-case according to their purpose, which include but not limited to:</p>
@@ -645,18 +670,20 @@ In this example, we are trying to know the reason why the model outputs a <code 
 <li><p>Customize output image visualization options</p></li>
 <li><p>Explain multiple class targets, passing them as label indices or as actual label names</p></li>
 <li><p>Call explainer multiple times to explain multiple images or to use different targets</p></li>
-<li><p>Using <code class="docutils literal notranslate"><span class="pre">insert_xai</span></code> API, insert XAI head to your OpenVINO IR model and get additional saliency map output in the same inference pipeline</p></li>
+<li><p>Insert XAI head to your PyTorch models and export to ONNX format to generate saliency maps on ONNX Runtime
+(Refer to the <a class="reference internal" href="#./examples/run_torch_onnx.py"><span class="xref myst">full example script</span></a>)</p></li>
 </ul>
 <p>Please find more options and scenarios in the following links:</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="user-guide.html"><span class="std std-doc">OpenVINO XAI User Guide</span></a></p></li>
 <li><p><a class="reference external" href="https://github.com/openvinotoolkit/openvino_notebooks/blob/latest/notebooks/explainable-ai-1-basic/explainable-ai-1-basic.ipynb">OpenVINO Notebook - XAI Basic</a></p></li>
 <li><p><a class="reference external" href="https://github.com/openvinotoolkit/openvino_notebooks/blob/latest/notebooks/explainable-ai-2-deep-dive/explainable-ai-2-deep-dive.ipynb">OpenVINO Notebook - XAI Deep Dive</a></p></li>
+<li><p><a class="reference external" href="https://github.com/openvinotoolkit/openvino_notebooks/blob/latest/notebooks/explainable-ai-3-map-interpretation/explainable-ai-3-map-interpretation.ipynb">OpenVINO Notebook - Saliency Map Interpretation</a></p></li>
 </ul>
 </section>
 <section id="playing-with-the-examples">
 <h3>Playing with the examples<a class="headerlink" href="#playing-with-the-examples" title="Link to this heading">#</a></h3>
-<p>Please look around the runnable <a class="reference internal" href="#./examples"><span class="xref myst">example scripts</span></a> and play with them to get used to the <code class="docutils literal notranslate"><span class="pre">Explainer</span></code> APIs.</p>
+<p>Please look around the runnable <a class="reference internal" href="#./examples"><span class="xref myst">example scripts</span></a> and play with them to get used to the <code class="docutils literal notranslate"><span class="pre">Explainer</span></code> and <code class="docutils literal notranslate"><span class="pre">insert_xai</span></code> APIs.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Prepare models by running tests (need &quot;pip install openvino_xai[dev]&quot; extra option)</span>
 <span class="c1"># Models are downloaded and stored in .data/otx_models</span>
 pytest<span class="w"> </span>tests/test_classification.py
@@ -665,6 +692,9 @@ pytest<span class="w"> </span>tests/test_classification.py
 <span class="c1"># All outputs will be stored in the corresponding output directory</span>
 python<span class="w"> </span>examples/run_classification.py<span class="w"> </span>.data/otx_models/mlc_mobilenetv3_large_voc.xml<span class="w"> </span><span class="se">\</span>
 tests/assets/cheetah_person.jpg<span class="w"> </span>--output<span class="w"> </span>output
+
+<span class="c1"># Run PyTorch and ONNX support example</span>
+python<span class="w"> </span>examples/run_torch_onnx.py
 </pre></div>
 </div>
 </section>
@@ -742,7 +772,7 @@ Intel’s products and software are intended only to be used in applications tha
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#features">Features</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-s-new-in-v1-0-0">What’s new in v1.0.0</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-s-new-in-v1-1-0">What’s new in v1.1.0</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-xai-methods">Supported XAI methods</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-explainable-models">Supported explainable models</a></li>
 </ul>
@@ -750,6 +780,7 @@ Intel’s products and software are intended only to be used in applications tha
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start">Quick Start</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hello-openvino-xai">Hello, OpenVINO XAI</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#insert-xai-head-to-your-models">Insert XAI head to your models</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#more-advanced-use-cases">More advanced use-cases</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#playing-with-the-examples">Playing with the examples</a></li>
 </ul>

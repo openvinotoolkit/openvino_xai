@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>OpenVINO™ Explainable AI Toolkit User Guide &#8212; OpenVINO™ XAI 1.0.0 documentation</title>
+    <title>OpenVINO™ Explainable AI Toolkit User Guide &#8212; OpenVINO™ XAI 1.2.0 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=8d563738"></script>
+    <script src="_static/documentation_options.js?v=6efca38a"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -125,7 +125,7 @@
   
   
   
-    <p class="title logo__title">OpenVINO™ XAI 1.0.0 documentation</p>
+    <p class="title logo__title">OpenVINO™ XAI 1.2.0 documentation</p>
   
 </a></div>
     
@@ -346,8 +346,10 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="#white-box-mode">White-Box mode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#black-box-mode">Black-Box mode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#xai-insertion-white-box-usage">XAI insertion (white-box usage)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#xai-methods">XAI methods</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#plot-saliency-maps">Plot saliency maps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#saving-saliency-maps">Saving saliency maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#measure-quality-metrics-of-saliency-maps">Measure quality metrics of saliency maps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#example-scripts">Example scripts</a></li>
 </ul>
 </li>
@@ -434,8 +436,17 @@ which is useful for analyzing model’s performance.</p>
 <li><p><a class="reference internal" href="#white-box-mode"><span class="xref myst">White-Box mode</span></a></p></li>
 <li><p><a class="reference internal" href="#black-box-mode"><span class="xref myst">Black-Box mode</span></a></p></li>
 <li><p><a class="reference internal" href="#xai-insertion-white-box-usage"><span class="xref myst">XAI insertion (white-box usage)</span></a></p></li>
+<li><p><a class="reference internal" href="#xai-methods"><span class="xref myst">XAI methods</span></a></p>
+<ul>
+<li><p><a class="reference internal" href="#overview"><span class="std std-ref">Overview</span></a></p></li>
+<li><p><a class="reference internal" href="#methods-performance-accuracy-comparison"><span class="xref myst">Methods performance-accuracy comparison</span></a></p></li>
+<li><p><a class="reference internal" href="#white-box-methods"><span class="xref myst">White-box methods</span></a></p></li>
+<li><p><a class="reference internal" href="#black-box-methods"><span class="xref myst">Black-box methods</span></a></p></li>
+</ul>
+</li>
 <li><p><a class="reference internal" href="#plot-saliency-maps"><span class="xref myst">Plot saliency maps</span></a></p></li>
 <li><p><a class="reference internal" href="#saving-saliency-maps"><span class="xref myst">Saving saliency maps</span></a></p></li>
+<li><p><a class="reference internal" href="#measure-quality-metrics-of-saliency-maps"><span class="xref myst">Measure quality metrics of saliency maps</span></a></p></li>
 <li><p><a class="reference internal" href="#example-scripts"><span class="xref myst">Example scripts</span></a></p></li>
 </ul>
 </li>
@@ -535,7 +546,7 @@ The OpenVINO Runtime supports loading and inference of the ONNX models, and so d
 <span class="c1"># Run explanation</span>
 <span class="n">explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span>
     <span class="n">preprocessed_image</span><span class="p">,</span>
-    <span class="n">target_explain_labels</span><span class="o">=</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">],</span>  <span class="c1"># indices or string labels to explain</span>
+    <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">],</span>  <span class="c1"># indices or string labels to explain</span>
     <span class="n">overlay</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># False by default</span>
     <span class="n">original_input_image</span><span class="o">=</span><span class="n">image</span><span class="p">,</span>  <span class="c1"># to apply overlay on the original image instead of the preprocessed one that was used for the explainer</span>
 <span class="p">)</span>
@@ -583,7 +594,7 @@ The OpenVINO Runtime supports loading and inference of the ONNX models, and so d
 <span class="c1"># Run explanation</span>
 <span class="n">explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span>
     <span class="n">image</span><span class="p">,</span>
-    <span class="n">target_explain_labels</span><span class="o">=</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">],</span>  <span class="c1"># indices or string labels to explain</span>
+    <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">],</span>  <span class="c1"># indices or string labels to explain</span>
 <span class="p">)</span>
 
 <span class="c1"># Save saliency maps</span>
@@ -619,6 +630,7 @@ The OpenVINO Runtime supports loading and inference of the ONNX models, and so d
     <span class="n">model</span><span class="p">,</span>
     <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">,</span>
     <span class="n">preprocess_fn</span><span class="o">=</span><span class="n">preprocess_fn</span><span class="p">,</span>
+    <span class="n">explain_mode</span><span class="o">=</span><span class="n">ExplainMode</span><span class="o">.</span><span class="n">WHITEBOX</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="c1"># Generate and process saliency maps (as many as required, sequentially)</span>
@@ -632,12 +644,11 @@ The OpenVINO Runtime supports loading and inference of the ONNX models, and so d
 <span class="c1"># Run explanation</span>
 <span class="n">explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span>
     <span class="n">image</span><span class="p">,</span>
-    <span class="n">explain_mode</span><span class="o">=</span><span class="n">ExplainMode</span><span class="o">.</span><span class="n">WHITEBOX</span><span class="p">,</span>
     <span class="c1"># target_layer=&quot;last_conv_node_name&quot;,  # target_layer - node after which the XAI branch will be inserted, usually the last convolutional layer in the backbone</span>
     <span class="n">embed_scaling</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># True by default. If set to True, the saliency map scale (0 ~ 255) operation is embedded in the model</span>
     <span class="n">explain_method</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Method</span><span class="o">.</span><span class="n">RECIPROCAM</span><span class="p">,</span>  <span class="c1"># ReciproCAM is the default XAI method for CNNs</span>
     <span class="n">label_names</span><span class="o">=</span><span class="n">voc_labels</span><span class="p">,</span>
-    <span class="n">target_explain_labels</span><span class="o">=</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">],</span>  <span class="c1"># target classes to explain, also [&#39;dog&#39;, &#39;person&#39;] is a valid input, since label_names are provided</span>
+    <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">],</span>  <span class="c1"># target classes to explain, also [&#39;dog&#39;, &#39;person&#39;] is a valid input, since label_names are provided</span>
     <span class="n">overlay</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># False by default</span>
 <span class="p">)</span>
 
@@ -680,6 +691,7 @@ Cons:</p></li>
     <span class="n">model</span><span class="p">,</span>
     <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">,</span>
     <span class="n">preprocess_fn</span><span class="o">=</span><span class="n">preprocess_fn</span><span class="p">,</span>
+    <span class="n">explain_mode</span><span class="o">=</span><span class="n">ExplainMode</span><span class="o">.</span><span class="n">BLACKBOX</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="c1"># Generate and process saliency maps (as many as required, sequentially)</span>
@@ -688,9 +700,8 @@ Cons:</p></li>
 <span class="c1"># Run explanation</span>
 <span class="n">explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span>
     <span class="n">image</span><span class="p">,</span>
-    <span class="n">explain_mode</span><span class="o">=</span><span class="n">ExplainMode</span><span class="o">.</span><span class="n">BLACKBOX</span><span class="p">,</span>
-    <span class="n">target_explain_labels</span><span class="o">=</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">],</span>  <span class="c1"># target classes to explain</span>
-    <span class="c1"># target_explain_labels=-1,  # explain all classes</span>
+    <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">],</span>  <span class="c1"># target classes to explain</span>
+    <span class="c1"># targets=-1,  # explain all classes</span>
     <span class="n">overlay</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># False by default</span>
 <span class="p">)</span>
 
@@ -705,25 +716,401 @@ Cons:</p></li>
 <p>As mentioned above, saliency map generation requires model inference. In the above use cases, OpenVINO XAI performs model inference using provided processing functions. An alternative approach is to use XAI to insert the XAI branch into the model and infer it in the original pipeline.</p>
 <p><code class="docutils literal notranslate"><span class="pre">insert_xai()</span></code> API is used for insertion.</p>
 <p><strong>Note</strong>: The original model outputs are not affected, and the model should be inferable by the original inference pipeline.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
 <span class="kn">import</span> <span class="nn">openvino_xai</span> <span class="k">as</span> <span class="nn">xai</span>
+<span class="kn">from</span> <span class="nn">openvino_xai.explainer.visualizer</span> <span class="kn">import</span> <span class="n">colormap</span><span class="p">,</span> <span class="n">overlay</span>
 
 
 <span class="c1"># Create an ov.Model</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">ov</span><span class="o">.</span><span class="n">Core</span><span class="p">()</span><span class="o">.</span><span class="n">read_model</span><span class="p">(</span><span class="s2">&quot;path/to/model.xml&quot;</span><span class="p">)</span>  <span class="c1"># type: ov.Model</span>
+<span class="n">model</span><span class="p">:</span> <span class="n">ov</span><span class="o">.</span><span class="n">Model</span> <span class="o">=</span> <span class="n">ov</span><span class="o">.</span><span class="n">Core</span><span class="p">()</span><span class="o">.</span><span class="n">read_model</span><span class="p">(</span><span class="s2">&quot;path/to/model.xml&quot;</span><span class="p">)</span>
 
-<span class="c1"># Insert XAI branch into the model graph</span>
-<span class="n">model_xai</span> <span class="o">=</span> <span class="n">xai</span><span class="o">.</span><span class="n">insert_xai</span><span class="p">(</span>
+<span class="c1"># Get and preprocess image</span>
+<span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="s2">&quot;path/to/image.jpg&quot;</span><span class="p">)</span>
+<span class="n">image_norm</span> <span class="o">=</span> <span class="n">preprocess_fn</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+
+<span class="c1"># Insert XAI branch into the OpenVINO model graph (IR)</span>
+<span class="n">model_xai</span><span class="p">:</span> <span class="n">ov</span><span class="o">.</span><span class="n">Model</span> <span class="o">=</span> <span class="n">xai</span><span class="o">.</span><span class="n">insert_xai</span><span class="p">(</span>
     <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
     <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">,</span>
-    <span class="c1"># target_layer=&quot;last_conv_node_name&quot;,  # target_layer - the node after which the XAI branch will be inserted, usually the last convolutional layer in the backbone</span>
+    <span class="c1"># target_layer=&quot;last_conv_node_name&quot;,  # target_layer - the node after which the XAI branch will be inserted, usually the last convolutional layer in the backbone. Defaults to None, by which the target layer is automatically detected</span>
     <span class="n">embed_scaling</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># True by default. If set to True, the saliency map scale (0 ~ 255) operation is embedded in the model</span>
     <span class="n">explain_method</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Method</span><span class="o">.</span><span class="n">RECIPROCAM</span><span class="p">,</span>  <span class="c1"># ReciproCAM is the default XAI method for CNNs</span>
-<span class="p">)</span>  <span class="c1"># type: ov.Model</span>
+<span class="p">)</span>
 
-<span class="c1"># ***** Downstream task: user&#39;s code that infers model_xai and picks &#39;saliency_map&#39; output *****</span>
+<span class="c1"># Insert XAI branch into the Pytorch model</span>
+<span class="c1"># XAI head is inserted using the module hook mechanism internally</span>
+<span class="c1"># so that users could get additional saliency map without major changes in the original inference pipeline.</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="n">model</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span>
+
+<span class="c1"># Insert XAI head</span>
+<span class="n">model_xai</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span> <span class="o">=</span> <span class="n">xai</span><span class="o">.</span><span class="n">insert_xai</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">)</span>
+
+<span class="c1"># Torch XAI model inference</span>
+<span class="n">model_xai</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+    <span class="n">outputs</span> <span class="o">=</span> <span class="n">model_xai</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">image_norm</span><span class="p">))</span>
+    <span class="n">logits</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;prediction&quot;</span><span class="p">]</span>  <span class="c1"># BxC: original model prediction</span>
+    <span class="n">saliency_maps</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;saliency_map&quot;</span><span class="p">]</span>  <span class="c1"># BxCxhxw: additional per-class saliency map</span>
+    <span class="n">probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="n">probs</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="c1"># Torch XAI model saliency map</span>
+<span class="n">saliency_maps</span> <span class="o">=</span> <span class="n">saliency_maps</span><span class="o">.</span><span class="n">numpy</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Cxhxw</span>
+<span class="n">saliency_map</span> <span class="o">=</span> <span class="n">saliency_maps</span><span class="p">[</span><span class="n">label</span><span class="p">]</span>  <span class="c1"># hxw saliency_map for the label</span>
+<span class="n">saliency_map</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">saliency_map</span><span class="p">,</span> <span class="n">dsize</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># HxW</span>
+<span class="n">saliency_map</span> <span class="o">=</span> <span class="n">colormap</span><span class="p">(</span><span class="n">saliency_map</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:])</span>  <span class="c1"># 1xHxWx3</span>
+<span class="n">result_image</span> <span class="o">=</span> <span class="n">overlay</span><span class="p">(</span><span class="n">saliency_map</span><span class="p">,</span> <span class="n">image</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># HxWx3</span>
 </pre></div>
 </div>
+</section>
+<section id="xai-methods">
+<h2>XAI methods<a class="headerlink" href="#xai-methods" title="Link to this heading">#</a></h2>
+<section id="overview">
+<h3>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h3>
+<p>At the moment, the following XAI methods are supported:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head text-left"><p>Method</p></th>
+<th class="head text-center"><p>Using model internals</p></th>
+<th class="head text-center"><p>Per-target support</p></th>
+<th class="head text-center"><p>Single-shot</p></th>
+<th class="head text-center"><p>#Model inferences</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-left"><p>White-Box</p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>Activation Map</p></td>
+<td class="text-center"><p>Yes</p></td>
+<td class="text-center"><p>No</p></td>
+<td class="text-center"><p>Yes</p></td>
+<td class="text-center"><p>1</p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>Recipro-CAM</p></td>
+<td class="text-center"><p>Yes</p></td>
+<td class="text-center"><p>Yes (class)</p></td>
+<td class="text-center"><p>Yes*</p></td>
+<td class="text-center"><p>1*</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>ViT Recipro-CAM</p></td>
+<td class="text-center"><p>Yes</p></td>
+<td class="text-center"><p>Yes (class)</p></td>
+<td class="text-center"><p>Yes*</p></td>
+<td class="text-center"><p>1*</p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>DetClassProbabilityMap</p></td>
+<td class="text-center"><p>Yes**</p></td>
+<td class="text-center"><p>Yes (class)</p></td>
+<td class="text-center"><p>Yes</p></td>
+<td class="text-center"><p>1</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>Black-Box</p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>RISE</p></td>
+<td class="text-center"><p>No</p></td>
+<td class="text-center"><p>Yes (class)</p></td>
+<td class="text-center"><p>No</p></td>
+<td class="text-center"><p>1000-10000</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>AISEClassification</p></td>
+<td class="text-center"><p>No</p></td>
+<td class="text-center"><p>Yes (class)</p></td>
+<td class="text-center"><p>No</p></td>
+<td class="text-center"><p>120-500</p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>AISEDetection</p></td>
+<td class="text-center"><p>No</p></td>
+<td class="text-center"><p>Yes (bbox)</p></td>
+<td class="text-center"><p>No</p></td>
+<td class="text-center"><p>60-250</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>* Recipro-CAM re-infers part of the graph (usually neck + head or last transformer block) H*W times, where HxW – feature map size of the target layer.</p>
+<p>** DetClassProbabilityMap requires explicit definition of the target layers.
+The rest of the white-box methods support automatic detection of the target layer.</p>
+<p>Target layer is the part of the model graph where XAI branch will be inserted (applicable for white-box methods).</p>
+<p>All supported methods are gradient-free, which suits deployment framework settings (e.g. OpenVINO™), where the model is in optimized or compiled representation.</p>
+</section>
+<section id="methods-performance-accuracy-comparison">
+<h3>Methods performance-accuracy comparison<a class="headerlink" href="#methods-performance-accuracy-comparison" title="Link to this heading">#</a></h3>
+<p>The table below compares accuracy and performace of different models and explain methods (learn more about <a class="reference internal" href="#measure-quality-metrics-of-saliency-maps"><span class="xref myst">Quality Metrics</span></a>).</p>
+<p>Metrics were measured on a 10% random subset of the <a class="reference external" href="https://www.image-net.org/challenges/LSVRC/index.php">ILSVRC 2012</a> validation dataset (5000 images, seed 42).</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head text-center"><p>Model</p></th>
+<th class="head text-center"><p>Explain mode</p></th>
+<th class="head text-center"><p>Explain method</p></th>
+<th class="head text-center"><p>Explain time<br>#Model inferences</p></th>
+<th class="head"><p></p></th>
+<th class="head text-center"><p>Pointing game</p></th>
+<th class="head"><p></p></th>
+<th class="head text-center"><p>Insertion</p></th>
+<th class="head text-center"><p>Deletion</p></th>
+<th class="head"><p></p></th>
+<th class="head text-center"><p>ADCC</p></th>
+<th class="head text-center"><p>Coherency</p></th>
+<th class="head text-center"><p>Complexity</p></th>
+<th class="head text-center"><p>Average Drop</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-center"><p>deit - tiny   (transformer)</p></td>
+<td class="text-center"><p>White box</p></td>
+<td class="text-center"><p>VIT ReciproCAM</p></td>
+<td class="text-center"><p>1*</p></td>
+<td><p></p></td>
+<td class="text-center"><p><strong>89.9</strong></p></td>
+<td><p></p></td>
+<td class="text-center"><p>22.4</p></td>
+<td class="text-center"><p><strong>4.5</strong></p></td>
+<td><p></p></td>
+<td class="text-center"><p>70.4</p></td>
+<td class="text-center"><p>88.9</p></td>
+<td class="text-center"><p><strong>38.1</strong></p></td>
+<td class="text-center"><p>34.3</p></td>
+</tr>
+<tr class="row-odd"><td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p>Activation map</p></td>
+<td class="text-center"><p>1</p></td>
+<td><p></p></td>
+<td class="text-center"><p>56.6</p></td>
+<td><p></p></td>
+<td class="text-center"><p>7.8</p></td>
+<td class="text-center"><p>7.0</p></td>
+<td><p></p></td>
+<td class="text-center"><p>46.9</p></td>
+<td class="text-center"><p>74.0</p></td>
+<td class="text-center"><p>53.7</p></td>
+<td class="text-center"><p>65.4</p></td>
+</tr>
+<tr class="row-even"><td class="text-center"><p></p></td>
+<td class="text-center"><p>Black Box**</p></td>
+<td class="text-center"><p>AISE</p></td>
+<td class="text-center"><p>60</p></td>
+<td><p></p></td>
+<td class="text-center"><p>73.9</p></td>
+<td><p></p></td>
+<td class="text-center"><p>15.9</p></td>
+<td class="text-center"><p>8.9</p></td>
+<td><p></p></td>
+<td class="text-center"><p>66.6</p></td>
+<td class="text-center"><p>73.9</p></td>
+<td class="text-center"><p>44.3</p></td>
+<td class="text-center"><p>26.0</p></td>
+</tr>
+<tr class="row-odd"><td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p>RISE</p></td>
+<td class="text-center"><p>2000</p></td>
+<td><p></p></td>
+<td class="text-center"><p>85.5</p></td>
+<td><p></p></td>
+<td class="text-center"><p><strong>23.2</strong></p></td>
+<td class="text-center"><p>5.8</p></td>
+<td><p></p></td>
+<td class="text-center"><p><strong>74.8</strong></p></td>
+<td class="text-center"><p><strong>92.5</strong></p></td>
+<td class="text-center"><p>42.3</p></td>
+<td class="text-center"><p><strong>16.6</strong></p></td>
+</tr>
+<tr class="row-even"><td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+<td><p></p></td>
+<td class="text-center"><p></p></td>
+<td><p></p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+<td><p></p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+</tr>
+<tr class="row-odd"><td class="text-center"><p>resnet18</p></td>
+<td class="text-center"><p>White box</p></td>
+<td class="text-center"><p>ReciproCAM</p></td>
+<td class="text-center"><p>1*</p></td>
+<td><p></p></td>
+<td class="text-center"><p><strong>89.5</strong></p></td>
+<td><p></p></td>
+<td class="text-center"><p>33.9</p></td>
+<td class="text-center"><p><strong>5.9</strong></p></td>
+<td><p></p></td>
+<td class="text-center"><p><strong>77.3</strong></p></td>
+<td class="text-center"><p>91.1</p></td>
+<td class="text-center"><p>30.2</p></td>
+<td class="text-center"><p>25.9</p></td>
+</tr>
+<tr class="row-even"><td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p>Activation map</p></td>
+<td class="text-center"><p>1</p></td>
+<td><p></p></td>
+<td class="text-center"><p>87.0</p></td>
+<td><p></p></td>
+<td class="text-center"><p><strong>36.3</strong></p></td>
+<td class="text-center"><p>10.5</p></td>
+<td><p></p></td>
+<td class="text-center"><p>74.4</p></td>
+<td class="text-center"><p><strong>97.9</strong></p></td>
+<td class="text-center"><p><strong>25.2</strong></p></td>
+<td class="text-center"><p>40.2</p></td>
+</tr>
+<tr class="row-odd"><td class="text-center"><p></p></td>
+<td class="text-center"><p>Black Box**</p></td>
+<td class="text-center"><p>AISE</p></td>
+<td class="text-center"><p>60</p></td>
+<td><p></p></td>
+<td class="text-center"><p>72.0</p></td>
+<td><p></p></td>
+<td class="text-center"><p>22.5</p></td>
+<td class="text-center"><p>12.4</p></td>
+<td><p></p></td>
+<td class="text-center"><p>67.4</p></td>
+<td class="text-center"><p>69.3</p></td>
+<td class="text-center"><p>44.5</p></td>
+<td class="text-center"><p>16.9</p></td>
+</tr>
+<tr class="row-even"><td class="text-center"><p></p></td>
+<td class="text-center"><p></p></td>
+<td class="text-center"><p>RISE</p></td>
+<td class="text-center"><p>2000</p></td>
+<td><p></p></td>
+<td class="text-center"><p>87.0</p></td>
+<td><p></p></td>
+<td class="text-center"><p>34.6</p></td>
+<td class="text-center"><p>7.1</p></td>
+<td><p></p></td>
+<td class="text-center"><p>77.1</p></td>
+<td class="text-center"><p>93.0</p></td>
+<td class="text-center"><p>42.0</p></td>
+<td class="text-center"><p><strong>8.3</strong></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>* Recipro-CAM re-infers part of the graph (usually neck + head or last transformer block) H*W times, where HxW is the feature map size of the target layer.</p>
+<p>** For Black Box Methods preset = <code class="docutils literal notranslate"><span class="pre">SPEED</span></code></p>
+</section>
+<section id="white-box-methods">
+<h3>White-Box methods<a class="headerlink" href="#white-box-methods" title="Link to this heading">#</a></h3>
+<p>When to use?</p>
+<ul class="simple">
+<li><p>When model architecture follows standard CNN-based or ViT-based design (OV-XAI <span class="xref myst">support</span> 1000+ CNN and ViT models).</p></li>
+<li><p>When speed matters. White-box methods are fast - it takes ~one model inference to generate saliency map.</p></li>
+<li><p>When it is required to obtain saliency map together with model prediction at the inference server environment. White-box methods update model graph, so that the XAI branch and saliency map output added to the model. Therefore, with a minor compute overhead, it is possible to generate both model predictions and saliency maps.</p></li>
+</ul>
+<p>All white-box methods require access to model internal state. To generate saliency map, supported white-box methods potentially change and process internal model activations in a way that fosters compute efficiency.</p>
+<section id="activation-map">
+<h4>Activation Map<a class="headerlink" href="#activation-map" title="Link to this heading">#</a></h4>
+<p>Suitable for:</p>
+<ul class="simple">
+<li><p>Binary classification problems (e.g. inspecting model reasoning when predicting a positive class).</p></li>
+<li><p>Visualization of the global (class-agnostic) model attention (e.g. inspecting which input pixels are the most salient for the model).</p></li>
+</ul>
+<p>Activation Map is the most basic and naive approach. It takes the outputs of the model’s feature extractor (backbone) and averages it in the channel dimension. The results highly rely on the backbone and ignore neck and head computations. Basically, it gives a relatively good and fast result, which highlight the most activated features from the backbone perspective.</p>
+<p>Below saliency map was obtained for <a class="reference external" href="https://huggingface.co/timm/resnet18.a1_in1k">ResNet-18</a> from <a class="reference external" href="https://huggingface.co/timm">timm</a>:</p>
+<p><img alt="OpenVINO XAI Architecture" src="_images/ActivationMap_resnet18.a1_in1k_activation_map.jpg" /></p>
+</section>
+<section id="recipro-cam-vit-recipro-cam-for-vit-models">
+<h4>Recipro-CAM (ViT Recipro-CAM for ViT models)<a class="headerlink" href="#recipro-cam-vit-recipro-cam-for-vit-models" title="Link to this heading">#</a></h4>
+<p>Suitable for:</p>
+<ul class="simple">
+<li><p>Almost all CNN-based architectures.</p></li>
+<li><p>Many ViT-based architectures.</p></li>
+</ul>
+<p><a class="reference download internal" download="" href="_downloads/bf0a086155a09e7733279dc08c5ed41b/recipro_cam.py"><span class="xref download myst">Recipro-CAM</span></a> involves spatially masking of the extracted feature maps to exploit the correlation between activation maps and model predictions for target classes. It is perturbation-based method which perturbs internal model activations.</p>
+<p>Assume 7x7 feature map which is extracted by the CNN backbone. One location of the feature map is preserved (e.g. at index [0, 0]), while the rest feature map values is masked out with e.g. zeros (perturbation is the same across channel dimension). Perturbed feature map inferred through the model head. The the model prediction scores are used as saliency scores for index [0, 0]. This is repeated for all 49 spatial location. The final saliency map obtained after resizing and scaling. See <a class="reference external" href="https://openaccess.thecvf.com/content/CVPR2024W/XAI4CV/papers/Byun_ReciproCAM_Lightweight_Gradient-free_Class_Activation_Map_for_Post-hoc_Explanations_CVPRW_2024_paper.pdf">paper</a> for more details.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Recipro-CAM</span></code> is an efficient XAI method.
+The main weak point is that saliency for each pixel in the feature map space is estimated in isolation, without taking into account joint contribution of different pixels/features.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Recipro-CAM</span></code> is the default method for the classification task. <a class="reference download internal" download="" href="_downloads/bf0a086155a09e7733279dc08c5ed41b/recipro_cam.py"><span class="xref download myst">ViT Recipro-CAM</span></a> is a modification of Recipro-CAM for ViT-based models.</p>
+<p>Below saliency map was obtained for <a class="reference external" href="https://huggingface.co/timm/resnet18.a1_in1k">ResNet-18</a> from <a class="reference external" href="https://huggingface.co/timm">timm</a> and “cheetah” class:</p>
+<p><img alt="OpenVINO XAI Architecture" src="_images/ReciproCAM_resnet18.a1_in1k_293.jpg" /></p>
+</section>
+<section id="detclassprobabilitymap">
+<h4>DetClassProbabilityMap<a class="headerlink" href="#detclassprobabilitymap" title="Link to this heading">#</a></h4>
+<p>Suitable for:</p>
+<ul class="simple">
+<li><p>Single-stage object detection models.</p></li>
+<li><p>When it is enough to estimate saliency maps per-class.</p></li>
+</ul>
+<p><a class="reference download internal" download="" href="_downloads/4d8133226dd2252c94af18a88705d36c/det_class_probability_map.py"><span class="xref download myst">DetClassProbabilityMap</span></a> takes the raw classification head output and uses class probability maps to calculate regions of interest for each class. So, it creates different salience maps for each class. This algorithm is implemented for single-stage detectors only and required explicit list of target layers.</p>
+<p>The main limitation of this method is that, due to the training loss design of most single-stage detectors, activation values drift towards the center of the object while propagating through the network. Many object detectors, while being designed to precisely estimate location of the objects, might mess up spatial location of object features in the latent space.</p>
+<p>Below saliency map was obtained for <code class="docutils literal notranslate"><span class="pre">YOLOX</span></code> trained in-house on PASCAL VOC dataset:</p>
+<p><img alt="OpenVINO XAI Architecture" src="_images/DetClassProbabilityMap.jpg" /></p>
+</section>
+</section>
+<section id="black-box-methods">
+<h3>Black-Box methods<a class="headerlink" href="#black-box-methods" title="Link to this heading">#</a></h3>
+<p>When to use?</p>
+<ul class="simple">
+<li><p>When custom models are used and/or white-box methods fail (e.g. Swin-based transformers).</p></li>
+<li><p>When more advanced model explanation is required. See more details below (e.g. in the RISE overview).</p></li>
+<li><p>When spacial location of the features is messed up in the latent space (e.g. some single-stage object detection models).</p></li>
+</ul>
+<p>All black-box methods are perturbation-based - they perturb the input and register the change in the output.
+Usually, for high quality saliency map, hundreds or thousands of model inferences required. That is the reason for them to be compute-inefficient. On the other hand, black box methods are model-agnostic.</p>
+<p>Given that the quality of the saliency maps usually correlates with the number of available inferences, we propose the following presets for the black-box methods: <code class="docutils literal notranslate"><span class="pre">Preset.SPEED</span></code>, <code class="docutils literal notranslate"><span class="pre">Preset.BALANCE</span></code>, <code class="docutils literal notranslate"><span class="pre">Preset.QUALITY</span></code> (<code class="docutils literal notranslate"><span class="pre">Preset.BALANCE</span></code> is used by default).
+Apart from that, methods parameters can be defined directly via Explainer or Method API.</p>
+<section id="rise">
+<h4>RISE<a class="headerlink" href="#rise" title="Link to this heading">#</a></h4>
+<p>Suitable for:</p>
+<ul class="simple">
+<li><p>All classification models which can generate per-class prediction scores.</p></li>
+<li><p>More flexibility and more advanced use cases (e.g. control of granularity of the saliency map).</p></li>
+</ul>
+<p><a class="reference download internal" download="" href="_downloads/76561b11d66ce9f1c7ee1b3402ba9d23/rise.py"><span class="xref download myst">RISE</span></a> probes a model by sub-sampling the input image via random masks and records its response to each of them.
+RISE creates random masks from down-scaled space (e.g. 7×7 grid) and adds random translation shifts for the pixel-level explanation with further up-sampling. Weighted sum of all sampled masks used to generate the fine-grained saliency map.
+Since it approximates the true saliency map with Monte Carlo sampling, it requires multiple thousands of forward passes to generate a fine-grained saliency map. RISE is a non-deterministic method.
+See <a class="reference external" href="https://arxiv.org/abs/1806.07421v3">paper</a> for more details.</p>
+<p><code class="docutils literal notranslate"><span class="pre">RISE</span></code> generates saliency maps for all classes at once, although indices of target classes can be provided (which might bring some performance boost).</p>
+<p><code class="docutils literal notranslate"><span class="pre">RISE</span></code> has two main hyperparameter: <code class="docutils literal notranslate"><span class="pre">num_cells</span></code> (define the resolution of the grid for the masks) and <code class="docutils literal notranslate"><span class="pre">num_masks</span></code> (defines number of inferences).
+Number of cells defines granularity of the saliency map (usually, the higher the granularity - the better). Higher number of cells require more masks to converge. Going from <code class="docutils literal notranslate"><span class="pre">Preset.SPEED</span></code> to <code class="docutils literal notranslate"><span class="pre">Preset.QUALITY</span></code>, the number of masks (compute budget) increases.</p>
+<p>Below saliency map was obtained for <a class="reference external" href="https://huggingface.co/timm/resnet18.a1_in1k">ResNet-18</a> from <a class="reference external" href="https://huggingface.co/timm">timm</a> and “cheetah” class (default parameters).</p>
+<p><img alt="OpenVINO XAI Architecture" src="_images/RISE_resnet18.a1_in1k_293.jpg" /></p>
+<p>It is possible to see, that some grass-related pixels from the left cheetah also contribute to the cheetah prediction, which might indicates that model learned cheetah features in combination with grass (which makes sense).</p>
+</section>
+<section id="aiseclassification">
+<h4>AISEClassification<a class="headerlink" href="#aiseclassification" title="Link to this heading">#</a></h4>
+<p>Suitable for:</p>
+<ul class="simple">
+<li><p>All classification models which can generate per-class prediction scores.</p></li>
+<li><p>Cases when speed matters.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">AISE</span></code> formulates saliency map generation as a kernel density estimation (KDE) problem, and adaptively sample input masks using a derivative-free optimizer to maximize mask saliency score. KDE requires a proper kernel width, which is not known. A set of pre-defined kernel widths is used simultaneously, and the result is them aggregated. This adaptive sampling mechanism improves the efficiency of input mask generation and thus increases convergence speed. AISE is designed to be task-agnostic and can be applied to a wide range of classification and object detection architectures.
+<code class="docutils literal notranslate"><span class="pre">AISE</span></code> is optimized for generating saliency map for a specific class (or a few classes). To specify target classes, use targets argument.</p>
+<p><a class="reference download internal" download="" href="_downloads/0a692ff6fcb77ae473e504e58612751c/classification.py"><span class="xref download myst">AISEClassification</span></a> is designed for classification models.</p>
+<p>Below saliency map was obtained for <a class="reference external" href="https://huggingface.co/timm/resnet18.a1_in1k">ResNet-18</a> from <a class="reference external" href="https://huggingface.co/timm">timm</a> and “cheetah” class:</p>
+<p><img alt="OpenVINO XAI Architecture" src="_images/AISE_resnet18.a1_in1k_293.jpg" /></p>
+</section>
+<section id="aisedetection">
+<h4>AISEDetection<a class="headerlink" href="#aisedetection" title="Link to this heading">#</a></h4>
+<p>Suitable for:</p>
+<ul class="simple">
+<li><p>All detection models which can generate bounding boxes, labels and scores.</p></li>
+<li><p>When speed matters.</p></li>
+<li><p>When it is required to get per-box saliency map.</p></li>
+</ul>
+<p><a class="reference download internal" download="" href="_downloads/2b14cd654176fc7e07a5993fa4444c01/detection.py"><span class="xref download myst">AISEDetection</span></a> is designed for detection models and support per-bounding box saliency maps.</p>
+<p>Below saliency map was obtained for <code class="docutils literal notranslate"><span class="pre">YOLOX</span></code> trained in-house on PASCAL VOC dataset (with default parameters, <code class="docutils literal notranslate"><span class="pre">Preset.BALANCE</span></code>):</p>
+<p><img alt="OpenVINO XAI Architecture" src="_images/AISEDetection.jpg" /></p>
+</section>
+</section>
 </section>
 <section id="plot-saliency-maps">
 <h2>Plot saliency maps<a class="headerlink" href="#plot-saliency-maps" title="Link to this heading">#</a></h2>
@@ -752,6 +1139,7 @@ Cons:</p></li>
     <span class="n">model</span><span class="p">,</span>
     <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">,</span>
     <span class="n">preprocess_fn</span><span class="o">=</span><span class="n">preprocess_fn</span><span class="p">,</span>
+    <span class="n">explain_mode</span><span class="o">=</span><span class="n">ExplainMode</span><span class="o">.</span><span class="n">WHITEBOX</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">voc_labels</span> <span class="o">=</span> <span class="p">[</span>
@@ -765,9 +1153,8 @@ Cons:</p></li>
 <span class="c1"># Run explanation</span>
 <span class="n">explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span>
     <span class="n">image</span><span class="p">,</span>
-    <span class="n">explain_mode</span><span class="o">=</span><span class="n">ExplainMode</span><span class="o">.</span><span class="n">WHITEBOX</span><span class="p">,</span>
     <span class="n">label_names</span><span class="o">=</span><span class="n">voc_labels</span><span class="p">,</span>
-    <span class="n">target_explain_labels</span><span class="o">=</span><span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">11</span><span class="p">],</span>  <span class="c1"># [&#39;cat&#39;, &#39;dog&#39;] also possible as target classes to explain</span>
+    <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">11</span><span class="p">],</span>  <span class="c1"># [&#39;cat&#39;, &#39;dog&#39;] also possible as target classes to explain</span>
 <span class="p">)</span>
 
 <span class="c1"># Use matplotlib (recommended for Jupyter) - default backend</span>
@@ -828,6 +1215,7 @@ Cons:</p></li>
     <span class="n">model</span><span class="p">,</span>
     <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">,</span>
     <span class="n">preprocess_fn</span><span class="o">=</span><span class="n">preprocess_fn</span><span class="p">,</span>
+    <span class="n">explain_mode</span><span class="o">=</span><span class="n">ExplainMode</span><span class="o">.</span><span class="n">WHITEBOX</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">voc_labels</span> <span class="o">=</span> <span class="p">[</span>
@@ -850,9 +1238,8 @@ Cons:</p></li>
 <span class="c1"># Run explanation</span>
 <span class="n">explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span>
     <span class="n">image</span><span class="p">,</span>
-    <span class="n">explain_mode</span><span class="o">=</span><span class="n">ExplainMode</span><span class="o">.</span><span class="n">WHITEBOX</span><span class="p">,</span>
     <span class="n">label_names</span><span class="o">=</span><span class="n">voc_labels</span><span class="p">,</span>
-    <span class="n">target_explain_labels</span><span class="o">=</span><span class="n">result_idxs</span><span class="p">,</span>  <span class="c1"># target classes to explain</span>
+    <span class="n">targets</span><span class="o">=</span><span class="n">result_idxs</span><span class="p">,</span>  <span class="c1"># target classes to explain</span>
 <span class="p">)</span>
 
 <span class="c1"># Save saliency maps flexibly</span>
@@ -867,6 +1254,129 @@ Cons:</p></li>
 <span class="n">explanation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
     <span class="n">OUTPUT_PATH</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;image_name_&quot;</span><span class="p">,</span> <span class="n">postfix</span><span class="o">=</span><span class="s2">&quot;_conf_&quot;</span><span class="p">,</span> <span class="n">confidence_scores</span><span class="o">=</span><span class="n">scores_dict</span>
 <span class="p">)</span>  <span class="c1"># image_name_aeroplane_conf_0.85.jpg</span>
+</pre></div>
+</div>
+</section>
+<section id="measure-quality-metrics-of-saliency-maps">
+<h2>Measure quality metrics of saliency maps<a class="headerlink" href="#measure-quality-metrics-of-saliency-maps" title="Link to this heading">#</a></h2>
+<p>To compare different saliency maps, you can use the implemented quality metrics: Pointing Game, Insertion-Deletion AUC, and ADCC.</p>
+<ul class="simple">
+<li><p><strong>ADCC (Average Drop-Coherence-Complexity)</strong> (<a class="reference external" href="https://arxiv.org/abs/2104.10252">paper</a>/<a class="reference external" href="https://github.com/aimagelab/ADCC/">impl</a>) - averages three submetrics:</p>
+<ul>
+<li><p><strong>Average Drop</strong> - The percentage drop in confidence when the model sees only the explanation map (image masked with the saliency map) instead of the full image.</p></li>
+<li><p><strong>Coherence</strong> - The coherency between the saliency map on the input image and saliency map on the explanation map (image masked with the saliency map). Requires generating an extra explanation (can be time-consuming for black box methods).</p></li>
+<li><p><strong>Complexity</strong> - Measures the L1 norm of the saliency map (average value per pixel). Fewer important pixels -&gt; less complexity -&gt; better saliency map.</p></li>
+</ul>
+</li>
+<li><p><strong>Insertion-Deletion AUC</strong> (<a class="reference external" href="https://arxiv.org/abs/1806.07421">paper</a>) - Measures the AUC of the curve of model confidence when important pixels are sequentially inserted or deleted. Time-consuming, requires 60 model inferences: 30 steps for insertion and 30 steps for deletion (number of steps is configurable).</p></li>
+<li><p><strong>Pointing Game</strong> (<a class="reference external" href="https://arxiv.org/abs/1608.00507">paper</a>/<a class="reference external" href="https://github.com/understandable-machine-intelligence-lab/Quantus/blob/main/quantus/metrics/localisation/pointing_game.py">impl</a>) - Returns True if the most important saliency map pixel falls into the object ground truth bounding box. Requires ground truth annotation, so it is convenient to use on public datasets (COCO, VOC, ILSVRC) rather than individual images (check <a class="reference download internal" download="" href="_downloads/959b21439550740fb32540e68430cfbe/test_accuracy.py"><span class="xref download myst">accuracy_tests</span></a> for examples).</p></li>
+</ul>
+<p>Here is a comparison of the performance time (measured in model inferences) for different accuracy methods. The explain time (also in model inferences) is added along for the better picture.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head text-center"><p>Explain mode</p></th>
+<th class="head text-center"><p>Explain method</p></th>
+<th class="head text-center"><p>Explain time**</p></th>
+<th class="head text-center"><p>Pointing Game</p></th>
+<th class="head text-center"><p>Insertion/Deletion AUC</p></th>
+<th class="head text-center"><p>ADCC</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-center"><p>White Box</p></td>
+<td class="text-center"><p>Activation map</p></td>
+<td class="text-center"><p>1</p></td>
+<td class="text-center"><p>0</p></td>
+<td class="text-center"><p>30 insertion + 30 deletion + 1 to define predicted class  and check difference in its   score</p></td>
+<td class="text-center"><p>2 + 1 explain (1*)</p></td>
+</tr>
+<tr class="row-odd"><td class="text-center"><p></p></td>
+<td class="text-center"><p>ReciproCAM</p></td>
+<td class="text-center"><p>1*</p></td>
+<td class="text-center"><p>0</p></td>
+<td class="text-center"><p>30 insertion + 30 deletion</p></td>
+<td class="text-center"><p>2 + 1 explain (1*)</p></td>
+</tr>
+<tr class="row-even"><td class="text-center"><p></p></td>
+<td class="text-center"><p>ViT ReciproCAM</p></td>
+<td class="text-center"><p>1*</p></td>
+<td class="text-center"><p>0</p></td>
+<td class="text-center"><p>30 insertion + 30 deletion</p></td>
+<td class="text-center"><p>2 + 1 explain (1*)</p></td>
+</tr>
+<tr class="row-odd"><td class="text-center"><p>Black Box</p></td>
+<td class="text-center"><p>AISE-classification</p></td>
+<td class="text-center"><p>120-500</p></td>
+<td class="text-center"><p>0</p></td>
+<td class="text-center"><p>30 insertion + 30 deletion</p></td>
+<td class="text-center"><p>2 + 1 explain (120-150)</p></td>
+</tr>
+<tr class="row-even"><td class="text-center"><p></p></td>
+<td class="text-center"><p>RISE</p></td>
+<td class="text-center"><p>1000-10000</p></td>
+<td class="text-center"><p>0</p></td>
+<td class="text-center"><p>30 insertion + 30 deletion</p></td>
+<td class="text-center"><p>2 + 1 explain (1000-10000)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>* Recipro-CAM re-infers part of the graph (usually neck + head or last transformer block) H*W times, where HxW is the feature map size of the target layer.</p>
+<p>** All time measurements are in number of model inferences.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">openvino.runtime</span> <span class="k">as</span> <span class="nn">ov</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Mapping</span>
+
+<span class="kn">import</span> <span class="nn">openvino_xai</span> <span class="k">as</span> <span class="nn">xai</span>
+<span class="kn">from</span> <span class="nn">openvino_xai.explainer</span> <span class="kn">import</span> <span class="n">ExplainMode</span>
+<span class="kn">from</span> <span class="nn">openvino_xai.metrics</span> <span class="kn">import</span> <span class="n">ADCC</span><span class="p">,</span> <span class="n">InsertionDeletionAUC</span>
+
+
+<span class="k">def</span> <span class="nf">preprocess_fn</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Preprocess the input image.&quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">image</span><span class="p">,</span> <span class="n">dsize</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">))</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">transpose</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">processed_image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">processed_image</span>
+
+<span class="k">def</span> <span class="nf">postprocess_fn</span><span class="p">(</span><span class="n">output</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Postprocess the model output.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">softmax</span><span class="p">(</span><span class="n">output</span><span class="p">[</span><span class="s2">&quot;logits&quot;</span><span class="p">])</span>
+
+<span class="k">def</span> <span class="nf">softmax</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute softmax values of x.&quot;&quot;&quot;</span>
+    <span class="n">e_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">e_x</span> <span class="o">/</span> <span class="n">e_x</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+<span class="n">IMAGE_PATH</span> <span class="o">=</span> <span class="s2">&quot;path/to/image.jpg&quot;</span>
+<span class="n">MODEL_PATH</span> <span class="o">=</span> <span class="s2">&quot;path/to/model.xml&quot;</span>
+
+<span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">IMAGE_PATH</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ov</span><span class="o">.</span><span class="n">Core</span><span class="p">()</span><span class="o">.</span><span class="n">read_model</span><span class="p">(</span><span class="n">MODEL_PATH</span><span class="p">)</span>
+
+<span class="n">explainer</span> <span class="o">=</span> <span class="n">xai</span><span class="o">.</span><span class="n">Explainer</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">task</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Task</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">,</span>
+    <span class="n">preprocess_fn</span><span class="o">=</span><span class="n">preprocess_fn</span><span class="p">,</span>
+    <span class="n">explain_mode</span><span class="o">=</span><span class="n">ExplainMode</span><span class="o">.</span><span class="n">WHITEBOX</span><span class="p">,</span>
+    <span class="n">explain_method</span><span class="o">=</span><span class="n">xai</span><span class="o">.</span><span class="n">Method</span><span class="o">.</span><span class="n">RECIPROCAM</span> <span class="c1"># Also VITRECIPROCAM, AISE, RISE, ACTIVATIONMAP are supported</span>
+<span class="p">)</span>
+
+<span class="c1"># Generate explanation (if several targets are passed, metrics for all saliency maps will be aggregated)</span>
+<span class="n">explanation</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">colormap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">overlay</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">resize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Calculate InsertionDeletionAUC metric over the list of explanations and input images</span>
+<span class="n">auc</span> <span class="o">=</span> <span class="n">InsertionDeletionAUC</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">preprocess_fn</span><span class="p">,</span> <span class="n">postprocess_fn</span><span class="p">)</span>
+<span class="n">auc_score</span> <span class="o">=</span> <span class="n">auc</span><span class="o">.</span><span class="n">evaluate</span><span class="p">([</span><span class="n">explanation</span><span class="p">],</span> <span class="p">[</span><span class="n">image</span><span class="p">],</span> <span class="n">steps</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="c1"># {&#39;insertion&#39;: 0.43, &#39;deletion&#39;: 0.09, &#39;delta&#39;: 0.34}</span>
+<span class="n">insertion</span><span class="p">,</span> <span class="n">deletion</span><span class="p">,</span> <span class="n">delta</span> <span class="o">=</span> <span class="n">auc_score</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Insertion </span><span class="si">{</span><span class="n">deletion</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">, Deletion </span><span class="si">{</span><span class="n">insertion</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">, Delta </span><span class="si">{</span><span class="n">delta</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Calculate ADCC metric over the list of explanations and input images</span>
+<span class="n">adcc</span> <span class="o">=</span> <span class="n">ADCC</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">preprocess_fn</span><span class="p">,</span> <span class="n">postprocess_fn</span><span class="p">,</span> <span class="n">explainer</span><span class="p">)</span>
+<span class="n">adcc_score</span> <span class="o">=</span> <span class="n">adcc</span><span class="o">.</span><span class="n">evaluate</span><span class="p">([</span><span class="n">explanation</span><span class="p">],</span> <span class="p">[</span><span class="n">image</span><span class="p">])</span> <span class="c1"># {&#39;adcc&#39;: 0.95, &#39;coherency&#39;: 0.99, &#39;complexity&#39;: 0.13, &#39;average_drop&#39;: 0.0}</span>
+<span class="n">adcc</span><span class="p">,</span> <span class="n">coherency</span><span class="p">,</span> <span class="n">complexity</span><span class="p">,</span> <span class="n">average_drop</span> <span class="o">=</span> <span class="n">adcc_score</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ADCC </span><span class="si">{</span><span class="n">adcc</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">, Coherency </span><span class="si">{</span><span class="n">coherency</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">, Complexity </span><span class="si">{</span><span class="n">complexity</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">, Average drop </span><span class="si">{</span><span class="n">average_drop</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -947,8 +1457,26 @@ Cons:</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#white-box-mode">White-Box mode</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#black-box-mode">Black-Box mode</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#xai-insertion-white-box-usage">XAI insertion (white-box usage)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#xai-methods">XAI methods</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#methods-performance-accuracy-comparison">Methods performance-accuracy comparison</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#white-box-methods">White-Box methods</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#activation-map">Activation Map</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#recipro-cam-vit-recipro-cam-for-vit-models">Recipro-CAM (ViT Recipro-CAM for ViT models)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#detclassprobabilitymap">DetClassProbabilityMap</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#black-box-methods">Black-Box methods</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#rise">RISE</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#aiseclassification">AISEClassification</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#aisedetection">AISEDetection</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plot-saliency-maps">Plot saliency maps</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#saving-saliency-maps">Saving saliency maps</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#measure-quality-metrics-of-saliency-maps">Measure quality metrics of saliency maps</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-scripts">Example scripts</a></li>
 </ul>
   </nav></div>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>openvino_xai.methods.black_box.rise &#8212; OpenVINO™ XAI 1.0.0 documentation</title>
+    <title>openvino_xai.methods.black_box.rise &#8212; OpenVINO™ XAI 1.2.0 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../../../_static/documentation_options.js?v=8d563738"></script>
+    <script src="../../../../_static/documentation_options.js?v=6efca38a"></script>
     <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -123,7 +123,7 @@
   
   
   
-    <p class="title logo__title">OpenVINO™ XAI 1.0.0 documentation</p>
+    <p class="title logo__title">OpenVINO™ XAI 1.2.0 documentation</p>
   
 </a></div>
     
@@ -444,6 +444,8 @@ document.write(`
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">postprocess_fn</span><span class="o">=</span><span class="n">postprocess_fn</span><span class="p">,</span> <span class="n">preprocess_fn</span><span class="o">=</span><span class="n">preprocess_fn</span><span class="p">,</span> <span class="n">device_name</span><span class="o">=</span><span class="n">device_name</span>
         <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_masks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_cells</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">if</span> <span class="n">prepare_model</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">prepare_model</span><span class="p">()</span>
@@ -456,7 +458,7 @@ document.write(`
         <span class="n">target_indices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">preset</span><span class="p">:</span> <span class="n">Preset</span> <span class="o">=</span> <span class="n">Preset</span><span class="o">.</span><span class="n">BALANCE</span><span class="p">,</span>
         <span class="n">num_masks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">num_cells</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
+        <span class="n">num_cells</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">prob</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
         <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
         <span class="n">scale_output</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -485,13 +487,11 @@ document.write(`
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">data_preprocessed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">preprocess_fn</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
-        <span class="n">num_masks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preset_parameters</span><span class="p">(</span><span class="n">preset</span><span class="p">,</span> <span class="n">num_masks</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_masks</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cells</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preset_parameters</span><span class="p">(</span><span class="n">preset</span><span class="p">,</span> <span class="n">num_masks</span><span class="p">,</span> <span class="n">num_cells</span><span class="p">)</span>
 
         <span class="n">saliency_maps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_synchronous_explanation</span><span class="p">(</span>
             <span class="n">data_preprocessed</span><span class="p">,</span>
             <span class="n">target_indices</span><span class="p">,</span>
-            <span class="n">num_masks</span><span class="p">,</span>
-            <span class="n">num_cells</span><span class="p">,</span>
             <span class="n">prob</span><span class="p">,</span>
             <span class="n">seed</span><span class="p">,</span>
         <span class="p">)</span>
@@ -511,26 +511,31 @@ document.write(`
     <span class="k">def</span> <span class="nf">_preset_parameters</span><span class="p">(</span>
         <span class="n">preset</span><span class="p">:</span> <span class="n">Preset</span><span class="p">,</span>
         <span class="n">num_masks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-        <span class="c1"># TODO (negvet): preset num_cells</span>
-        <span class="k">if</span> <span class="n">num_masks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">num_masks</span>
-
+        <span class="n">num_cells</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
         <span class="k">if</span> <span class="n">preset</span> <span class="o">==</span> <span class="n">Preset</span><span class="o">.</span><span class="n">SPEED</span><span class="p">:</span>
-            <span class="k">return</span> <span class="mi">2000</span>
+            <span class="n">num_masks_</span> <span class="o">=</span> <span class="mi">1000</span>
+            <span class="n">num_cells_</span> <span class="o">=</span> <span class="mi">4</span>
         <span class="k">elif</span> <span class="n">preset</span> <span class="o">==</span> <span class="n">Preset</span><span class="o">.</span><span class="n">BALANCE</span><span class="p">:</span>
-            <span class="k">return</span> <span class="mi">5000</span>
+            <span class="n">num_masks_</span> <span class="o">=</span> <span class="mi">5000</span>
+            <span class="n">num_cells_</span> <span class="o">=</span> <span class="mi">8</span>
         <span class="k">elif</span> <span class="n">preset</span> <span class="o">==</span> <span class="n">Preset</span><span class="o">.</span><span class="n">QUALITY</span><span class="p">:</span>
-            <span class="k">return</span> <span class="mi">8000</span>
+            <span class="n">num_masks_</span> <span class="o">=</span> <span class="mi">10000</span>
+            <span class="n">num_cells_</span> <span class="o">=</span> <span class="mi">12</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Preset </span><span class="si">{</span><span class="n">preset</span><span class="si">}</span><span class="s2"> is not supported.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">num_masks</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">num_masks</span> <span class="o">=</span> <span class="n">num_masks_</span>
+        <span class="k">if</span> <span class="n">num_cells</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">num_cells</span> <span class="o">=</span> <span class="n">num_cells_</span>
+
+        <span class="k">return</span> <span class="n">num_masks</span><span class="p">,</span> <span class="n">num_cells</span>
 
     <span class="k">def</span> <span class="nf">_run_synchronous_explanation</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">data_preprocessed</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
         <span class="n">target_classes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">num_masks</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">num_cells</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">prob</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -547,8 +552,8 @@ document.write(`
         <span class="n">rand_generator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
 
         <span class="n">saliency_maps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_targets</span><span class="p">,</span> <span class="n">input_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">input_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
-        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_masks</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Explaining in synchronous mode&quot;</span><span class="p">):</span>
-            <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_mask</span><span class="p">(</span><span class="n">input_size</span><span class="p">,</span> <span class="n">num_cells</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">rand_generator</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_masks</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Explaining in synchronous mode&quot;</span><span class="p">):</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_mask</span><span class="p">(</span><span class="n">input_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cells</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">rand_generator</span><span class="p">)</span>
             <span class="c1"># Add channel dimensions for masks</span>
             <span class="k">if</span> <span class="n">is_bhwc_layout</span><span class="p">(</span><span class="n">data_preprocessed</span><span class="p">):</span>
                 <span class="n">masked</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">data_preprocessed</span>

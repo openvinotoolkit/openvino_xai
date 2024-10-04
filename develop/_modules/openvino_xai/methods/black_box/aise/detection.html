@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>openvino_xai.methods.black_box.aise.detection &#8212; OpenVINO™ XAI 1.0.0 documentation</title>
+    <title>openvino_xai.methods.black_box.aise.detection &#8212; OpenVINO™ XAI 1.2.0 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
 <link rel="preload" as="script" href="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../../../../_static/documentation_options.js?v=8d563738"></script>
+    <script src="../../../../../_static/documentation_options.js?v=6efca38a"></script>
     <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -123,7 +123,7 @@
   
   
   
-    <p class="title logo__title">OpenVINO™ XAI 1.0.0 documentation</p>
+    <p class="title logo__title">OpenVINO™ XAI 1.2.0 documentation</p>
   
 </a></div>
     
@@ -456,6 +456,8 @@ document.write(`
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">deletion</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">predictions</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_iterations_per_kernel</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">divisors</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="AISEDetection.generate_saliency_map">
 <a class="viewcode-back" href="../../../../../api-manual.html#openvino_xai.methods.AISEDetection.generate_saliency_map">[docs]</a>
@@ -550,13 +552,13 @@ document.write(`
         <span class="n">divisors</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
         <span class="k">if</span> <span class="n">preset</span> <span class="o">==</span> <span class="n">Preset</span><span class="o">.</span><span class="n">SPEED</span><span class="p">:</span>
-            <span class="n">iterations</span> <span class="o">=</span> <span class="mi">50</span>
+            <span class="n">iterations</span> <span class="o">=</span> <span class="mi">20</span>
             <span class="n">divs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">preset</span> <span class="o">==</span> <span class="n">Preset</span><span class="o">.</span><span class="n">BALANCE</span><span class="p">:</span>
-            <span class="n">iterations</span> <span class="o">=</span> <span class="mi">100</span>
+            <span class="n">iterations</span> <span class="o">=</span> <span class="mi">50</span>
             <span class="n">divs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">preset</span> <span class="o">==</span> <span class="n">Preset</span><span class="o">.</span><span class="n">QUALITY</span><span class="p">:</span>
-            <span class="n">iterations</span> <span class="o">=</span> <span class="mi">150</span>
+            <span class="n">iterations</span> <span class="o">=</span> <span class="mi">50</span>
             <span class="n">divs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Preset </span><span class="si">{</span><span class="n">preset</span><span class="si">}</span><span class="s2"> is not supported.&quot;</span><span class="p">)</span>

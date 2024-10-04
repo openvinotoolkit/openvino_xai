@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>openvino_xai.explainer.visualizer &#8212; OpenVINO™ XAI 1.0.0 documentation</title>
+    <title>openvino_xai.explainer.visualizer &#8212; OpenVINO™ XAI 1.2.0 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+    <script src="../../../_static/documentation_options.js?v=6efca38a"></script>
     <script src="../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -123,7 +123,7 @@
   
   
   
-    <p class="title logo__title">OpenVINO™ XAI 1.0.0 documentation</p>
+    <p class="title logo__title">OpenVINO™ XAI 1.2.0 documentation</p>
   
 </a></div>
     
@@ -588,14 +588,14 @@ document.write(`
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_explanation_with_processed_sal_map</span><span class="p">(</span><span class="n">explanation</span><span class="p">,</span> <span class="n">saliency_map_np</span><span class="p">,</span> <span class="n">indices_to_return</span><span class="p">)</span></div>
 
 
-    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_put_classification_info</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
         <span class="n">saliency_map_np</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
         <span class="n">indices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
         <span class="n">label_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">predictions</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Prediction</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">corner_location</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">17</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="mi">3</span>
         <span class="k">for</span> <span class="n">smap</span><span class="p">,</span> <span class="n">target_index</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">saliency_map_np</span><span class="p">)),</span> <span class="n">indices</span><span class="p">):</span>
             <span class="n">label</span> <span class="o">=</span> <span class="n">label_names</span><span class="p">[</span><span class="n">target_index</span><span class="p">]</span> <span class="k">if</span> <span class="n">label_names</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">target_index</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">predictions</span> <span class="ow">and</span> <span class="n">target_index</span> <span class="ow">in</span> <span class="n">predictions</span><span class="p">:</span>
@@ -603,18 +603,19 @@ document.write(`
                 <span class="k">if</span> <span class="n">score</span><span class="p">:</span>
                     <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">|</span><span class="si">{</span><span class="n">score</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span>
 
+            <span class="n">font_scale</span><span class="p">,</span> <span class="n">text_height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_text_to_image</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">saliency_map_np</span><span class="p">[</span><span class="n">smap</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
             <span class="n">cv2</span><span class="o">.</span><span class="n">putText</span><span class="p">(</span>
                 <span class="n">saliency_map_np</span><span class="p">[</span><span class="n">smap</span><span class="p">],</span>
                 <span class="n">label</span><span class="p">,</span>
-                <span class="n">org</span><span class="o">=</span><span class="n">corner_location</span><span class="p">,</span>
-                <span class="n">fontFace</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">fontScale</span><span class="o">=</span><span class="mf">1.3</span><span class="p">,</span>
+                <span class="n">org</span><span class="o">=</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">text_height</span> <span class="o">+</span> <span class="n">offset</span><span class="p">),</span>
+                <span class="n">fontFace</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">fontScale</span><span class="o">=</span><span class="n">font_scale</span><span class="p">,</span>
                 <span class="n">color</span><span class="o">=</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
-                <span class="n">thickness</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">thickness</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
             <span class="p">)</span>
 
-    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_put_detection_info</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
         <span class="n">saliency_map_np</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
         <span class="n">indices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
         <span class="n">label_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
@@ -623,6 +624,7 @@ document.write(`
         <span class="k">if</span> <span class="ow">not</span> <span class="n">predictions</span><span class="p">:</span>
             <span class="k">return</span>
 
+        <span class="n">offset</span> <span class="o">=</span> <span class="mi">7</span>
         <span class="k">for</span> <span class="n">smap</span><span class="p">,</span> <span class="n">target_index</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">saliency_map_np</span><span class="p">)),</span> <span class="n">indices</span><span class="p">):</span>
             <span class="n">saliency_map</span> <span class="o">=</span> <span class="n">saliency_map_np</span><span class="p">[</span><span class="n">smap</span><span class="p">]</span>
             <span class="n">label_index</span> <span class="o">=</span> <span class="n">predictions</span><span class="p">[</span><span class="n">target_index</span><span class="p">]</span><span class="o">.</span><span class="n">label</span>
@@ -634,16 +636,39 @@ document.write(`
 
             <span class="n">label</span> <span class="o">=</span> <span class="n">label_names</span><span class="p">[</span><span class="n">label_index</span><span class="p">]</span> <span class="k">if</span> <span class="n">label_names</span> <span class="k">else</span> <span class="n">label_index</span>
             <span class="n">label_score</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">|</span><span class="si">{</span><span class="n">score</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="n">box_location</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">x1</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">y1</span> <span class="o">-</span> <span class="mi">5</span><span class="p">)</span>
+
+            <span class="n">font_scale</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_text_to_image</span><span class="p">(</span><span class="n">label_score</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">saliency_map</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">box_location</span> <span class="o">=</span> <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span> <span class="o">-</span> <span class="n">offset</span>
             <span class="n">cv2</span><span class="o">.</span><span class="n">putText</span><span class="p">(</span>
                 <span class="n">saliency_map</span><span class="p">,</span>
                 <span class="n">label_score</span><span class="p">,</span>
                 <span class="n">org</span><span class="o">=</span><span class="n">box_location</span><span class="p">,</span>
-                <span class="n">fontFace</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">fontScale</span><span class="o">=</span><span class="mf">1.3</span><span class="p">,</span>
+                <span class="n">fontFace</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">fontScale</span><span class="o">=</span><span class="n">font_scale</span><span class="p">,</span>
                 <span class="n">color</span><span class="o">=</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
-                <span class="n">thickness</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">thickness</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
             <span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_fit_text_to_image</span><span class="p">(</span>
+        <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">x_start</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">image_width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">font_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">thickness</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+        <span class="n">font_face</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">max_width</span> <span class="o">=</span> <span class="n">image_width</span> <span class="o">-</span> <span class="mi">5</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">text_size</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">getTextSize</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">font_face</span><span class="p">,</span> <span class="n">font_scale</span><span class="p">,</span> <span class="n">thickness</span><span class="p">)</span>
+            <span class="n">text_width</span><span class="p">,</span> <span class="n">text_height</span> <span class="o">=</span> <span class="n">text_size</span>
+
+            <span class="k">if</span> <span class="n">x_start</span> <span class="o">+</span> <span class="n">text_width</span> <span class="o">&lt;=</span> <span class="n">max_width</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">font_scale</span><span class="p">,</span> <span class="n">text_height</span>
+
+            <span class="n">font_scale</span> <span class="o">-=</span> <span class="mf">0.1</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">font_scale</span> <span class="o">-</span> <span class="mf">0.1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.001</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">font_scale</span><span class="p">,</span> <span class="n">text_height</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_apply_scaling</span><span class="p">(</span><span class="n">explanation</span><span class="p">:</span> <span class="n">Explanation</span><span class="p">,</span> <span class="n">saliency_map_np</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
