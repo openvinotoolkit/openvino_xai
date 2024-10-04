@@ -4,7 +4,6 @@
 import copy
 from abc import abstractmethod
 from typing import Callable
-from venv import logger
 
 import numpy as np
 import openvino.runtime as ov
@@ -14,6 +13,7 @@ from openvino_xai.common.utils import (
     SALIENCY_MAP_OUTPUT_NAME,
     IdentityPreprocessFN,
     has_xai,
+    logger,
 )
 from openvino_xai.inserter.inserter import insert_xai_branch_into_model
 from openvino_xai.methods.base import MethodBase
@@ -43,7 +43,6 @@ class WhiteBoxMethod(MethodBase[ov.Model, ov.CompiledModel]):
     ):
         super().__init__(preprocess_fn=preprocess_fn, device_name=device_name)
         self._model_ori = copy.deepcopy(model)
-        self.preprocess_fn = preprocess_fn
         self.embed_scaling = embed_scaling
 
     @property
@@ -60,18 +59,16 @@ class WhiteBoxMethod(MethodBase[ov.Model, ov.CompiledModel]):
         return model_output[SALIENCY_MAP_OUTPUT_NAME]
 
     def prepare_model(self, load_model: bool = True) -> ov.Model:
-        if has_xai(self._model_ori):
-            logger.info("Provided IR model already contains XAI branch.")
-            self._model = self._model_ori
-            if load_model:
-                self._model_compiled = ov.Core().compile_model(model=self._model, device_name=self._device_name)
-            return self._model
-
-        xai_output_node = self.generate_xai_branch()
-        self._model = insert_xai_branch_into_model(self._model_ori, xai_output_node, self.embed_scaling)
-        if not has_xai(self._model):
-            raise RuntimeError("Insertion of the XAI branch into the model was not successful.")
-        if load_model:
+        if self._model is None:
+            if has_xai(self._model_ori):
+                logger.info("Provided IR model already contains XAI branch.")
+                self._model = self._model_ori
+            else:
+                xai_output_node = self.generate_xai_branch()
+                self._model = insert_xai_branch_into_model(self._model_ori, xai_output_node, self.embed_scaling)
+                if not has_xai(self._model):
+                    raise RuntimeError("Insertion of the XAI branch into the model was not successful.")
+        if load_model and self._model_compiled is None:
             self._model_compiled = ov.Core().compile_model(model=self._model, device_name=self._device_name)
         return self._model
 

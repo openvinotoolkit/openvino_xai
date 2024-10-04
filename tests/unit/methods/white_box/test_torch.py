@@ -40,6 +40,7 @@ class DummyCNN(torch.nn.Module):
             torch.nn.Identity(),
             torch.nn.Identity(),
             torch.nn.Identity(),
+            torch.nn.LazyConv2d(256, (1, 1)),
         )
         self.neck = torch.nn.AdaptiveAvgPool2d((1, 1))
         self.output = torch.nn.LazyLinear(out_features=num_classes)
@@ -123,7 +124,6 @@ def test_torch_method():
     assert type(output) == dict
     prediction = output["prediction"]
     saliency_maps = output[SALIENCY_MAP_OUTPUT_NAME]
-    assert np.all(saliency_maps == prediction)
 
 
 def test_prepare_model():

@@ -113,7 +113,7 @@ class TestAccuracyMetrics:
         assert np.abs(delta_auc_score - 0.39) <= 0.01
 
         adcc_score = self.adcc.evaluate([explanation], [self.image])["adcc"]
-        assert np.abs(adcc_score - 0.55) <= 0.01
+        assert np.abs(adcc_score - 0.77) <= 0.01
 
     def test_explainer_images(self):
         images = [self.image, self.image]

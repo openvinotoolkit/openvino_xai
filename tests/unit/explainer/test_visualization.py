@@ -10,6 +10,11 @@ from openvino_xai.explainer.explanation import Explanation
 from openvino_xai.explainer.visualizer import Visualizer, colormap, overlay, resize
 from openvino_xai.methods.base import Prediction
 
+ORIGINAL_INPUT_IMAGE = [
+    np.ones((100, 100, 3)),
+    np.ones((10, 10, 3)),
+]
+
 SALIENCY_MAPS = [
     (np.random.rand(1, 5, 5) * 255).astype(np.uint8),
     (np.random.rand(1, 2, 5, 5) * 255).astype(np.uint8),
@@ -97,6 +102,7 @@ def test_overlay():
 
 
 class TestVisualizer:
+    @pytest.mark.parametrize("original_input_image", ORIGINAL_INPUT_IMAGE)
     @pytest.mark.parametrize("saliency_maps", SALIENCY_MAPS)
     @pytest.mark.parametrize("explain_all_classes", EXPLAIN_ALL_CLASSES)
     @pytest.mark.parametrize("task", [Task.CLASSIFICATION, Task.DETECTION])
@@ -105,8 +111,10 @@ class TestVisualizer:
     @pytest.mark.parametrize("colormap", [True, False])
     @pytest.mark.parametrize("overlay", [True, False])
     @pytest.mark.parametrize("overlay_weight", [0.5, 0.3])
+    @pytest.mark.parametrize("overlay_prediction", [True, False])
     def test_visualizer(
         self,
+        original_input_image,
         saliency_maps,
         explain_all_classes,
         task,
@@ -115,6 +123,7 @@ class TestVisualizer:
         colormap,
         overlay,
         overlay_weight,
+        overlay_prediction,
     ):
         if explain_all_classes:
             explain_targets = -1
@@ -124,7 +133,6 @@ class TestVisualizer:
         explanation = Explanation(saliency_maps, targets=explain_targets, task=Task.CLASSIFICATION)
 
         raw_sal_map_dims = len(explanation.shape)
-        original_input_image = np.ones((20, 20, 3))
         visualizer = Visualizer()
         explanation = visualizer(
             explanation=explanation,
@@ -134,6 +142,7 @@ class TestVisualizer:
             colormap=colormap,
             overlay=overlay,
             overlay_weight=overlay_weight,
+            overlay_prediction=overlay_prediction,
         )
 
         assert explanation is not None
@@ -161,6 +170,7 @@ class TestVisualizer:
                 colormap=colormap,
                 overlay=overlay,
                 overlay_weight=overlay_weight,
+                overlay_prediction=overlay_prediction,
             )
             maps_data = explanation.saliency_map
             maps_size = explanation_output_size.saliency_map
@@ -172,14 +182,21 @@ class TestVisualizer:
                 1: Prediction(bounding_box=[2, 5, 9, 7], score=0.5, label=0),
             }
             explanation = Explanation(saliency_maps, targets=-1, task=task, predictions=predictions)
+
             visualizer = Visualizer()
-            explanation_output_size = visualizer(
+            explanation = visualizer(
                 explanation=explanation,
                 original_input_image=original_input_image,
-                output_size=(20, 20),
                 scaling=scaling,
                 resize=resize,
                 colormap=colormap,
                 overlay=overlay,
                 overlay_weight=overlay_weight,
+                overlay_prediction=overlay_prediction,
             )
+
+            if task == Task.CLASSIFICATION and original_input_image.shape[0] == 100 and overlay:
+                if overlay_prediction:
+                    assert np.all(explanation.saliency_map[0][10, 6] == np.array([255, 0, 0], dtype=np.uint8))
+                else:
+                    assert np.any(explanation.saliency_map[0][10, 6] != np.array([255, 0, 0], dtype=np.uint8))

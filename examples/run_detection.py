@@ -89,8 +89,9 @@ def explain_white_box(args):
 
     # Save saliency maps for visual inspection
     if args.output is not None:
-        output = Path(args.output) / "detection"
-        explanation.save(output, Path(args.image_path).stem)
+        output = Path(args.output) / "detection_white_box"
+        ori_image_name = Path(args.image_path).stem
+        explanation.save(output, f"{ori_image_name}_")
 
 
 def explain_black_box(args):
@@ -131,7 +132,8 @@ def explain_black_box(args):
     # Save saliency maps for visual inspection
     if args.output is not None:
         output = Path(args.output) / "detection_black_box"
-        explanation.save(output, f"{Path(args.image_path).stem}_")
+        ori_image_name = Path(args.image_path).stem
+        explanation.save(output, f"{ori_image_name}_")
 
 
 def main(argv):

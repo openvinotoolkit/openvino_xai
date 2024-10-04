@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Tuple
 
 import numpy as np
 
-from openvino_xai.explainer.explanation import Explanation, Layout
+from openvino_xai.explainer.explanation import ONE_MAP_LAYOUTS, Explanation
 from openvino_xai.metrics.base import BaseMetric
 
 
@@ -43,7 +43,7 @@ class InsertionDeletionAUC(BaseMetric):
         return image_insertion, image_deletion
 
     def __call__(
-        self, saliency_map: np.ndarray, class_idx: int, input_image: np.ndarray, steps: int = 100, **kwargs: Any
+        self, saliency_map: np.ndarray, class_idx: int, input_image: np.ndarray, steps: int = 30, **kwargs: Any
     ) -> Dict[str, float]:
         """
         Calculate the Insertion and Deletion AUC metrics for one saliency map for one class.
@@ -62,6 +62,9 @@ class InsertionDeletionAUC(BaseMetric):
         :return: A dictionary containing the AUC scores for insertion and deletion scores.
         :rtype: Dict[str, float]
         """
+
+        class_idx = np.argmax(self.model_predict(input_image)) if class_idx is None else class_idx
+
         # Sort pixels by descending importance to find the most important pixels
         sorted_indices = np.argsort(-saliency_map.flatten())
         sorted_indices = np.unravel_index(sorted_indices, saliency_map.shape)
@@ -95,13 +98,11 @@ class InsertionDeletionAUC(BaseMetric):
         :return: A Dict containing the mean insertion AUC, mean deletion AUC, and their difference (delta) as values.
         :rtype: float
         """
-        for explanation in explanations:
-            assert explanation.layout in [Layout.MULTIPLE_MAPS_PER_IMAGE_GRAY, Layout.MULTIPLE_MAPS_PER_IMAGE_COLOR]
-
         results = []
         for input_image, explanation in zip(input_images, explanations):
             for class_idx, saliency_map in explanation.saliency_map.items():
-                metric_dict = self(saliency_map, int(class_idx), input_image, steps)
+                target_idx = None if explanation.layout in ONE_MAP_LAYOUTS else int(class_idx)
+                metric_dict = self(saliency_map, target_idx, input_image, steps)
                 results.append([metric_dict["insertion"], metric_dict["deletion"]])
 
         insertion, deletion = np.mean(np.array(results), axis=0)

@@ -104,16 +104,22 @@ class TestAISEClassification(InputSampling):
         self._generate_with_preset(method, Preset.SPEED)
         toc = time.time()
         time_speed = toc - tic
+        assert method.num_iterations_per_kernel == 20
+        assert np.all(method.kernel_widths == np.array([0.1, 0.175, 0.25]))
 
         tic = time.time()
         self._generate_with_preset(method, Preset.BALANCE)
         toc = time.time()
         time_balance = toc - tic
+        assert method.num_iterations_per_kernel == 50
+        assert np.all(method.kernel_widths == np.array([0.1, 0.175, 0.25]))
 
         tic = time.time()
         self._generate_with_preset(method, Preset.QUALITY)
         toc = time.time()
         time_quality = toc - tic
+        assert method.num_iterations_per_kernel == 50
+        np.testing.assert_allclose(method.kernel_widths, np.array([0.075, 0.11875, 0.1625, 0.20625, 0.25]))
 
         assert time_speed < time_balance < time_quality
 
@@ -171,16 +177,22 @@ class TestAISEDetection(InputSampling):
         self._generate_with_preset(method, Preset.SPEED)
         toc = time.time()
         time_speed = toc - tic
+        assert method.num_iterations_per_kernel == 20
+        assert np.all(method.divisors == np.array([7.0, 4.0, 1.0]))
 
         tic = time.time()
         self._generate_with_preset(method, Preset.BALANCE)
         toc = time.time()
         time_balance = toc - tic
+        assert method.num_iterations_per_kernel == 50
+        assert np.all(method.divisors == np.array([7.0, 4.0, 1.0]))
 
         tic = time.time()
         self._generate_with_preset(method, Preset.QUALITY)
         toc = time.time()
         time_quality = toc - tic
+        assert method.num_iterations_per_kernel == 50
+        assert np.all(method.divisors == np.array([8.0, 6.25, 4.5, 2.75, 1.0]))
 
         assert time_speed < time_balance < time_quality
 
@@ -227,16 +239,22 @@ class TestRISE(InputSampling):
         self._generate_with_preset(method, Preset.SPEED)
         toc = time.time()
         time_speed = toc - tic
+        assert method.num_masks == 1000
+        assert method.num_cells == 4
 
         tic = time.time()
         self._generate_with_preset(method, Preset.BALANCE)
         toc = time.time()
         time_balance = toc - tic
+        assert method.num_masks == 5000
+        assert method.num_cells == 8
 
         tic = time.time()
         self._generate_with_preset(method, Preset.QUALITY)
         toc = time.time()
         time_quality = toc - tic
+        assert method.num_masks == 10_000
+        assert method.num_cells == 12
 
         assert time_speed < time_balance < time_quality
 

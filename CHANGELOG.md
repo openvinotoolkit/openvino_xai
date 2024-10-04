@@ -1,15 +1,38 @@
 # Change Log
 
-## [1.1.0 Unreleased]
+## [1.2.0 Unreleased]
 
 ### Summary
 
-* Support OpenVINO IR (.xml) / ONNX (.onnx) model file for `Explainer` model
-* Enable AISE: Adaptive Input Sampling for Explanation of Black-box Models
-* Upgrade OpenVINO to 2024.3.0
+*
+
+### What's Changed
+
+*
+
+### Known Issues
+
+* Runtime error from ONNX / OpenVINO IR models while conversion or inference for XAI in https://github.com/openvinotoolkit/openvino_xai/issues/29
+* Models not supported by white box XAI methods in https://github.com/openvinotoolkit/openvino_xai/issues/30
+
+### New Contributors
+
+* N/A
+
+---
+
+## [1.1.0]
+
+### Summary
+
+* Support PyTorch models with `insert_xai()` API for saliency map generation on PyTorch / ONNX runtime
+* Support OpenVINO IR (.xml) / ONNX (.onnx) model files for `Explainer`
+* Enable AISE method: Adaptive Input Sampling for Explanation of Black-box Models
+* Add Pointing Game, Insertion-Deletion AUC and ADCC quality metrics for saliency maps
+* Upgrade OpenVINO to 2024.4.0
 * Add saliency map visualization with explanation.plot()
 * Enable flexible naming for saved saliency maps and include confidence scores
-* Add Pointing Game, Insertion-Deletion AUC and ADCC quality metrics for saliency maps
+* Add XAI method documentation
 
 ### What's Changed
 
@@ -26,6 +49,11 @@
 * Add [Insertion-Deletion AUC](https://arxiv.org/abs/1806.07421) saliency map quality metric by @GalyaZalesskaya in https://github.com/openvinotoolkit/openvino_xai/pull/56
 * Add [ADCC](https://arxiv.org/abs/2104.10252) saliency map quality metric by @GalyaZalesskaya in https://github.com/openvinotoolkit/openvino_xai/pull/57
 * Enable AISE for detection: Adaptive Input Sampling for Explanation of Black-box Models by @negvet in https://github.com/openvinotoolkit/openvino_xai/pull/55
+* Enable prediction attribute for methods that is used for enhancing saliency map overlay by @negvet in https://github.com/openvinotoolkit/openvino_xai/pull/62
+* Add documentation per-method, including summary and usage guide by @negvet in https://github.com/openvinotoolkit/openvino_xai/pull/63
+* Support Pytorch models for `insert_xai` API by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/61
+* Auto-detect feature layer for Pytorch models by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/64
+* Upgrade OpenVINO to 2024.4.0 by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/72
 
 ### Known Issues
 

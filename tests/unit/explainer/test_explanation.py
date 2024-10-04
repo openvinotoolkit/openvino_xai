@@ -12,6 +12,14 @@ from openvino_xai.explainer.explanation import Explanation
 from tests.unit.explainer.test_explanation_utils import VOC_NAMES
 
 SALIENCY_MAPS = (np.random.rand(1, 20, 5, 5) * 255).astype(np.uint8)
+SALIENCY_MAPS_DICT = {
+    0: (np.random.rand(5, 5, 3) * 255).astype(np.uint8),
+    2: (np.random.rand(5, 5, 3) * 255).astype(np.uint8),
+}
+SALIENCY_MAPS_DICT_EXCEPTION = {
+    0: (np.random.rand(5, 5, 3, 2) * 255).astype(np.uint8),
+    2: (np.random.rand(5, 5, 3, 2) * 255).astype(np.uint8),
+}
 SALIENCY_MAPS_IMAGE = (np.random.rand(1, 5, 5) * 255).astype(np.uint8)
 
 
@@ -106,7 +114,7 @@ class TestExplanation:
         # Update the num columns for the matplotlib visualization grid
         explanation.plot(backend="matplotlib", num_columns=1)
 
-        # Class index that is not in saliency maps will be ommitted with message
+        # Class index that is not in saliency maps will be omitted with message
         with caplog.at_level(logging.INFO):
             explanation.plot([0, 3], backend="matplotlib")
         assert "Provided class index 3 is not available among saliency maps." in caplog.text
@@ -123,3 +131,13 @@ class TestExplanation:
         # Plot activation map
         explanation = self._get_explanation(saliency_maps=SALIENCY_MAPS_IMAGE, label_names=None)
         explanation.plot()
+
+        # Plot colored map
+        explanation = self._get_explanation(saliency_maps=SALIENCY_MAPS_DICT, label_names=None)
+        explanation.plot()
+
+        # Plot wrong map shape
+        with pytest.raises(Exception) as exc_info:
+            explanation = self._get_explanation(saliency_maps=SALIENCY_MAPS_DICT_EXCEPTION, label_names=None)
+            explanation.plot()
+        assert str(exc_info.value) == "Saliency map expected to be 3 or 2-dimensional, but got 4."

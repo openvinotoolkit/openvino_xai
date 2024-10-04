@@ -2,9 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import openvino
-import pytest
 
-torch = pytest.importorskip("torch")
+from openvino_xai.utils.torch import torch
 
 
 def export_to_onnx(model: torch.nn.Module, save_path: str, data_sample: torch.Tensor, set_dynamic_batch: bool) -> None:  # type: ignore

@@ -4,6 +4,7 @@
 import csv
 import os
 import shutil
+import subprocess  # nosec B404 (not a part of product)
 from pathlib import Path
 
 import cv2
@@ -142,6 +143,12 @@ class TestImageClassificationTimm:
         21841: 2441,  # 2441 is a cheetah class_id in the ImageNet-21k dataset
         21843: 2441,  # 2441 is a cheetah class_id in the ImageNet-21k dataset
         11821: 1652,  # 1652 is a cheetah class_id in the ImageNet-12k dataset
+    }
+    reference_maps_names = {
+        (ExplainMode.WHITEBOX, Method.RECIPROCAM): Path("resnet18.a1_in1k_reciprocam.npy"),
+        (ExplainMode.WHITEBOX, Method.ACTIVATIONMAP): Path("resnet18.a1_in1k_activationmap.npy"),
+        (ExplainMode.BLACKBOX, Method.AISE): Path("resnet18.a1_in1k_aise.npy"),
+        (ExplainMode.BLACKBOX, Method.RISE): Path("resnet18.a1_in1k_rise.npy"),
     }
 
     @pytest.fixture(autouse=True)
@@ -479,7 +486,7 @@ class TestImageClassificationTimm:
         image_norm = image_norm[None, :]  # CHW -> 1CHW
         target_class = self.supported_num_classes[model_cfg["num_classes"]]
 
-        xai_model: torch.nn.Module = insert_xai(
+        model_xai: torch.nn.Module = insert_xai(
             model,
             task=Task.CLASSIFICATION,
             target_layer=target_layer,
@@ -487,21 +494,77 @@ class TestImageClassificationTimm:
         )
 
         with torch.no_grad():
-            xai_model.eval()
-            xai_output = xai_model(torch.from_numpy(image_norm).float())
-            xai_logit = xai_output["prediction"]
-            xai_prob = torch.softmax(xai_logit, dim=-1)
-            xai_label = xai_prob.argmax(dim=-1)[0]
-        assert xai_label.item() == target_class
-        assert xai_prob[0, xai_label].item() > 0.0
+            model_xai.eval()
+            outputs = model_xai(torch.from_numpy(image_norm).float())
+            logits = outputs["prediction"]
+            probs = torch.softmax(logits, dim=-1)
+            label = probs.argmax(dim=-1)[0]
+        assert label.item() == target_class
+        assert probs[0, label].item() > 0.0
 
-        saliency_map: np.ndarray = xai_output["saliency_map"].numpy(force=True)
+        saliency_map: np.ndarray = outputs["saliency_map"].numpy(force=True)
         saliency_map = saliency_map.squeeze(0)
         assert saliency_map.shape[-1] > 1 and saliency_map.shape[-2] > 1
         assert saliency_map.min() < saliency_map.max()
         assert saliency_map.dtype == np.uint8
 
         self.clear_cache()
+
+    @pytest.mark.parametrize(
+        "explain_mode, explain_method",
+        [
+            (ExplainMode.WHITEBOX, Method.RECIPROCAM),
+            (ExplainMode.WHITEBOX, Method.ACTIVATIONMAP),
+            (ExplainMode.BLACKBOX, Method.AISE),
+            (ExplainMode.BLACKBOX, Method.RISE),
+        ],
+    )
+    def test_reference_map(self, explain_mode, explain_method):
+        model_id = "resnet18.a1_in1k"
+        model_dir = self.data_dir / "timm_models" / "converted_models"
+        _, model_cfg = self.get_timm_model(model_id, model_dir)
+
+        ir_path = model_dir / model_id / "model_fp32.xml"
+        model = ov.Core().read_model(ir_path)
+
+        mean_values = [(item * 255) for item in model_cfg["mean"]]
+        scale_values = [(item * 255) for item in model_cfg["std"]]
+        preprocess_fn = get_preprocess_fn(
+            change_channel_order=True,
+            input_size=model_cfg["input_size"][1:],
+            mean=mean_values,
+            std=scale_values,
+            hwc_to_chw=True,
+        )
+
+        explainer = Explainer(
+            model=model,
+            task=Task.CLASSIFICATION,
+            preprocess_fn=preprocess_fn,
+            postprocess_fn=get_postprocess_fn(),
+            explain_mode=explain_mode,
+            explain_method=explain_method,
+            embed_scaling=False,
+        )
+
+        target_class = self.supported_num_classes[model_cfg["num_classes"]]
+        image = cv2.imread("tests/assets/cheetah_person.jpg")
+        explanation = explainer(
+            image,
+            original_input_image=image,
+            targets=[target_class],
+            resize=False,
+            colormap=False,
+        )
+
+        if explain_method == Method.ACTIVATIONMAP:
+            generated_map = explanation.saliency_map["per_image_map"]
+        else:
+            generated_map = explanation.saliency_map[target_class]
+
+        reference_maps_path = Path("tests/assets/reference_maps")
+        reference_map = np.load(reference_maps_path / self.reference_maps_names[(explain_mode, explain_method)])
+        assert np.all(np.abs(generated_map.astype(np.int16) - reference_map.astype(np.int16)) <= 3)
 
     def check_for_saved_map(self, model_id, directory):
         for target in self.supported_num_classes.values():
@@ -605,3 +668,22 @@ class TestImageClassificationTimm:
         if bool_string == "False":
             return 0
         raise ValueError
+
+
+class TestExample:
+    """Test sanity of examples/run_torch_onnx.py."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self, fxt_data_root):
+        self.data_dir = fxt_data_root
+
+    def test_torch_onnx(self, tmp_path_factory: pytest.TempPathFactory):
+        output_root = tmp_path_factory.mktemp("openvino_xai")
+        output_dir = Path(output_root) / "example"
+        cmd = [
+            "python",
+            "examples/run_torch_onnx.py",
+            "--output_dir",
+            output_dir,
+        ]
+        subprocess.run(cmd, check=True)  # noqa: S603, PLW1510

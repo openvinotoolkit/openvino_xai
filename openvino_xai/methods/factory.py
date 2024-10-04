@@ -6,7 +6,6 @@ from typing import Callable, List, Mapping
 
 import numpy as np
 import openvino as ov
-import torch
 
 from openvino_xai.common.parameters import Method, Task
 from openvino_xai.common.utils import IdentityPreprocessFN, logger
@@ -21,6 +20,7 @@ from openvino_xai.methods.white_box.det_class_probability_map import (
     DetClassProbabilityMap,
 )
 from openvino_xai.methods.white_box.recipro_cam import ReciproCAM, ViTReciproCAM
+from openvino_xai.utils.torch import torch
 
 
 class MethodFactory(ABC):

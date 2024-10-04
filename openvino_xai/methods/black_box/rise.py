@@ -45,6 +45,8 @@ class RISE(BlackBoxXAIMethod):
         super().__init__(
             model=model, postprocess_fn=postprocess_fn, preprocess_fn=preprocess_fn, device_name=device_name
         )
+        self.num_masks: int | None = None
+        self.num_cells: int | None = None
 
         if prepare_model:
             self.prepare_model()
@@ -55,7 +57,7 @@ class RISE(BlackBoxXAIMethod):
         target_indices: List[int] | None = None,
         preset: Preset = Preset.BALANCE,
         num_masks: int | None = None,
-        num_cells: int = 8,
+        num_cells: int | None = None,
         prob: float = 0.5,
         seed: int = 0,
         scale_output: bool = True,
@@ -84,13 +86,11 @@ class RISE(BlackBoxXAIMethod):
         """
         data_preprocessed = self.preprocess_fn(data)
 
-        num_masks = self._preset_parameters(preset, num_masks)
+        self.num_masks, self.num_cells = self._preset_parameters(preset, num_masks, num_cells)
 
         saliency_maps = self._run_synchronous_explanation(
             data_preprocessed,
             target_indices,
-            num_masks,
-            num_cells,
             prob,
             seed,
         )
@@ -109,26 +109,31 @@ class RISE(BlackBoxXAIMethod):
     def _preset_parameters(
         preset: Preset,
         num_masks: int | None = None,
-    ) -> int:
-        # TODO (negvet): preset num_cells
-        if num_masks is not None:
-            return num_masks
-
+        num_cells: int | None = None,
+    ) -> Tuple[int, int]:
         if preset == Preset.SPEED:
-            return 2000
+            num_masks_ = 1000
+            num_cells_ = 4
         elif preset == Preset.BALANCE:
-            return 5000
+            num_masks_ = 5000
+            num_cells_ = 8
         elif preset == Preset.QUALITY:
-            return 8000
+            num_masks_ = 10000
+            num_cells_ = 12
         else:
             raise ValueError(f"Preset {preset} is not supported.")
+
+        if num_masks is None:
+            num_masks = num_masks_
+        if num_cells is None:
+            num_cells = num_cells_
+
+        return num_masks, num_cells
 
     def _run_synchronous_explanation(
         self,
         data_preprocessed: np.ndarray,
         target_classes: List[int] | None,
-        num_masks: int,
-        num_cells: int,
         prob: float,
         seed: int,
     ) -> np.ndarray:
@@ -145,8 +150,8 @@ class RISE(BlackBoxXAIMethod):
         rand_generator = np.random.default_rng(seed=seed)
 
         saliency_maps = np.zeros((num_targets, input_size[0], input_size[1]))
-        for _ in tqdm(range(0, num_masks), desc="Explaining in synchronous mode"):
-            mask = self._generate_mask(input_size, num_cells, prob, rand_generator)
+        for _ in tqdm(range(0, self.num_masks), desc="Explaining in synchronous mode"):
+            mask = self._generate_mask(input_size, self.num_cells, prob, rand_generator)
             # Add channel dimensions for masks
             if is_bhwc_layout(data_preprocessed):
                 masked = np.expand_dims(mask, 2) * data_preprocessed

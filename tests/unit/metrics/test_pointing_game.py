@@ -12,6 +12,7 @@ class TestPointingGame:
     @pytest.fixture(autouse=True)
     def setUp(self):
         self.pointing_game = PointingGame()
+        self.gt_bboxes = [{"cat": [(0, 0, 2, 2)], "dog": [(0, 0, 1, 1)]}]
 
     def test_pointing_game(self):
         saliency_map = np.zeros((3, 3), dtype=np.float32)
@@ -27,16 +28,15 @@ class TestPointingGame:
 
     def test_pointing_game_evaluate(self, caplog):
         pointing_game = PointingGame()
-        explanation = Explanation(
-            label_names=["cat", "dog"],
-            targets=[0, 1],
-            task=Task.CLASSIFICATION,
-            saliency_map={0: [[0, 1], [2, 3]], 1: [[0, 0], [0, 1]]},
-        )
-        explanations = [explanation]
-
-        gt_bboxes = [{"cat": [(0, 0, 2, 2)], "dog": [(0, 0, 1, 1)]}]
-        score_result = pointing_game.evaluate(explanations, gt_bboxes)
+        explanations = [
+            Explanation(
+                label_names=["cat", "dog"],
+                targets=[0, 1],
+                task=Task.CLASSIFICATION,
+                saliency_map={0: [[0, 1], [2, 3]], 1: [[0, 0], [0, 1]]},
+            )
+        ]
+        score_result = pointing_game.evaluate(explanations, self.gt_bboxes)
         assert score_result["pointing_game"] == 1.0
 
         # No hit for dog class saliency map, hit for cat class saliency map
@@ -57,13 +57,20 @@ class TestPointingGame:
             score_result = pointing_game.evaluate(explanations, gt_bboxes)
 
         # No label names
-        explanation = Explanation(
-            label_names=None,
-            targets=[0, 1],
-            task=Task.CLASSIFICATION,
-            saliency_map={0: [[0, 1], [2, 3]], 1: [[0, 0], [0, 1]]},
-        )
-        explanations = [explanation]
-        gt_bboxes = [{"cat": [(0, 0, 2, 2)], "dog": [(0, 0, 1, 1)]}]
+        explanations = [
+            Explanation(
+                label_names=None,
+                targets=[0, 1],
+                task=Task.CLASSIFICATION,
+                saliency_map={0: [[0, 1], [2, 3]], 1: [[0, 0], [0, 1]]},
+            )
+        ]
         with pytest.raises(AssertionError):
-            score_result = pointing_game.evaluate(explanations, gt_bboxes)
+            score_result = pointing_game.evaluate(explanations, self.gt_bboxes)
+
+        # Activation map
+        explanations = [
+            Explanation({"per_image_map": [[0, 1], [2, 3]]}, targets="per_image_map", task=Task.CLASSIFICATION)
+        ]
+        score_result = pointing_game.evaluate(explanations, self.gt_bboxes)
+        assert score_result["pointing_game"] == 1.0

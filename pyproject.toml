@@ -7,15 +7,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "openvino_xai"
-version = "1.1.0rc0"
+version = "1.2.0rc0"
 dependencies = [
-  "openvino-dev==2024.3",
+  "openvino-dev==2024.4",
   "opencv-python",
   "scipy",
   "numpy==1.*",
   "tqdm",
   "matplotlib",
-  "torch",
 ]
 requires-python = ">=3.10"
 authors = [
@@ -44,11 +43,13 @@ dev = [
   "pre-commit==3.7.0",
   "addict",
   "timm==0.9.5",
-  "onnx==1.14.1",
+  "onnx",
+  "onnxruntime",
   "pandas",
   "py-cpuinfo",
   "openpyxl",
   "torchvision",
+  "pycocotools",
 ]
 doc = [
   "furo",

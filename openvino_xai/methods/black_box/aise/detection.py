@@ -57,6 +57,8 @@ class AISEDetection(AISEBase):
         )
         self.deletion = False
         self.predictions = {}
+        self.num_iterations_per_kernel: int | None = None
+        self.divisors: List[float] | np.ndarray | None = None
 
     def generate_saliency_map(  # type: ignore
         self,
@@ -148,13 +150,13 @@ class AISEDetection(AISEBase):
         divisors: List[float] | np.ndarray | None,
     ) -> Tuple[int, np.ndarray]:
         if preset == Preset.SPEED:
-            iterations = 50
+            iterations = 20
             divs = np.linspace(7, 1, 3)
         elif preset == Preset.BALANCE:
-            iterations = 100
+            iterations = 50
             divs = np.linspace(7, 1, 3)
         elif preset == Preset.QUALITY:
-            iterations = 150
+            iterations = 50
             divs = np.linspace(8, 1, 5)
         else:
             raise ValueError(f"Preset {preset} is not supported.")
