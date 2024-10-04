@@ -446,7 +446,7 @@ Suitable for:
 
 [Recipro-CAM](../../openvino_xai/methods/white_box/recipro_cam.py) involves spatially masking of the extracted feature maps to exploit the correlation between activation maps and model predictions for target classes. It is perturbation-based method which perturbs internal model activations.
 
-Assume 7x7 feature map which is extracted by the CNN backbone. One location of the feature map is preserved (e.g. at index [0, 0]), while the rest feature map values is masked out with e.g. zeros (perturbation is the same across channel dimension). Perturbed feature map inferred through the model head. The the model prediction scores are used as saliency scores for index [0, 0]. This is repeated for all 49 spatial location. The final saliency map obtained after resizing and scaling. See [paper](https://arxiv.org/abs/2209.14074) for more details.
+Assume 7x7 feature map which is extracted by the CNN backbone. One location of the feature map is preserved (e.g. at index [0, 0]), while the rest feature map values is masked out with e.g. zeros (perturbation is the same across channel dimension). Perturbed feature map inferred through the model head. The the model prediction scores are used as saliency scores for index [0, 0]. This is repeated for all 49 spatial location. The final saliency map obtained after resizing and scaling. See [paper](https://openaccess.thecvf.com/content/CVPR2024W/XAI4CV/papers/Byun_ReciproCAM_Lightweight_Gradient-free_Class_Activation_Map_for_Post-hoc_Explanations_CVPRW_2024_paper.pdf) for more details.
 
 `Recipro-CAM` is an efficient XAI method.
 The main weak point is that saliency for each pixel in the feature map space is estimated in isolation, without taking into account joint contribution of different pixels/features.
@@ -734,7 +734,7 @@ def preprocess_fn(image: np.ndarray) -> np.ndarray:
 
 def postprocess_fn(output: Mapping):
     """Postprocess the model output."""
-    return softmax(output["logits"]) 
+    return softmax(output["logits"])
 
 def softmax(x: np.ndarray) -> np.ndarray:
     """Compute softmax values of x."""

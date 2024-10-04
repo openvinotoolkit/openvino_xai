@@ -1,5 +1,26 @@
 # Change Log
 
+## [1.2.0 Unreleased]
+
+### Summary
+
+*
+
+### What's Changed
+
+*
+
+### Known Issues
+
+* Runtime error from ONNX / OpenVINO IR models while conversion or inference for XAI in https://github.com/openvinotoolkit/openvino_xai/issues/29
+* Models not supported by white box XAI methods in https://github.com/openvinotoolkit/openvino_xai/issues/30
+
+### New Contributors
+
+* N/A
+
+---
+
 ## [1.1.0]
 
 ### Summary
