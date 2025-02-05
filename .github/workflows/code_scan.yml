@@ -9,7 +9,7 @@ on:
       - develop
       - releases/*
   workflow_dispatch: # run on request (no need for PR)
-  workflow_call:  # run by other workflow
+  workflow_call: # run by other workflow
 
 # Declare default permissions as read only.
 permissions: {}
@@ -62,7 +62,7 @@ jobs:
           name: python-deps-list
           path: "${{ github.workspace }}/requirements.txt"
           retention-days: 7
-  
+
   Trivy-Scan-Misconfig:
     runs-on: ubuntu-22.04
     permissions:
@@ -93,8 +93,6 @@ jobs:
           name: trivy-misconfig-results
           path: "${{ github.workspace }}/trivy-results-misconfig.sarif"
           retention-days: 7
-
-
 
   Bandit:
     runs-on: ubuntu-22.04
