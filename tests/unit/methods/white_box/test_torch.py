@@ -103,9 +103,7 @@ def test_torch_method():
     assert SALIENCY_MAP_OUTPUT_NAME in output
 
     class DummyMethod(TorchWhiteBoxMethod):
-        def _feature_hook(
-            self, module: torch.nn.Module, inputs: Any, output: torch.Tensor
-        ) -> torch.Tensor:
+        def _feature_hook(self, module: torch.nn.Module, inputs: Any, output: torch.Tensor) -> torch.Tensor:
             output = torch.cat((output, output), dim=0)
             return super()._feature_hook(module, inputs, output)
 
@@ -130,9 +128,7 @@ def test_torch_method():
 
 def test_prepare_model():
     model = DummyCNN()
-    method = TorchWhiteBoxMethod(
-        model=model, target_layer="feature", prepare_model=False
-    )
+    method = TorchWhiteBoxMethod(model=model, target_layer="feature", prepare_model=False)
     model_xai = method.prepare_model(load_model=False)
     assert method._model_compiled is None
     model_xai = method.prepare_model(load_model=False)
@@ -200,9 +196,7 @@ def test_reciprocam(optimize_gap: bool) -> None:
     batch_size = 2
     num_classes = 3
     model = DummyCNN(num_classes=num_classes)
-    method = TorchReciproCAM(
-        model=model, target_layer="feature", optimize_gap=optimize_gap
-    )
+    method = TorchReciproCAM(model=model, target_layer="feature", optimize_gap=optimize_gap)
     model_xai = method.prepare_model()
     assert has_xai(model_xai)
     data = np.random.rand(batch_size, 4, 5, 5)
