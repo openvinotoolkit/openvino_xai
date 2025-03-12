@@ -12,7 +12,7 @@
 
 ![Python](https://img.shields.io/badge/python-3.10%2B-green)
 [![OpenVINO](https://img.shields.io/badge/openvino-2024.4-purple)](https://pypi.org/project/openvino/)
-[![codecov](https://codecov.io/gh/openvinotoolkit/openvino_xai/graph/badge.svg?token=NR0Z0CWDK9)](https://codecov.io/gh/openvinotoolkit/openvino_xai)
+[![codecov](https://codecov.io/gh/open-edge-platform/openvino_xai/graph/badge.svg?token=NR0Z0CWDK9)](https://codecov.io/gh/open-edge-platform/openvino_xai)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![PyPI](https://img.shields.io/pypi/v/openvino_xai)](https://pypi.org/project/openvino_xai)
 [![Downloads](https://static.pepy.tech/badge/openvino_xai)](https://pepy.tech/project/openvino_xai)
@@ -86,8 +86,8 @@ Most of CNNs and Transformer models from [Pytorch Image Models (timm)](https://g
 
 Please refer to the following known issues for unsupported models and reasons.
 
-* [Runtime error from ONNX / OpenVINO IR models while conversion or inference for XAI (#29)](https://github.com/openvinotoolkit/openvino_xai/issues/29)
-* [Models not supported by white box XAI methods (#30)](https://github.com/openvinotoolkit/openvino_xai/issues/30)
+* [Runtime error from ONNX / OpenVINO IR models while conversion or inference for XAI (#29)](https://github.com/open-edge-platform/openvino_xai/issues/29)
+* [Models not supported by white box XAI methods (#30)](https://github.com/open-edge-platform/openvino_xai/issues/30)
 
 > **_NOTE:_**  GenAI / LLMs would be also supported incrementally in the upcoming releases.
 
@@ -124,7 +124,7 @@ pip install openvino_xai[dev]
 
 ```bash
 # Clone the source repository
-git clone https://github.com/openvinotoolkit/openvino_xai.git
+git clone https://github.com/open-edge-platform/openvino_xai.git
 cd openvino_xai
 
 # Editable mode (for development):
@@ -270,12 +270,12 @@ python examples/run_torch_onnx.py
 
 For those who would like to contribute to the library, please refer to the [contribution guide](CONTRIBUTING.md) for details.
 
-Please let us know via the [Issues tab](https://github.com/openvinotoolkit/openvino_xai/issues/new) if you have any issues, feature requests, or questions.
+Please let us know via the [Issues tab](https://github.com/open-edge-platform/openvino_xai/issues/new) if you have any issues, feature requests, or questions.
 
 Thank you! We appreciate your support!
 
-<a href="https://github.com/openvinotoolkit/openvino_xai/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=openvinotoolkit/openvino_xai" />
+<a href="https://github.com/open-edge-platform/openvino_xai/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=open-edge-platform/openvino_xai" />
 </a>
 
 ---

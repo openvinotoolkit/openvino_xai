@@ -39,30 +39,29 @@ templates_path = ["_templates"]
 exclude_patterns = ["build", "Thumbs.db", ".DS_Store"]
 
 
-
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-#html_theme = 'sphinx_rtd_theme'
+# html_theme = 'sphinx_rtd_theme'
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
 html_theme_options = {
-#    #"navbar_center": [],
-#    #"navbar_end": ["search-field.html", "theme-switcher.html", "navbar-icon-links.html"],
-#    #"search_bar_text": "Search",
+    #    #"navbar_center": [],
+    #    #"navbar_end": ["search-field.html", "theme-switcher.html", "navbar-icon-links.html"],
+    #    #"search_bar_text": "Search",
     "icon_links": [
         {
             "name": "GitHub",
-            "url": "https://github.com/openvinotoolkit/openvino_xai",
+            "url": "https://github.com/open-edge-platform/openvino_xai",
             "icon": "_static/github_icon.png",
             "type": "local",
         },
     ],
 }
 html_sidebars = {
-   '**': [
-       'globaltoc.html',
-   ],
+    "**": [
+        "globaltoc.html",
+    ],
 }
 html_css_files = [
     "custom.css",

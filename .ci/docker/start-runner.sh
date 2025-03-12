@@ -84,7 +84,7 @@ fi
 
 docker run -d --rm \
     --ipc=host \
-    -e RUNNER_REPO_URL="https://github.com/openvinotoolkit/openvino_xai" \
+    -e RUNNER_REPO_URL="https://github.com/open-edge-platform/openvino_xai" \
     -e RUNNER_NAME="$ACTIONS_RUNNER_NAME" \
     -e RUNNER_LABELS="$LABELS" \
     -e RUNNER_TOKEN="$GITHUB_TOKEN" \

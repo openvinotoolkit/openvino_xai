@@ -22,7 +22,7 @@ Or, the simplest way using build script
 ```bash
 docker run -d --rm \
     --ipc=host \
-    -e RUNNER_REPO_URL="https://github.com/openvinotoolkit/openvino_xai" \
+    -e RUNNER_REPO_URL="https://github.com/open-edge-platform/openvino_xai" \
     -e RUNNER_NAME="ci-runner-ov-xai" \
     -e RUNNER_LABELS="large-disk" \
     -e RUNNER_TOKEN= \

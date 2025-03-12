@@ -12,8 +12,8 @@
 
 ### Known Issues
 
-* Runtime error from ONNX / OpenVINO IR models while conversion or inference for XAI in https://github.com/openvinotoolkit/openvino_xai/issues/29
-* Models not supported by white box XAI methods in https://github.com/openvinotoolkit/openvino_xai/issues/30
+* Runtime error from ONNX / OpenVINO IR models while conversion or inference for XAI in https://github.com/open-edge-platform/openvino_xai/issues/29
+* Models not supported by white box XAI methods in https://github.com/open-edge-platform/openvino_xai/issues/30
 
 ### New Contributors
 
@@ -36,29 +36,29 @@
 
 ### What's Changed
 
-* Use OVC converted models in func tests by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/44
-* Update CodeCov action by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/46
-* Refactor OpenVINO imports by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/45
-* Support OV IR / ONNX model file for Explainer by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/47
-* Try CNN -> ViT assumption for IR insertion by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/48
-* Enable AISE for classification: Adaptive Input Sampling for Explanation of Black-box Models by @negvet in https://github.com/openvinotoolkit/openvino_xai/pull/49
-* Upgrade OpenVINO to 2024.3.0 by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/52
-* Add saliency map visualization with explanation.plot() by @GalyaZalesskaya in https://github.com/openvinotoolkit/openvino_xai/pull/53
-* Enable flexible naming for saved saliency maps and include confidence scores by @GalyaZalesskaya in https://github.com/openvinotoolkit/openvino_xai/pull/51
-* Add [Pointing Game](https://link.springer.com/article/10.1007/s11263-017-1059-x) saliency map quality metric by @GalyaZalesskaya in https://github.com/openvinotoolkit/openvino_xai/pull/54
-* Add [Insertion-Deletion AUC](https://arxiv.org/abs/1806.07421) saliency map quality metric by @GalyaZalesskaya in https://github.com/openvinotoolkit/openvino_xai/pull/56
-* Add [ADCC](https://arxiv.org/abs/2104.10252) saliency map quality metric by @GalyaZalesskaya in https://github.com/openvinotoolkit/openvino_xai/pull/57
-* Enable AISE for detection: Adaptive Input Sampling for Explanation of Black-box Models by @negvet in https://github.com/openvinotoolkit/openvino_xai/pull/55
-* Enable prediction attribute for methods that is used for enhancing saliency map overlay by @negvet in https://github.com/openvinotoolkit/openvino_xai/pull/62
-* Add documentation per-method, including summary and usage guide by @negvet in https://github.com/openvinotoolkit/openvino_xai/pull/63
-* Support Pytorch models for `insert_xai` API by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/61
-* Auto-detect feature layer for Pytorch models by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/64
-* Upgrade OpenVINO to 2024.4.0 by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/72
+* Use OVC converted models in func tests by @goodsong81 in https://github.com/open-edge-platform/openvino_xai/pull/44
+* Update CodeCov action by @goodsong81 in https://github.com/open-edge-platform/openvino_xai/pull/46
+* Refactor OpenVINO imports by @goodsong81 in https://github.com/open-edge-platform/openvino_xai/pull/45
+* Support OV IR / ONNX model file for Explainer by @goodsong81 in https://github.com/open-edge-platform/openvino_xai/pull/47
+* Try CNN -> ViT assumption for IR insertion by @goodsong81 in https://github.com/open-edge-platform/openvino_xai/pull/48
+* Enable AISE for classification: Adaptive Input Sampling for Explanation of Black-box Models by @negvet in https://github.com/open-edge-platform/openvino_xai/pull/49
+* Upgrade OpenVINO to 2024.3.0 by @goodsong81 in https://github.com/open-edge-platform/openvino_xai/pull/52
+* Add saliency map visualization with explanation.plot() by @GalyaZalesskaya in https://github.com/open-edge-platform/openvino_xai/pull/53
+* Enable flexible naming for saved saliency maps and include confidence scores by @GalyaZalesskaya in https://github.com/open-edge-platform/openvino_xai/pull/51
+* Add [Pointing Game](https://link.springer.com/article/10.1007/s11263-017-1059-x) saliency map quality metric by @GalyaZalesskaya in https://github.com/open-edge-platform/openvino_xai/pull/54
+* Add [Insertion-Deletion AUC](https://arxiv.org/abs/1806.07421) saliency map quality metric by @GalyaZalesskaya in https://github.com/open-edge-platform/openvino_xai/pull/56
+* Add [ADCC](https://arxiv.org/abs/2104.10252) saliency map quality metric by @GalyaZalesskaya in https://github.com/open-edge-platform/openvino_xai/pull/57
+* Enable AISE for detection: Adaptive Input Sampling for Explanation of Black-box Models by @negvet in https://github.com/open-edge-platform/openvino_xai/pull/55
+* Enable prediction attribute for methods that is used for enhancing saliency map overlay by @negvet in https://github.com/open-edge-platform/openvino_xai/pull/62
+* Add documentation per-method, including summary and usage guide by @negvet in https://github.com/open-edge-platform/openvino_xai/pull/63
+* Support Pytorch models for `insert_xai` API by @goodsong81 in https://github.com/open-edge-platform/openvino_xai/pull/61
+* Auto-detect feature layer for Pytorch models by @goodsong81 in https://github.com/open-edge-platform/openvino_xai/pull/64
+* Upgrade OpenVINO to 2024.4.0 by @goodsong81 in https://github.com/open-edge-platform/openvino_xai/pull/72
 
 ### Known Issues
 
-* Runtime error from ONNX / OpenVINO IR models while conversion or inference for XAI in https://github.com/openvinotoolkit/openvino_xai/issues/29
-* Models not supported by white box XAI methods in https://github.com/openvinotoolkit/openvino_xai/issues/30
+* Runtime error from ONNX / OpenVINO IR models while conversion or inference for XAI in https://github.com/open-edge-platform/openvino_xai/issues/29
+* Models not supported by white box XAI methods in https://github.com/open-edge-platform/openvino_xai/issues/30
 
 ### New Contributors
 
@@ -136,35 +136,35 @@
 * Add unit test coverage setting by @goodsong81 in https://github.com/intel-sandbox/openvino_xai/pull/63
 * Add LICENSE and SECURITY.md by @goodsong81 in https://github.com/intel-sandbox/openvino_xai/pull/64
 * Add CHANGLOG.md by @goodsong81 in https://github.com/intel-sandbox/openvino_xai/pull/65
-* Update project title and repo links by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/1
-* Add pre-merge GitHub Actions workflow by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/2
-* Add security code scan workflow by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/4
-* Add daily E2E test workflow by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/6
-* Refactor names/folders/objects for better verbosity by @GalyaZalesskaya in https://github.com/openvinotoolkit/openvino_xai/pull/5
-* Fix daily workflow by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/8
-* Support XAI Method Abstract Interface by @negvet in https://github.com/openvinotoolkit/openvino_xai/pull/7
-* Update version to 1.0.0rc0 by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/10
-* Move insert_xai into separate functional api module by @negvet in https://github.com/openvinotoolkit/openvino_xai/pull/11
-* Add fuzzing test by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/13
-* Support CodeQL for security code scan by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/14
-* Route e2e test to "large-disk" labeled ci-runner by @yunchu in https://github.com/openvinotoolkit/openvino_xai/pull/17
-* Flatten parameter objects by @negvet in https://github.com/openvinotoolkit/openvino_xai/pull/16
-* Add mount option for ci script by @yunchu in https://github.com/openvinotoolkit/openvino_xai/pull/21
-* Remove target explain group by @negvet in https://github.com/openvinotoolkit/openvino_xai/pull/25
-* Add third-party-programs.txt by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/27
-* Add full timm functional tests by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/20
-* Add performance tests @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/31
-* Extend some explainer/visualizer capabilities and Fix pre-release bugs by @negvet in https://github.com/openvinotoolkit/openvino_xai/pull/28
-* Support device by @negvet in https://github.com/openvinotoolkit/openvino_xai/pull/32
-* Fixes for deep dive notebook by @GalyaZalesskaya in https://github.com/openvinotoolkit/openvino_xai/pull/35
-* Refine README.md as self-contained Getting Started by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/34
-* Add sanity tests for example scripts by @goodsong81 in https://github.com/openvinotoolkit/openvino_xai/pull/39
-* Follow-up fixes for deep dive notebook by @GalyaZalesskaya in https://github.com/openvinotoolkit/openvino_xai/pull/40
+* Update project title and repo links by @goodsong81 in https://github.com/open-edge-platform/openvino_xai/pull/1
+* Add pre-merge GitHub Actions workflow by @goodsong81 in https://github.com/open-edge-platform/openvino_xai/pull/2
+* Add security code scan workflow by @goodsong81 in https://github.com/open-edge-platform/openvino_xai/pull/4
+* Add daily E2E test workflow by @goodsong81 in https://github.com/open-edge-platform/openvino_xai/pull/6
+* Refactor names/folders/objects for better verbosity by @GalyaZalesskaya in https://github.com/open-edge-platform/openvino_xai/pull/5
+* Fix daily workflow by @goodsong81 in https://github.com/open-edge-platform/openvino_xai/pull/8
+* Support XAI Method Abstract Interface by @negvet in https://github.com/open-edge-platform/openvino_xai/pull/7
+* Update version to 1.0.0rc0 by @goodsong81 in https://github.com/open-edge-platform/openvino_xai/pull/10
+* Move insert_xai into separate functional api module by @negvet in https://github.com/open-edge-platform/openvino_xai/pull/11
+* Add fuzzing test by @goodsong81 in https://github.com/open-edge-platform/openvino_xai/pull/13
+* Support CodeQL for security code scan by @goodsong81 in https://github.com/open-edge-platform/openvino_xai/pull/14
+* Route e2e test to "large-disk" labeled ci-runner by @yunchu in https://github.com/open-edge-platform/openvino_xai/pull/17
+* Flatten parameter objects by @negvet in https://github.com/open-edge-platform/openvino_xai/pull/16
+* Add mount option for ci script by @yunchu in https://github.com/open-edge-platform/openvino_xai/pull/21
+* Remove target explain group by @negvet in https://github.com/open-edge-platform/openvino_xai/pull/25
+* Add third-party-programs.txt by @goodsong81 in https://github.com/open-edge-platform/openvino_xai/pull/27
+* Add full timm functional tests by @goodsong81 in https://github.com/open-edge-platform/openvino_xai/pull/20
+* Add performance tests @goodsong81 in https://github.com/open-edge-platform/openvino_xai/pull/31
+* Extend some explainer/visualizer capabilities and Fix pre-release bugs by @negvet in https://github.com/open-edge-platform/openvino_xai/pull/28
+* Support device by @negvet in https://github.com/open-edge-platform/openvino_xai/pull/32
+* Fixes for deep dive notebook by @GalyaZalesskaya in https://github.com/open-edge-platform/openvino_xai/pull/35
+* Refine README.md as self-contained Getting Started by @goodsong81 in https://github.com/open-edge-platform/openvino_xai/pull/34
+* Add sanity tests for example scripts by @goodsong81 in https://github.com/open-edge-platform/openvino_xai/pull/39
+* Follow-up fixes for deep dive notebook by @GalyaZalesskaya in https://github.com/open-edge-platform/openvino_xai/pull/40
 
 ### Known Issues
 
-* Runtime error from ONNX / OpenVINO IR models while conversion or inference for XAI in https://github.com/openvinotoolkit/openvino_xai/issues/29
-* Models not supported by white box XAI methods in https://github.com/openvinotoolkit/openvino_xai/issues/30
+* Runtime error from ONNX / OpenVINO IR models while conversion or inference for XAI in https://github.com/open-edge-platform/openvino_xai/issues/29
+* Models not supported by white box XAI methods in https://github.com/open-edge-platform/openvino_xai/issues/30
 
 ### New Contributors
 
@@ -172,4 +172,4 @@
 * @GalyaZalesskaya made their first contribution in https://github.com/intel-sandbox/openvino_xai/pull/1
 * @sovrasov made their first contribution in https://github.com/intel-sandbox/openvino_xai/pull/10
 * @goodsong81 made their first contribution in https://github.com/intel-sandbox/openvino_xai/pull/59
-* @yunchu made their first contribution in https://github.com/openvinotoolkit/openvino_xai/pull/17
+* @yunchu made their first contribution in https://github.com/open-edge-platform/openvino_xai/pull/17

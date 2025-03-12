@@ -6,7 +6,7 @@
 Welcome to OpenVINO™ Explainable AI Toolkit's documentation!
 ============================================================
 
-`OpenVINO XAI <https://github.com/openvinotoolkit/openvino_xai>`_ provides a suite of Explainable AI (XAI) algorithms for explanation of `OpenVINO™ <https://github.com/openvinotoolkit/openvino>`_ Intermediate Representation (IR).
+`OpenVINO XAI <https://github.com/open-edge-platform/openvino_xai>`_ provides a suite of Explainable AI (XAI) algorithms for explanation of `OpenVINO™ <https://github.com/open-edge-platform/openvino>`_ Intermediate Representation (IR).
 
 .. toctree::
    :maxdepth: 2
