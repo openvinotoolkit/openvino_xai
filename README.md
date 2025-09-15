@@ -7,7 +7,7 @@ If you have an ongoing need to use this project, are interested in independently
 
 <div align="center">
 
-# OpenVINO™ Explainable AI Toolkit - OpenVINO XAI
+## OpenVINO™ Explainable AI Toolkit - OpenVINO XAI
 
 ---
 
