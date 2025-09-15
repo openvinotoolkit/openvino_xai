@@ -1,3 +1,10 @@
+# PROJECT NOT UNDER ACTIVE MANAGEMENT
+
+This project will no longer be maintained by Intel.
+Intel has ceased development and contributions including, but not limited to, maintenance, bug fixes, new releases, or updates, to this project.
+Intel no longer accepts patches to this project.
+If you have an ongoing need to use this project, are interested in independently developing it, or would like to maintain patches for the open source software community, please create your own fork of this project.
+
 <div align="center">
 
 # OpenVINO™ Explainable AI Toolkit - OpenVINO XAI
@@ -53,30 +60,30 @@ for i, image in enumerate(images):
 
 ### What's new in v1.1.0
 
-* Support PyTorch models with `insert_xai()` API for saliency map generation on PyTorch / ONNX runtime
-* Support OpenVINO IR (.xml) / ONNX (.onnx) model files for `Explainer`
-* Enable AISE method: Adaptive Input Sampling for Explanation of Black-box Models
-* Add Pointing Game, Insertion-Deletion AUC and ADCC quality metrics for saliency maps
-* Upgrade OpenVINO to 2024.4.0
-* Add saliency map visualization with explanation.plot()
-* Enable flexible naming for saved saliency maps and include confidence scores
+- Support PyTorch models with `insert_xai()` API for saliency map generation on PyTorch / ONNX runtime
+- Support OpenVINO IR (.xml) / ONNX (.onnx) model files for `Explainer`
+- Enable AISE method: Adaptive Input Sampling for Explanation of Black-box Models
+- Add Pointing Game, Insertion-Deletion AUC and ADCC quality metrics for saliency maps
+- Upgrade OpenVINO to 2024.4.0
+- Add saliency map visualization with explanation.plot()
+- Enable flexible naming for saved saliency maps and include confidence scores
 
 Please refer to the [change logs](CHANGELOG.md) for the full release history.
 
 ### Supported XAI methods
 
-At the moment, *Image Classification* and *Object Detection* tasks are supported for the *Computer Vision* domain.
-*Black-Box* (model agnostic but slow) methods and *White-Box* (model specific but fast) methods are supported:
+At the moment, _Image Classification_ and _Object Detection_ tasks are supported for the _Computer Vision_ domain.
+_Black-Box_ (model agnostic but slow) methods and _White-Box_ (model specific but fast) methods are supported:
 
-| Domain          | Task                 | Type      | Algorithm              | Links |
-|-----------------|----------------------|-----------|------------------------|-------|
+| Domain          | Task                 | Type      | Algorithm              | Links                                                                                                                                                                                                                                        |
+| --------------- | -------------------- | --------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Computer Vision | Image Classification | White-Box | ReciproCAM             | [paper](https://openaccess.thecvf.com/content/CVPR2024W/XAI4CV/papers/Byun_ReciproCAM_Lightweight_Gradient-free_Class_Activation_Map_for_Post-hoc_Explanations_CVPRW_2024_paper.pdf) / [src](openvino_xai/me4thods/white_box/recipro_cam.py) |
-|                 |                      |           | VITReciproCAM          | [paper](https://arxiv.org/abs/2310.02588) / [src](openvino_xai/methods/white_box/recipro_cam.py) |
-|                 |                      |           | ActivationMap          | experimental / [src](openvino_xai/methods/white_box/activation_map.py)                           |
-|                 |                      | Black-Box | AISEClassification     | [src](openvino_xai/methods/black_box/aise/classification.py)                                     |
-|                 |                      |           | RISE                   | [paper](https://arxiv.org/abs/1806.07421v3) / [src](openvino_xai/methods/black_box/rise.py)      |
-|                 | Object Detection     | White-Box | DetClassProbabilityMap | experimental / [src](openvino_xai/methods/white_box/det_class_probability_map.py)                |
-|                 |                      | Black-Box | AISEDetection          | [src](openvino_xai/methods/black_box/aise/detection.py)                                          |
+|                 |                      |           | VITReciproCAM          | [paper](https://arxiv.org/abs/2310.02588) / [src](openvino_xai/methods/white_box/recipro_cam.py)                                                                                                                                             |
+|                 |                      |           | ActivationMap          | experimental / [src](openvino_xai/methods/white_box/activation_map.py)                                                                                                                                                                       |
+|                 |                      | Black-Box | AISEClassification     | [src](openvino_xai/methods/black_box/aise/classification.py)                                                                                                                                                                                 |
+|                 |                      |           | RISE                   | [paper](https://arxiv.org/abs/1806.07421v3) / [src](openvino_xai/methods/black_box/rise.py)                                                                                                                                                  |
+|                 | Object Detection     | White-Box | DetClassProbabilityMap | experimental / [src](openvino_xai/methods/white_box/det_class_probability_map.py)                                                                                                                                                            |
+|                 |                      | Black-Box | AISEDetection          | [src](openvino_xai/methods/black_box/aise/detection.py)                                                                                                                                                                                      |
 
 See more method comparison at the [User Guide](docs/source/user-guide.md).
 
@@ -86,16 +93,16 @@ Most of CNNs and Transformer models from [Pytorch Image Models (timm)](https://g
 
 Please refer to the following known issues for unsupported models and reasons.
 
-* [Runtime error from ONNX / OpenVINO IR models while conversion or inference for XAI (#29)](https://github.com/openvinotoolkit/openvino_xai/issues/29)
-* [Models not supported by white box XAI methods (#30)](https://github.com/openvinotoolkit/openvino_xai/issues/30)
+- [Runtime error from ONNX / OpenVINO IR models while conversion or inference for XAI (#29)](https://github.com/openvinotoolkit/openvino_xai/issues/29)
+- [Models not supported by white box XAI methods (#30)](https://github.com/openvinotoolkit/openvino_xai/issues/30)
 
-> **_NOTE:_**  GenAI / LLMs would be also supported incrementally in the upcoming releases.
+> **_NOTE:_** GenAI / LLMs would be also supported incrementally in the upcoming releases.
 
 ---
 
 ## Installation
 
-> **_NOTE:_**  OpenVINO XAI works on Python 3.10 or higher
+> **_NOTE:_** OpenVINO XAI works on Python 3.10 or higher
 
 <details>
 <summary>Set up environment</summary>
@@ -107,6 +114,7 @@ python3.10 -m venv .ovxai
 # Activate virtual env.
 source .ovxai/bin/activate
 ```
+
 </details>
 
 Install from PyPI package
@@ -130,6 +138,7 @@ cd openvino_xai
 # Editable mode (for development):
 pip install -e .[dev]
 ```
+
 </details>
 
 <details>
@@ -141,7 +150,9 @@ You can enjoy the PyTorch XAI feature if the PyTorch is installed along with the
 # Install PyTorch (CPU version as example)
 pip3 install torch --index-url https://download.pytorch.org/whl/cpu
 ```
+
 Please refer to the [PyTorch Installation Guide](https://pytorch.org/get-started/locally/) for other options.
+
 </details>
 
 <details>
@@ -154,6 +165,7 @@ pytest -v -s ./tests/unit
 # Run code quality checks
 pre-commit run --all-files
 ```
+
 </details>
 
 ---
@@ -199,9 +211,9 @@ explanation: xai.Explanation = explainer(
 explanation.save(dir_path="./output")
 ```
 
-Original image | Explained image
----------------|----------------
-![Oringinal images](tests/assets/cheetah_person.jpg) | ![Explained image](docs/source/_static/xai-cheetah.png)
+| Original image                                       | Explained image                                         |
+| ---------------------------------------------------- | ------------------------------------------------------- |
+| ![Oringinal images](tests/assets/cheetah_person.jpg) | ![Explained image](docs/source/_static/xai-cheetah.png) |
 
 We can see that model is focusing on the body or skin area of the animals to tell if this image contains actual cheetahs.
 
@@ -231,20 +243,20 @@ with torch.no_grad():
 
 Users could tweak the basic use-case according to their purpose, which include but not limited to:
 
-* Select XAI mode (White-Box or Black-Box) or even specific method which are automatically decided by default
-* Provide custom model pre/post processing functions like resize and normalizations which the model expects
-* Customize output image visualization options
-* Explain multiple class targets, passing them as label indices or as actual label names
-* Call explainer multiple times to explain multiple images or to use different targets
-* Insert XAI head to your PyTorch models and export to ONNX format to generate saliency maps on ONNX Runtime
+- Select XAI mode (White-Box or Black-Box) or even specific method which are automatically decided by default
+- Provide custom model pre/post processing functions like resize and normalizations which the model expects
+- Customize output image visualization options
+- Explain multiple class targets, passing them as label indices or as actual label names
+- Call explainer multiple times to explain multiple images or to use different targets
+- Insert XAI head to your PyTorch models and export to ONNX format to generate saliency maps on ONNX Runtime
   (Refer to the [full example script](./examples/run_torch_onnx.py))
 
 Please find more options and scenarios in the following links:
 
-* [OpenVINO XAI User Guide](docs/source/user-guide.md)
-* [OpenVINO Notebook - XAI Basic](https://github.com/openvinotoolkit/openvino_notebooks/blob/latest/notebooks/explainable-ai-1-basic/explainable-ai-1-basic.ipynb)
-* [OpenVINO Notebook - XAI Deep Dive](https://github.com/openvinotoolkit/openvino_notebooks/blob/latest/notebooks/explainable-ai-2-deep-dive/explainable-ai-2-deep-dive.ipynb)
-* [OpenVINO Notebook - Saliency Map Interpretation](https://github.com/openvinotoolkit/openvino_notebooks/blob/latest/notebooks/explainable-ai-3-map-interpretation/explainable-ai-3-map-interpretation.ipynb)
+- [OpenVINO XAI User Guide](docs/source/user-guide.md)
+- [OpenVINO Notebook - XAI Basic](https://github.com/openvinotoolkit/openvino_notebooks/blob/latest/notebooks/explainable-ai-1-basic/explainable-ai-1-basic.ipynb)
+- [OpenVINO Notebook - XAI Deep Dive](https://github.com/openvinotoolkit/openvino_notebooks/blob/latest/notebooks/explainable-ai-2-deep-dive/explainable-ai-2-deep-dive.ipynb)
+- [OpenVINO Notebook - Saliency Map Interpretation](https://github.com/openvinotoolkit/openvino_notebooks/blob/latest/notebooks/explainable-ai-3-map-interpretation/explainable-ai-3-map-interpretation.ipynb)
 
 ### Playing with the examples
 
